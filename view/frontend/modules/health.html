@@ -1,29 +1,368 @@
-<section class="content-section" id="health">
-  <div class="section-header">
-    <h2 class="module-title">❤️ Gestion de la Santé</h2>
-    <p>Suivez vos indicateurs de santé et votre progression vers vos objectifs.</p>
-  </div>
-  <div class="cards-grid">
-    <div class="info-card">
-      <h3>Indicateurs Corporels</h3>
-      <p>Suivez votre poids, IMC, masse grasse, masse musculaire et autres métriques corporelles.</p>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma Santé & Nutrition</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <style>
+        :root {
+            --vert: #013220;
+            --sable: #CBBD93;
+            --violet: #BA5BED;
+            --bleu: #77B5FE;
+        }
+
+        .health-user-wrap {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .module-title {
+            color: var(--vert);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .health-tabs-nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 25px 0;
+            border-bottom: 3px solid rgba(1, 50, 32, 0.15);
+            padding-bottom: 15px;
+        }
+
+        .health-tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: #f8f8f8;
+            color: var(--vert);
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .health-tab-btn.active {
+            background: linear-gradient(135deg, var(--vert), #0a3d2a);
+            color: white;
+            box-shadow: 0 4px 12px rgba(1, 50, 32, 0.2);
+        }
+
+        .health-tab-content {
+            display: none;
+        }
+
+        .health-tab-content.active {
+            display: block;
+        }
+
+        .health-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .health-h3 {
+            color: var(--vert);
+            margin-bottom: 8px;
+        }
+
+        .health-muted {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .health-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px 24px;
+        }
+
+        .health-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--vert);
+        }
+
+        .health-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        .health-input:focus {
+            border-color: var(--bleu);
+            outline: none;
+        }
+
+        .health-btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .health-btn-violet {
+            background: linear-gradient(135deg, #BA5BED, #9d4dd4);
+            color: white;
+        }
+
+        .health-btn-bleu {
+            background: linear-gradient(135deg, #77B5FE, #4a9ee8);
+            color: #0a1a10;
+        }
+
+        .health-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 10000;
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#CBBD93]">
+
+<section class="content-section health-user-wrap" id="health">
+    <div class="section-header">
+        <h2 class="module-title health-user-title">🏥 Ma santé & nutrition</h2>
+        <p>Centralisez votre dossier médical, vos régimes autorisés et obtenez des indications personnalisées. Validez les aliments et consultez vos scores nutritionnels & écologiques.</p>
     </div>
-    <div class="info-card">
-      <h3>Suivi Glycémie</h3>
-      <p>Enregistrez et analysez vos niveaux de glycémie pour un meilleur contrôle diabétique.</p>
+
+    <!-- TABS NAVIGATION -->
+    <div class="health-tabs-nav">
+        <button class="health-tab-btn active" data-tab="dossier" onclick="healthTabSwitch(this, 'dossier')">📋 Dossier Médical</button>
+        <button class="health-tab-btn" data-tab="regimes" onclick="healthTabSwitch(this, 'regimes')">🥗 Mes Régimes</button>
+        <button class="health-tab-btn" data-tab="assistant" onclick="healthTabSwitch(this, 'assistant')">🤖 Assistant Santé</button>
+        <button class="health-tab-btn" data-tab="scores" onclick="healthTabSwitch(this, 'scores')">📊 Scores Nutritionnels</button>
     </div>
-    <div class="info-card">
-      <h3>Hydratation</h3>
-      <p>Suivez votre consommation d'eau quotidienne et recevez des rappels personnalisés.</p>
+
+    <!-- ==================== TAB DOSSIER ==================== -->
+    <div id="health-tab-dossier" class="health-tab-content active">
+        <div class="health-panel">
+            <h3 class="health-h3">📋 Mon Dossier Médical</h3>
+            <p class="health-muted">Mise à jour des informations personnelles. L'IMC est calculé automatiquement.</p>
+
+            <div class="health-section-split" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 25px;">
+                
+                <!-- Biométrie -->
+                <div>
+                    <h4 style="color: var(--vert); font-weight: 600; margin-bottom: 15px;">Biométrie</h4>
+                    <div class="health-form-grid">
+                        <div>
+                            <label class="health-label">Groupe sanguin</label>
+                            <select class="health-input" id="healthDossierGroupe">
+                                <option value="">— Sélectionner —</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="health-label">Poids (kg)</label>
+                            <input type="number" step="0.1" class="health-input" id="healthDossierPoids" placeholder="ex. 70" />
+                        </div>
+                        <div>
+                            <label class="health-label">Taille (cm)</label>
+                            <input type="number" step="0.1" class="health-input" id="healthDossierTaille" placeholder="ex. 175" />
+                        </div>
+                        <div>
+                            <label class="health-label">IMC (calculé)</label>
+                            <input type="text" class="health-input" id="healthDossierIMC" readonly placeholder="—" 
+                                   style="background: rgba(1,50,32,0.08); font-weight: bold;"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Allergies & Maladies -->
+                <div>
+                    <h4 style="color: var(--vert); font-weight: 600; margin-bottom: 15px;">Allergies & Maladies</h4>
+                    <div class="health-form-grid">
+                        <div class="col-span-2">
+                            <label class="health-label">Allergies (description)</label>
+                            <textarea class="health-input" id="healthDossierAllergie" rows="3" 
+                                      placeholder="ex. Arachides, lactose, pollen..."></textarea>
+                        </div>
+                        <div>
+                            <label class="health-label">Gravité de l'allergie</label>
+                            <select class="health-input" id="healthDossierGravite">
+                                <option value="">— Sélectionner —</option>
+                                <option value="légère">Légère</option>
+                                <option value="modérée">Modérée</option>
+                                <option value="sévère">Sévère</option>
+                                <option value="anaphylactique">Anaphylactique</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="health-label">Maladies chroniques</label>
+                            <textarea class="health-input" id="healthDossierMaladies" rows="3" 
+                                      placeholder="ex. Diabète type 2, hypertension, asthme..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 35px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button type="button" class="health-btn health-btn-violet" onclick="healthSaveDossier()">
+                    💾 Enregistrer le dossier
+                </button>
+                <button type="button" class="health-btn health-btn-bleu" onclick="healthCalculateIMC()">
+                    📐 Calculer IMC
+                </button>
+                <a href="addDossier.php" class="health-btn" style="background:#013220;color:white;">
+                    ➕ Nouveau dossier
+                </a>
+                <a href="updateDossier.php" class="health-btn" style="background:#77B5FE;color:white;">
+                    ✏️ Modifier dossier
+                </a>
+            </div>
+        </div>
     </div>
-  </div>
+
+    <!-- ==================== TAB RÉGIMES ==================== -->
+    <div id="health-tab-regimes" class="health-tab-content">
+        <div class="health-panel">
+            <h3 class="health-h3">🥗 Mes Régimes Autorisés</h3>
+            <p class="health-muted">Liste des régimes liés à votre dossier médical.</p>
+
+            <div id="healthRegimeListContainer" style="margin: 25px 0; min-height: 200px;">
+                <!-- JavaScript will dynamically load the regimes list here -->
+                <p class="health-muted" style="text-align:center; padding:40px;">Chargement des régimes...</p>
+            </div>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="addRegime.php" class="health-btn health-btn-bleu">
+                    ➕ Ajouter un régime
+                </a>
+                <a href="updateRegime.php" class="health-btn" style="background:#013220;color:white;">
+                    ✏️ Modifier un régime
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TAB ASSISTANT (Placeholder) ==================== -->
+    <div id="health-tab-assistant" class="health-tab-content">
+        <div class="health-panel">
+            <h3 class="health-h3">🤖 Assistant Santé & Nutrition</h3>
+            <p class="health-muted">Votre assistant IA est en cours de développement. Revenez bientôt !</p>
+            <!-- Paste your original assistant code here -->
+        </div>
+    </div>
+
+    <!-- ==================== TAB SCORES (Placeholder) ==================== -->
+    <div id="health-tab-scores" class="health-tab-content">
+        <div class="health-panel">
+            <h3 class="health-h3">📊 Mes Scores Nutritionnels & Écologiques</h3>
+            <p class="health-muted">Fonctionnalité en cours de développement.</p>
+            <!-- Paste your original scores code here -->
+        </div>
+    </div>
 </section>
 
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>
+<script>
+    // Tab switching
+    function healthTabSwitch(btn, tab) {
+        document.querySelectorAll('.health-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.health-tab-content').forEach(c => c.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById('health-tab-' + tab).classList.add('active');
+    }
+
+    // IMC Calculation
+    function healthCalculateIMC() {
+        const poids = parseFloat(document.getElementById('healthDossierPoids').value);
+        const tailleCm = parseFloat(document.getElementById('healthDossierTaille').value);
+        
+        if (!poids || !tailleCm || tailleCm <= 0) {
+            showToast('Erreur', 'Veuillez entrer un poids et une taille valides', 'error');
+            return;
+        }
+        
+        const tailleM = tailleCm / 100;
+        const imc = (poids / (tailleM * tailleM)).toFixed(1);
+        
+        document.getElementById('healthDossierIMC').value = imc;
+        
+        let message = `Votre IMC est ${imc}. `;
+        if (imc < 18.5) message += "Vous êtes en sous-poids.";
+        else if (imc < 25) message += "Vous avez un poids normal.";
+        else if (imc < 30) message += "Vous êtes en surpoids.";
+        else message += "Vous êtes en obésité.";
+        
+        showToast('IMC Calculé', message, 'success');
+    }
+
+    // Save Dossier (Demo)
+    function healthSaveDossier() {
+        // In real project, send data via fetch/AJAX to backend
+        showToast('Succès', 'Dossier médical enregistré avec succès !', 'success');
+    }
+
+    // Simple Toast Notification
+    function showToast(title, message, type = 'success') {
+        let toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.style.background = type === 'success' ? '#013220' : '#e74c3c';
+        toast.innerHTML = `<strong>${title}</strong><br>${message}`;
+        document.body.appendChild(toast);
+        toast.style.display = 'block';
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }, 4000);
+    }
+
+    // Load regimes when tab is opened (demo)
+    document.querySelector('[data-tab="regimes"]').addEventListener('click', function() {
+        setTimeout(() => {
+            const container = document.getElementById('healthRegimeListContainer');
+            container.innerHTML = `
+                <div style="padding:20px; background:#f9f9f9; border-radius:12px; border:1px solid #eee;">
+                    <p><strong>Aucun régime enregistré pour le moment.</strong></p>
+                    <p class="health-muted">Ajoutez votre premier régime via le bouton ci-dessous.</p>
+                </div>
+            `;
+        }, 800);
+    });
+
+    // Auto-calculate IMC when weight or height changes
+    document.getElementById('healthDossierPoids').addEventListener('input', healthCalculateIMC);
+    document.getElementById('healthDossierTaille').addEventListener('input', healthCalculateIMC);
+</script>
+
+</body>
+</html>

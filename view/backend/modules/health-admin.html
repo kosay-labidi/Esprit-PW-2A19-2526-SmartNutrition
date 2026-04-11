@@ -1,184 +1,80 @@
-<section class="content-section" id="health">
-  <div class="section-header">
-    <h2 class="module-title">❤️ Gestion de la Santé</h2>
-    <p>Suivez les indicateurs de santé des utilisateurs</p>
-  </div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>GaiaLumen Admin - Santé</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <style>
+        :root { --vert: #013220; --sable: #CBBD93; --violet: #BA5BED; --bleu: #77B5FE; }
+        .glass { background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); border: 1px solid rgba(1,50,32,0.1); border-radius: 16px; }
+    </style>
+</head>
+<body class="bg-[#CBBD93]">
+    <!-- Sidebar & Header - same as your other admin pages -->
+    <aside class="sidebar-nav-wrapper"> ... </aside>
+    <main class="main-wrapper">
+        <header class="header"> ... </header>
 
-  <div class="section">
-    <div class="section-header">
-      <h2 class="section-title">Indicateurs de Santé</h2>
-      <div class="section-actions">
-        <button class="btn btn-secondary" onclick="refreshHealth()">🔄 Actualiser</button>
-        <button class="btn btn-primary" onclick="exportData('health')">📥 Exporter</button>
-      </div>
-    </div>
+        <section class="section p-8">
+            <h1 class="text-4xl font-bold text-[#013220]">🏥 Gestion Santé - Admin</h1>
 
-    <div class="quick-stats">
-      <div class="quick-stat">
-        <div class="quick-stat-value">892</div>
-        <div class="quick-stat-label">Utilisateurs actifs</div>
-      </div>
-      <div class="quick-stat">
-        <div class="quick-stat-value">3,247</div>
-        <div class="quick-stat-label">Mesures enregistrées</div>
-      </div>
-      <div class="quick-stat">
-        <div class="quick-stat-value">78%</div>
-        <div class="quick-stat-label">Objectifs atteints</div>
-      </div>
-      <div class="quick-stat">
-        <div class="quick-stat-value">24.2</div>
-        <div class="quick-stat-label">IMC moyen</div>
-      </div>
-    </div>
+            <div class="flex gap-4 mb-8">
+                <a href="addDossier.php" class="bg-[#BA5BED] text-white px-8 py-4 rounded-2xl">+ Nouveau Dossier</a>
+                <a href="addRegime.php" class="bg-[#77B5FE] text-white px-8 py-4 rounded-2xl">+ Nouveau Régime</a>
+            </div>
 
-    <div class="filter-chips">
-      <div class="chip active" onclick="filterHealthByChip(this,'all')">Tous</div>
-      <div class="chip" onclick="filterHealthByChip(this,'weight')">⚖️ Poids</div>
-      <div class="chip" onclick="filterHealthByChip(this,'glucose')">🩸 Glycémie</div>
-      <div class="chip" onclick="filterHealthByChip(this,'hydration')">💧 Hydratation</div>
-      <div class="chip" onclick="filterHealthByChip(this,'activity')">🏃 Activité</div>
-    </div>
+            <!-- Dossiers Table -->
+            <div class="glass p-8 mb-12">
+                <h2 class="text-2xl font-semibold text-[#013220] mb-6">📋 Dossiers Médicaux</h2>
+                <table class="w-full">
+                    <thead class="bg-[#013220] text-white"><tr><th>ID</th><th>Poids</th><th>Taille</th><th>Allergie</th><th>Actions</th></tr></thead>
+                    <tbody>
+                    <?php 
+                    require_once '../../../Controller/dossierMedical.controller.php';
+                    $ctrl = new DossierMedicalController();
+                    $list = $ctrl->list();
+                    foreach ($list as $d): ?>
+                        <tr class="border-b hover:bg-[#CBBD93]/30">
+                            <td><?php echo $d['id_dossier']; ?></td>
+                            <td><?php echo $d['poids']; ?> kg</td>
+                            <td><?php echo $d['taille']; ?> cm</td>
+                            <td><?php echo htmlspecialchars($d['allergie'] ?? '-'); ?></td>
+                            <td>
+                                <a href="showDossier.php?id=<?php echo $d['id_dossier']; ?>">Voir</a> |
+                                <a href="updateDossier.php?id=<?php echo $d['id_dossier']; ?>">Modifier</a> |
+                                <a href="deleteDossier.php?id=<?php echo $d['id_dossier']; ?>" onclick="return confirm('Supprimer ce dossier ?')">Supprimer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
 
-    <div class="search-bar">
-      <input type="text" class="search-input" id="healthSearchInput" placeholder="Rechercher un utilisateur..." onkeyup="searchHealth()">
-      <select class="form-select" id="healthTypeFilter" onchange="filterHealth()">
-        <option value="">Tous les indicateurs</option>
-        <option value="weight">Poids</option>
-        <option value="glucose">Glycémie</option>
-        <option value="hydration">Hydratation</option>
-        <option value="activity">Activité physique</option>
-      </select>
-      <select class="form-select" id="healthPeriodFilter" onchange="filterHealth()">
-        <option value="">Toutes les périodes</option>
-        <option value="today">Aujourd'hui</option>
-        <option value="week">Cette semaine</option>
-        <option value="month">Ce mois</option>
-      </select>
-    </div>
-
-    <div class="data-grid">
-      <div class="data-card">
-        <div class="data-card-icon">⚖️</div>
-        <div class="data-card-title">Poids moyen</div>
-        <div class="data-card-value">72.5 kg</div>
-      </div>
-      <div class="data-card">
-        <div class="data-card-icon">🩸</div>
-        <div class="data-card-title">Glycémie moy.</div>
-        <div class="data-card-value">95 mg/dL</div>
-      </div>
-      <div class="data-card">
-        <div class="data-card-icon">💧</div>
-        <div class="data-card-title">Hydratation moy.</div>
-        <div class="data-card-value">2.1 L/jour</div>
-      </div>
-      <div class="data-card">
-        <div class="data-card-icon">🏃</div>
-        <div class="data-card-title">Activité moy.</div>
-        <div class="data-card-value">8,500 pas</div>
-      </div>
-    </div>
-
-    <div class="table-container" style="margin-top:30px;">
-      <table>
-        <thead>
-          <tr>
-            <th>Utilisateur</th>
-            <th>Poids</th>
-            <th>IMC</th>
-            <th>Glycémie</th>
-            <th>Hydratation</th>
-            <th>Dernière mesure</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Sophie Martin</td>
-            <td>65 kg</td>
-            <td><span class="badge badge-active">22.5 (Normal)</span></td>
-            <td>92 mg/dL</td>
-            <td>2.5 L/jour</td>
-            <td>Il y a 3 heures</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="viewHealth('1')">👁️ Voir</button>
-                <button class="action-btn action-btn-edit" onclick="editHealth('1')">✏️ Modifier</button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>Karim Benali</td>
-            <td>78 kg</td>
-            <td><span class="badge badge-active">24.8 (Normal)</span></td>
-            <td>98 mg/dL</td>
-            <td>1.8 L/jour</td>
-            <td>Il y a 6 heures</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="viewHealth('2')">👁️ Voir</button>
-                <button class="action-btn action-btn-edit" onclick="editHealth('2')">✏️ Modifier</button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>Léa Dubois</td>
-            <td>58 kg</td>
-            <td><span class="badge badge-active">21.2 (Normal)</span></td>
-            <td>88 mg/dL</td>
-            <td>2.2 L/jour</td>
-            <td>Il y a 1 jour</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="viewHealth('3')">👁️ Voir</button>
-                <button class="action-btn action-btn-edit" onclick="editHealth('3')">✏️ Modifier</button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<script>
-function refreshHealth() {
-  showToast('Actualisation', 'Indicateurs de santé actualisés', 'success');
-}
-
-function filterHealthByChip(chip, type) {
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  console.log('Filtre santé:', type);
-}
-
-function searchHealth() {
-  const search = document.getElementById('healthSearchInput').value;
-  console.log('Recherche santé:', search);
-}
-
-function filterHealth() {
-  const type = document.getElementById('healthTypeFilter').value;
-  const period = document.getElementById('healthPeriodFilter').value;
-  console.log('Filtre santé:', type, period);
-}
-
-function viewHealth(id) {
-  showToast('Santé', `Affichage des indicateurs de l'utilisateur ${id}`, 'info');
-}
-
-function editHealth(id) {
-  showToast('Modification', `Modification des indicateurs de l'utilisateur ${id}`, 'info');
-}
-}
-</script>
-
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>
+            <!-- Régimes Table -->
+            <div class="glass p-8">
+                <h2 class="text-2xl font-semibold text-[#013220] mb-6">🥗 Régimes</h2>
+                <table class="w-full">
+                    <thead class="bg-[#013220] text-white"><tr><th>Nom</th><th>Type</th><th>Actions</th></tr></thead>
+                    <tbody>
+                    <?php 
+                    require_once '../../../Controller/regime.controller.php';
+                    $ctrl = new RegimeController();
+                    $list = $ctrl->list();
+                    foreach ($list as $r): ?>
+                        <tr class="border-b hover:bg-[#CBBD93]/30">
+                            <td><?php echo htmlspecialchars($r['nom_regime']); ?></td>
+                            <td><?php echo $r['type_regime']; ?></td>
+                            <td>
+                                <a href="showRegime.php?id=<?php echo $r['id_regime']; ?>">Voir</a> |
+                                <a href="updateRegime.php?id=<?php echo $r['id_regime']; ?>">Modifier</a> |
+                                <a href="deleteRegime.php?id=<?php echo $r['id_regime']; ?>" onclick="return confirm('Supprimer ce régime ?')">Supprimer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

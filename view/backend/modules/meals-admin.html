@@ -1,0 +1,185 @@
+<section class="content-section" id="meals">
+  <div class="section-header">
+    <h2 class="module-title">🍽️ Gestion des Repas</h2>
+    <p>Gérez les repas enregistrés par les utilisateurs</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <h2 class="section-title">Repas Enregistrés</h2>
+      <div class="section-actions">
+        <button class="btn btn-secondary" onclick="refreshMeals()">🔄 Actualiser</button>
+        <button class="btn btn-primary" onclick="exportData('meals')">📥 Exporter</button>
+      </div>
+    </div>
+
+    <div class="quick-stats">
+      <div class="quick-stat">
+        <div class="quick-stat-value">8,542</div>
+        <div class="quick-stat-label">Repas totaux</div>
+      </div>
+      <div class="quick-stat">
+        <div class="quick-stat-value">423</div>
+        <div class="quick-stat-label">Cette semaine</div>
+      </div>
+      <div class="quick-stat">
+        <div class="quick-stat-value">1,847</div>
+        <div class="quick-stat-label">Calories moy.</div>
+      </div>
+      <div class="quick-stat">
+        <div class="quick-stat-value">4.2/5</div>
+        <div class="quick-stat-label">Note moyenne</div>
+      </div>
+    </div>
+
+    <div class="filter-chips">
+      <div class="chip active" onclick="filterMealsByChip(this,'all')">Tous</div>
+      <div class="chip" onclick="filterMealsByChip(this,'breakfast')">🌅 Petit-déjeuner</div>
+      <div class="chip" onclick="filterMealsByChip(this,'lunch')">☀️ Déjeuner</div>
+      <div class="chip" onclick="filterMealsByChip(this,'dinner')">🌙 Dîner</div>
+      <div class="chip" onclick="filterMealsByChip(this,'snack')">🍎 Collation</div>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" class="search-input" id="mealSearchInput" placeholder="Rechercher un repas..." onkeyup="searchMeals()">
+      <select class="form-select" id="mealTypeFilter" onchange="filterMeals()">
+        <option value="">Tous les types</option>
+        <option value="breakfast">Petit-déjeuner</option>
+        <option value="lunch">Déjeuner</option>
+        <option value="dinner">Dîner</option>
+        <option value="snack">Collation</option>
+      </select>
+      <select class="form-select" id="mealDateFilter" onchange="filterMeals()">
+        <option value="">Toutes les dates</option>
+        <option value="today">Aujourd'hui</option>
+        <option value="week">Cette semaine</option>
+        <option value="month">Ce mois</option>
+      </select>
+    </div>
+
+    <div class="data-grid">
+      <div class="data-card">
+        <div class="data-card-icon">🌅</div>
+        <div class="data-card-title">Petit-déjeuner</div>
+        <div class="data-card-value">2,134</div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-icon">☀️</div>
+        <div class="data-card-title">Déjeuner</div>
+        <div class="data-card-value">2,847</div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-icon">🌙</div>
+        <div class="data-card-title">Dîner</div>
+        <div class="data-card-value">2,654</div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-icon">🍎</div>
+        <div class="data-card-title">Collation</div>
+        <div class="data-card-value">907</div>
+      </div>
+    </div>
+
+    <div class="table-container" style="margin-top:30px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Utilisateur</th>
+            <th>Repas</th>
+            <th>Type</th>
+            <th>Calories</th>
+            <th>Eco-score</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Sophie Martin</td>
+            <td>Salade César</td>
+            <td><span class="badge badge-user">Déjeuner</span></td>
+            <td>450 kcal</td>
+            <td><span class="badge badge-active">A (85/100)</span></td>
+            <td>Aujourd'hui 12:30</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn action-btn-edit" onclick="viewMeal('1')">👁️ Voir</button>
+                <button class="action-btn action-btn-delete" onclick="deleteMeal('1')">🗑️ Supprimer</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Karim Benali</td>
+            <td>Poulet rôti + légumes</td>
+            <td><span class="badge badge-user">Dîner</span></td>
+            <td>680 kcal</td>
+            <td><span class="badge badge-active">B (72/100)</span></td>
+            <td>Hier 19:45</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn action-btn-edit" onclick="viewMeal('2')">👁️ Voir</button>
+                <button class="action-btn action-btn-delete" onclick="deleteMeal('2')">🗑️ Supprimer</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Léa Dubois</td>
+            <td>Smoothie bowl</td>
+            <td><span class="badge badge-user">Petit-déj</span></td>
+            <td>320 kcal</td>
+            <td><span class="badge badge-active">A (92/100)</span></td>
+            <td>Aujourd'hui 08:15</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn action-btn-edit" onclick="viewMeal('3')">👁️ Voir</button>
+                <button class="action-btn action-btn-delete" onclick="deleteMeal('3')">🗑️ Supprimer</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<script>
+function refreshMeals() {
+  showToast('Actualisation', 'Repas actualisés', 'success');
+}
+
+function filterMealsByChip(chip, type) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  console.log('Filtre repas:', type);
+}
+
+function searchMeals() {
+  const search = document.getElementById('mealSearchInput').value;
+  console.log('Recherche repas:', search);
+}
+
+function filterMeals() {
+  const type = document.getElementById('mealTypeFilter').value;
+  const date = document.getElementById('mealDateFilter').value;
+  console.log('Filtre repas:', type, date);
+}
+
+function viewMeal(id) {
+  showToast('Repas', `Affichage du repas ${id}`, 'info');
+}
+
+function deleteMeal(id) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer ce repas?')) {
+    showToast('Suppression', `Repas ${id} supprimé`, 'success');
+  }
+}
+</script>
+
+<style>
+.module-title {
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+</style>

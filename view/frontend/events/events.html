@@ -1,0 +1,125 @@
+<section class="content-section" id="events">
+  <div class="section-header">
+    <h2 class="module-title">📅 Événements</h2>
+    <p>Découvrez et participez aux événements éco-responsables</p>
+  </div>
+
+  <div class="events-grid" id="events-list"></div>
+</section>
+
+<style>
+.module-title {
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.event-card {
+  background: var(--surface);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(168, 184, 160, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.event-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  background: linear-gradient(135deg, rgba(168, 184, 160, 0.2), rgba(91, 62, 150, 0.2));
+}
+
+.event-content {
+  padding: 20px;
+}
+
+.event-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.event-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.event-description {
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.event-actions {
+  display: flex;
+  gap: 12px;
+}
+</style>
+
+<script>
+function loadEvents() {
+  fetch('../../controller/event.controller.php?action=read')
+    .then(response => response.json())
+    .then(result => {
+      if(result.success) {
+        displayEvents(result.data);
+      }
+    });
+}
+
+function displayEvents(events) {
+  const container = document.getElementById('events-list');
+  
+  if(events.length === 0) {
+    container.innerHTML = '<p>Aucun événement disponible pour le moment.</p>';
+    return;
+  }
+
+  const html = events.map(e => `
+    <div class="event-card">
+      ${e.image ? `<img src="${e.image}" alt="${e.titre}" class="event-image">` : '<div class="event-image"></div>'}
+      <div class="event-content">
+        <h3 class="event-title">${e.titre}</h3>
+        <div class="event-meta">
+          <span>📅 ${e.date_debut} à ${e.heure_debut}</span>
+          <span>📍 ${e.lieu}</span>
+          <span>👤 ${e.organisateur}</span>
+          ${e.capacite_max ? `<span>👥 ${e.participants_count || 0}/${e.capacite_max} places</span>` : ''}
+        </div>
+        <p class="event-description">${e.description.substring(0, 120)}...</p>
+        <div class="event-actions">
+          <button class="btn btn-primary btn-sm" onclick="registerEvent(${e.id})">
+            ✅ S'inscrire
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = html;
+}
+
+function registerEvent(id) {
+  alert('Inscription à l\'événement ' + id);
+}
+
+window.addEventListener('load', loadEvents);
+</script>

@@ -1,0 +1,94 @@
+<section class="content-section" id="events">
+  <div class="section">
+    <div class="section-header">
+      <h2 class="module-title">🎯 Gestion des Événements</h2>
+      <div class="section-actions">
+        <button class="btn btn-secondary" onclick="refreshEvents()">🔄 Actualiser</button>
+        <button class="btn btn-primary" onclick="addEvent()">➕ Nouvel Événement</button>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" class="search-input" placeholder="Rechercher un événement...">
+      <select class="form-select">
+        <option value="">Tous les types</option>
+        <option value="atelier">🛠️ Atelier</option>
+        <option value="conference">🎤 Conférence</option>
+        <option value="sensibilisation">🌱 Sensibilisation</option>
+      </select>
+      <select class="form-select">
+        <option value="">Tous les statuts</option>
+        <option value="actif">✅ Actif</option>
+        <option value="termine">📦 Terminé</option>
+        <option value="annule">❌ Annulé</option>
+      </select>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Titre</th>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Lieu</th>
+            <th>Participants</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Atelier Compostage Urbain</td>
+            <td><span class="badge" style="background:rgba(52,152,219,.2);color:#3498db;">🛠️ Atelier</span></td>
+            <td>15/04/2026</td>
+            <td>Paris 15e</td>
+            <td>18/25</td>
+            <td><span class="badge badge-active">✅ Actif</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn action-btn-edit" onclick="editEvent(1)">✏️</button>
+                <button class="action-btn action-btn-delete" onclick="deleteEvent(1)">🗑️</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Conférence Climat 2026</td>
+            <td><span class="badge" style="background:rgba(155,89,182,.2);color:#9b59b6;">🎤 Conférence</span></td>
+            <td>20/04/2026</td>
+            <td>Lyon</td>
+            <td>89/150</td>
+            <td><span class="badge badge-active">✅ Actif</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn action-btn-edit" onclick="editEvent(2)">✏️</button>
+                <button class="action-btn action-btn-delete" onclick="deleteEvent(2)">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button class="page-btn" disabled>◀ Précédent</button>
+      <button class="page-btn active">1</button>
+      <button class="page-btn">2</button>
+      <button class="page-btn">Suivant ▶</button>
+    </div>
+  </div>
+</section>
+
+<style>
+.module-title {
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+</style>

@@ -1,0 +1,922 @@
+<!-- ═══════════════════════════════════════════════════════════
+     MODULE ADMIN DÉFIS - GaiaLumen Backend
+     Formulaire en haut + Tableau des défis + Tableau des participants
+     ═══════════════════════════════════════════════════════════ -->
+
+<link rel="stylesheet" href="../frontend/css/challenges-steakers.css">
+<link rel="stylesheet" href="css/challenges-admin.css">
+
+<section class="content-section" id="challenges">
+  <div class="section-header">
+    <h2 class="module-title">🏆 Gestion des Défis Collaboratifs</h2>
+    <p>Créez et gérez les défis collaboratifs</p>
+  </div>
+
+  <!-- Layout: Formulaire (haut) + Tableaux (bas) -->
+  <div class="admin-layout">
+    
+    <!-- ══════════════════════════════════════════════════════
+         FORMULAIRE EN HAUT (compact et visible)
+         ══════════════════════════════════════════════════════ -->
+    <div class="form-panel">
+      <div class="form-panel-header">
+        <h3 id="form-title">➕ Nouveau Défi</h3>
+        <button class="btn-reset" onclick="resetForm()" title="Réinitialiser">
+          🔄 Réinitialiser
+        </button>
+      </div>
+
+      <form id="challenge-form" onsubmit="handleChallengeSubmit(event)">
+        <input type="hidden" id="challenge-id" name="id">
+        
+        <!-- Ligne 1: Titre + Description -->
+        <div class="form-row-compact">
+          <div class="form-group">
+            <label class="form-label">
+              Titre du défi <span class="required">*</span>
+            </label>
+            <input 
+              type="text" 
+              name="titre" 
+              id="challenge-titre"
+              class="form-input" 
+              placeholder="Ex: Défi Zéro Déchet - 30 Jours" 
+              required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Description <span class="required">*</span>
+              <span class="char-count" id="description-count">0/500</span>
+            </label>
+            <textarea 
+              name="description" 
+              id="challenge-description"
+              class="form-textarea" 
+              rows="2" 
+              placeholder="Décrivez le défi..."
+              maxlength="500"
+              oninput="updateCharCountAdmin(this, 'description-count', 500)"
+              required></textarea>
+          </div>
+        </div>
+
+        <!-- Ligne 2: Type, Catégorie, Objectif, Durée -->
+        <div class="form-row-compact">
+          <div class="form-group">
+            <label class="form-label">Type <span class="required">*</span></label>
+            <select name="type" id="challenge-type" class="form-select" required>
+              <option value="">Sélectionner...</option>
+              <option value="collectif">👥 Collectif</option>
+              <option value="individuel">👤 Individuel</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Catégorie <span class="required">*</span></label>
+            <select name="objectif" id="challenge-objectif" class="form-select" required>
+              <option value="">Sélectionner...</option>
+              <option value="dechets">♻️ Déchets</option>
+              <option value="eau">💧 Eau</option>
+              <option value="repas">🥗 Repas</option>
+              <option value="transport">🚲 Transport</option>
+              <option value="energie">⚡ Énergie</option>
+              <option value="co2">🌍 CO2</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Objectif (%) <span class="required">*</span></label>
+            <input 
+              type="number" 
+              name="valeur_cible" 
+              id="challenge-valeur"
+              class="form-input" 
+              min="1" 
+              max="100" 
+              value="50"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Durée (jours) <span class="required">*</span></label>
+            <select name="duree" id="challenge-duree" class="form-select" required>
+              <option value="7">7 jours</option>
+              <option value="14">14 jours</option>
+              <option value="21">21 jours</option>
+              <option value="30" selected>30 jours</option>
+              <option value="60">60 jours</option>
+              <option value="90">90 jours</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Ligne 3: Dates, Statut, Sticker, Image, Boutons -->
+        <div class="form-row-compact">
+          <div class="form-group">
+            <label class="form-label">Date début <span class="required">*</span></label>
+            <input 
+              type="date" 
+              name="date_debut" 
+              id="challenge-date-debut"
+              class="form-input" 
+              required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date fin <span class="required">*</span></label>
+            <input 
+              type="date" 
+              name="date_fin" 
+              id="challenge-date-fin"
+              class="form-input" 
+              required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Statut <span class="required">*</span></label>
+            <select name="statut" id="challenge-statut" class="form-select" required>
+              <option value="actif">✅ Actif</option>
+              <option value="termine">📦 Terminé</option>
+              <option value="futur">🔜 À venir</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Sticker <span class="required">*</span></label>
+            <select name="streak_icon" id="challenge-streak-icon" class="form-select" required>
+              <option value="">Sélectionner...</option>
+              <option value="♻️">♻️ Recyclage</option>
+              <option value="💧">💧 Eau</option>
+              <option value="🥗">🥗 Repas</option>
+              <option value="🌾">🌾 Local</option>
+              <option value="🚲">🚲 Transport</option>
+              <option value="⚡">⚡ Énergie</option>
+              <option value="🌍">🌍 Planète</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">URL Image</label>
+            <input 
+              type="url" 
+              name="image" 
+              id="challenge-image"
+              class="form-input" 
+              placeholder="https://...">
+          </div>
+
+          <div class="form-group form-actions-inline">
+            <label class="form-label" style="opacity: 0;">Actions</label>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-secondary btn-compact" onclick="resetForm()">
+                ❌ Annuler
+              </button>
+              <button type="submit" class="btn btn-primary btn-compact" id="form-submit-btn">
+                ✅ Créer
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         TABLEAU DES DÉFIS
+         ══════════════════════════════════════════════════════ -->
+    <div class="table-panel">
+      
+      <!-- Statistiques rapides -->
+      <div class="quick-stats-mini">
+        <div class="stat-mini">
+          <div class="stat-mini-value">28</div>
+          <div class="stat-mini-label">Défis</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-value">1,847</div>
+          <div class="stat-mini-label">Participants</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-value">82%</div>
+          <div class="stat-mini-label">Complétion</div>
+        </div>
+      </div>
+
+      <!-- Filtres -->
+      <div class="table-filters">
+        <input 
+          type="text" 
+          class="search-input-admin" 
+          id="search-input-admin" 
+          placeholder="🔍 Rechercher..."
+          onkeyup="searchChallengesAdmin()">
+        
+        <select class="form-select" id="status-filter-admin" onchange="filterChallengesAdmin()" style="background: rgba(232, 220, 196, 0.15); color: #E8DCC4; border: 2px solid rgba(232, 220, 196, 0.3);">
+          <option value="">Tous statuts</option>
+          <option value="actif">✅ Actif</option>
+          <option value="termine">📦 Terminé</option>
+          <option value="futur">🔜 À venir</option>
+        </select>
+
+        <button class="btn btn-secondary btn-sm" onclick="refreshTableAdmin()">
+          🔄
+        </button>
+      </div>
+
+      <!-- Tableau -->
+      <div class="table-container-admin">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Défi</th>
+              <th>Type</th>
+              <th>Participants</th>
+              <th>Statut</th>
+              <th>Date fin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="challenges-tbody">
+            <tr class="table-row-animated">
+              <td>
+                <div class="challenge-cell">
+                  <span class="challenge-icon">♻️</span>
+                  <div>
+                    <div class="challenge-name">Défi Zéro Déchet</div>
+                    <div class="challenge-desc">30 jours sans déchet</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="badge badge-type">Collectif</span></td>
+              <td>142</td>
+              <td><span class="badge badge-active">Actif</span></td>
+              <td>30/04/2026</td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-icon" onclick="editChallengeAdmin(1)" title="Modifier">
+                    ✏️
+                  </button>
+                  <button class="btn-icon btn-danger" onclick="deleteChallengeAdmin(1)" title="Supprimer">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr class="table-row-animated">
+              <td>
+                <div class="challenge-cell">
+                  <span class="challenge-icon">💧</span>
+                  <div>
+                    <div class="challenge-name">Économie d'Eau</div>
+                    <div class="challenge-desc">21 jours d'économie</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="badge badge-type">Individuel</span></td>
+              <td>89</td>
+              <td><span class="badge badge-active">Actif</span></td>
+              <td>01/05/2026</td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-icon" onclick="editChallengeAdmin(2)" title="Modifier">
+                    ✏️
+                  </button>
+                  <button class="btn-icon btn-danger" onclick="deleteChallengeAdmin(2)" title="Supprimer">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr class="table-row-animated">
+              <td>
+                <div class="challenge-cell">
+                  <span class="challenge-icon">🥗</span>
+                  <div>
+                    <div class="challenge-name">Végan 30 Jours</div>
+                    <div class="challenge-desc">Alimentation végétale</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="badge badge-type">Collectif</span></td>
+              <td>234</td>
+              <td><span class="badge badge-completed">Terminé</span></td>
+              <td>31/03/2026</td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-icon" onclick="editChallengeAdmin(3)" title="Modifier">
+                    ✏️
+                  </button>
+                  <button class="btn-icon btn-danger" onclick="deleteChallengeAdmin(3)" title="Supprimer">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="table-pagination">
+        <div class="pagination-info">
+          Affichage de 1 à 3 sur 28 défis
+        </div>
+        <div class="pagination-controls">
+          <button class="btn btn-sm" disabled>← Précédent</button>
+          <button class="btn btn-sm">Suivant →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         TABLEAU DES PARTICIPANTS
+         ══════════════════════════════════════════════════════ -->
+    <div class="participants-section">
+      <div class="participants-header">
+        <h3>👥 Gestion des Participants</h3>
+        <div class="participants-stats">
+          <div class="participant-stat">
+            <div class="participant-stat-value">1,847</div>
+            <div class="participant-stat-label">Total</div>
+          </div>
+          <div class="participant-stat">
+            <div class="participant-stat-value">142</div>
+            <div class="participant-stat-label">Actifs</div>
+          </div>
+          <div class="participant-stat">
+            <div class="participant-stat-value">89%</div>
+            <div class="participant-stat-label">Engagement</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtres participants -->
+      <div class="participants-filters">
+        <input 
+          type="text" 
+          class="search-input-admin" 
+          id="search-participants" 
+          placeholder="🔍 Rechercher un participant..."
+          onkeyup="searchParticipants()">
+        
+        <select class="form-select" id="challenge-filter" onchange="filterParticipantsByChallenge()" style="background: rgba(232, 220, 196, 0.15); color: #E8DCC4; border: 2px solid rgba(232, 220, 196, 0.3);">
+          <option value="">Tous les défis</option>
+          <option value="1">Défi Zéro Déchet</option>
+          <option value="2">Économie d'Eau</option>
+          <option value="3">Végan 30 Jours</option>
+        </select>
+
+        <select class="form-select" id="progress-filter" onchange="filterParticipantsByProgress()" style="background: rgba(232, 220, 196, 0.15); color: #E8DCC4; border: 2px solid rgba(232, 220, 196, 0.3);">
+          <option value="">Toutes progressions</option>
+          <option value="low">0-30%</option>
+          <option value="medium">31-70%</option>
+          <option value="high">71-100%</option>
+        </select>
+
+        <button class="btn btn-secondary btn-sm" onclick="exportParticipants()">
+          📥 Exporter
+        </button>
+      </div>
+
+      <!-- Tableau participants -->
+      <div class="participants-table-container">
+        <table class="participants-table">
+          <thead>
+            <tr>
+              <th>Participant</th>
+              <th>Défi</th>
+              <th>Progression</th>
+              <th>Objectif</th>
+              <th>Date inscription</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="participants-tbody">
+            <tr class="table-row-animated">
+              <td>
+                <div class="participant-info">
+                  <div class="participant-avatar">SM</div>
+                  <div class="participant-details">
+                    <div class="participant-name">Sophie Martin</div>
+                    <div class="participant-email">sophie.martin@email.com</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.5rem;">♻️</span>
+                  <span>Défi Zéro Déchet</span>
+                </div>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="progress-bar-participant">
+                    <div class="progress-fill-participant high" style="width: 85%;"></div>
+                  </div>
+                  <span style="font-weight: 700;">85%</span>
+                </div>
+              </td>
+              <td>50%</td>
+              <td>01/04/2026</td>
+              <td><span class="badge badge-active">Actif</span></td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-icon" onclick="viewParticipant(1)" title="Voir détails">
+                    👁️
+                  </button>
+                  <button class="btn-icon btn-danger" onclick="removeParticipant(1)" title="Retirer">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr class="table-row-animated">
+              <td>
+                <div class="participant-info">
+                  <div class="participant-avatar">KB</div>
+                  <div class="participant-details">
+                    <div class="participant-name">Karim Benali</div>
+                    <div class="participant-email">karim.benali@email.com</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.5rem;">💧</span>
+                  <span>Économie d'Eau</span>
+                </div>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="progress-bar-participant">
+                    <div class="progress-fill-participant medium" style="width: 62%;"></div>
+                  </div>
+                  <span style="font-weight: 700;">62%</span>
+                </div>
+              </td>
+              <td>40%</td>
+              <td>05/04/2026</td>
+              <td><span class="badge badge-active">Actif</span></td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-icon" onclick="viewParticipant(2)" title="Voir détails">
+                    👁️
+                  </button>
+                  <button class="btn-icon btn-danger" onclick="removeParticipant(2)" title="Retirer">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr class="table-row-animated">
+              <td>
+                <div class="participant-info">
+                  <div class="participant-avatar">LD</div>
+                  <div class="participant-details">
+                    <div class="participant-name">Léa Dubois</div>
+                    <div class="participant-email">lea.dubois@email.com</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.5rem;">🥗</span>
+                  <span>Végan 30 Jours</span>
+                </div>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="progress-bar-participant">
+                    <div class="progress-fill-participant low" style="width: 28%;"></div>
+                  </div>
+                  <span style="font-weight: 700;">28%</span>
+                </div>
+              </td>
+              <td>60%</td>
+              <td>10/04/2026</td>
+              <td><span class="badge badge-active">Actif</span></td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-icon" onclick="viewParticipant(3)" title="Voir détails">
+                    👁️
+                  </button>
+                  <button class="btn-icon btn-danger" onclick="removeParticipant(3)" title="Retirer">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination participants -->
+      <div class="table-pagination">
+        <div class="pagination-info">
+          Affichage de 1 à 3 sur 1,847 participants
+        </div>
+        <div class="pagination-controls">
+          <button class="btn btn-sm" disabled>← Précédent</button>
+          <button class="btn btn-sm">Suivant →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<script>
+// ══════════════════════════════════════════════════════════
+// FONCTIONS JAVASCRIPT AVEC ANIMATIONS
+// ══════════════════════════════════════════════════════════
+
+// Réinitialiser le formulaire avec animation
+function resetForm() {
+  const form = document.getElementById('challenge-form');
+  const formPanel = document.querySelector('.form-panel');
+  
+  // Animation de shake
+  formPanel.style.animation = 'none';
+  setTimeout(() => {
+    formPanel.style.animation = 'fadeInUp 0.6s ease-out';
+  }, 10);
+  
+  form.reset();
+  document.getElementById('challenge-id').value = '';
+  document.getElementById('form-title').textContent = '➕ Nouveau Défi';
+  document.getElementById('form-submit-btn').textContent = '✅ Créer';
+  document.getElementById('description-count').textContent = '0/500';
+  
+  // Animation de succès
+  showNotification('Formulaire réinitialisé', 'info');
+}
+
+// Modifier un défi avec animation
+function editChallengeAdmin(id) {
+  const formPanel = document.querySelector('.form-panel');
+  
+  // Animation de highlight
+  formPanel.style.boxShadow = '0 0 30px rgba(168, 184, 160, 0.6)';
+  setTimeout(() => {
+    formPanel.style.boxShadow = '';
+  }, 1000);
+  
+  document.getElementById('form-title').textContent = '✏️ Modifier le Défi';
+  document.getElementById('form-submit-btn').textContent = '✅ Mettre à jour';
+  document.getElementById('challenge-id').value = id;
+  
+  // Remplir le formulaire avec animation
+  setTimeout(() => {
+    document.getElementById('challenge-titre').value = 'Défi Zéro Déchet';
+    document.getElementById('challenge-description').value = 'Réduisez vos déchets de 50% en 30 jours';
+    document.getElementById('challenge-type').value = 'collectif';
+    document.getElementById('challenge-objectif').value = 'dechets';
+    document.getElementById('challenge-valeur').value = 50;
+    document.getElementById('challenge-duree').value = 30;
+    document.getElementById('challenge-date-debut').value = '2026-04-01';
+    document.getElementById('challenge-date-fin').value = '2026-04-30';
+    document.getElementById('challenge-statut').value = 'actif';
+    document.getElementById('challenge-streak-icon').value = '♻️';
+    
+    // Animer les champs remplis
+    document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach((input, index) => {
+      setTimeout(() => {
+        input.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+          input.style.transform = 'scale(1)';
+        }, 200);
+      }, index * 50);
+    });
+  }, 300);
+  
+  // Scroll vers le formulaire avec animation smooth
+  formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  
+  showNotification('Mode édition activé', 'info');
+}
+
+// Supprimer un défi avec animation
+function deleteChallengeAdmin(id) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer ce défi ?')) {
+    const row = event.target.closest('tr');
+    
+    // Animation de suppression
+    row.style.transition = 'all 0.5s ease';
+    row.style.transform = 'translateX(-100%)';
+    row.style.opacity = '0';
+    
+    setTimeout(() => {
+      row.remove();
+      showNotification('Défi supprimé avec succès', 'success');
+    }, 500);
+  }
+}
+
+// Soumettre le formulaire avec animation
+function handleChallengeSubmit(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const data = Object.fromEntries(formData);
+  
+  const submitBtn = document.getElementById('form-submit-btn');
+  const originalText = submitBtn.textContent;
+  
+  // Animation du bouton
+  submitBtn.textContent = '⏳ Enregistrement...';
+  submitBtn.disabled = true;
+  submitBtn.style.transform = 'scale(0.95)';
+  
+  // Simuler l'enregistrement
+  setTimeout(() => {
+    submitBtn.style.transform = 'scale(1)';
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+    
+    if (data.id) {
+      showNotification('Défi mis à jour avec succès', 'success');
+    } else {
+      showNotification('Défi créé avec succès', 'success');
+      
+      // Ajouter une nouvelle ligne au tableau avec animation
+      addNewRowToTable(data);
+    }
+    
+    resetForm();
+  }, 1500);
+}
+
+// Ajouter une nouvelle ligne au tableau avec animation
+function addNewRowToTable(data) {
+  const tbody = document.getElementById('challenges-tbody');
+  const newRow = document.createElement('tr');
+  newRow.className = 'table-row-animated';
+  newRow.style.animation = 'slideInLeft 0.5s ease-out';
+  
+  newRow.innerHTML = `
+    <td>
+      <div class="challenge-cell">
+        <span class="challenge-icon">${data.streak_icon || '🎯'}</span>
+        <div>
+          <div class="challenge-name">${data.titre}</div>
+          <div class="challenge-desc">${data.description.substring(0, 30)}...</div>
+        </div>
+      </div>
+    </td>
+    <td><span class="badge badge-type">${data.type}</span></td>
+    <td>0</td>
+    <td><span class="badge badge-active">${data.statut}</span></td>
+    <td>${data.date_fin}</td>
+    <td>
+      <div class="action-btns">
+        <button class="btn-icon" onclick="editChallengeAdmin(${Date.now()})" title="Modifier">✏️</button>
+        <button class="btn-icon btn-danger" onclick="deleteChallengeAdmin(${Date.now()})" title="Supprimer">🗑️</button>
+      </div>
+    </td>
+  `;
+  
+  tbody.insertBefore(newRow, tbody.firstChild);
+}
+
+// Rechercher avec animation
+function searchChallengesAdmin() {
+  const search = document.getElementById('search-input-admin').value.toLowerCase();
+  const rows = document.querySelectorAll('#challenges-tbody tr');
+  
+  rows.forEach((row, index) => {
+    const text = row.textContent.toLowerCase();
+    if (text.includes(search)) {
+      row.style.display = '';
+      row.style.animation = `slideInLeft 0.3s ease-out ${index * 0.05}s`;
+    } else {
+      row.style.animation = 'none';
+      row.style.opacity = '0';
+      setTimeout(() => {
+        row.style.display = 'none';
+      }, 300);
+    }
+  });
+}
+
+// Filtrer avec animation
+function filterChallengesAdmin() {
+  const status = document.getElementById('status-filter-admin').value;
+  const rows = document.querySelectorAll('#challenges-tbody tr');
+  
+  rows.forEach((row, index) => {
+    const badge = row.querySelector('.badge-active, .badge-completed');
+    if (!status || (badge && badge.textContent.toLowerCase().includes(status))) {
+      row.style.display = '';
+      row.style.animation = `fadeInUp 0.3s ease-out ${index * 0.05}s`;
+    } else {
+      row.style.opacity = '0';
+      setTimeout(() => {
+        row.style.display = 'none';
+      }, 300);
+    }
+  });
+}
+
+// Actualiser avec animation
+function refreshTableAdmin() {
+  const tablePanel = document.querySelector('.table-panel');
+  tablePanel.style.animation = 'pulse 0.5s ease';
+  
+  setTimeout(() => {
+    tablePanel.style.animation = '';
+    showNotification('Tableau actualisé', 'success');
+  }, 500);
+}
+
+// Compteur de caractères avec animation
+function updateCharCountAdmin(textarea, counterId, max) {
+  const count = textarea.value.length;
+  const counter = document.getElementById(counterId);
+  counter.textContent = `${count}/${max}`;
+  
+  // Animation de couleur selon le nombre de caractères
+  if (count > max * 0.9) {
+    counter.style.color = '#e74c3c';
+    counter.style.fontWeight = '800';
+  } else if (count > max * 0.7) {
+    counter.style.color = '#f39c12';
+    counter.style.fontWeight = '700';
+  } else {
+    counter.style.color = '#5a7a5f';
+    counter.style.fontWeight = '600';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// FONCTIONS POUR LA GESTION DES PARTICIPANTS
+// ══════════════════════════════════════════════════════════
+
+// Rechercher des participants
+function searchParticipants() {
+  const search = document.getElementById('search-participants').value.toLowerCase();
+  const rows = document.querySelectorAll('#participants-tbody tr');
+  
+  rows.forEach((row, index) => {
+    const text = row.textContent.toLowerCase();
+    if (text.includes(search)) {
+      row.style.display = '';
+      row.style.animation = `slideInLeft 0.3s ease-out ${index * 0.05}s`;
+    } else {
+      row.style.opacity = '0';
+      setTimeout(() => {
+        row.style.display = 'none';
+      }, 300);
+    }
+  });
+}
+
+// Filtrer par défi
+function filterParticipantsByChallenge() {
+  const challengeId = document.getElementById('challenge-filter').value;
+  console.log('Filtre par défi:', challengeId);
+  showNotification('Filtre appliqué', 'info');
+}
+
+// Filtrer par progression
+function filterParticipantsByProgress() {
+  const progress = document.getElementById('progress-filter').value;
+  console.log('Filtre par progression:', progress);
+  showNotification('Filtre appliqué', 'info');
+}
+
+// Voir détails d'un participant
+function viewParticipant(id) {
+  showNotification(`Affichage du participant ${id}`, 'info');
+  console.log('Voir participant:', id);
+}
+
+// Retirer un participant
+function removeParticipant(id) {
+  if (confirm('Êtes-vous sûr de vouloir retirer ce participant du défi ?')) {
+    const row = event.target.closest('tr');
+    
+    // Animation de suppression
+    row.style.transition = 'all 0.5s ease';
+    row.style.transform = 'translateX(-100%)';
+    row.style.opacity = '0';
+    
+    setTimeout(() => {
+      row.remove();
+      showNotification('Participant retiré avec succès', 'success');
+    }, 500);
+  }
+}
+
+// Exporter les participants
+function exportParticipants() {
+  showNotification('Export en cours...', 'info');
+  setTimeout(() => {
+    showNotification('Participants exportés avec succès', 'success');
+  }, 1500);
+}
+
+// Notification système avec animation
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: -100px;
+    right: 20px;
+    padding: 16px 24px;
+    background: ${type === 'success' ? 'linear-gradient(135deg, #27ae60, #2ecc71)' : 
+                  type === 'error' ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : 
+                  'linear-gradient(135deg, #3498db, #2980b9)'};
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 10000;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform: scale(0.5);
+    opacity: 0;
+  `;
+  notification.textContent = message;
+  
+  document.body.appendChild(notification);
+  
+  // Animation d'entrée
+  setTimeout(() => {
+    notification.style.top = '20px';
+    notification.style.transform = 'scale(1)';
+    notification.style.opacity = '1';
+  }, 10);
+  
+  // Animation de sortie
+  setTimeout(() => {
+    notification.style.top = '-100px';
+    notification.style.transform = 'scale(0.5)';
+    notification.style.opacity = '0';
+    setTimeout(() => {
+      notification.remove();
+    }, 500);
+  }, 3000);
+}
+
+// Animation au chargement de la page
+document.addEventListener('DOMContentLoaded', () => {
+  // Animer les éléments au chargement
+  const formInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
+  formInputs.forEach((input, index) => {
+    input.style.opacity = '0';
+    input.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      input.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+      input.style.opacity = '1';
+      input.style.transform = 'translateY(0)';
+    }, index * 30);
+  });
+  
+  // Animer les statistiques
+  const stats = document.querySelectorAll('.stat-mini, .participant-stat');
+  stats.forEach((stat, index) => {
+    stat.style.opacity = '0';
+    stat.style.transform = 'scale(0.5)';
+    setTimeout(() => {
+      stat.style.transition = 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+      stat.style.opacity = '1';
+      stat.style.transform = 'scale(1)';
+    }, 200 + (index * 100));
+  });
+  
+  // Animer les lignes du tableau
+  const tableRows = document.querySelectorAll('.table-row-animated');
+  tableRows.forEach((row, index) => {
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(-50px)';
+    setTimeout(() => {
+      row.style.transition = 'all 0.5s ease-out';
+      row.style.opacity = '1';
+      row.style.transform = 'translateX(0)';
+    }, 400 + (index * 100));
+  });
+  
+  // Animation des badges
+  const badges = document.querySelectorAll('.badge');
+  badges.forEach((badge, index) => {
+    badge.style.opacity = '0';
+    badge.style.transform = 'scale(0)';
+    setTimeout(() => {
+      badge.style.transition = 'all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+      badge.style.opacity = '1';
+      badge.style.transform = 'scale(1)';
+    }, 600 + (index * 50));
+  });
+  
+  // Animation des barres de progression
+  const progressBars = document.querySelectorAll('.progress-fill-participant');
+  progressBars.forEach((bar, index) => {
+    const targetWidth = bar.style.width;
+    bar.style.width = '0%';
+    setTimeout(() => {
+      bar.style.width = targetWidth;
+    }, 800 + (index * 150));
+  });
+  
+  console.log('✨ Animations initialisées');
+});
+</script>

@@ -1683,55 +1683,22 @@
 </style>
 
 <!-- Chargement du script principal du module -->
-<script src="js/challenges.js"></script>
+<script src="js/challenges-complete.js"></script>
 
 <script>
-(function() {
-  // Redéfinir loadChallenges / initChallenges pour utiliser le vrai backend
-  function fetchChallenges() {
-    const grid    = document.getElementById('challenges-grid');
-    const loading = document.getElementById('challenges-loading');
-    const empty   = document.getElementById('challenges-empty');
-    if (!grid || !loading) return;
-
-    loading.style.display = 'flex';
-    if (grid)  grid.style.display  = 'none';
-    if (empty) empty.style.display = 'none';
-
-    fetch('../../controller/challenge.controller.php?action=list')
-      .then(r => r.json())
-      .then(data => {
-        loading.style.display = 'none';
-        if (!Array.isArray(data) || data.length === 0) {
-          if (empty) empty.style.display = 'block';
-        } else {
-          // Si le script challenges.js expose renderChallenges, l'utiliser
-          if (typeof window.renderChallenges === 'function') {
-            window.renderChallenges(data);
-          } else {
-            grid.style.display = 'grid';
-            grid.innerHTML = data.map(c => `
-              <div class="challenge-card">
-                <div class="challenge-content">
-                  <h3 class="challenge-title">${c.titre || c.nom || c.name || 'Défi #' + c.id}</h3>
-                  <p class="challenge-description">${c.description || ''}</p>
-                  <div class="challenge-stats">
-                    ${c.date_debut ? `<div class="challenge-stat"><span>📅</span><span>${c.date_debut}</span></div>` : ''}
-                    ${c.date_fin   ? `<div class="challenge-stat"><span>🏁</span><span>${c.date_fin}</span></div>` : ''}
-                  </div>
-                </div>
-              </div>
-            `).join('');
-          }
-        }
-      })
-      .catch(() => {
-        loading.style.display = 'none';
-        if (empty) empty.style.display = 'block';
-      });
+// Initialisation du module quand il est chargé
+document.addEventListener('moduleLoaded', (e) => {
+  if (e.detail.moduleName === 'challenges') {
+    if (typeof loadChallenges === 'function') {
+      loadChallenges();
+    }
   }
+});
 
-  window.loadChallenges  = fetchChallenges;
-  window.initChallenges  = fetchChallenges;
-})();
+// Au cas où le script est chargé après
+if (document.getElementById('challenges')) {
+  if (typeof loadChallenges === 'function') {
+    loadChallenges();
+  }
+}
 </script>

@@ -218,14 +218,45 @@ function loadChallenges() {
   grid.style.display = 'none';
   empty.style.display = 'none';
   
-  setTimeout(() => {
-    allChallenges = sampleChallenges;
-    allParticipants = sampleParticipants;
-    filterChallenges();
-    renderRanking();
-    renderMyRank();
-    loading.style.display = 'none';
-  }, 800);
+  // Fetch data from backend
+  fetch('../backend/challenges/listChallenges.php', {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (!Array.isArray(data)) {
+        console.error('Données reçues non valides:', data);
+        allChallenges = [];
+      } else {
+        // Transformer les données pour correspondre au format attendu par le frontend si nécessaire
+        allChallenges = data.map(c => ({
+          ...c,
+          id: parseInt(c.id),
+          valeur_cible: parseInt(c.valeur_cible),
+          participants_count: parseInt(c.participants_count || 0),
+          progression: parseInt(c.progression || 0),
+          steaker: c.streak_icon || '🏆',
+          steaker_nom: c.objectif || 'Défi' // Utiliser l'objectif comme nom par défaut
+        }));
+      }
+      
+      allParticipants = sampleParticipants; // Garder les participants fictifs pour l'instant
+      
+      filterChallenges();
+      renderRanking();
+      renderMyRank();
+      
+      loading.style.display = 'none';
+    })
+    .catch(err => {
+      console.error('Erreur lors du chargement des défis:', err);
+      // Fallback sur les données d'exemple en cas d'erreur
+      allChallenges = sampleChallenges;
+      filterChallenges();
+      loading.style.display = 'none';
+    });
 }
 
 function filterChallenges() {

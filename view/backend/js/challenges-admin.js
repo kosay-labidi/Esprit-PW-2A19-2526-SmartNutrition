@@ -50,6 +50,7 @@ let adminParticipants = [
 document.addEventListener('adminModuleLoaded', (e) => {
   if (e.detail.moduleName === 'challenges') {
     console.log('📦 Module Challenges détecté, chargement des données...');
+    initChallengeForm();
     loadAdminChallenges();
     renderParticipantsTable();
   }
@@ -57,12 +58,78 @@ document.addEventListener('adminModuleLoaded', (e) => {
 
 // Au cas où le script est chargé après le module
 if (document.getElementById('challenges')) {
+  initChallengeForm();
   loadAdminChallenges();
+}
+
+function initChallengeForm() {
+  const form = document.getElementById('challenge-form');
+  if (form) {
+    form.onsubmit = function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const isUpdate = formData.get('id') !== '';
+      const url = isUpdate ? 'challenges/updateChallenge.php?id=' + formData.get('id') : 'challenges/addChallenge.php';
+      
+      const submitBtn = document.getElementById('form-submit-btn');
+      const originalText = submitBtn.innerText;
+      submitBtn.disabled = true;
+      submitBtn.innerText = '⌛ Envoi...';
+
+      fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => {
+        // Si c'est un ajout/modif classique, il redirige. On intercepte ça.
+        if (response.redirected) {
+          return { success: true };
+        }
+        return response.text().then(text => {
+          try {
+            return JSON.parse(text);
+          } catch(e) {
+            // Si ce n'est pas du JSON, on considère que c'est bon si le statut est OK
+            return { success: response.ok };
+          }
+        });
+      })
+      .then(result => {
+        if (result.success || result === true) {
+          console.log('✅ Succès !');
+          resetForm();
+          loadAdminChallenges(); // Recharger le tableau
+          
+          // Notification visuelle (optionnelle)
+          const msg = isUpdate ? 'Défi modifié avec succès !' : 'Défi créé avec succès !';
+          alert(msg);
+        } else {
+          alert('❌ Erreur lors de l\'enregistrement : ' + (result.message || 'Erreur inconnue'));
+        }
+      })
+      .catch(err => {
+        console.error('Erreur AJAX:', err);
+        alert('❌ Erreur de connexion au serveur');
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalText;
+      });
+    };
+  }
 }
 
 // ── Chargement des données (AFFICHER) ────────────────────────
 function loadAdminChallenges() {
-  fetch('challenges/listChallenges.php')
+  fetch('challenges/listChallenges.php', {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
     .then(response => response.json())
     .then(data => {
       adminChallenges = data;
@@ -71,7 +138,6 @@ function loadAdminChallenges() {
     })
     .catch(err => {
       console.error('Erreur lors du chargement des défis admin:', err);
-      renderChallengesTable();
     });
 }
 
@@ -129,7 +195,30 @@ function editChallenge(id) {
 
 function deleteChallenge(id) {
   if (confirm('⚠️ Voulez-vous vraiment supprimer ce défi ? Cette action est irréversible.')) {
-    window.location.href = `challenges/deleteChallenge.php?id=${id}`;
+    fetch(`challenges/deleteChallenge.php?id=${id}`, {
+      method: 'GET',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.redirected || response.ok) {
+        return { success: true };
+      }
+      return response.json();
+    })
+    .then(result => {
+      if (result.success) {
+        console.log('✅ Défi supprimé');
+        loadAdminChallenges(); // Recharger le tableau
+      } else {
+        alert('❌ Erreur : ' + (result.message || 'Impossible de supprimer'));
+      }
+    })
+    .catch(err => {
+      console.error('Erreur suppression:', err);
+      alert('❌ Erreur de connexion');
+    });
   }
 }
 
@@ -264,14 +353,14 @@ function refreshTableAdmin() {
 }
 
 function updateDashboardStats() {
-  const statsDefis = document.querySelector('.quick-stats-mini .stat-mini:nth-child(1) .stat-mini-value');
-  const statsParticipants = document.querySelector('.quick-stats-mini .stat-mini:nth-child(2) .stat-mini-value');
+  const statChallenges = document.querySelector('.stat-mini:nth-child(1) .stat-mini-value');
+  const statCompletion = document.querySelector('.stat-mini:nth-child(3) .stat-mini-value');
   
-  if (statsDefis) statsDefis.innerText = adminChallenges.length;
-  
-  if (statsParticipants) {
-    const totalParticipants = adminChallenges.reduce((sum, c) => sum + parseInt(c.participants_count || 0), 0);
-    statsParticipants.innerText = totalParticipants.toLocaleString();
+  if (statChallenges) statChallenges.innerText = adminChallenges.length;
+  if (statCompletion) {
+    const termines = adminChallenges.filter(c => c.statut === 'termine').length;
+    const rate = adminChallenges.length > 0 ? Math.round((termines / adminChallenges.length) * 100) : 0;
+    statCompletion.innerText = rate + '%';
   }
 }
 

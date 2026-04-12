@@ -379,29 +379,24 @@ document.addEventListener('adminModuleLoaded', (e) => {
 
 // Fonctions utilitaires admin
 function refreshUsers() {
-  console.log('🔄 Actualisation des utilisateurs...');
-  showToast('Utilisateurs actualisés', 'success');
+  showToast('Actualisé', 'Liste des utilisateurs mise à jour', 'success');
 }
 
 function exportData(type) {
-  console.log(`📥 Export des données: ${type}`);
-  showToast(`Export ${type} en cours...`, 'info');
+  showToast('Export', `Export des données ${type} en cours...`, 'info');
 }
 
 function addUser() {
-  console.log('➕ Ajout d\'un utilisateur');
-  showToast('Fonctionnalité à implémenter', 'info');
+  window.showAddUserModal();
 }
 
 function editUser(id) {
-  console.log(`✏️ Modification utilisateur ${id}`);
-  showToast(`Modification utilisateur ${id}`, 'info');
+  showToast('Modification', `Utilisateur ${id} en cours de modification`, 'info');
 }
 
 function deleteUser(id) {
   if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur?')) {
-    console.log(`🗑️ Suppression utilisateur ${id}`);
-    showToast(`Utilisateur ${id} supprimé`, 'success');
+    showToast('Supprimé', `Utilisateur ${id} supprimé avec succès`, 'success');
   }
 }
 

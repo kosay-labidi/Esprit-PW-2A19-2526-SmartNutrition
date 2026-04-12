@@ -14,12 +14,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mdp = $_POST['mdp'] ?? '';
     $role = trim($_POST['role'] ?? 'utilisateur');
 
+<<<<<<< Updated upstream
     if ($nom === '') {
         $errors[] = 'Le nom est requis';
     }
     if ($prenom === '') {
         $errors[] = 'Le prénom est requis';
     }
+=======
+   if ($nom === '') {
+    $errors[] = 'Le nom est requis';
+} elseif (preg_match('/\d/', $nom)) {
+    $errors[] = 'Le nom ne doit pas contenir de chiffres';
+}
+
+if ($prenom === '') {
+    $errors[] = 'Le prénom est requis';
+} elseif (preg_match('/\d/', $prenom)) {
+    $errors[] = 'Le prénom ne doit pas contenir de chiffres';
+}
+>>>>>>> Stashed changes
     if ($email === '') {
         $errors[] = "L'email est requis";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {

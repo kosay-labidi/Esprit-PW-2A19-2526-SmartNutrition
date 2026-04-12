@@ -175,23 +175,191 @@ window.logout = function() {
 };
 
 window.showToast = function(title, message, type = 'info') {
+  const colors = { success: '#2ecc71', error: '#e74c3c', info: '#3498db', warning: '#f39c12' };
+  const icons  = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  const color  = colors[type] || colors.info;
+  const icon   = icons[type]  || icons.info;
+
   const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  toast.style.cssText = `
+    position:fixed;top:20px;right:20px;z-index:99999;
+    background:#1e1e2e;border:1px solid ${color};border-left:4px solid ${color};
+    border-radius:10px;padding:14px 18px;min-width:280px;max-width:380px;
+    display:flex;align-items:flex-start;gap:12px;
+    box-shadow:0 8px 32px rgba(0,0,0,.4);
+    opacity:0;transform:translateX(120%);transition:all .35s ease;
+    color:#f0f0f0;font-family:inherit;font-size:14px;
+  `;
   toast.innerHTML = `
-    <div class="toast-icon">${icons[type] || 'ℹ️'}</div>
-    <div class="toast-content">
-      <div class="toast-title">${title}</div>
-      <div class="toast-message">${message}</div>
+    <span style="font-size:1.2rem;margin-top:2px;flex-shrink:0">${icon}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:.95rem;margin-bottom:4px">${title}</div>
+      <div style="font-size:.85rem;opacity:.8;line-height:1.4">${message}</div>
     </div>
-    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:1.2rem;padding:0;line-height:1;flex-shrink:0">×</button>
   `;
   document.body.appendChild(toast);
-  setTimeout(() => toast.classList.add('show'), 100);
+  setTimeout(() => { toast.style.opacity = '1'; toast.style.transform = 'translateX(0)'; }, 50);
   setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(120%)';
+    setTimeout(() => toast.remove(), 350);
   }, 4000);
+};
+
+// Modale Ajouter Utilisateur
+window.showAddUserModal = function() {
+  // Supprimer une ancienne modale si elle existe
+  document.getElementById('modal-add-user')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-add-user';
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:99998;
+    background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .3s ease;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:#1e1e2e;border:1px solid rgba(91,62,150,.5);
+      border-radius:18px;padding:36px;width:100%;max-width:480px;
+      box-shadow:0 24px 64px rgba(0,0,0,.6);
+      transform:translateY(20px);transition:transform .3s ease;
+      color:#f0f0f0;font-family:inherit;
+    " id="modal-add-user-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <h2 style="margin:0;font-size:1.3rem;font-weight:700">➕ Ajouter un utilisateur</h2>
+        <button onclick="document.getElementById('modal-add-user').remove()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:1.4rem;line-height:1">×</button>
+      </div>
+      <div id="modal-add-user-errors" style="display:none;background:rgba(231,76,60,.1);border:1px solid #e74c3c;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:.85rem;color:#e74c3c"></div>
+      <div style="display:grid;gap:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Nom </label>
+            <input id="au-nom" type="text" placeholder="Farhani" style="${inputStyle()}">
+          </div>
+          <div>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Prénom </label>
+            <input id="au-prenom" type="text" placeholder="Ahmed" style="${inputStyle()}">
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Email </label>
+          <input id="au-email" type="email" placeholder="Farhani.Ahmed@email.com" style="${inputStyle()}">
+        </div>
+        <div>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Mot de passe  (min. 6 caractères)</label>
+          <input id="au-mdp" type="password" placeholder="••••••••" style="${inputStyle()}">
+          <div>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Confirmer le mot de passe </label>
+          <input id="au-mdp2" type="password" placeholder="••••••••" style="${inputStyle()}">
+        </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Rôle</label>
+          <select id="au-role" style="${inputStyle()}">
+            <option value="utilisateur">Utilisateur</option>
+            <option value="medecin">Médecin</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:24px;justify-content:flex-end">
+        <button onclick="document.getElementById('modal-add-user').remove()" style="
+          padding:10px 22px;border-radius:50px;border:1px solid rgba(255,255,255,.2);
+          background:transparent;color:#f0f0f0;cursor:pointer;font-size:.9rem;
+        ">Annuler</button>
+        <button onclick="submitAddUser()" style="
+          padding:10px 26px;border-radius:50px;border:none;
+          background:linear-gradient(135deg,#5B3E96,#3A86C4);
+          color:#fff;cursor:pointer;font-size:.9rem;font-weight:600;
+          box-shadow:0 4px 16px rgba(91,62,150,.4);
+        ">Ajouter</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  setTimeout(() => {
+    modal.style.opacity = '1';
+    document.getElementById('modal-add-user-box').style.transform = 'translateY(0)';
+  }, 10);
+
+  // Fermer en cliquant sur le fond
+  modal.addEventListener('click', e => {
+    if (e.target === modal) modal.remove();
+  });
+};
+
+function inputStyle() {
+  return `
+    width:100%;box-sizing:border-box;padding:10px 14px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);
+    border-radius:8px;color:#f0f0f0;font-size:.9rem;font-family:inherit;
+    outline:none;transition:border-color .2s;
+  `;
+}
+
+window.submitAddUser = async function() {
+  const nom    = document.getElementById('au-nom')?.value.trim();
+  const prenom = document.getElementById('au-prenom')?.value.trim();
+  const email  = document.getElementById('au-email')?.value.trim();
+  const mdp    = document.getElementById('au-mdp')?.value;
+  const mdp2 = document.getElementById('au-mdp2')?.value;
+  const role   = document.getElementById('au-role')?.value;
+  const errDiv = document.getElementById('modal-add-user-errors');
+  const errors = [];
+
+if (!nom || !prenom || !email || !mdp) {
+  errors.push('Tous les champs sont requis');
+}
+
+if (errors.length === 0) {
+  if (/\d/.test(nom) || /\d/.test(prenom))
+    errors.push('Le nom et le prénom ne doivent pas contenir de chiffres');
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    errors.push('Email invalide');
+
+  if (mdp.length < 6)
+    errors.push('Le mot de passe doit contenir au moins 6 caractères');
+  if (mdp !== mdp2)
+  errors.push('Les mots de passe ne correspondent pas');
+}
+
+  if (errors.length > 0) {
+    errDiv.style.display = 'block';
+    errDiv.innerHTML = errors.map(e => `• ${e}`).join('<br>');
+    return;
+  }
+
+  errDiv.style.display = 'none';
+
+  // Envoi vers addUser.php via fetch
+  const formData = new FormData();
+  formData.append('nom', nom);
+  formData.append('prenom', prenom);
+  formData.append('email', email);
+  formData.append('mdp', mdp);
+  formData.append('role', role);
+
+  try {
+    const response = await fetch('users/addUser.php', { method: 'POST', body: formData });
+
+    const text = await response.text();
+
+    if (response.ok) {
+  document.getElementById('modal-add-user')?.remove();
+  showToast('Succès', 'Utilisateur ajouté avec succès !', 'success');
+} else {
+  errDiv.style.display = 'block';
+  errDiv.innerHTML = '• Email déjà utilisé ou erreur serveur';
+}
+  } catch (err) {
+    errDiv.style.display = 'block';
+    errDiv.innerHTML = '• Erreur réseau, veuillez réessayer';
+  }
 };
 
 // Gestion des modales

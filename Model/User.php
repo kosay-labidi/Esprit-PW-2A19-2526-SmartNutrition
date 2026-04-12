@@ -11,6 +11,7 @@ class User
     private string $date_creation = '';
     private string $date_mise_a_jour = '';
 
+<<<<<<< Updated upstream
     public function __construct(
         ?int $id_utilisateur = null,
         string $nom = '',
@@ -21,6 +22,9 @@ class User
         string $date_creation = '',
         string $date_mise_a_jour = ''
     ) {
+=======
+    public function __construct(?int $id_utilisateur = null,string $nom = '',string $prenom = '',string $email = '',string $mdp = '',string $role = 'utilisateur',string $date_creation = '',string $date_mise_a_jour = '') {
+>>>>>>> Stashed changes
         $this->id_utilisateur = $id_utilisateur;
         $this->nom = $nom;
         $this->prenom = $prenom;

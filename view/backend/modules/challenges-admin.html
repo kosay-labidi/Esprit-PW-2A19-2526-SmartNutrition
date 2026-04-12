@@ -26,7 +26,7 @@
         </button>
       </div>
 
-      <form id="challenge-form" onsubmit="handleChallengeSubmit(event)">
+      <form id="challenge-form" action="challenges/addChallenge.php" method="POST">
         <input type="hidden" id="challenge-id" name="id">
         
         <!-- Ligne 1: Titre + Description -->
@@ -237,87 +237,13 @@
             </tr>
           </thead>
           <tbody id="challenges-tbody">
-            <tr class="table-row-animated">
-              <td>
-                <div class="challenge-cell">
-                  <span class="challenge-icon">♻️</span>
-                  <div>
-                    <div class="challenge-name">Défi Zéro Déchet</div>
-                    <div class="challenge-desc">30 jours sans déchet</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="badge badge-type">Collectif</span></td>
-              <td>142</td>
-              <td><span class="badge badge-active">Actif</span></td>
-              <td>30/04/2026</td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-icon" onclick="editChallengeAdmin(1)" title="Modifier">
-                    ✏️
-                  </button>
-                  <button class="btn-icon btn-danger" onclick="deleteChallengeAdmin(1)" title="Supprimer">
-                    🗑️
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr class="table-row-animated">
-              <td>
-                <div class="challenge-cell">
-                  <span class="challenge-icon">💧</span>
-                  <div>
-                    <div class="challenge-name">Économie d'Eau</div>
-                    <div class="challenge-desc">21 jours d'économie</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="badge badge-type">Individuel</span></td>
-              <td>89</td>
-              <td><span class="badge badge-active">Actif</span></td>
-              <td>01/05/2026</td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-icon" onclick="editChallengeAdmin(2)" title="Modifier">
-                    ✏️
-                  </button>
-                  <button class="btn-icon btn-danger" onclick="deleteChallengeAdmin(2)" title="Supprimer">
-                    🗑️
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr class="table-row-animated">
-              <td>
-                <div class="challenge-cell">
-                  <span class="challenge-icon">🥗</span>
-                  <div>
-                    <div class="challenge-name">Végan 30 Jours</div>
-                    <div class="challenge-desc">Alimentation végétale</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="badge badge-type">Collectif</span></td>
-              <td>234</td>
-              <td><span class="badge badge-completed">Terminé</span></td>
-              <td>31/03/2026</td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-icon" onclick="editChallengeAdmin(3)" title="Modifier">
-                    ✏️
-                  </button>
-                  <button class="btn-icon btn-danger" onclick="deleteChallengeAdmin(3)" title="Supprimer">
-                    🗑️
-                  </button>
-                </div>
-              </td>
-            </tr>
+            <!-- Les défis chargés depuis la base de données apparaîtront ici -->
           </tbody>
         </table>
       </div>
 
       <!-- Pagination -->
-      <div class="table-pagination">
+      <div class="table-pagination" style="display: none;">
         <div class="pagination-info">
           Affichage de 1 à 3 sur 28 défis
         </div>
@@ -384,11 +310,10 @@
           <thead>
             <tr>
               <th>Participant</th>
-              <th>Défi</th>
+              <th>Défi rejoint</th>
               <th>Progression</th>
-              <th>Objectif</th>
-              <th>Date inscription</th>
               <th>Statut</th>
+              <th>Inscription</th>
               <th>Actions</th>
             </tr>
           </thead>

@@ -339,3 +339,37 @@
   color: #e74c3c;
 }
 </style>
+
+<script>
+(function() {
+  // Redéfinir loadEvents pour utiliser le vrai backend au lieu de sampleEvents
+  window.loadEvents = function() {
+    const eventsGrid    = document.getElementById('events-grid');
+    const eventsLoading = document.getElementById('events-loading');
+    const eventsEmpty   = document.getElementById('events-empty');
+    if (!eventsGrid || !eventsLoading || !eventsEmpty) return;
+
+    eventsLoading.style.display = 'block';
+    eventsGrid.style.display    = 'none';
+    eventsEmpty.style.display   = 'none';
+
+    fetch('../../controller/event.controller.php?action=list')
+      .then(r => r.json())
+      .then(data => {
+        eventsLoading.style.display = 'none';
+        if (!Array.isArray(data) || data.length === 0) {
+          eventsEmpty.style.display = 'block';
+        } else {
+          window.allEvents = data;
+          if (typeof filterEvents === 'function') {
+            filterEvents();
+          }
+        }
+      })
+      .catch(() => {
+        eventsLoading.style.display = 'none';
+        eventsEmpty.style.display   = 'block';
+      });
+  };
+})();
+</script>

@@ -4,72 +4,7 @@
 // ═══════════════════════════════════════════════════════════
 // DONNÉES
 // ═══════════════════════════════════════════════════════════
-const sampleChallenges = [
-  {
-    id: 1,
-    titre: 'Défi Zéro Déchet',
-    description: 'Réduisez vos déchets alimentaires de 50% en 30 jours',
-    type: 'collectif',
-    objectif: 'dechets',
-    valeur_cible: 50,
-    date_debut: '2026-04-01',
-    date_fin: '2026-04-30',
-    statut: 'actif',
-    participants_count: 142,
-    image: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800',
-    streak_current: 12,
-    streak_best: 15,
-    streak_icon: '♻️'
-  },
-  {
-    id: 2,
-    titre: "Économie d'Eau",
-    description: "Réduisez votre consommation d'eau de 30% pendant 21 jours",
-    type: 'individuel',
-    objectif: 'eau',
-    valeur_cible: 30,
-    date_debut: '2026-04-10',
-    date_fin: '2026-05-01',
-    statut: 'actif',
-    participants_count: 89,
-    image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=800',
-    streak_current: 8,
-    streak_best: 10,
-    streak_icon: '💧'
-  },
-  {
-    id: 3,
-    titre: 'Végan 30 Jours',
-    description: 'Adoptez une alimentation 100% végétale pendant un mois',
-    type: 'collectif',
-    objectif: 'repas',
-    valeur_cible: 90,
-    date_debut: '2026-03-01',
-    date_fin: '2026-03-31',
-    statut: 'termine',
-    participants_count: 234,
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
-    streak_current: 0,
-    streak_best: 30,
-    streak_icon: '🥗'
-  },
-  {
-    id: 4,
-    titre: 'Local Food Challenge',
-    description: 'Consommez uniquement des produits locaux (rayon 50km)',
-    type: 'individuel',
-    objectif: 'co2',
-    valeur_cible: 40,
-    date_debut: '2026-05-01',
-    date_fin: '2026-05-31',
-    statut: 'futur',
-    participants_count: 0,
-    image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800',
-    streak_current: 0,
-    streak_best: 0,
-    streak_icon: '🌾'
-  }
-];
+const sampleChallenges = [];
 
 const sampleRankings = {
   global: [
@@ -144,40 +79,49 @@ function initChallenges() {
 
   // ── Rendu des cartes ──────────────────────────────────────
   function renderChallenges(list) {
+    if (!list || list.length === 0) {
+      grid.innerHTML = '<div class="no-challenges">Aucun défi trouvé</div>';
+      return;
+    }
     grid.innerHTML = list.map(c => {
-      const level = c.participants_count > 100 ? 'double' : 'bronze';
-      const streakDisplay = c.streak_current > 0 
+      // Si c'est un objet de la DB, adapter les clés si nécessaire
+      const titre = c.titre || c.nom;
+      const level = (c.participants_count || 0) > 100 ? 'double' : 'bronze';
+      const streakDisplay = (c.streak_current || 0) > 0 
         ? `<div class="challenge-streak">
-             <div class="streak-icon-badge">${c.streak_icon}</div>
+             <div class="streak-icon-badge">${c.streak_icon || '🏆'}</div>
              <div class="streak-info">
                <div class="streak-current">Série actuelle: ${c.streak_current} jours</div>
-               <div class="streak-best">Meilleure série: ${c.streak_best} jours</div>
+               <div class="streak-best">Meilleure série: ${c.streak_best || 0} jours</div>
              </div>
            </div>`
-        : c.streak_best > 0
+        : (c.streak_best || 0) > 0
         ? `<div class="challenge-streak">
-             <div class="streak-icon-badge">${c.streak_icon}</div>
+             <div class="streak-icon-badge">${c.streak_icon || '🏆'}</div>
              <div class="streak-info">
                <div class="streak-best">Meilleure série: ${c.streak_best} jours</div>
              </div>
            </div>`
         : '';
       
+      const image = c.image || 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800';
+      const statut = c.statut || 'actif';
+      
       return `
         <div class="challenge-card" data-challenge-id="${c.id}">
-          <img src="${c.image}" alt="${c.titre}" class="challenge-image" onclick="window.viewChallengeDetail(${c.id})">
-          <div class="challenge-badge ${c.statut}">${c.statut.toUpperCase()}</div>
+          <img src="${image}" alt="${titre}" class="challenge-image" onclick="window.viewChallengeDetail(${c.id})">
+          <div class="challenge-badge ${statut}">${statut.toUpperCase()}</div>
           <div class="challenge-steaker">
             <div class="steaker-3d steaker-${level} steaker-small">
               <span class="steaker-icon">${getSteakerIcon(level)}</span>
             </div>
           </div>
           <div class="challenge-content">
-            <h3 class="challenge-title" onclick="window.viewChallengeDetail(${c.id})">${c.titre}</h3>
+            <h3 class="challenge-title" onclick="window.viewChallengeDetail(${c.id})">${titre}</h3>
             <p class="challenge-description">${c.description}</p>
             ${streakDisplay}
             <div class="challenge-stats">
-              <div class="challenge-stat"><span>${c.participants_count} participants</span></div>
+              <div class="challenge-stat"><span>${c.participants_count || 0} participants</span></div>
               <div class="challenge-stat"><span>Objectif: -${c.valeur_cible}%</span></div>
             </div>
             <button class="btn-participate" onclick="event.stopPropagation(); window.showInlineParticipationForm(${c.id})">
@@ -192,6 +136,22 @@ function initChallenges() {
         </div>`;
     }).join('');
   }
+
+  // ── Chargement des données ────────────────────────────────
+   function loadChallenges() {
+     loading.style.display = 'flex';
+     fetch('../backend/challenges/listChallenges.php')
+       .then(response => response.json())
+       .then(data => {
+         renderChallenges(data);
+         loading.style.display = 'none';
+       })
+       .catch(err => {
+         console.error('Erreur lors du chargement des défis:', err);
+         renderChallenges([]);
+         loading.style.display = 'none';
+       });
+   }
 
   // ── Classement ────────────────────────────────────────────
   function renderRanking(type = 'global') {
@@ -258,26 +218,17 @@ function initChallenges() {
   const refreshBtn = document.getElementById('challenge-refresh');
   if (refreshBtn) {
     refreshBtn.onclick = () => {
-      loading.style.display = 'flex';
       grid.style.display = 'none';
-      setTimeout(() => {
-        renderChallenges(sampleChallenges);
-        loading.style.display = 'none';
-        grid.style.display = 'grid';
-      }, 600);
+      loadChallenges();
+      grid.style.display = 'grid';
     };
   }
 
   // ── Chargement initial ────────────────────────────────────
-  loading.style.display = 'flex';
-  grid.style.display = 'none';
-  setTimeout(() => {
-    renderChallenges(sampleChallenges);
-    renderRanking('global');
-    renderMyRank();
-    loading.style.display = 'none';
-    grid.style.display = 'grid';
-  }, 600);
+  renderRanking('global');
+  renderMyRank();
+  loadChallenges();
+  grid.style.display = 'grid';
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -94,7 +94,7 @@ class UserController
         if ($id < 1) {
             return null;
         }
-        $sql = 'SELECT id_utilisateur, nom, prenom, email, role, date_creation, date_mise_a_jour
+        $sql = 'SELECT id_utilisateur, nom, prenom, email, mdp, role, date_creation, date_mise_a_jour
                 FROM utilisateurs WHERE id_utilisateur = :id LIMIT 1';
         try {
             $db = config::getConnexion();
@@ -123,4 +123,36 @@ class UserController
             return false;
         }
     }
+    public function updateUser(User $user): bool
+{
+    $sql = 'UPDATE utilisateurs 
+            SET nom = :nom, 
+                prenom = :prenom, 
+                email = :email, 
+                role = :role
+            WHERE id_utilisateur = :id';
+    
+    try {
+        $db = config::getConnexion();
+        $query = $db->prepare($sql);
+        
+        $result = $query->execute([
+            'id' => $user->getIdUtilisateur(),
+            'nom' => $user->getNom(),
+            'prenom' => $user->getPrenom(),
+            'email' => $user->getEmail(),
+            'role' => $user->getRole()
+        ]);
+        
+        // Debug
+        error_log("Update result: " . ($result ? "true" : "false"));
+        error_log("SQL: " . $sql);
+        error_log("Params: id=" . $user->getIdUtilisateur() . ", nom=" . $user->getNom() . ", prenom=" . $user->getPrenom() . ", email=" . $user->getEmail() . ", role=" . $user->getRole());
+        
+        return $result;
+    } catch (Exception $e) {
+        error_log("Erreur mise à jour utilisateur: " . $e->getMessage());
+        return false;
+    }
+}
 }

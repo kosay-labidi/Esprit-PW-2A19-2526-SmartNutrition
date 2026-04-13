@@ -396,9 +396,65 @@ function addUser() {
   window.showAddUserModal();
 }
 
-function editUser(id) {
-  showToast('Modification', `Utilisateur ${id} en cours de modification`, 'info');
-}
+window.editUser = async function(id) {
+    try {
+        const response = await fetch(`http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php?id=${id}`);
+        const html = await response.text();
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        const form = tempDiv.querySelector('form');
+        if (form) {
+            document.getElementById('edit_user_id').value = form.querySelector('[name="id"]')?.value || id;
+            document.getElementById('edit_nom').value = form.querySelector('[name="nom"]')?.value || '';
+            document.getElementById('edit_prenom').value = form.querySelector('[name="prenom"]')?.value || '';
+            document.getElementById('edit_email').value = form.querySelector('[name="email"]')?.value || '';
+            document.getElementById('edit_role').value = form.querySelector('[name="role"]')?.value || 'utilisateur';
+            
+            document.getElementById('editUserModal').style.display = 'flex';
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur', 'Impossible de charger les données', 'error');
+    }
+};
+
+window.closeEditModal = function() {
+    document.getElementById('editUserModal').style.display = 'none';
+};
+
+// Intercepter la soumission du formulaire
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editUserForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    
+    fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Vérifier si PHP a retourné un succès
+        if (html.includes('handleUpdateResponse') || html.includes('succès')) {
+            closeEditModal();
+            loadUsers();
+            showToast('Succès', 'Utilisateur modifié avec succès', 'success');
+        } else {
+            showToast('Erreur', 'Échec de la mise à jour', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        showToast('Erreur', 'Erreur lors de la modification', 'error');
+    });
+});
+    }
+});
 
 function deleteUser(id) {
   if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur?')) {

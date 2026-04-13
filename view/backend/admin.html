@@ -119,7 +119,45 @@
 <div class="progress-bar">
   <div class="progress-bar-fill" id="progressBar"></div>
 </div>
-
+<!-- Modal pour modifier un utilisateur -->
+<div id="editUserModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✏️ Modifier l'utilisateur</h3>
+            <span class="modal-close" onclick="closeEditModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="editUserForm" method="POST" action="http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php">
+                <input type="hidden" name="id" id="edit_user_id">
+                <div class="form-group">
+                    <label>Nom:</label>
+                    <input type="text" name="nom" id="edit_nom" class="modal-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Prénom:</label>
+                    <input type="text" name="prenom" id="edit_prenom" class="modal-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" name="email" id="edit_email" class="modal-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Rôle:</label>
+                    <select name="role" id="edit_role" class="modal-input">
+                        <option value="utilisateur">Utilisateur</option>
+                        <option value="nutritionniste">Nutritionniste</option>
+                        <option value="ecologiste">Écologiste</option>
+                        <option value="admin">Administrateur</option>
+                    </select>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Annuler</button>
+                    <button type="submit" class="btn-save">💾 Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <!-- Scripts -->
 <script src="js/admin.js"></script>
 <script src="js/admin-module-loader.js"></script>

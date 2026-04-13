@@ -1,29 +1,125 @@
-<section class="content-section" id="planning">
+<!-- planning.html - Module Frontend -->
+<section id="planning" class="content-section">
   <div class="section-header">
-    <h2 class="module-title">📅 Gestion du Planning</h2>
-    <p>Organisez vos repas de la semaine avec un calendrier intelligent et personnalisé.</p>
+    <h2>📅 Planning Nutritionnel</h2>
+    <p>Gérez vos demandes de planning personnalisées</p>
   </div>
-  <div class="cards-grid">
-    <div class="info-card">
-      <h3>Calendrier Hebdomadaire</h3>
-      <p>Planifiez tous vos repas de la semaine avec un calendrier interactif et intuitif.</p>
-    </div>
-    <div class="info-card">
-      <h3>Suggestions Automatiques</h3>
-      <p>Recevez des suggestions de repas basées sur vos objectifs et préférences nutritionnelles.</p>
-    </div>
-    <div class="info-card">
-      <h3>Liste de Courses</h3>
-      <p>Générez automatiquement votre liste de courses à partir de votre planning hebdomadaire.</p>
-    </div>
-  </div>
-</section>
 
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>
+  <div class="quick-actions">
+    <a href="planning/addDemandeplanning.php" class="action-card">
+      <div class="action-icon">➕</div>
+      <div class="action-info">
+        <h3>Nouvelle Demande</h3>
+        <p>Créer un nouveau planning nutritionnel</p>
+      </div>
+      <div class="action-arrow">→</div>
+    </a>
+  </div>
+
+  <div class="cards-grid" id="my-demandes-container">
+    <div class="info-card">
+      <h3>🎯 Comment ça marche ?</h3>
+      <ul class="feature-list">
+        <li><strong>1.</strong> Définissez vos objectifs caloriques</li>
+        <li><strong>2.</strong> Indiquez votre budget</li>
+        <li><strong>3.</strong> Choisissez la durée</li>
+        <li><strong>4.</strong> Recevez votre planning personnalisé</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>💡 Conseils Nutrition</h3>
+      <div class="tips-grid">
+        <span class="tip-badge">🥗 Légumes</span>
+        <span class="tip-badge">🍗 Protéines</span>
+        <span class="tip-badge">🍚 Glucides</span>
+        <span class="tip-badge">🥑 Bonnes graisses</span>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .action-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(91, 62, 150, .2);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.3s;
+      cursor: none;
+    }
+    .action-card:hover {
+      border-color: rgba(91, 62, 150, .5);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(91, 62, 150, .3);
+    }
+    .action-icon {
+      font-size: 2rem;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(91, 62, 150, .2), rgba(58, 134, 196, .2));
+      border-radius: 16px;
+    }
+    .action-info {
+      flex: 1;
+    }
+    .action-info h3 {
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .action-info p {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .action-arrow {
+      font-size: 1.5rem;
+      color: var(--blue);
+      transition: transform 0.3s;
+    }
+    .action-card:hover .action-arrow {
+      transform: translateX(4px);
+    }
+    .feature-list {
+      list-style: none;
+      padding: 0;
+    }
+    .feature-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(91, 62, 150, .1);
+      color: var(--muted);
+    }
+    .feature-list li:last-child {
+      border-bottom: none;
+    }
+    .feature-list strong {
+      color: var(--blue);
+      margin-right: 8px;
+    }
+    .tips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .tip-badge {
+      background: rgba(91, 62, 150, .15);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+  </style>
+</section>

@@ -1,0 +1,140 @@
+<section class="content-section" id="events">
+  <div class="section">
+    <div class="section-header">
+      <h2 class="module-title">🎯 Gestion des Événements</h2>
+      <div class="section-actions">
+        <a href="../evenement/list.php" class="btn btn-secondary" target="_blank">📋 Voir liste complète</a>
+        <a href="../evenement/add.php" class="btn btn-primary" target="_blank">➕ Nouvel Événement</a>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" class="search-input" id="eventSearch"
+             placeholder="Rechercher un événement..." onkeyup="filterEventsTable()">
+      <select class="form-select" id="eventTypeFilter" onchange="filterEventsTable()">
+        <option value="">Tous les types</option>
+        <option value="repas">🍲 Repas</option>
+        <option value="sport">🧘 Sport</option>
+        <option value="medical">🥗 Nutrition</option>
+        <option value="atelier">🌱 Atelier</option>
+      </select>
+    </div>
+
+    <div id="events-loading" style="text-align:center;padding:40px;color:var(--muted);">
+      <div class="section-loader-spinner"></div>
+      <p style="margin-top:12px;">Chargement des événements...</p>
+    </div>
+
+    <div class="table-container" id="events-table-container" style="display:none;">
+      <table id="events-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Titre</th><th>Type</th><th>Date</th><th>Heure</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="events-tbody"></tbody>
+      </table>
+    </div>
+
+    <div id="events-empty" style="display:none;text-align:center;padding:40px;color:var(--muted);">
+      <div style="font-size:3rem;margin-bottom:12px;">📅</div>
+      <p>Aucun événement trouvé.</p>
+      <a href="../evenement/add.php" class="btn btn-primary" style="margin-top:12px;">➕ Créer le premier</a>
+    </div>
+  </div>
+</section>
+
+<style>
+.module-title {
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  font-size: 1.6rem; font-weight: 700;
+}
+</style>
+
+<script>
+(function() {
+  let allEvents = [];
+
+  // Charger depuis le controller PHP via requête AJAX
+  async function loadEvents() {
+    try {
+      // On appelle list.php et on parse les données de la table HTML
+      // Méthode alternative : fetch sur une API JSON si disponible
+      const res = await fetch('../evenement/list.php');
+      const html = await res.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const rows = doc.querySelectorAll('tbody tr');
+
+      allEvents = [];
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 5) {
+          const id = cells[0]?.textContent?.replace('#','').trim();
+          const titre = cells[1]?.textContent?.trim();
+          const date = cells[2]?.textContent?.trim();
+          const heure = cells[3]?.textContent?.trim();
+          const type = cells[4]?.textContent?.trim();
+          if (id && titre) {
+            allEvents.push({ id, titre, date, heure, type });
+          }
+        }
+      });
+      renderTable(allEvents);
+    } catch(e) {
+      // Fallback message
+      document.getElementById('events-loading').innerHTML =
+        '<p style="color:var(--muted);">⚠️ Chargement impossible. <a href="../evenement/list.php" target="_blank" style="color:var(--blue);">Ouvrir la liste directement</a></p>';
+    }
+  }
+
+  function renderTable(data) {
+    const loading = document.getElementById('events-loading');
+    const container = document.getElementById('events-table-container');
+    const empty = document.getElementById('events-empty');
+    const tbody = document.getElementById('events-tbody');
+    const typeIcons = {repas:'🍲',sport:'🧘',medical:'🥗',atelier:'🌱'};
+
+    loading.style.display = 'none';
+
+    if (!data || data.length === 0) {
+      container.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+    container.style.display = 'block';
+    tbody.innerHTML = data.map(e => `
+      <tr>
+        <td><strong>#${e.id}</strong></td>
+        <td>${e.titre}</td>
+        <td><span class="badge badge-user">${typeIcons[e.type] || '📌'} ${e.type}</span></td>
+        <td>${e.date}</td>
+        <td>${e.heure}</td>
+        <td>
+          <div class="action-btns">
+            <a href="../evenement/show.php?id=${e.id}" target="_blank" class="action-btn action-btn-edit">👁️ Voir</a>
+            <a href="../evenement/update.php?id=${e.id}" target="_blank" class="action-btn action-btn-edit">✏️ Modifier</a>
+            <a href="../evenement/delete.php?id=${e.id}"
+               onclick="return confirm('Supprimer cet événement ?')"
+               class="action-btn action-btn-delete">🗑️</a>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  window.filterEventsTable = function() {
+    const q = (document.getElementById('eventSearch')?.value || '').toLowerCase();
+    const t = (document.getElementById('eventTypeFilter')?.value || '');
+    renderTable(allEvents.filter(e =>
+      (!q || e.titre.toLowerCase().includes(q)) &&
+      (!t || e.type.toLowerCase().includes(t))
+    ));
+  };
+
+  loadEvents();
+})();
+</script>

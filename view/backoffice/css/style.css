@@ -1,0 +1,54 @@
+:root {
+    --vert-profond: #006400;
+    --sable-ancestral: #f5f0e6;
+    --violet-mystique: #c8a2c8;
+    --bleu-celeste: #6cb4ee;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f6f0;
+    color: #333;
+}
+
+.header {
+    background: linear-gradient(to right, var(--vert-profond), #004d00);
+    color: white;
+    padding: 1rem 0;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.btn-primary {
+    background-color: var(--vert-profond);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #004d00;
+}
+
+.form-control {
+    border-radius: 8px;
+}
+
+.table th {
+    background-color: var(--sable-ancestral);
+    color: var(--vert-profond);
+}
+
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+/* Palette spécifique Héritage de Gaia */
+.green-deep { background-color: var(--vert-profond); color: white; }
+.sand-ancestral { background-color: var(--sable-ancestral); }
+.violet-mystic { background-color: var(--violet-mystique); }
+.blue-celeste { background-color: var(--bleu-celeste); }

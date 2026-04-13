@@ -345,16 +345,16 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
     <div class="form-row">
       <div class="form-group">
         <label for="nom">Nom</label>
-        <input type="text" id="nom" name="nom" required maxlength="100" placeholder="Dupont" pattern="[^0-9]+" title="Les chiffres ne sont pas autorisés"/>
+        <input type="text" id="nom" name="nom" required maxlength="100" placeholder="Farhani" pattern="[^0-9]+" title="Les chiffres ne sont pas autorisés"/>
       </div>
       <div class="form-group">
         <label for="prenom">Prénom</label>
-        <input type="text" id="prenom" name="prenom" required maxlength="100" placeholder="Jean" pattern="[^0-9]+" title="Les chiffres ne sont pas autorisés"/>
+        <input type="text" id="prenom" name="prenom" required maxlength="100" placeholder="Ahmed" pattern="[^0-9]+" title="Les chiffres ne sont pas autorisés"/>
       </div>
     </div>
     <div class="form-group">
       <label for="email">E-mail</label>
-      <input type="email" id="email" name="email" required maxlength="150" placeholder="vous@exemple.com"/>
+      <input type="email" id="email" name="email" required maxlength="150" placeholder="Farhani.Ahmed@gmail.com"/>
     </div>
     <div class="form-group">
       <label for="mdp">Mot de passe</label>
@@ -363,6 +363,14 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
     <div class="form-group">
       <label for="mdp2">Confirmer le mot de passe</label>
       <input type="password" id="mdp2" name="mdp2" required minlength="6" autocomplete="new-password"/>
+    </div>
+    <div class="form-group">
+    <label for="role">Rôle</label>
+    <select id="role" name="role" required style="width: 100%; padding: 10px; border: 1px solid #1F3D2B; border-radius: 4px; font-size: 16px; background-color: #1F3D2B;">
+    <option value="utilisateur">Utilisateur</option>
+    <option value="nutritionniste">Nutritionniste</option>
+    <option value="ecologiste">Écologiste</option>
+    </select>
     </div>
     <button type="submit" class="btn-submit" id="btn-submit">S'inscrire</button>
   </form>

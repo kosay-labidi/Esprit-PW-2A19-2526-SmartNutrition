@@ -41,6 +41,42 @@ class UserController
             return false;
         }
     }
+    /**
+     * Retourne un tableau avec 'status' et 'data'.
+     * status: 'ok' | 'account_not_found' | 'wrong_password' | 'error'
+     */
+    public function login(string $email, string $mdp): array
+    {
+        $email = trim($email);
+        if ($email === '' || $mdp === '') {
+            return ['status' => 'error', 'data' => null];
+        }
+
+        $sql = 'SELECT id_utilisateur, nom, prenom, email, mdp, role 
+                FROM utilisateurs WHERE email = :email LIMIT 1';
+        try {
+            $db = config::getConnexion();
+            $query = $db->prepare($sql);
+            $query->execute(['email' => $email]);
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                // L'email n'existe pas dans la base
+                return ['status' => 'account_not_found', 'data' => null];
+            }
+
+            if (!password_verify($mdp, $row['mdp'])) {
+                // Email trouvé mais mot de passe incorrect
+                return ['status' => 'wrong_password', 'data' => null];
+            }
+
+            unset($row['mdp']); // ne jamais renvoyer le hash
+            return ['status' => 'ok', 'data' => $row];
+
+        } catch (Exception $e) {
+            return ['status' => 'error', 'data' => null];
+        }
+    }
 
     /**
      * @return array<string, mixed>|null
@@ -141,6 +177,35 @@ if (PHP_SAPI !== 'cli' && $scriptReal && $fileReal && $scriptReal === $fileReal)
         }
         exit;
     }
+    if ($action === 'login') {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        echo json_encode(['success' => false, 'message' => 'Méthode non autorisée.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $raw = file_get_contents('php://input');
+    $payload = json_decode($raw, true);
+
+    $email = trim((string) ($payload['email'] ?? ''));
+    $mdp   = (string) ($payload['mdp'] ?? '');
+
+    if ($email === '' || $mdp === '') {
+        echo json_encode(['success' => false, 'message' => 'Email et mot de passe requis.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $result = $controller->login($email, $mdp);
+
+    if ($result['status'] === 'ok') {
+        echo json_encode(['success' => true, 'data' => $result['data']], JSON_UNESCAPED_UNICODE);
+    } elseif ($result['status'] === 'account_not_found') {
+        echo json_encode(['success' => false, 'message' => 'Compte n\'existe pas.'], JSON_UNESCAPED_UNICODE);
+    } elseif ($result['status'] === 'wrong_password') {
+        echo json_encode(['success' => false, 'message' => 'Mot de passe incorrect.'], JSON_UNESCAPED_UNICODE);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Erreur interne du serveur.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit;
+}
 
     echo json_encode(['success' => false, 'message' => 'Action inconnue'], JSON_UNESCAPED_UNICODE);
     exit;

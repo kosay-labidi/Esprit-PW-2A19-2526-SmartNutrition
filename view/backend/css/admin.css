@@ -160,9 +160,13 @@ h1, h2, h3, h4 {
   }
 }
 
-/* Animations des cartes et éléments */
-.stat-card, .section, .quick-stat, .data-card, tr {
+.stat-card, .section, .quick-stat, .data-card {
   opacity: 0; /* Initialement invisible pour l'animation JS */
+}
+
+/* Les lignes du tableau ne sont pas concernées par l'animation */
+tr {
+  opacity: 1;
 }
 
 .animate-in {
@@ -1019,4 +1023,5 @@ tbody tr:hover {
   .search-input, .form-select {
     width: 100%;
   }
+  
 }

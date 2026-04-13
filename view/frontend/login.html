@@ -466,6 +466,9 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
       <label for="remember">Se souvenir de moi</label>
     </div>
     
+    <!-- Message d'erreur login -->
+    <div id="login-error" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;background:rgba(220,53,69,0.15);border:1px solid rgba(220,53,69,0.4);color:#ff6b7a;font-size:0.88rem;text-align:center;animation:slideUp .3s ease;"></div>
+
     <button type="submit" class="btn-submit">Se connecter</button>
   </form>
   
@@ -693,56 +696,70 @@ window.addEventListener('load',function(){
    ═══════════════════════════════════════════════════════════ */
 const API_URL = 'http://localhost:5000/api';
 
-async function handleLogin(e){
+async function handleLogin(e) {
   e.preventDefault();
-  const btn=e.target.querySelector('.btn-submit');
-  const email = document.getElementById('email-input').value;
+  const btn = e.target.querySelector('.btn-submit');
+  const email    = document.getElementById('email-input').value;
   const password = document.getElementById('password-input').value;
-  
-  btn.textContent='Connexion en cours...';
-  btn.disabled=true;
-  
-  // MODE TEMPLATE (SANS BASE DE DONNÉES)
-  console.log('🌐 Mode Template activé - Connexion sans backend');
-  
-  // Simulation d'un petit délai pour l'effet visuel
-  setTimeout(() => {
-    // Créer une session de test
-    localStorage.setItem('gaialumen-token', 'template-token-' + Date.now());
-    
-    // Déterminer le rôle (admin si l'email contient 'admin', sinon user)
-    const role = email.toLowerCase().includes('admin') ? 'admin' : 'user';
-    
-    localStorage.setItem('gaialumen-user', JSON.stringify({
-      id: 1,
-      nom: role === 'admin' ? 'Administrateur' : 'Utilisateur Démo',
-      email: email,
-      role: role
-    }));
-    
-    btn.textContent='✓ Connexion réussie!';
-    
-    setTimeout(() => {
-      if (role === 'admin') {
-        window.location.href = '../backend/admin.html';
-      } else {
-        window.location.href = 'dashboard.html';
-      }
-    }, 800);
-  }, 1000);
-}
+  const errorDiv = document.getElementById('login-error');
 
-/* 
-// Vérifier si déjà connecté
-if (localStorage.getItem('gaialumen-token')) {
-  const user = JSON.parse(localStorage.getItem('gaialumen-user') || '{}');
-  if (user.role === 'admin') {
-    window.location.href = '../backend/admin.html';
-  } else {
-    window.location.href = 'dashboard.html';
+  // Réinitialiser le message d'erreur
+  errorDiv.style.display = 'none';
+  errorDiv.textContent = '';
+
+  btn.textContent = 'Connexion en cours...';
+  btn.disabled = true;
+
+  try {
+    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/Controller/user.controller.php?action=login',{
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, mdp: password })
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const rawText = await response.text();
+      console.error('Réponse PHP brute (pas JSON):', rawText);
+      throw new Error('Le serveur PHP ne renvoie pas du JSON. Vérifiez que le backend est bien démarré et que le chemin est correct.');
+    }
+
+    const result = await response.json();
+    console.log('Résultat login:', result);
+
+    if (result.success) {
+      localStorage.setItem('gaialumen-user', JSON.stringify(result.data));
+      localStorage.setItem('gaialumen-token', 'session-' + Date.now());
+
+      btn.textContent = '✓ Connexion réussie!';
+
+      setTimeout(() => {
+        if (result.data.role === 'admin') {
+          window.location.href = '../backend/admin.html';
+        } else {
+          window.location.href = 'dashboard.html';
+        }
+      }, 800);
+
+    } else {
+      btn.textContent = 'Se connecter';
+      btn.disabled = false;
+      errorDiv.textContent = result.message || 'Identifiants incorrects.';
+      errorDiv.style.display = 'block';
+    }
+
+  } catch (err) {
+    console.error('Erreur login:', err);
+    btn.textContent = 'Se connecter';
+    btn.disabled = false;
+    errorDiv.textContent = err.message || 'Impossible de contacter le serveur.';
+    errorDiv.style.display = 'block';
   }
 }
-*/
+
+// Nettoyer toute session précédente à l'arrivée sur la page de login
+localStorage.removeItem('gaialumen-token');
+localStorage.removeItem('gaialumen-user');
 
 /* ═══════════════════════════════════════════════════════════
    THEME TOGGLE

@@ -27,49 +27,21 @@
     </div>
 
     <div class="table-container">
-      <table>
+      <table class="data-table">
         <thead>
           <tr>
             <th>ID</th>
-            <th>Nom</th>
+            <th>Nom Complet</th>
             <th>Email</th>
             <th>Rôle</th>
-            <th>Statut</th>
-            <th>Inscription</th>
+            <th>Date d'inscription</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="usersTableBody">
-          <tr>
-            <td>1</td>
-            <td>Jean Dupont</td>
-            <td>jean.dupont@email.com</td>
-            <td><span class="badge badge-user">Utilisateur</span></td>
-            <td><span class="badge badge-active">Actif</span></td>
-            <td>15/03/2026</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="editUser(1)">✏️ Modifier</button>
-                <button class="action-btn action-btn-delete" onclick="deleteUser(1)">🗑️ Supprimer</button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Marie Martin</td>
-            <td>marie.martin@email.com</td>
-            <td><span class="badge badge-admin">Admin</span></td>
-            <td><span class="badge badge-active">Actif</span></td>
-            <td>10/03/2026</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="editUser(2)">✏️ Modifier</button>
-                <button class="action-btn action-btn-delete" onclick="deleteUser(2)">🗑️ Supprimer</button>
-              </div>
-            </td>
-          </tr>
+          <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
         </tbody>
-      </table>
+       </table>
     </div>
 
     <div class="pagination">
@@ -81,14 +53,3 @@
     </div>
   </div>
 </section>
-
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 1.6rem;
-  font-weight: 700;
-}
-</style>

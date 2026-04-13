@@ -369,17 +369,23 @@ document.addEventListener('adminModuleLoaded', (e) => {
       }
       break;
     case 'users':
-      // Charger les utilisateurs
-      if (typeof loadUsers === 'function') {
-        setTimeout(() => loadUsers(), 100);
-      }
+      // Attendre que le DOM du module soit bien rendu avant de charger
+      const waitForTable = setInterval(() => {
+        if (document.getElementById('usersTableBody')) {
+          clearInterval(waitForTable);
+          loadUsers();
+        }
+      }, 50);
+      // Timeout de sécurité après 3 secondes
+      setTimeout(() => clearInterval(waitForTable), 3000);
       break;
   }
 });
 
 // Fonctions utilitaires admin
 function refreshUsers() {
-  showToast('Actualisé', 'Liste des utilisateurs mise à jour', 'success');
+  loadUsers();
+  showToast('Actualisé', 'Liste mise à jour', 'success');
 }
 
 function exportData(type) {
@@ -471,6 +477,59 @@ function animateModuleElements(moduleName) {
       el.classList.add('animate-in');
     }, delay);
   });
+}
+async function loadUsers() {
+  console.log("📡 Chargement des utilisateurs...");
+
+  const tableBody = document.getElementById("usersTableBody");
+  
+  if (!tableBody) {
+    console.error("❌ usersTableBody introuvable !");
+    setTimeout(loadUsers, 100);
+    return;
+  }
+
+  try {
+    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">⏳ Chargement...<\/td><\/tr>';
+    
+    const response = await fetch("http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/showUser.php");
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const htmlContent = await response.text();
+    
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    const phpTable = tempDiv.querySelector('#usersTable');
+    
+    if (phpTable) {
+      const phpTableBody = phpTable.querySelector('tbody');
+      
+      if (phpTableBody) {
+        tableBody.innerHTML = phpTableBody.innerHTML;
+        
+        // FORCER l'opacité à 1 pour toutes les lignes
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach(row => {
+          row.style.opacity = '1';
+        });
+        
+        console.log(`✅ ${rows.length} utilisateurs affichés`);
+        
+      } else {
+        tableBody.innerHTML = `<td><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: Tableau sans corps<\/td><\/tr>`;
+      }
+    } else {
+      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: Tableau non trouvé<\/td><\/tr>`;
+    }
+    
+  } catch (error) {
+    console.error("❌ Erreur:", error);
+    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${error.message}<\/td><\/tr>`;
+  }
 }
 
 console.log('✅ Admin Module Loader prêt');

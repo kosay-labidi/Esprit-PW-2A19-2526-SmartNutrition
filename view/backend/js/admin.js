@@ -236,32 +236,33 @@ window.showAddUserModal = function() {
       <div style="display:grid;gap:14px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
           <div>
-            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Nom </label>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Nom</label>
             <input id="au-nom" type="text" placeholder="Farhani" style="${inputStyle()}">
           </div>
           <div>
-            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Prénom </label>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Prénom</label>
             <input id="au-prenom" type="text" placeholder="Ahmed" style="${inputStyle()}">
           </div>
         </div>
         <div>
-          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Email </label>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Email</label>
           <input id="au-email" type="email" placeholder="Farhani.Ahmed@email.com" style="${inputStyle()}">
         </div>
         <div>
-          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Mot de passe  (min. 6 caractères)</label>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Mot de passe (min. 6 caractères)</label>
           <input id="au-mdp" type="password" placeholder="••••••••" style="${inputStyle()}">
-          <div>
-          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Confirmer le mot de passe </label>
-          <input id="au-mdp2" type="password" placeholder="••••••••" style="${inputStyle()}">
         </div>
+        <div>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Confirmer le mot de passe</label>
+          <input id="au-mdp2" type="password" placeholder="••••••••" style="${inputStyle()}">
         </div>
         <div>
           <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Rôle</label>
           <select id="au-role" style="${inputStyle()}">
-            <option value="utilisateur">Utilisateur</option>
-            <option value="medecin">Médecin</option>
-            <option value="admin">Admin</option>
+            <option value="utilisateur"style="color: #000000;">Utilisateur</option>
+            <option value="nutritionniste" style="color: #000000;">Nutritionniste</option>
+            <option value="ecologiste" style="color: #000000;">Écologiste</option>
+            <option value="admin" style="color: #000000;" >Admin</option>
           </select>
         </div>
       </div>

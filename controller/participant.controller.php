@@ -27,6 +27,29 @@ class ParticipantController {
         }
     }
 
+    public function listParticipants($id_challenge = null) {
+        $sql = "SELECT p.*, c.titre AS challenge_titre, c.streak_icon AS challenge_icon
+                FROM participant p
+                LEFT JOIN challenge c ON c.id = p.id_challenge";
+
+        $params = [];
+        if ($id_challenge !== null) {
+            $sql .= " WHERE p.id_challenge = :id_challenge";
+            $params['id_challenge'] = (int)$id_challenge;
+        }
+
+        $sql .= " ORDER BY p.date_inscription DESC, p.id DESC";
+
+        $db = Config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute($params);
+            return $query->fetchAll();
+        } catch (Exception $e) {
+            die('Error: ' . $e->getMessage());
+        }
+    }
+
     public function listParticipantsByChallenge($id_challenge) {
         $sql = "SELECT * FROM participant WHERE id_challenge = :id_challenge";
         $db = Config::getConnexion();

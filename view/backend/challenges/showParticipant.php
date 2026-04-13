@@ -1,10 +1,31 @@
 <?php
+require_once(__DIR__ . '/../../../controller/participant.controller.php');
 require_once(__DIR__ . '/../../../controller/challenge.controller.php');
+require_once(__DIR__ . '/../../../Model/Participant.php');
+require_once(__DIR__ . '/../../../Model/Challenge.php');
 
+$error = "";
+$warning = "";
+$participantC = new ParticipantController();
 $challengeC = new ChallengeController();
 
+$challenge = null;
+$participants = [];
+$id_challenge = 0;
 if (isset($_GET['id'])) {
-    $challenge = $challengeC->showChallenge($_GET['id']);
+    $id_challenge = (int)$_GET['id'];
+} elseif (isset($_GET['id_challenge'])) {
+    $id_challenge = (int)$_GET['id_challenge'];
+}
+
+if ($id_challenge > 0) {
+    $challenge = $challengeC->showChallenge($id_challenge);
+    if (!$challenge) {
+        $warning = "Challenge not found. Showing participants for this challenge id.";
+    }
+    $participants = $participantC->listParticipants($id_challenge);
+} else {
+    $participants = $participantC->listParticipants();
 }
 ?>
 <!DOCTYPE html>
@@ -14,22 +35,18 @@ if (isset($_GET['id'])) {
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="shortcut icon" href="assets/images/favicon.svg" type="image/x-icon" />
-    <title>Esprit Challenge | View</title>
-  
-    <!-- ========== All CSS files linkup ========= -->
+    <title>Esprit Challenge | Participants</title>
+
     <link rel="stylesheet" href="https://cdn.lineicons.com/4.0/lineicons.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="../../css/admin.css" />
     <link rel="stylesheet" href="../../css/challenges-admin.css" />
 </head>
 <body>
-    <!-- ======== Preloader =========== -->
     <div id="preloader">
       <div class="spinner"></div>
     </div>
-    <!-- ======== Preloader =========== -->
 
-    <!-- ======== sidebar-nav start =========== -->
     <aside class="sidebar-nav-wrapper">
       <div class="navbar-logo">
         <a href="index.html">
@@ -99,8 +116,8 @@ if (isset($_GET['id'])) {
       </nav>
     </aside>
     <div class="overlay"></div>
+
  <main class="main-wrapper">
-      <!-- ========== header start ========== -->
       <header class="header">
         <div class="container-fluid">
           <div class="row">
@@ -142,17 +159,14 @@ if (isset($_GET['id'])) {
           </div>
         </div>
       </header>
-      <!-- ========== header end ========== -->
 
-      <!-- ========== section start ========== -->
       <section class="section">
         <div class="container-fluid">
-          <!-- ========== title-wrapper start ========== -->
           <div class="title-wrapper pt-30">
             <div class="row align-items-center">
               <div class="col-md-6">
                 <div class="title">
-                  <h2>Challenge Details</h2>
+                  <h2>Participants</h2>
                 </div>
               </div>
               <div class="col-md-6">
@@ -166,7 +180,7 @@ if (isset($_GET['id'])) {
                         <a href="listChallenges.php">Challenges</a>
                       </li>
                       <li class="breadcrumb-item active" aria-current="page">
-                       Details
+                       Participants
                       </li>
                     </ol>
                   </nav>
@@ -174,51 +188,142 @@ if (isset($_GET['id'])) {
               </div>
             </div>
           </div>
+
        <div class="content">
-    <div class="container mt-4">
-        <?php if ($challenge) { ?>
-        <div class="card">
-            <div class="card-header d-flex align-items-center">
-                <span class="fs-2 me-3"><?php echo $challenge['streak_icon']; ?></span>
-                <h3 class="mb-0"><?php echo $challenge['titre']; ?></h3>
+        <div class="container mt-4">
+          <?php if (!empty($error)) { ?>
+            <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
+          <?php } else { ?>
+            <?php if (!empty($warning)) { ?>
+              <div class="alert alert-warning" role="alert"><?php echo htmlspecialchars($warning, ENT_QUOTES, 'UTF-8'); ?></div>
+            <?php } ?>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="d-flex align-items-center">
+                <?php if (!empty($challenge)) { ?>
+                  <span class="fs-2 me-3"><?php echo htmlspecialchars((string)$challenge['streak_icon'], ENT_QUOTES, 'UTF-8'); ?></span>
+                  <div>
+                    <h4 class="mb-0"><?php echo htmlspecialchars((string)$challenge['titre'], ENT_QUOTES, 'UTF-8'); ?></h4>
+                    <div class="text-muted">
+                      <?php echo htmlspecialchars((string)$challenge['date_debut'], ENT_QUOTES, 'UTF-8'); ?> → <?php echo htmlspecialchars((string)$challenge['date_fin'], ENT_QUOTES, 'UTF-8'); ?>
+                    </div>
+                  </div>
+                <?php } else { ?>
+                  <div>
+                    <h4 class="mb-0">All participants</h4>
+                    <div class="text-muted">All challenges</div>
+                  </div>
+                <?php } ?>
+              </div>
+              <a class="btn btn-primary" href="addParticipant.php<?php echo $id_challenge > 0 ? ('?id_challenge=' . (int)$id_challenge) : ''; ?>">
+                <i class="lni lni-plus"></i> Add Participant
+              </a>
             </div>
-            <div class="card-body">
-                <div class="row">
+
+            <?php if (!empty($challenge) && !empty($challenge['image'])) { ?>
+              <div class="card mb-4">
+                <div class="card-body">
+                  <div class="row align-items-center">
                     <div class="col-md-4">
-                        <img src="<?php echo $challenge['image']; ?>" alt="Challenge Image" class="img-fluid rounded mb-3">
+                      <img src="<?php echo htmlspecialchars((string)$challenge['image'], ENT_QUOTES, 'UTF-8'); ?>" alt="Challenge Image" class="img-fluid rounded">
                     </div>
                     <div class="col-md-8">
-                        <p><strong>Description:</strong> <?php echo $challenge['description']; ?></p>
-                        <hr>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <p><strong>Type:</strong> <?php echo ucfirst($challenge['type']); ?></p>
-                                <p><strong>Objective:</strong> <?php echo $challenge['objectif']; ?></p>
-                                <p><strong>Target Value:</strong> <?php echo $challenge['valeur_cible']; ?></p>
-                            </div>
-                            <div class="col-sm-6">
-                                <p><strong>Start Date:</strong> <?php echo $challenge['date_debut']; ?></p>
-                                <p><strong>End Date:</strong> <?php echo $challenge['date_fin']; ?></p>
-                                <p><strong>Status:</strong> <span class="badge bg-primary"><?php echo $challenge['statut']; ?></span></p>
-                            </div>
+                      <p class="mb-2"><strong>Description:</strong> <?php echo htmlspecialchars((string)$challenge['description'], ENT_QUOTES, 'UTF-8'); ?></p>
+                      <div class="row">
+                        <div class="col-sm-6">
+                          <p class="mb-1"><strong>Type:</strong> <?php echo htmlspecialchars((string)$challenge['type'], ENT_QUOTES, 'UTF-8'); ?></p>
+                          <p class="mb-1"><strong>Objective:</strong> <?php echo htmlspecialchars((string)$challenge['objectif'], ENT_QUOTES, 'UTF-8'); ?></p>
                         </div>
+                        <div class="col-sm-6">
+                          <p class="mb-1"><strong>Target Value:</strong> <?php echo htmlspecialchars((string)$challenge['valeur_cible'], ENT_QUOTES, 'UTF-8'); ?></p>
+                          <p class="mb-1"><strong>Status:</strong> <span class="badge bg-primary"><?php echo htmlspecialchars((string)$challenge['statut'], ENT_QUOTES, 'UTF-8'); ?></span></p>
+                        </div>
+                      </div>
                     </div>
+                  </div>
                 </div>
+              </div>
+            <?php } ?>
+
+            <?php if (empty($participants)) { ?>
+              <div class="alert alert-info" role="alert">No participants found.</div>
+            <?php } else { ?>
+              <div class="card">
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Challenge</th>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Objective</th>
+                          <th>Joined</th>
+                          <th>Motivation</th>
+                          <th>Action</th>
+                          <th>Engagement</th>
+                          <th>Notifications</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <?php foreach ($participants as $p) { ?>
+                          <tr>
+                            <td><?php echo htmlspecialchars((string)$p['id'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td>
+                              <?php
+                                $challengeLabel = "";
+                                if (!empty($p['challenge_titre'])) {
+                                    $challengeLabel = (string)$p['challenge_titre'];
+                                } else {
+                                    $challengeLabel = "Challenge #" . (int)$p['id_challenge'];
+                                }
+
+                                $icon = !empty($p['challenge_icon']) ? (string)$p['challenge_icon'] : "";
+                                echo htmlspecialchars($icon, ENT_QUOTES, 'UTF-8');
+                                if ($icon !== "") { echo " "; }
+                                echo htmlspecialchars($challengeLabel, ENT_QUOTES, 'UTF-8');
+                              ?>
+                            </td>
+                            <td><?php echo htmlspecialchars((string)$p['nom'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars((string)$p['email'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars((string)$p['objectif'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars((string)($p['date_inscription'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td style="min-width: 220px;"><?php echo htmlspecialchars((string)$p['motivation'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td style="min-width: 220px;"><?php echo htmlspecialchars((string)$p['action'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td>
+                              <?php if ((int)$p['engagement'] === 1) { ?>
+                                <span class="badge bg-success">Yes</span>
+                              <?php } else { ?>
+                                <span class="badge bg-secondary">No</span>
+                              <?php } ?>
+                            </td>
+                            <td>
+                              <?php if ((int)$p['notifications'] === 1) { ?>
+                                <span class="badge bg-success">Yes</span>
+                              <?php } else { ?>
+                                <span class="badge bg-secondary">No</span>
+                              <?php } ?>
+                            </td>
+                          </tr>
+                        <?php } ?>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            <?php } ?>
+
+            <div class="text-center mt-4">
+              <a href="listChallenges.php" class="btn btn-secondary">
+                <i class="lni lni-arrow-left"></i> Back to List
+              </a>
             </div>
-            <div class="card-footer text-center">
-                <a href="updateChallenge.php?id=<?php echo $challenge['id']; ?>" class="btn btn-warning">
-                    <i class="lni lni-pencil"></i> Edit
-                </a>
-                <a href="listChallenges.php" class="btn btn-secondary">
-                    <i class="lni lni-arrow-left"></i> Back to List
-                </a>
-            </div>
+          <?php } ?>
         </div>
-        <?php } else { echo '<p>Challenge not found.</p>'; } ?>
-    </div>
-  </div>
+       </div>
         </div>
       </section>
+
       <footer class="footer">
         <div class="container-fluid">
           <div class="row">

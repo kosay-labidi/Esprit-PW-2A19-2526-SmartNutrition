@@ -420,13 +420,27 @@ function editEvent(id) {
   console.log(`✏️ Modification événement ${id}`);
   showToast(`Modification événement ${id}`, 'info');
 }
-
-function deleteEvent(id) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cet événement?')) {
-    console.log(`🗑️ Suppression événement ${id}`);
-    showToast(`Événement ${id} supprimé`, 'success');
+window.deleteUser = async function(id) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+    try {
+      // Afficher un toast de chargement
+      showToast('Suppression', 'Suppression en cours...', 'info');
+      
+      // Appeler deleteUser.php en arrière-plan
+      const response = await fetch(`http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/deleteUser.php?id=${id}`);
+      
+      // Recharger la liste des utilisateurs sans quitter la page
+      await loadUsers();
+      
+      // Afficher un message de succès
+      showToast('Succès', 'Utilisateur supprimé avec succès', 'success');
+      
+    } catch (error) {
+      console.error('❌ Erreur:', error);
+      showToast('Erreur', 'Impossible de supprimer l\'utilisateur', 'error');
+    }
   }
-}
+};
 
 function refreshActivity() {
   console.log('🔄 Actualisation des logs...');

@@ -725,39 +725,59 @@ tbody tr:hover {
   color: var(--violet);
 }
 
-/* Action Buttons */
+/* Action Buttons - Même style que les boutons principaux */
 .action-btns {
-  display: flex;
-  gap: 8px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
 }
 
-.action-btn {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: none;
-  cursor: none;
-  font-size: .8rem;
-  transition: all .2s;
+/* Bouton Modifier - style identique à btn-secondary */
+.btn-edit {
+    background: var(--glass);
+    border: 1px solid rgba(91, 62, 150, .3);
+    border-radius: 12px;
+    padding: 6px 14px;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.action-btn-edit {
-  background: rgba(58, 134, 196, .2);
-  color: #3A86C4;
+.btn-edit:hover {
+    background: rgba(91, 62, 150, 0.2);
+    transform: translateY(-2px);
+    border-color: var(--violet);
 }
 
-.action-btn-edit:hover {
-  background: rgba(58, 134, 196, .3);
+/* Bouton Supprimer - style identique à btn-primary mais en rouge */
+.btn-delete {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    border: none;
+    border-radius: 12px;
+    padding: 6px 14px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.action-btn-delete {
-  background: rgba(231, 76, 60, .2);
-  color: #e74c3c;
+.btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
 
-.action-btn-delete:hover {
-  background: rgba(231, 76, 60, .3);
+.btn-delete:active {
+    transform: translateY(0);
 }
-
 /* Charts */
 .chart-container {
   position: relative;
@@ -983,6 +1003,120 @@ tbody tr:hover {
   opacity: 0.4;
   cursor: not-allowed;
 }
+/* ===== STYLES POUR LES BOUTONS D'ACTION DANS LE TABLEAU ===== */
+
+/* Conteneur des boutons */
+.action-btns {
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* Bouton Modifier */
+.btn-edit {
+    background: linear-gradient(135deg, #3A86C4, #2c6e9e) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px 18px !important;
+    color: white !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-edit:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(58, 134, 196, 0.4) !important;
+    background: linear-gradient(135deg, #2c6e9e, #3A86C4) !important;
+}
+
+.btn-edit:active {
+    transform: translateY(0) !important;
+}
+
+/* Bouton Supprimer */
+.btn-delete {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px 18px !important;
+    color: white !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-delete:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4) !important;
+    background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
+}
+
+.btn-delete:active {
+    transform: translateY(0) !important;
+}
+
+/* Version outline (bordure seulement) - alternative plus élégante */
+.btn-edit-outline {
+    background: transparent !important;
+    border: 2px solid #3A86C4 !important;
+    color: #3A86C4 !important;
+    box-shadow: none !important;
+}
+
+.btn-edit-outline:hover {
+    background: #3A86C4 !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+}
+
+.btn-delete-outline {
+    background: transparent !important;
+    border: 2px solid #e74c3c !important;
+    color: #e74c3c !important;
+    box-shadow: none !important;
+}
+
+.btn-delete-outline:hover {
+    background: #e74c3c !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Version avec icônes uniquement (ronds) */
+.btn-edit-icon, .btn-delete-icon {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    justify-content: center !important;
+}
+
+.btn-edit-icon span, .btn-delete-icon span {
+    display: none;
+}
+
+.btn-edit-icon::before {
+    content: "✏️" !important;
+    font-size: 1rem !important;
+}
+
+.btn-delete-icon::before {
+    content: "🗑️" !important;
+    font-size: 1rem !important;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {

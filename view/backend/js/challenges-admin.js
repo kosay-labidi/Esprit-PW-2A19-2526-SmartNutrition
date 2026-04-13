@@ -6,41 +6,7 @@
 console.log('🏆 Admin Challenges (Mode Ajout/Affichage) chargé');
 
 let adminChallenges = [];
-let adminParticipants = [
-  {
-    id: 1,
-    nom: 'Sophie Martin',
-    email: 'sophie.martin@email.com',
-    challenge_id: 1,
-    challenge_titre: 'Défi Zéro Déchet',
-    challenge_icon: '♻️',
-    progression: 85,
-    statut: 'actif',
-    date_inscription: '2026-04-01'
-  },
-  {
-    id: 2,
-    nom: 'Karim Benali',
-    email: 'karim.benali@email.com',
-    challenge_id: 2,
-    challenge_titre: 'Économie d\'Eau',
-    challenge_icon: '💧',
-    progression: 62,
-    statut: 'actif',
-    date_inscription: '2026-04-05'
-  },
-  {
-    id: 3,
-    nom: 'Léa Dubois',
-    email: 'lea.dubois@email.com',
-    challenge_id: 3,
-    challenge_titre: 'Végan 30 Jours',
-    challenge_icon: '🥗',
-    progression: 28,
-    statut: 'actif',
-    date_inscription: '2026-04-10'
-  }
-];
+let adminParticipants = [];
 
 // ═══════════════════════════════════════════════════════════
 // INITIALISATION
@@ -52,7 +18,7 @@ document.addEventListener('adminModuleLoaded', (e) => {
     console.log('📦 Module Challenges détecté, chargement des données...');
     initChallengeForm();
     loadAdminChallenges();
-    renderParticipantsTable();
+    loadAdminParticipants();
   }
 });
 
@@ -60,6 +26,7 @@ document.addEventListener('adminModuleLoaded', (e) => {
 if (document.getElementById('challenges')) {
   initChallengeForm();
   loadAdminChallenges();
+  loadAdminParticipants();
 }
 
 function initChallengeForm() {
@@ -135,9 +102,31 @@ function loadAdminChallenges() {
       adminChallenges = data;
       renderChallengesTable();
       updateDashboardStats();
+      renderParticipantsChallengeFilter();
     })
     .catch(err => {
       console.error('Erreur lors du chargement des défis admin:', err);
+    });
+}
+
+function loadAdminParticipants() {
+  fetch('challenges/showParticipant.php', {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+    .then(response => response.json())
+    .then(result => {
+      adminParticipants = Array.isArray(result.participants) ? result.participants : [];
+      renderParticipantsTable();
+      updateParticipantsStats();
+      updateDashboardStats();
+    })
+    .catch(err => {
+      console.error('Erreur lors du chargement des participants admin:', err);
+      adminParticipants = [];
+      renderParticipantsTable();
+      updateParticipantsStats();
     });
 }
 
@@ -354,9 +343,11 @@ function refreshTableAdmin() {
 
 function updateDashboardStats() {
   const statChallenges = document.querySelector('.stat-mini:nth-child(1) .stat-mini-value');
+  const statParticipants = document.querySelector('.stat-mini:nth-child(2) .stat-mini-value');
   const statCompletion = document.querySelector('.stat-mini:nth-child(3) .stat-mini-value');
   
   if (statChallenges) statChallenges.innerText = adminChallenges.length;
+  if (statParticipants) statParticipants.innerText = adminParticipants.length;
   if (statCompletion) {
     const termines = adminChallenges.filter(c => c.statut === 'termine').length;
     const rate = adminChallenges.length > 0 ? Math.round((termines / adminChallenges.length) * 100) : 0;
@@ -368,27 +359,82 @@ function updateDashboardStats() {
 // RENDU DU TABLEAU PARTICIPANTS
 // ═══════════════════════════════════════════════════════════
 
+function renderParticipantsChallengeFilter() {
+  const select = document.getElementById('challenge-filter');
+  if (!select) return;
+
+  const previousValue = select.value;
+  const options = ['<option value="">Tous les défis</option>'];
+
+  adminChallenges.forEach(c => {
+    const id = c.id;
+    const titre = c.titre || `Challenge #${id}`;
+    options.push(`<option value="${id}">${escapeHtml(titre)}</option>`);
+  });
+
+  select.innerHTML = options.join('');
+  if (previousValue !== undefined) {
+    select.value = previousValue;
+  }
+}
+
 function renderParticipantsTable() {
   const tbody = document.getElementById('participants-tbody');
   if (!tbody) return;
   
-  const filteredParticipants = adminParticipants; // À filtrer plus tard si besoin
+  const searchValue = (document.getElementById('search-participants')?.value || '').toLowerCase();
+  const challengeFilter = document.getElementById('challenge-filter')?.value || '';
+  const progressFilter = document.getElementById('progress-filter')?.value || '';
+
+  const filteredParticipants = adminParticipants.filter(p => {
+    const nom = String(p.nom || '');
+    const email = String(p.email || '');
+    const challengeTitre = String(p.challenge_titre || '');
+
+    if (searchValue) {
+      const haystack = `${nom} ${email} ${challengeTitre}`.toLowerCase();
+      if (!haystack.includes(searchValue)) return false;
+    }
+
+    if (challengeFilter) {
+      if (String(p.id_challenge) !== String(challengeFilter)) return false;
+    }
+
+    const prog = clampInt(p.objectif, 0, 100);
+    if (progressFilter === 'low' && !(prog >= 0 && prog <= 30)) return false;
+    if (progressFilter === 'medium' && !(prog >= 31 && prog <= 70)) return false;
+    if (progressFilter === 'high' && !(prog >= 71 && prog <= 100)) return false;
+
+    return true;
+  });
   
   if (filteredParticipants.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align:center;padding:40px;color:var(--muted);">
+        <td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">
           <div style="font-size:3rem;margin-bottom:12px;">👤</div>
           <div>Aucun participant trouvé</div>
         </td>
       </tr>
     `;
+    updateParticipantsPagination(filteredParticipants.length);
     return;
   }
   
   tbody.innerHTML = filteredParticipants.map(p => {
-    const avatar = p.nom.split(' ').map(n => n[0]).join('').toUpperCase();
-    const progColor = p.progression > 70 ? 'high' : p.progression > 30 ? 'medium' : 'low';
+    const nom = String(p.nom || '');
+    const email = String(p.email || '');
+    const avatar = nom ? nom.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() : '??';
+    const challengeIcon = String(p.challenge_icon || '🏆');
+    const challengeTitre = String(p.challenge_titre || (`Challenge #${p.id_challenge}`));
+
+    const prog = clampInt(p.objectif, 0, 100);
+    const progColor = prog > 70 ? 'high' : prog > 30 ? 'medium' : 'low';
+    const objective = p.challenge_target !== null && p.challenge_target !== undefined && p.challenge_target !== '' ? `${p.challenge_target}%` : '-';
+    const joined = formatDate(p.date_inscription);
+    const isActive = clampInt(p.engagement, 0, 1) === 1;
+    const statusLabel = isActive ? 'Actif' : 'Inactif';
+    const statusClass = isActive ? 'badge-active' : 'badge-completed';
     
     return `
       <tr class="table-row-animated">
@@ -396,35 +442,34 @@ function renderParticipantsTable() {
           <div class="participant-info">
             <div class="participant-avatar">${avatar}</div>
             <div class="participant-details">
-              <div class="participant-name">${p.nom}</div>
-              <div class="participant-email">${p.email}</div>
+              <div class="participant-name">${escapeHtml(nom)}</div>
+              <div class="participant-email">${escapeHtml(email)}</div>
             </div>
           </div>
         </td>
         <td>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 1.5rem;">${p.challenge_icon}</span>
-            <span style="font-weight: 600;">${p.challenge_titre}</span>
+            <span style="font-size: 1.5rem;">${escapeHtml(challengeIcon)}</span>
+            <span style="font-weight: 600;">${escapeHtml(challengeTitre)}</span>
           </div>
         </td>
         <td>
           <div style="display: flex; align-items: center; gap: 10px;">
             <div class="progress-bar-participant" style="flex:1; height:8px; background:rgba(91,62,150,0.1); border-radius:4px; overflow:hidden;">
-              <div class="progress-fill-participant ${progColor}" style="width: ${p.progression}%; height:100%; transition:width 1s ease;"></div>
+              <div class="progress-fill-participant ${progColor}" style="width: ${prog}%; height:100%; transition:width 1s ease;"></div>
             </div>
-            <span style="font-weight: 700; min-width:35px;">${p.progression}%</span>
+            <span style="font-weight: 700; min-width:35px;">${prog}%</span>
           </div>
         </td>
-        <td><span class="badge badge-active">Actif</span></td>
-        <td>
-          <div style="font-weight:600;">${formatDate(p.date_inscription)}</div>
-        </td>
+        <td>${escapeHtml(objective)}</td>
+        <td><div style="font-weight:600;">${escapeHtml(joined)}</div></td>
+        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
         <td>
           <div class="action-btns">
-            <button class="btn-icon" onclick="editParticipant(${p.id})" title="Modifier" style="background: rgba(91, 62, 150, 0.2); color: var(--blue);">
-              ✏️
+            <button class="btn-icon" onclick="viewParticipant(${p.id})" title="Voir détails">
+              👁️
             </button>
-            <button class="btn-icon btn-danger" onclick="deleteParticipant(${p.id})" title="Supprimer" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c;">
+            <button class="btn-icon btn-danger" onclick="deleteParticipant(${p.id}, ${p.id_challenge})" title="Supprimer">
               🗑️
             </button>
           </div>
@@ -432,16 +477,123 @@ function renderParticipantsTable() {
       </tr>
     `;
   }).join('');
+
+  updateParticipantsPagination(filteredParticipants.length);
 }
 
-function editParticipant(id) {
-  console.log('Modifier le participant:', id);
-  // À implémenter avec un modal ou formulaire
+function updateParticipantsPagination(visibleCount) {
+  const total = visibleCount;
+  const start = total > 0 ? 1 : 0;
+  const end = total;
+  const el = document.getElementById('participants-pagination-info');
+  if (el) el.innerText = `Affichage de ${start} à ${end} sur ${total} participants`;
 }
 
-function deleteParticipant(id) {
-  if (confirm('Voulez-vous vraiment retirer ce participant du défi ?')) {
-    console.log('Supprimer le participant:', id);
-    // Appel AJAX vers deleteParticipant.php
+function updateParticipantsStats() {
+  const total = adminParticipants.length;
+  const active = adminParticipants.filter(p => clampInt(p.engagement, 0, 1) === 1).length;
+  const engagement = total > 0 ? Math.round((active / total) * 100) : 0;
+
+  const totalEl = document.getElementById('participants-total');
+  const activeEl = document.getElementById('participants-active');
+  const engEl = document.getElementById('participants-engagement');
+
+  if (totalEl) totalEl.innerText = total.toLocaleString('fr-FR');
+  if (activeEl) activeEl.innerText = active.toLocaleString('fr-FR');
+  if (engEl) engEl.innerText = `${engagement}%`;
+}
+
+function searchParticipants() {
+  renderParticipantsTable();
+}
+
+function filterParticipantsByChallenge() {
+  renderParticipantsTable();
+}
+
+function filterParticipantsByProgress() {
+  renderParticipantsTable();
+}
+
+function exportParticipants() {
+  const rows = adminParticipants.map(p => ({
+    id: p.id,
+    id_challenge: p.id_challenge,
+    challenge: p.challenge_titre || '',
+    nom: p.nom || '',
+    email: p.email || '',
+    progression: clampInt(p.objectif, 0, 100),
+    objectif_defi: p.challenge_target ?? '',
+    engagement: p.engagement ?? '',
+    notifications: p.notifications ?? '',
+    date_inscription: p.date_inscription ?? ''
+  }));
+
+  const header = Object.keys(rows[0] || { id: '' });
+  const csv = [
+    header.join(','),
+    ...rows.map(r => header.map(k => csvEscape(r[k])).join(','))
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'participants.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function viewParticipant(id) {
+  const p = adminParticipants.find(x => String(x.id) === String(id));
+  if (!p) return;
+  alert(`Participant: ${p.nom}\nEmail: ${p.email}\nDéfi: ${p.challenge_titre || p.id_challenge}\nMotivation: ${p.motivation || '-'}\nAction: ${p.action || '-'}`);
+}
+
+function deleteParticipant(id, idChallenge) {
+  if (!confirm('Voulez-vous vraiment retirer ce participant du défi ?')) return;
+
+  fetch(`challenges/deleteParticipant.php?id=${encodeURIComponent(id)}&id_challenge=${encodeURIComponent(idChallenge)}`, {
+    method: 'GET',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+    .then(r => r.json())
+    .then(result => {
+      if (result && result.success) {
+        loadAdminParticipants();
+      } else {
+        alert('❌ Erreur: Impossible de supprimer le participant');
+      }
+    })
+    .catch(err => {
+      console.error('Erreur suppression participant:', err);
+      alert('❌ Erreur de connexion');
+    });
+}
+
+function clampInt(value, min, max) {
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n)) return min;
+  return Math.min(max, Math.max(min, n));
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function csvEscape(value) {
+  const s = String(value ?? '');
+  if (s.includes('"') || s.includes(',') || s.includes('\n') || s.includes('\r')) {
+    return `"${s.replace(/"/g, '""')}"`;
   }
+  return s;
 }

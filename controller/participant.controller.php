@@ -28,7 +28,7 @@ class ParticipantController {
     }
 
     public function listParticipants($id_challenge = null) {
-        $sql = "SELECT p.*, c.titre AS challenge_titre, c.streak_icon AS challenge_icon
+        $sql = "SELECT p.*, c.titre AS challenge_titre, c.streak_icon AS challenge_icon, c.valeur_cible AS challenge_target
                 FROM participant p
                 LEFT JOIN challenge c ON c.id = p.id_challenge";
 
@@ -46,7 +46,8 @@ class ParticipantController {
             $query->execute($params);
             return $query->fetchAll();
         } catch (Exception $e) {
-            die('Error: ' . $e->getMessage());
+            error_log('Error listing participants: ' . $e->getMessage());
+            return [];
         }
     }
 
@@ -58,7 +59,21 @@ class ParticipantController {
             $query->execute(['id_challenge' => $id_challenge]);
             return $query->fetchAll();
         } catch (Exception $e) {
-            die('Error: ' . $e->getMessage());
+            error_log('Error listing participants by challenge: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function deleteParticipant($id) {
+        $sql = "DELETE FROM participant WHERE id = :id";
+        $db = Config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute(['id' => (int)$id]);
+            return true;
+        } catch (Exception $e) {
+            error_log('Error deleting participant: ' . $e->getMessage());
+            return false;
         }
     }
 }

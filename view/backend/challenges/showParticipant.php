@@ -27,6 +27,18 @@ if ($id_challenge > 0) {
 } else {
     $participants = $participantC->listParticipants();
 }
+
+$isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+if ($isAjax) {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'id_challenge' => $id_challenge,
+        'challenge' => $challenge,
+        'participants' => $participants
+    ]);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -263,6 +275,7 @@ if ($id_challenge > 0) {
                           <th>Action</th>
                           <th>Engagement</th>
                           <th>Notifications</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -303,6 +316,15 @@ if ($id_challenge > 0) {
                               <?php } else { ?>
                                 <span class="badge bg-secondary">No</span>
                               <?php } ?>
+                            </td>
+                            <td>
+                              <a
+                                href="deleteParticipant.php?id=<?php echo (int)$p['id']; ?>&id_challenge=<?php echo (int)$p['id_challenge']; ?>"
+                                class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure?')"
+                              >
+                                <i class="lni lni-trash-can"></i>
+                              </a>
                             </td>
                           </tr>
                         <?php } ?>

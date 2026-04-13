@@ -261,15 +261,15 @@
         <h3>👥 Gestion des Participants</h3>
         <div class="participants-stats">
           <div class="participant-stat">
-            <div class="participant-stat-value">1,847</div>
+            <div class="participant-stat-value" id="participants-total">-</div>
             <div class="participant-stat-label">Total</div>
           </div>
           <div class="participant-stat">
-            <div class="participant-stat-value">142</div>
+            <div class="participant-stat-value" id="participants-active">-</div>
             <div class="participant-stat-label">Actifs</div>
           </div>
           <div class="participant-stat">
-            <div class="participant-stat-value">89%</div>
+            <div class="participant-stat-value" id="participants-engagement">-</div>
             <div class="participant-stat-label">Engagement</div>
           </div>
         </div>
@@ -286,9 +286,6 @@
         
         <select class="form-select" id="challenge-filter" onchange="filterParticipantsByChallenge()" style="background: rgba(232, 220, 196, 0.15); color: #E8DCC4; border: 2px solid rgba(232, 220, 196, 0.3);">
           <option value="">Tous les défis</option>
-          <option value="1">Défi Zéro Déchet</option>
-          <option value="2">Économie d'Eau</option>
-          <option value="3">Végan 30 Jours</option>
         </select>
 
         <select class="form-select" id="progress-filter" onchange="filterParticipantsByProgress()" style="background: rgba(232, 220, 196, 0.15); color: #E8DCC4; border: 2px solid rgba(232, 220, 196, 0.3);">
@@ -318,118 +315,10 @@
             </tr>
           </thead>
           <tbody id="participants-tbody">
-            <tr class="table-row-animated">
-              <td>
-                <div class="participant-info">
-                  <div class="participant-avatar">SM</div>
-                  <div class="participant-details">
-                    <div class="participant-name">Sophie Martin</div>
-                    <div class="participant-email">sophie.martin@email.com</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 1.5rem;">♻️</span>
-                  <span>Défi Zéro Déchet</span>
-                </div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <div class="progress-bar-participant">
-                    <div class="progress-fill-participant high" style="width: 85%;"></div>
-                  </div>
-                  <span style="font-weight: 700;">85%</span>
-                </div>
-              </td>
-              <td>50%</td>
-              <td>01/04/2026</td>
-              <td><span class="badge badge-active">Actif</span></td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-icon" onclick="viewParticipant(1)" title="Voir détails">
-                    👁️
-                  </button>
-                  <button class="btn-icon btn-danger" onclick="removeParticipant(1)" title="Retirer">
-                    🗑️
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr class="table-row-animated">
-              <td>
-                <div class="participant-info">
-                  <div class="participant-avatar">KB</div>
-                  <div class="participant-details">
-                    <div class="participant-name">Karim Benali</div>
-                    <div class="participant-email">karim.benali@email.com</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 1.5rem;">💧</span>
-                  <span>Économie d'Eau</span>
-                </div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <div class="progress-bar-participant">
-                    <div class="progress-fill-participant medium" style="width: 62%;"></div>
-                  </div>
-                  <span style="font-weight: 700;">62%</span>
-                </div>
-              </td>
-              <td>40%</td>
-              <td>05/04/2026</td>
-              <td><span class="badge badge-active">Actif</span></td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-icon" onclick="viewParticipant(2)" title="Voir détails">
-                    👁️
-                  </button>
-                  <button class="btn-icon btn-danger" onclick="removeParticipant(2)" title="Retirer">
-                    🗑️
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr class="table-row-animated">
-              <td>
-                <div class="participant-info">
-                  <div class="participant-avatar">LD</div>
-                  <div class="participant-details">
-                    <div class="participant-name">Léa Dubois</div>
-                    <div class="participant-email">lea.dubois@email.com</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 1.5rem;">🥗</span>
-                  <span>Végan 30 Jours</span>
-                </div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <div class="progress-bar-participant">
-                    <div class="progress-fill-participant low" style="width: 28%;"></div>
-                  </div>
-                  <span style="font-weight: 700;">28%</span>
-                </div>
-              </td>
-              <td>60%</td>
-              <td>10/04/2026</td>
-              <td><span class="badge badge-active">Actif</span></td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-icon" onclick="viewParticipant(3)" title="Voir détails">
-                    👁️
-                  </button>
-                  <button class="btn-icon btn-danger" onclick="removeParticipant(3)" title="Retirer">
-                    🗑️
-                  </button>
-                </div>
+            <tr>
+              <td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">
+                <div style="font-size:2rem;margin-bottom:10px;">⏳</div>
+                Chargement des participants...
               </td>
             </tr>
           </tbody>
@@ -438,9 +327,7 @@
 
       <!-- Pagination participants -->
       <div class="table-pagination">
-        <div class="pagination-info">
-          Affichage de 1 à 3 sur 1,847 participants
-        </div>
+        <div class="pagination-info" id="participants-pagination-info">Affichage de 0 à 0 sur 0 participants</div>
         <div class="pagination-controls">
           <button class="btn btn-sm" disabled>← Précédent</button>
           <button class="btn btn-sm">Suivant →</button>

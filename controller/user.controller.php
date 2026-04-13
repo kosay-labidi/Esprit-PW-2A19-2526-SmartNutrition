@@ -77,6 +77,7 @@ class UserController
             return ['status' => 'error', 'data' => null];
         }
     }
+<<<<<<< HEAD
 
     /**
      * Retourne la liste de tous les utilisateurs
@@ -97,6 +98,8 @@ class UserController
             return [];
         }
     }
+=======
+>>>>>>> 9e1701d57447f1ea9a12952a4c5c4a4b6cc86823
 
     /**
      * @return array<string, mixed>|null

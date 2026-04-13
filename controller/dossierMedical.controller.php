@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../Model/DossierMedical.php';
+require_once __DIR__ . '/../Model/Regime.php';
 
 class DossierMedicalController {
 
@@ -65,5 +66,263 @@ class DossierMedicalController {
         $stmt = $db->prepare($sql);
         $stmt->execute([':id' => $id]);
     }
+
+    // Statistics and analytics
+    public function getStatistics() {
+        $db = config::getConnexion();
+
+        // Basic stats
+        $stats = [];
+
+        // Total dossiers
+        $stmt = $db->query("SELECT COUNT(*) as total FROM dossier_medical");
+        $stats['total_dossiers'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+        // Average IMC
+        $stmt = $db->query("SELECT AVG(imc) as avg_imc FROM dossier_medical WHERE imc IS NOT NULL");
+        $stats['avg_imc'] = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_imc'], 1);
+
+        // IMC categories distribution
+        $stmt = $db->query("
+            SELECT
+                CASE
+                    WHEN imc < 18.5 THEN 'underweight'
+                    WHEN imc < 25 THEN 'normal'
+                    WHEN imc < 30 THEN 'overweight'
+                    ELSE 'obese'
+                END as category,
+                COUNT(*) as count
+            FROM dossier_medical
+            WHERE imc IS NOT NULL
+            GROUP BY category
+        ");
+        $stats['imc_distribution'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Blood type distribution
+        $stmt = $db->query("
+            SELECT groupe_sanguin, COUNT(*) as count
+            FROM dossier_medical
+            WHERE groupe_sanguin IS NOT NULL
+            GROUP BY groupe_sanguin
+            ORDER BY count DESC
+        ");
+        $stats['blood_types'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Allergies count
+        $stmt = $db->query("SELECT COUNT(*) as count FROM dossier_medical WHERE allergie IS NOT NULL AND allergie != ''");
+        $stats['allergies_count'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
+        return $stats;
+    }
+
+    // Search dossiers
+    public function search($query, $filters = []) {
+        $sql = "SELECT * FROM dossier_medical WHERE 1=1";
+        $params = [];
+
+        if (!empty($query)) {
+            $sql .= " AND (allergie LIKE :query OR maladies LIKE :query OR traitement LIKE :query OR medecin LIKE :query)";
+            $params[':query'] = '%' . $query . '%';
+        }
+
+        // Apply filters
+        if (!empty($filters['groupe_sanguin'])) {
+            $sql .= " AND groupe_sanguin = :groupe_sanguin";
+            $params[':groupe_sanguin'] = $filters['groupe_sanguin'];
+        }
+
+        if (!empty($filters['imc_min'])) {
+            $sql .= " AND imc >= :imc_min";
+            $params[':imc_min'] = $filters['imc_min'];
+        }
+
+        if (!empty($filters['imc_max'])) {
+            $sql .= " AND imc <= :imc_max";
+            $params[':imc_max'] = $filters['imc_max'];
+        }
+
+        $sql .= " ORDER BY date_mise_a_jour DESC";
+
+        $db = config::getConnexion();
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Sort dossiers
+    public function sort($field = 'date_mise_a_jour', $direction = 'DESC') {
+        $allowedFields = ['id_dossier', 'poids', 'taille', 'imc', 'groupe_sanguin', 'date_mise_a_jour', 'date_creation'];
+        $allowedDirections = ['ASC', 'DESC'];
+
+        if (!in_array($field, $allowedFields)) {
+            $field = 'date_mise_a_jour';
+        }
+
+        if (!in_array(strtoupper($direction), $allowedDirections)) {
+            $direction = 'DESC';
+        }
+
+        $sql = "SELECT * FROM dossier_medical ORDER BY {$field} {$direction}";
+        $db = config::getConnexion();
+        return $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Export to PDF (basic implementation)
+    public function exportToPdf() {
+        $dossiers = $this->list();
+
+        // Basic HTML for PDF generation
+        $html = "<h1>Dossiers Médicaux - Export PDF</h1>";
+        $html .= "<table border='1' cellpadding='5'>";
+        $html .= "<tr><th>ID</th><th>Groupe Sanguin</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Allergies</th></tr>";
+
+        foreach ($dossiers as $d) {
+            $html .= "<tr>";
+            $html .= "<td>{$d['id_dossier']}</td>";
+            $html .= "<td>{$d['groupe_sanguin']}</td>";
+            $html .= "<td>{$d['poids']} kg</td>";
+            $html .= "<td>{$d['taille']} cm</td>";
+            $html .= "<td>" . number_format($d['imc'], 1) . "</td>";
+            $html .= "<td>{$d['allergie']}</td>";
+            $html .= "</tr>";
+        }
+
+        $html .= "</table>";
+        return $html;
+    }
+
+    // Health assistant methods
+    public function validateAliment($aliment, $userId = 1) {
+        // Get user's medical dossier
+        $dossier = $this->getByUserId($userId);
+        if (!$dossier) {
+            return ['allowed' => true, 'warnings' => [], 'alternatives' => []];
+        }
+
+        $warnings = [];
+        $alternatives = [];
+
+        // Check allergies
+        if ($dossier['allergie'] && stripos($dossier['allergie'], $aliment) !== false) {
+            $warnings[] = "Allergie détectée pour: {$aliment}";
+        }
+
+        // Check against user's authorized regimes
+        $authorizedRegimes = $this->getAuthorizedRegimes($userId);
+        foreach ($authorizedRegimes as $regime) {
+            if (!$regime->isAlimentAllowed($aliment)) {
+                $warnings[] = "Aliment interdit selon le régime: {$regime->getNomRegime()}";
+                $alternatives = array_merge($alternatives, $regime->getAlimentsRecommandesArray());
+            }
+        }
+
+        return [
+            'allowed' => empty($warnings),
+            'warnings' => $warnings,
+            'alternatives' => array_unique($alternatives)
+        ];
+    }
+
+    public function getByUserId($userId) {
+        $sql = "SELECT * FROM dossier_medical WHERE id_utilisateur = :user_id";
+        $db = config::getConnexion();
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':user_id' => $userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getAuthorizedRegimes($userId) {
+        $sql = "
+            SELECT r.* FROM regimes r
+            INNER JOIN dossier_regime dr ON r.id_regime = dr.id_regime
+            INNER JOIN dossier_medical d ON dr.id_dossier = d.id_dossier
+            WHERE d.id_utilisateur = :user_id
+        ";
+        $db = config::getConnexion();
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':user_id' => $userId]);
+
+        $regimes = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $regime = new Regime(
+                $row['id_regime'],
+                $row['nom_regime'],
+                $row['slug'],
+                $row['description'],
+                $row['type_regime'],
+                $row['niveau_difficulte'],
+                $row['aliments_interdits'],
+                $row['aliments_recommandes'],
+                $row['apport_calorique_moyen']
+            );
+            $regimes[] = $regime;
+        }
+        return $regimes;
+    }
+
+    // Handle API requests
+    public function handleRequest() {
+        header('Content-Type: application/json');
+
+        $action = $_GET['action'] ?? '';
+
+        try {
+            switch ($action) {
+                case 'read':
+                case 'list':
+                    $result = $this->list();
+                    echo json_encode(['success' => true, 'data' => $result]);
+                    break;
+
+                case 'stats':
+                    $stats = $this->getStatistics();
+                    echo json_encode($stats);
+                    break;
+
+                case 'search':
+                    $query = $_GET['q'] ?? '';
+                    $filters = [
+                        'groupe_sanguin' => $_GET['groupe_sanguin'] ?? '',
+                        'imc_min' => $_GET['imc_min'] ?? '',
+                        'imc_max' => $_GET['imc_max'] ?? ''
+                    ];
+                    $result = $this->search($query, $filters);
+                    echo json_encode(['success' => true, 'data' => $result]);
+                    break;
+
+                case 'sort':
+                    $field = $_GET['field'] ?? 'date_mise_a_jour';
+                    $direction = $_GET['direction'] ?? 'DESC';
+                    $result = $this->sort($field, $direction);
+                    echo json_encode(['success' => true, 'data' => $result]);
+                    break;
+
+                case 'validate_aliment':
+                    $aliment = $_GET['aliment'] ?? '';
+                    $userId = $_GET['user_id'] ?? 1;
+                    $result = $this->validateAliment($aliment, $userId);
+                    echo json_encode($result);
+                    break;
+
+                case 'export_pdf':
+                    $html = $this->exportToPdf();
+                    echo json_encode(['success' => true, 'html' => $html]);
+                    break;
+
+                default:
+                    echo json_encode(['success' => false, 'message' => 'Action not found']);
+                    break;
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+}
+
+// Handle API requests
+if (isset($_GET['action'])) {
+    $controller = new DossierMedicalController();
+    $controller->handleRequest();
 }
 ?>

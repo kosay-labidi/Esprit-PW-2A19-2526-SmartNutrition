@@ -9,7 +9,7 @@ class config
             $servername = "localhost";
             $username   = "root";
             $password   = "";
-            $dbname     = "DS_GaiaLumen";   
+            $dbname     = "DS_GaiaLumen";
 
             try {
                 self::$pdo = new PDO(
@@ -17,19 +17,14 @@ class config
                     $username,
                     $password
                 );
-
-                // Important settings for security and consistency
                 self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-                
             } catch (Exception $e) {
-                die('Erreur de connexion à la base de données : ' . $e->getMessage());
+                die('Erreur de connexion : ' . $e->getMessage());
             }
         }
         return self::$pdo;
     }
 }
-
-// Initialize connection when file is included
 config::getConnexion();
 ?>

@@ -1,6 +1,6 @@
 <?php
 require_once '../../../config.php';
-require_once '../../../Controller/regime.controller.php';
+require_once '../../../controller/regime.controller.php';
 $ctrl = new RegimeController();
 $id = $_GET['id'] ?? null;
 $regime = $id ? $ctrl->show($id) : null;
@@ -24,7 +24,7 @@ $regime = $id ? $ctrl->show($id) : null;
                 <p><strong>Niveau :</strong> <?php echo $regime['niveau_difficulte'] ?? '-'; ?></p>
                 <p class="col-span-2"><strong>Description :</strong> <?php echo htmlspecialchars($regime['description'] ?? '-'); ?></p>
             </div>
-            <a href="health-admin.html" class="mt-8 inline-block bg-[#77B5FE] text-white px-8 py-4 rounded-2xl">Retour à la liste</a>
+            <a href="../modules/health-admin.html" class="mt-8 inline-block bg-[#77B5FE] text-white px-8 py-4 rounded-2xl">Retour à la liste</a>
         </div>
     </main>
 </body>

@@ -1,6 +1,6 @@
 <?php
 require_once '../../../config.php';
-require_once '../../../Controller/regime.controller.php';
+require_once '../../../controller/regime.controller.php';
 
 $ctrl = new RegimeController();
 $id = $_GET['id'] ?? null;
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifier Régime - <?= SITE_NAME ?></title>
+    <title>Modifier Régime - GaiaLumen</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
     <style>
         :root {--vert:#013220;--sable:#CBBD93;--violet:#BA5BED;--bleu:#77B5FE;}
@@ -85,10 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main class="main-wrapper">
         <div class="glass p-10 max-w-3xl mx-auto mt-12">
             <h1 class="text-3xl font-bold text-[#013220] mb-2">✏️ Modifier le Régime</h1>
-            <p class="text-gray-600 mb-8">ID : <?= $id ?> — <?= e($regime['nom_regime'] ?? '') ?></p>
+            <p class="text-gray-600 mb-8">ID : <?= $id ?> — <?= htmlspecialchars($regime['nom_regime'] ?? '') ?></p>
 
             <?php if ($error): ?>
-                <div class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-2xl mb-6"><?= e($error) ?></div>
+                <div class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-2xl mb-6"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
 
             <form method="POST" class="space-y-8">
@@ -96,16 +96,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div>
                     <label class="block font-semibold mb-3 text-[#013220]">Nom du régime <span class="text-red-500">*</span></label>
                     <input type="text" name="nom_regime" class="health-input" required 
-                           value="<?= e($regime['nom_regime'] ?? $_POST['nom_regime'] ?? '') ?>">
+                           value="<?= htmlspecialchars($regime['nom_regime'] ?? $_POST['nom_regime'] ?? '') ?>">
                 </div>
 
                 <div>
                     <label class="block font-semibold mb-3">Description</label>
-                    <textarea name="description" rows="4" class="health-input"><?= e($regime['description'] ?? $_POST['description'] ?? '') ?></textarea>
+                    <textarea name="description" rows="4" class="health-input"><?= htmlspecialchars($regime['description'] ?? $_POST['description'] ?? '') ?></textarea>
                 </div>
 
-                <!-- Type, Niveau, JSON fields, Apport calorique ... (identique à addRegime) -->
-                <!-- Je les ai omis ici pour brevité, mais copiez-les exactement du addRegime.php ci-dessus et pré-remplissez avec $regime['champ'] -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block font-semibold mb-3">Type de régime</label>
+                        <select name="type_regime" class="health-input">
+                            <option value="alimentaire" <?= ($regime['type_regime'] ?? '') === 'alimentaire' ? 'selected' : '' ?>>Alimentaire</option>
+                            <option value="medical" <?= ($regime['type_regime'] ?? '') === 'medical' ? 'selected' : '' ?>>Médical</option>
+                            <option value="perte_de_poids" <?= ($regime['type_regime'] ?? '') === 'perte_de_poids' ? 'selected' : '' ?>>Perte de poids</option>
+                            <option value="prise_de_masse" <?= ($regime['type_regime'] ?? '') === 'prise_de_masse' ? 'selected' : '' ?>>Prise de masse</option>
+                            <option value="sportif" <?= ($regime['type_regime'] ?? '') === 'sportif' ? 'selected' : '' ?>>Sportif</option>
+                            <option value="autre" <?= ($regime['type_regime'] ?? '') === 'autre' ? 'selected' : '' ?>>Autre</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-3">Niveau de difficulté</label>
+                        <select name="niveau_difficulte" class="health-input">
+                            <option value="facile" <?= ($regime['niveau_difficulte'] ?? '') === 'facile' ? 'selected' : '' ?>>Facile</option>
+                            <option value="modere" <?= ($regime['niveau_difficulte'] ?? '') === 'modere' ? 'selected' : '' ?>>Modéré</option>
+                            <option value="avance" <?= ($regime['niveau_difficulte'] ?? '') === 'avance' ? 'selected' : '' ?>>Avancé</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block font-semibold mb-3">Aliments interdits (JSON)</label>
+                        <textarea name="aliments_interdits" rows="3" class="health-input" placeholder='["lait", "gluten", "arachides"]'><?= htmlspecialchars($regime['aliments_interdits'] ?? $_POST['aliments_interdits'] ?? '[]') ?></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-3">Aliments recommandés (JSON)</label>
+                        <textarea name="aliments_recommandes" rows="3" class="health-input" placeholder='["légumes", "fruits", "protéines"]'><?= htmlspecialchars($regime['aliments_recommandes'] ?? $_POST['aliments_recommandes'] ?? '[]') ?></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-3">Apport calorique moyen (kcal/jour)</label>
+                    <input type="number" step="0.1" name="apport_calorique" class="health-input"
+                           value="<?= htmlspecialchars($regime['apport_calorique_moyen'] ?? $_POST['apport_calorique'] ?? '') ?>" placeholder="ex. 1800">
+                </div>
 
                 <button type="submit" class="w-full bg-[#BA5BED] hover:bg-[#9d4dd4] text-white py-5 rounded-2xl font-semibold text-lg">
                     💾 Mettre à jour le régime

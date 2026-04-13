@@ -1,22 +1,24 @@
 <?php
 require_once '../../../config.php';
-require_once '../../../Controller/dossierMedical.controller.php';
+require_once '../../../controller/dossierMedical.controller.php';
+require_once '../../../Model/DossierMedical.php';
 
 $ctrl = new DossierMedicalController();
+$error = '';
+$success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Basic validation
-    if (empty($_POST['poids']) || empty($_POST['taille']) || $_POST['poids'] <= 0 || $_POST['taille'] <= 0) {
-        $error = "Poids et taille doivent être supérieurs à 0.";
-    } else {
+    $id_utilisateur = 1; // Change later when you have login
+
+    try {
         $dossier = new DossierMedical(
-            null, 
-            1, // user_id (à adapter selon votre système d'authentification)
-            null, 
+            null,
+            $id_utilisateur,
+            null,
             null,
             $_POST['groupe_sanguin'] ?? null,
-            (float)$_POST['poids'],
-            (float)$_POST['taille'],
+            floatval($_POST['poids'] ?? 0),
+            floatval($_POST['taille'] ?? 0),
             null,
             $_POST['regime_special'] ?? null,
             $_POST['notes_medecin'] ?? null,
@@ -28,102 +30,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['contact_en_cas_durgence'] ?? null
         );
 
-        $result = $ctrl->add($dossier);  // Assurez-vous que votre controller a une méthode add()
-        
-        if ($result) {
-            header('Location: health.html?msg=dossier_added');
-            exit;
-        } else {
-            $error = "Erreur lors de l'ajout du dossier.";
-        }
+        $result = $ctrl->add($dossier);
+        $success = "✅ Dossier médical enregistré avec succès!";
+    } catch (Exception $e) {
+        $error = "❌ Erreur : " . $e->getMessage();
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajouter un Dossier Médical</title>
+    <title>Ajouter Dossier Médical</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
     <style>
-        :root{--vert:#013220;--sable:#CBBD93;--violet:#BA5BED;--bleu:#77B5FE;}
-        body { background: var(--sable); font-family: system-ui, sans-serif; }
-        .glass {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            box-shadow: 0 15px 35px rgba(1,50,32,0.15);
-        }
+        :root { --vert:#013220; --sable:#CBBD93; --violet:#BA5BED; --bleu:#77B5FE; }
+        body { background: var(--sable); }
+        .glass { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 40px; max-width: 900px; margin: 40px auto; box-shadow: 0 15px 40px rgba(1,50,32,0.15); }
+        input, select, textarea { width: 100%; padding: 12px 16px; border: 2px solid var(--bleu); border-radius: 12px; font-size: 14px; margin-bottom: 12px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--violet); outline: none; }
+        button { background: var(--violet); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; }
+        button:hover { background: #9d4dd4; }
     </style>
 </head>
 <body>
-    <main class="main-wrapper">
-        <div class="glass p-10 max-w-3xl mx-auto mt-12">
-            <h1 class="text-3xl font-bold text-[#013220] mb-8 flex items-center gap-3">
-                ➕ Ajouter un nouveau dossier médical
-            </h1>
+    <div class="glass">
+        <h1 style="color: var(--vert); margin-bottom: 20px;">➕ Ajouter un Dossier Médical</h1>
+        
+        <?php if ($error): ?><div style="background: #fee; color: #c33; padding: 15px; border-radius: 10px; margin-bottom: 20px;"><?= htmlspecialchars($error) ?></div><?php endif; ?>
+        <?php if ($success): ?><div style="background: #efe; color: #3c3; padding: 15px; border-radius: 10px; margin-bottom: 20px;"><?= htmlspecialchars($success) ?></div><?php endif; ?>
 
-            <?php if (isset($error)): ?>
-                <p class="text-red-600 bg-red-100 p-4 rounded-2xl mb-6"><?= htmlspecialchars($error) ?></p>
-            <?php endif; ?>
+        <form method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Groupe sanguin</label>
+                <select name="groupe_sanguin">
+                    <option value="">— Sélectionner —</option>
+                    <option value="O+">O+</option><option value="O-">O-</option>
+                    <option value="A+">A+</option><option value="A-">A-</option>
+                    <option value="B+">B+</option><option value="B-">B-</option>
+                    <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                </select>
+            </div>
+            <div><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Poids (kg)</label><input type="number" step="0.1" name="poids" required></div>
+            <div><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Taille (cm)</label><input type="number" step="0.1" name="taille" required></div>
+            <div><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Régime spécial</label><input type="text" name="regime_special" placeholder="ex. Végétarien"></div>
 
-            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Biométrie -->
-                <div class="md:col-span-2">
-                    <h3 class="text-xl font-semibold text-[#013220] mb-4">Biométrie</h3>
-                </div>
-                <div>
-                    <label class="block font-semibold mb-2 text-[#013220]">Groupe sanguin</label>
-                    <select name="groupe_sanguin" class="w-full rounded-2xl border border-[#77B5FE] p-4">
-                        <option value="">— Sélectionner —</option>
-                        <option value="O+">O+</option><option value="O-">O-</option>
-                        <option value="A+">A+</option><option value="A-">A-</option>
-                        <option value="B+">B+</option><option value="B-">B-</option>
-                        <option value="AB+">AB+</option><option value="AB-">AB-</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block font-semibold mb-2 text-[#013220]">Poids (kg)</label>
-                    <input type="number" step="0.1" name="poids" class="w-full rounded-2xl border border-[#77B5FE] p-4" required>
-                </div>
-                <div>
-                    <label class="block font-semibold mb-2 text-[#013220]">Taille (cm)</label>
-                    <input type="number" step="0.1" name="taille" class="w-full rounded-2xl border border-[#77B5FE] p-4" required>
-                </div>
+            <div style="grid-column: 1 / -1;"><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Allergies</label><textarea name="allergie" rows="3"></textarea></div>
+            <div><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Gravité allergie</label>
+                <select name="gravite_allergie">
+                    <option value="">— Sélectionner —</option>
+                    <option value="légère">Légère</option><option value="modérée">Modérée</option>
+                    <option value="sévère">Sévère</option><option value="anaphylactique">Anaphylactique</option>
+                </select>
+            </div>
+            <div style="grid-column: 1 / -1;"><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Maladies chroniques</label><textarea name="maladies" rows="3"></textarea></div>
 
-                <!-- Allergies & Maladies -->
-                <div class="md:col-span-2 mt-6">
-                    <h3 class="text-xl font-semibold text-[#013220] mb-4">Allergies & Maladies</h3>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block font-semibold mb-2 text-[#013220]">Allergies</label>
-                    <textarea name="allergie" rows="3" class="w-full rounded-2xl border border-[#77B5FE] p-4" placeholder="ex. Arachides, lactose..."></textarea>
-                </div>
-                <div>
-                    <label class="block font-semibold mb-2 text-[#013220]">Gravité</label>
-                    <select name="gravite_allergie" class="w-full rounded-2xl border border-[#77B5FE] p-4">
-                        <option value="">— Sélectionner —</option>
-                        <option value="légère">Légère</option>
-                        <option value="modérée">Modérée</option>
-                        <option value="sévère">Sévère</option>
-                        <option value="anaphylactique">Anaphylactique</option>
-                    </select>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block font-semibold mb-2 text-[#013220]">Maladies chroniques</label>
-                    <textarea name="maladies" rows="3" class="w-full rounded-2xl border border-[#77B5FE] p-4" placeholder="ex. Diabète, hypertension..."></textarea>
-                </div>
-
-                <div class="md:col-span-2 mt-8">
-                    <button type="submit" class="w-full bg-[#BA5BED] hover:bg-[#9d4dd4] text-white py-5 rounded-2xl font-semibold text-lg transition">
-                        💾 Enregistrer le dossier
-                    </button>
-                </div>
-            </form>
-
-            <a href="health.html" class="mt-6 inline-block text-[#013220] hover:underline">← Retour à Ma Santé</a>
-        </div>
-    </main>
+            <div style="grid-column: 1 / -1;">
+                <button type="submit">💾 Enregistrer le dossier médical</button>
+            </div>
+        </form>
+        <a href="../health.html" style="margin-top: 20px; display: inline-block; color: var(--vert); text-decoration: none;">← Retour</a>
+    </div>
 </body>
 </html>

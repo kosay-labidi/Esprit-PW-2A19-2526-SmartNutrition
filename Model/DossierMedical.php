@@ -41,8 +41,11 @@ class DossierMedical {
         $this->contact_en_cas_durgence = $contact_en_cas_durgence;
     }
 
+    // Getters
     public function getIdDossier() { return $this->id_dossier; }
     public function getIdUtilisateur() { return $this->id_utilisateur; }
+    public function getDateCreation() { return $this->date_creation; }
+    public function getDateMiseAJour() { return $this->date_mise_a_jour; }
     public function getGroupeSanguin() { return $this->groupe_sanguin; }
     public function getPoids() { return $this->poids; }
     public function getTaille() { return $this->taille; }
@@ -55,5 +58,89 @@ class DossierMedical {
     public function getTraitement() { return $this->traitement; }
     public function getMedecin() { return $this->medecin; }
     public function getContactUrgence() { return $this->contact_en_cas_durgence; }
+
+    // Setters
+    public function setIdDossier(?int $id_dossier) { $this->id_dossier = $id_dossier; }
+    public function setIdUtilisateur(?int $id_utilisateur) { $this->id_utilisateur = $id_utilisateur; }
+    public function setDateCreation(?string $date_creation) { $this->date_creation = $date_creation; }
+    public function setDateMiseAJour(?string $date_mise_a_jour) { $this->date_mise_a_jour = $date_mise_a_jour; }
+    public function setGroupeSanguin(?string $groupe_sanguin) { $this->groupe_sanguin = $groupe_sanguin; }
+    public function setPoids(?float $poids) { $this->poids = $poids; }
+    public function setTaille(?float $taille) { $this->taille = $taille; }
+    public function setImc(?float $imc) { $this->imc = $imc; }
+    public function setRegimeSpecial(?string $regime_special) { $this->regime_special = $regime_special; }
+    public function setNotesMedecin(?string $notes_medecin) { $this->notes_medecin = $notes_medecin; }
+    public function setAllergie(?string $allergie) { $this->allergie = $allergie; }
+    public function setGraviteAllergie(?string $gravite_allergie) { $this->gravite_allergie = $gravite_allergie; }
+    public function setMaladies(?string $maladies) { $this->maladies = $maladies; }
+    public function setTraitement(?string $traitement) { $this->traitement = $traitement; }
+    public function setMedecin(?string $medecin) { $this->medecin = $medecin; }
+    public function setContactUrgence(?string $contact_en_cas_durgence) { $this->contact_en_cas_durgence = $contact_en_cas_durgence; }
+
+    // Helper methods
+    public function calculateImc() {
+        if ($this->poids && $this->taille && $this->taille > 0) {
+            return $this->poids / (($this->taille / 100) ** 2);
+        }
+        return null;
+    }
+
+    public function getImcCategory() {
+        if (!$this->imc) return null;
+        if ($this->imc < 18.5) return 'underweight';
+        if ($this->imc < 25) return 'normal';
+        if ($this->imc < 30) return 'overweight';
+        return 'obese';
+    }
+
+    public function getImcCategoryLabel() {
+        $category = $this->getImcCategory();
+        switch ($category) {
+            case 'underweight': return 'Insuffisance pondérale';
+            case 'normal': return 'Poids normal';
+            case 'overweight': return 'Surpoids';
+            case 'obese': return 'Obésité';
+            default: return 'Non calculé';
+        }
+    }
+
+    public function toArray() {
+        return [
+            'id_dossier' => $this->id_dossier,
+            'id_utilisateur' => $this->id_utilisateur,
+            'date_creation' => $this->date_creation,
+            'date_mise_a_jour' => $this->date_mise_a_jour,
+            'groupe_sanguin' => $this->groupe_sanguin,
+            'poids' => $this->poids,
+            'taille' => $this->taille,
+            'imc' => $this->imc,
+            'regime_special' => $this->regime_special,
+            'notes_medecin' => $this->notes_medecin,
+            'allergie' => $this->allergie,
+            'gravite_allergie' => $this->gravite_allergie,
+            'maladies' => $this->maladies,
+            'traitement' => $this->traitement,
+            'medecin' => $this->medecin,
+            'contact_en_cas_durgence' => $this->contact_en_cas_durgence
+        ];
+    }
+
+    public function validate() {
+        $errors = [];
+
+        if ($this->poids !== null && $this->poids <= 0) {
+            $errors[] = "Le poids doit être supérieur à 0";
+        }
+
+        if ($this->taille !== null && $this->taille <= 0) {
+            $errors[] = "La taille doit être supérieure à 0";
+        }
+
+        if ($this->groupe_sanguin && !preg_match('/^(A|B|AB|O)[+-]$/', $this->groupe_sanguin)) {
+            $errors[] = "Le groupe sanguin doit être au format A+, B-, AB+, O-, etc.";
+        }
+
+        return $errors;
+    }
 }
 ?>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ma Santé & Nutrition</title>
-    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
     <style>
         :root {
             --vert: #013220;
@@ -145,6 +145,172 @@
             z-index: 10000;
             display: none;
         }
+
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid rgba(186, 91, 237, 0.1);
+        }
+
+        .stat-card h4 {
+            color: var(--vert);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--violet);
+            margin-bottom: 8px;
+        }
+
+        .assistant-container {
+            margin-top: 20px;
+        }
+
+        .assistant-section {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .assistant-tool {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .assistant-tool:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .assistant-tool h4 {
+            color: var(--vert);
+            margin-bottom: 15px;
+        }
+
+        .assistant-tool input, .assistant-tool select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .assistant-tool input:focus, .assistant-tool select:focus {
+            border-color: var(--bleu);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--violet), var(--bleu));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-container {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .warnings, .alternatives {
+            margin-top: 15px;
+        }
+
+        .warnings h5, .alternatives h5 {
+            color: var(--vert);
+            margin-bottom: 8px;
+        }
+
+        .warnings ul, .alternatives ul {
+            margin-left: 20px;
+        }
+
+        .warnings li, .alternatives li {
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .suggestions-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .suggestion-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .suggestion-card h4 {
+            color: var(--vert);
+            margin-bottom: 8px;
+        }
+
+        .regime-meta {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .regime-meta span {
+            background: var(--violet);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .calories {
+            color: var(--bleu);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="bg-[#CBBD93]">
@@ -160,7 +326,7 @@
         <button class="health-tab-btn active" data-tab="dossier" onclick="healthTabSwitch(this, 'dossier')">📋 Dossier Médical</button>
         <button class="health-tab-btn" data-tab="regimes" onclick="healthTabSwitch(this, 'regimes')">🥗 Mes Régimes</button>
         <button class="health-tab-btn" data-tab="assistant" onclick="healthTabSwitch(this, 'assistant')">🤖 Assistant Santé</button>
-        <button class="health-tab-btn" data-tab="scores" onclick="healthTabSwitch(this, 'scores')">📊 Scores Nutritionnels</button>
+        <button class="health-tab-btn" data-tab="statistics" onclick="healthTabSwitch(this, 'statistics')">📊 Statistiques</button>
     </div>
 
     <!-- ==================== TAB DOSSIER ==================== -->
@@ -240,12 +406,12 @@
                 <button type="button" class="health-btn health-btn-bleu" onclick="healthCalculateIMC()">
                     📐 Calculer IMC
                 </button>
-                <a href="addDossier.php" class="health-btn" style="background:#013220;color:white;">
-                    ➕ Nouveau dossier
-                </a>
-                <a href="updateDossier.php" class="health-btn" style="background:#77B5FE;color:white;">
-                    ✏️ Modifier dossier
-                </a>
+                <a href="health/addDossier.php" class="health-btn" style="background:#013220;color:white;">
+                     ➕ Nouveau dossier
+                 </a>
+                 <a href="health/updateDossier.php" class="health-btn" style="background:#77B5FE;color:white;">
+                     ✏️ Modifier dossier
+                 </a>
             </div>
         </div>
     </div>
@@ -262,31 +428,63 @@
             </div>
 
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="addRegime.php" class="health-btn health-btn-bleu">
-                    ➕ Ajouter un régime
-                </a>
-                <a href="updateRegime.php" class="health-btn" style="background:#013220;color:white;">
-                    ✏️ Modifier un régime
-                </a>
+                <a href="health/addRegime.php" class="health-btn health-btn-bleu">
+                     ➕ Ajouter un régime
+                 </a>
+                 <a href="health/updateRegime.php" class="health-btn" style="background:#013220;color:white;">
+                     ✏️ Modifier un régime
+                 </a>
             </div>
         </div>
     </div>
 
-    <!-- ==================== TAB ASSISTANT (Placeholder) ==================== -->
+    <!-- ==================== TAB ASSISTANT ==================== -->
     <div id="health-tab-assistant" class="health-tab-content">
         <div class="health-panel">
             <h3 class="health-h3">🤖 Assistant Santé & Nutrition</h3>
-            <p class="health-muted">Votre assistant IA est en cours de développement. Revenez bientôt !</p>
-            <!-- Paste your original assistant code here -->
+            <p class="health-muted">Votre assistant intelligent pour valider les aliments et obtenir des recommandations personnalisées.</p>
+
+            <div id="healthAssistant" class="assistant-container">
+                <!-- Health assistant will be loaded here by JavaScript -->
+            </div>
         </div>
     </div>
 
-    <!-- ==================== TAB SCORES (Placeholder) ==================== -->
-    <div id="health-tab-scores" class="health-tab-content">
+    <!-- ==================== TAB STATISTICS ==================== -->
+    <div id="health-tab-statistics" class="health-tab-content">
         <div class="health-panel">
-            <h3 class="health-h3">📊 Mes Scores Nutritionnels & Écologiques</h3>
-            <p class="health-muted">Fonctionnalité en cours de développement.</p>
-            <!-- Paste your original scores code here -->
+            <h3 class="health-h3">📊 Statistiques & Analyses</h3>
+            <p class="health-muted">Visualisez vos métriques de santé et les tendances nutritionnelles.</p>
+
+            <div class="statistics-grid">
+                <div class="stat-card">
+                    <h4>Mes Dossiers</h4>
+                    <div class="stat-value" id="user-dossiers-count">0</div>
+                    <p>Dossiers médicaux actifs</p>
+                </div>
+                <div class="stat-card">
+                    <h4>IMC Actuel</h4>
+                    <div class="stat-value" id="current-imc">-</div>
+                    <p>Indice de masse corporelle</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Régimes Suivis</h4>
+                    <div class="stat-value" id="user-regimes-count">0</div>
+                    <p>Régimes autorisés</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Score Santé</h4>
+                    <div class="stat-value" id="health-score">-</div>
+                    <p>Évaluation globale</p>
+                </div>
+            </div>
+
+            <div class="charts-section" style="margin-top: 30px;">
+                <h4>Évolution de votre IMC</h4>
+                <div id="imc-chart-user" class="chart-container">
+                    <p class="text-center text-gray-500">Chargement de vos données...</p>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -325,10 +523,43 @@
         showToast('IMC Calculé', message, 'success');
     }
 
-    // Save Dossier (Demo)
-    function healthSaveDossier() {
-        // In real project, send data via fetch/AJAX to backend
-        showToast('Succès', 'Dossier médical enregistré avec succès !', 'success');
+    // Save Dossier
+    async function healthSaveDossier() {
+        const dossierData = {
+            id_utilisateur: 1, // Static user ID for now
+            groupe_sanguin: document.getElementById('healthDossierGroupe').value,
+            poids: parseFloat(document.getElementById('healthDossierPoids').value),
+            taille: parseFloat(document.getElementById('healthDossierTaille').value),
+            regime_special: '',
+            notes_medecin: '',
+            allergie: document.getElementById('healthDossierAllergie').value,
+            gravite_allergie: document.getElementById('healthDossierGravite').value,
+            maladies: document.getElementById('healthDossierMaladies').value,
+            traitement: '',
+            medecin: '',
+            contact_en_cas_durgence: ''
+        };
+
+        try {
+            const response = await fetch('health/addDossier.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(dossierData)
+            });
+
+            if (response.ok) {
+                showToast('Succès', 'Dossier médical enregistré avec succès !', 'success');
+                // Reload the page or refresh data
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showToast('Erreur', 'Erreur lors de l\'enregistrement du dossier.', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving dossier:', error);
+            showToast('Erreur', 'Erreur de connexion.', 'error');
+        }
     }
 
     // Simple Toast Notification
@@ -346,23 +577,95 @@
         }, 4000);
     }
 
-    // Load regimes when tab is opened (demo)
-    document.querySelector('[data-tab="regimes"]').addEventListener('click', function() {
-        setTimeout(() => {
-            const container = document.getElementById('healthRegimeListContainer');
+    // Load regimes when tab is opened
+    async function loadRegimes() {
+        const container = document.getElementById('healthRegimeListContainer');
+        container.innerHTML = '<div style="text-align:center; padding:40px;"><div class="section-loader-spinner"></div><p class="health-muted">Chargement des régimes...</p></div>';
+
+        try {
+            const response = await fetch('controller/regime.controller.php?action=list');
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const data = await response.json();
+            if (data.success && data.data && data.data.length > 0) {
+                const regimesHTML = data.data.map(regime => `
+                    <div class="regime-card" style="background:#f9f9f9; border-radius:12px; padding:20px; margin-bottom:15px; border:1px solid #eee;">
+                        <h4 style="color:#013220; margin-bottom:10px;">${regime.nom_regime}</h4>
+                        <p class="health-muted" style="margin-bottom:8px;">${regime.description || 'Aucune description'}</p>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <span style="background:#77B5FE; color:white; padding:4px 8px; border-radius:20px; font-size:0.8rem;">${regime.type_regime}</span>
+                            <span style="background:#BA5BED; color:white; padding:4px 8px; border-radius:20px; font-size:0.8rem;">${regime.niveau_difficulte}</span>
+                        </div>
+                        <div style="font-size:0.9rem;">
+                            <strong>Calories:</strong> ${regime.apport_calorique_moyen || 'N/A'} kcal/jour
+                        </div>
+                        <div style="margin-top:10px;">
+                            <a href="../health/updateRegime.php?id=${regime.id_regime}" style="color:#77B5FE; text-decoration:none; font-weight:500;">✏️ Modifier</a>
+                        </div>
+                    </div>
+                `).join('');
+                container.innerHTML = regimesHTML;
+            } else {
+                container.innerHTML = `
+                    <div style="padding:20px; background:#f9f9f9; border-radius:12px; border:1px solid #eee;">
+                        <p><strong>Aucun régime enregistré pour le moment.</strong></p>
+                        <p class="health-muted">Ajoutez votre premier régime via le bouton ci-dessous.</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading regimes:', error);
             container.innerHTML = `
-                <div style="padding:20px; background:#f9f9f9; border-radius:12px; border:1px solid #eee;">
-                    <p><strong>Aucun régime enregistré pour le moment.</strong></p>
-                    <p class="health-muted">Ajoutez votre premier régime via le bouton ci-dessous.</p>
+                <div style="padding:20px; background:#ffebee; border-radius:12px; border:1px solid #f44336;">
+                    <p><strong>Erreur de chargement</strong></p>
+                    <p class="health-muted">Impossible de charger les régimes.</p>
                 </div>
             `;
-        }, 800);
+        }
+    }
+
+    document.querySelector('[data-tab="regimes"]').addEventListener('click', function() {
+        setTimeout(() => loadRegimes(), 300);
     });
 
     // Auto-calculate IMC when weight or height changes
     document.getElementById('healthDossierPoids').addEventListener('input', healthCalculateIMC);
     document.getElementById('healthDossierTaille').addEventListener('input', healthCalculateIMC);
+
+    // Load existing dossier data on page load
+    async function loadExistingDossier() {
+        try {
+            const response = await fetch('controller/dossierMedical.controller.php?action=read');
+            if (!response.ok) return;
+
+            const data = await response.json();
+            if (data.success && data.data && data.data.length > 0) {
+                const dossier = data.data[0]; // Get first dossier (assuming user has only one)
+
+                // Fill form fields
+                if (dossier.groupe_sanguin) document.getElementById('healthDossierGroupe').value = dossier.groupe_sanguin;
+                if (dossier.poids) document.getElementById('healthDossierPoids').value = dossier.poids;
+                if (dossier.taille) document.getElementById('healthDossierTaille').value = dossier.taille;
+                if (dossier.allergie) document.getElementById('healthDossierAllergie').value = dossier.allergie;
+                if (dossier.gravite_allergie) document.getElementById('healthDossierGravite').value = dossier.gravite_allergie;
+                if (dossier.maladies) document.getElementById('healthDossierMaladies').value = dossier.maladies;
+
+                // Calculate IMC if both weight and height are present
+                if (dossier.poids && dossier.taille) {
+                    healthCalculateIMC();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading dossier:', error);
+        }
+    }
+
+    // Load data when dossier tab is clicked
+    document.querySelector('[data-tab="dossier"]').addEventListener('click', function() {
+        setTimeout(() => loadExistingDossier(), 300);
+    });
 </script>
+<script src="js/health.controller.js"></script>
 
 </body>
 </html>

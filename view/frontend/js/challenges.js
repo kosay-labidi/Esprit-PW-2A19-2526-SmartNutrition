@@ -140,9 +140,19 @@ function initChallenges() {
   // ── Chargement des données ────────────────────────────────
    function loadChallenges() {
      loading.style.display = 'flex';
-     fetch('../backend/challenges/listChallenges.php')
+     
+     // Utiliser l'en-tête X-Requested-With pour que listChallenges.php sache que c'est une requête AJAX
+     fetch('../backend/challenges/listChallenges.php', {
+       headers: {
+         'X-Requested-With': 'XMLHttpRequest'
+       }
+     })
        .then(response => response.json())
        .then(data => {
+         // Mettre à jour sampleChallenges pour que les autres fonctions y aient accès
+         sampleChallenges.length = 0; // Vider l'array
+         data.forEach(c => sampleChallenges.push(c));
+         
          renderChallenges(data);
          loading.style.display = 'none';
        })
@@ -457,55 +467,68 @@ window.handleInlineParticipationSubmit = function(event, challengeId) {
   // Disable submit button and show loading state
   submitBtn.disabled = true;
   const originalBtnText = submitBtn.innerHTML;
-  submitBtn.innerHTML = 'Envoi en cours...';
+  submitBtn.innerHTML = '<span class="spinner-small"></span> Envoi...';
   
   // Extract form data using FormData API
   const formData = new FormData(form);
   const data = {
+    id_challenge: challengeId,
     nom: formData.get('nom'),
     email: formData.get('email'),
     objectif: parseInt(formData.get('objectif')),
     motivation: formData.get('motivation'),
     action: formData.get('action'),
-    engagement: formData.get('engagement') === 'on',
-    notifications: formData.get('notifications') === 'on'
+    engagement: formData.get('engagement') === 'on' ? 1 : 0,
+    notifications: formData.get('notifications') === 'on' ? 1 : 0
   };
   
-  // Call validation function
-  if (!validateParticipationData(data)) {
-    // Re-enable submit button on validation failure
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = originalBtnText;
-    return;
-  }
-  
-  // Simulate API call (to be replaced with real API call)
-  // POST /api/challenges/:id/participate
-  setTimeout(() => {
-    // Simulate success response
-    const challenge = sampleChallenges.find(c => c.id === parseInt(challengeId));
-    
-    if (challenge) {
-      // Update challenge participant count
-      challenge.participants_count++;
+  // Call backend API
+  fetch('../backend/challenges/addParticipant.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      const challenge = sampleChallenges.find(c => c.id === parseInt(challengeId));
       
-      // Show success toast message with challenge icon
-      showToast(`Félicitations ${data.nom}! Vous participez maintenant au défi "${challenge.titre}" ${challenge.streak_icon}`, 'success');
-      
-      // Close form on success
-      window.hideInlineParticipationForm(challengeId);
-      
-      // Update challenge card participant count
-      setTimeout(() => {
-        updateChallengeCard(challengeId);
-      }, 350);
+      if (challenge) {
+        // Update challenge participant count locally
+        if (challenge.participants_count !== undefined) {
+          challenge.participants_count++;
+        } else {
+          challenge.participants_count = 1;
+        }
+        
+        // Show success toast
+        showToast(`Félicitations ${data.nom}! ${result.message}`, 'success');
+        
+        // Close form on success
+        window.hideInlineParticipationForm(challengeId);
+        
+        // Update challenge card participant count if possible
+        const card = document.querySelector(`.challenge-card[data-challenge-id="${challengeId}"]`);
+        if (card) {
+          const stats = card.querySelector('.challenge-stat span');
+          if (stats) stats.textContent = `${challenge.participants_count} participants`;
+        }
+      }
     } else {
-      // Show error toast if challenge not found
-      showToast('Erreur: Défi introuvable', 'error');
+      showToast(result.message || 'Erreur lors de l\'inscription', 'error');
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalBtnText;
     }
-  }, 800);
+  })
+  .catch(err => {
+    console.error('Erreur:', err);
+    showToast('Une erreur réseau est survenue', 'error');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
+  });
 };
 
 // Helper function to validate participation data

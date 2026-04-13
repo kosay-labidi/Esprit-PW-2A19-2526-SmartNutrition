@@ -237,6 +237,7 @@ function loadChallenges() {
           valeur_cible: parseInt(c.valeur_cible),
           participants_count: parseInt(c.participants_count || 0),
           progression: parseInt(c.progression || 0),
+          statut: normalizeChallengeStatus(c.statut),
           steaker: c.streak_icon || '🏆',
           steaker_nom: c.objectif || 'Défi' // Utiliser l'objectif comme nom par défaut
         }));
@@ -257,6 +258,17 @@ function loadChallenges() {
       filterChallenges();
       loading.style.display = 'none';
     });
+}
+
+function normalizeChallengeStatus(value) {
+  const raw = (value ?? '').toString().trim().toLowerCase();
+  if (!raw) return 'actif';
+  if (raw === 'active') return 'actif';
+  if (raw === 'terminé') return 'termine';
+  if (raw === 'terminée') return 'termine';
+  if (raw === 'a venir') return 'futur';
+  if (raw === 'à venir') return 'futur';
+  return raw;
 }
 
 function filterChallenges() {
@@ -296,17 +308,19 @@ function renderChallenges(challenges) {
     const dateFin = new Date(c.date_fin);
     const niveau = getSteakerLevel(c.progression);
     const progressColor = getProgressColor(c.progression);
+    const statut = normalizeChallengeStatus(c.statut);
+    const canParticipate = statut === 'actif';
     
     return `
-      <div class="challenge-card" onclick="showChallengeDetail(${c.id})">
+      <div class="challenge-card" data-challenge-id="${c.id}">
         ${c.image ? `<img src="${c.image}" alt="${c.titre}" class="challenge-image">` : ''}
         
         <div class="challenge-steaker">
           ${createSteakerHTML(c.steaker, niveau, 'small')}
         </div>
         
-        <div class="challenge-badge ${c.statut}">
-          ${c.statut === 'actif' ? '✅ Actif' : c.statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}
+        <div class="challenge-badge ${statut}">
+          ${statut === 'actif' ? '✅ Actif' : statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}
         </div>
         
         <div class="challenge-content">
@@ -344,6 +358,14 @@ function renderChallenges(challenges) {
               <div class="progress-bar-fill ${progressColor}" style="width: ${c.progression}%"></div>
             </div>
           </div>
+
+          <button
+            class="btn-participate ${canParticipate ? '' : 'is-disabled'}"
+            data-challenge-id="${c.id}"
+            data-challenge-status="${statut}"
+          >
+            Participer
+          </button>
         </div>
       </div>
     `;
@@ -448,8 +470,9 @@ function showChallengeDetail(challengeId) {
   const dateFin = new Date(challenge.date_fin);
   const niveau = getSteakerLevel(challenge.progression);
   const progressColor = getProgressColor(challenge.progression);
-  const isActif = challenge.statut === 'actif';
-  const isTermine = challenge.statut === 'termine';
+  const statut = normalizeChallengeStatus(challenge.statut);
+  const isActif = statut === 'actif';
+  const isTermine = statut === 'termine';
   const joursRestants = Math.ceil((dateFin - new Date()) / (1000 * 60 * 60 * 24));
 
   modalBody.innerHTML = `
@@ -461,8 +484,8 @@ function showChallengeDetail(challengeId) {
         
         <div style="flex:1;">
           <h2 style="font-size:2rem;margin-bottom:8px;">${challenge.titre}</h2>
-          <div class="challenge-badge ${challenge.statut}" style="position:static;display:inline-block;">
-            ${challenge.statut === 'actif' ? '✅ Actif' : challenge.statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}
+          <div class="challenge-badge ${statut}" style="position:static;display:inline-block;">
+            ${statut === 'actif' ? '✅ Actif' : statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}
           </div>
         </div>
       </div>
@@ -533,15 +556,20 @@ function openParticipationForm(challengeId) {
   const challenge = allChallenges.find(c => c.id === challengeId);
   const modal = document.getElementById('participation-modal');
   const title = document.getElementById('modal-challenge-title');
+  const desc = document.getElementById('modal-challenge-desc');
   
-  if (!challenge || !modal || !title) return;
+  if (!challenge || !modal || !title || !desc) return;
   
   title.textContent = `Défi: ${challenge.titre}`;
+  desc.textContent = challenge.description || '';
   closeChallengeModal();
   modal.classList.add('active');
   
   // Reset form
-  document.getElementById('participation-form').reset();
+  const form = document.getElementById('participation-form');
+  if (form) form.reset();
+  const submitText = document.getElementById('participation-submit-text');
+  if (submitText) submitText.textContent = 'Confirmer';
   updateCharCount();
 }
 
@@ -552,48 +580,116 @@ function closeParticipationModal() {
 }
 
 function updateCharCount() {
-  const textarea = document.getElementById('participant-objective');
-  const charCount = document.querySelector('.char-count');
+  const textarea = document.getElementById('participant-motivation');
+  const charCount = document.getElementById('motivation-count');
   if (textarea && charCount) {
     const length = textarea.value.length;
-    charCount.textContent = `${length} / 50`;
-    charCount.style.color = length >= 50 ? 'var(--success)' : 'var(--muted)';
+    charCount.textContent = `${length}/500`;
+    charCount.style.color = length >= 10 ? 'var(--success)' : 'var(--muted)';
   }
 }
 
-function handleParticipationSubmit(e) {
-  e.preventDefault();
+function handleParticipationSubmit(event) {
+  event.preventDefault();
   
+  // 💡 Protection anti-double-clic et vérification du statut
+  const submitText = document.getElementById('participation-submit-text');
+  const btnSubmit = event.target.querySelector('button[type="submit"]');
+  if (btnSubmit && btnSubmit.disabled) return;
+  if (btnSubmit) btnSubmit.disabled = true;
+
   const challenge = allChallenges.find(c => c.id === currentChallengeId);
-  if (!challenge) return;
+  if (!challenge) {
+    if (btnSubmit) btnSubmit.disabled = false;
+    return;
+  }
   
-  const formData = {
-    nom: document.getElementById('participant-name').value,
-    objectif: document.getElementById('participant-objective').value,
-    engagement: document.getElementById('participant-engagement').value,
-    accept: document.getElementById('participant-accept').checked
+  const nom = document.getElementById('participant-nom')?.value || '';
+  const email = document.getElementById('participant-email')?.value || '';
+  const objectif = parseInt(document.getElementById('participant-objectif')?.value || '0', 10);
+  const motivation = document.getElementById('participant-motivation')?.value || '';
+  const action = document.getElementById('participant-action')?.value || '';
+  const engagementChecked = !!document.getElementById('participant-engagement')?.checked;
+  const notificationsChecked = !!document.getElementById('participant-notifications')?.checked;
+
+  const resetBtn = () => {
+    if (btnSubmit) btnSubmit.disabled = false;
+    if (submitText) submitText.textContent = 'Confirmer';
   };
-  
-  // Validation
-  if (formData.objectif.length < 50) {
-    showToast('❌ L\'objectif doit contenir au moins 50 caractères', 'error');
+
+  if (nom.trim().length < 2) {
+    showToast('❌ Le nom doit contenir au moins 2 caractères', 'error');
+    resetBtn();
     return;
   }
-  
-  if (!formData.accept) {
-    showToast('❌ Vous devez accepter les conditions', 'error');
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    showToast('❌ Email invalide', 'error');
+    resetBtn();
     return;
   }
-  
-  // Simuler l'inscription
-  challenge.participants_count++;
-  
-  closeParticipationModal();
-  
-  showToast(`✅ Participation confirmée au défi "${challenge.titre}"!`, 'success');
-  
-  // Recharger les défis
-  filterChallenges();
+
+  if (!objectif || objectif < 1 || objectif > 100) {
+    showToast('❌ L\'objectif doit être entre 1 et 100%', 'error');
+    resetBtn();
+    return;
+  }
+
+  if (motivation.trim().length < 10) {
+    showToast('❌ La motivation doit contenir au moins 10 caractères', 'error');
+    resetBtn();
+    return;
+  }
+
+  if (action.trim().length < 5) {
+    showToast('❌ L\'action doit contenir au moins 5 caractères', 'error');
+    resetBtn();
+    return;
+  }
+
+  if (!engagementChecked) {
+    showToast('❌ Vous devez accepter l\'engagement', 'error');
+    resetBtn();
+    return;
+  }
+
+  if (submitText) submitText.textContent = 'Envoi...';
+
+  fetch('../backend/challenges/addParticipant.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({
+      id_challenge: currentChallengeId,
+      nom,
+      email,
+      objectif,
+      motivation,
+      action,
+      engagement: engagementChecked ? 1 : 0,
+      notifications: notificationsChecked ? 1 : 0
+    })
+  })
+    .then(r => r.json())
+    .then(result => {
+      if (!result || !result.success) {
+        showToast(result?.message || '❌ Erreur lors de l\'inscription', 'error');
+        resetBtn();
+        return;
+      }
+
+      challenge.participants_count = parseInt(challenge.participants_count || 0, 10) + 1;
+      closeParticipationModal();
+      showToast(`✅ Participation confirmée au défi "${challenge.titre}"!`, 'success');
+      filterChallenges();
+      resetBtn(); // Réactiver pour les prochaines fois
+    })
+    .catch(() => {
+      showToast('❌ Une erreur réseau est survenue', 'error');
+      resetBtn();
+    });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -714,14 +810,44 @@ function initChallenges() {
   const statusFilter = document.getElementById('challenge-status-filter');
   const refreshBtn = document.getElementById('challenge-refresh');
   const participationForm = document.getElementById('participation-form');
-  const objectiveTextarea = document.getElementById('participant-objective');
+  const motivationTextarea = document.getElementById('participant-motivation');
   const toggleRanking = document.getElementById('toggle-ranking');
+  const grid = document.getElementById('challenges-grid');
   
   if (searchInput) searchInput.addEventListener('input', filterChallenges);
   if (statusFilter) statusFilter.addEventListener('change', filterChallenges);
   if (refreshBtn) refreshBtn.addEventListener('click', loadChallenges);
   if (participationForm) participationForm.addEventListener('submit', handleParticipationSubmit);
-  if (objectiveTextarea) objectiveTextarea.addEventListener('input', updateCharCount);
+  if (motivationTextarea) motivationTextarea.addEventListener('input', updateCharCount);
+
+  if (grid) {
+    grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-participate');
+      if (btn) {
+        e.preventDefault();
+
+        const id = parseInt(btn.getAttribute('data-challenge-id') || '0', 10);
+        if (!id) return;
+
+        const statut = normalizeChallengeStatus(btn.getAttribute('data-challenge-status'));
+        if (statut !== 'actif') {
+          showToast(statut === 'termine' ? 'Ce défi est terminé' : 'Ce défi n\'est pas encore disponible', 'error');
+          return;
+        }
+
+        openParticipationForm(id);
+        return;
+      }
+
+      const card = e.target.closest('.challenge-card');
+      if (!card) return;
+
+      const id = parseInt(card.getAttribute('data-challenge-id') || '0', 10);
+      if (!id) return;
+
+      showChallengeDetail(id);
+    });
+  }
   
   // Gestion des onglets de classement
   const rankingTabs = document.querySelectorAll('.ranking-tab');

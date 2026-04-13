@@ -80,7 +80,6 @@
       </div>
     </aside>
   </div>
-</section>
 
 <!-- ═══════════════════════════════════════════════════════════
      MODAL UNIFIÉ (DÉTAILS, FORMULAIRE, DASHBOARD)
@@ -110,6 +109,135 @@
     </div>
   </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL PARTICIPATION AU DÉFI
+     ═══════════════════════════════════════════════════════════ -->
+<div id="participation-modal" class="modal-overlay">
+  <div class="modal-container modal-large">
+    <div class="modal-body">
+      <button
+        onclick="closeParticipationModal()"
+        class="modal-close"
+        title="Fermer"
+      >
+        ×
+      </button>
+
+      <div class="participation-layout">
+        <div class="participation-challenge-info">
+          <div class="challenge-info-content">
+            <h3 id="modal-challenge-title" style="margin: 0 0 10px 0"></h3>
+            <p id="modal-challenge-desc" style="margin: 0; color: var(--muted)"></p>
+          </div>
+        </div>
+
+        <div class="participation-form-container">
+          <div class="form-header">
+            <h3>Rejoindre le défi</h3>
+            <p>Remplissez ce formulaire pour participer</p>
+          </div>
+
+          <form id="participation-form" onsubmit="handleParticipationSubmit(event)">
+            <div class="form-group">
+              <label class="form-label">Nom complet <span class="required">*</span></label>
+              <input
+                type="text"
+                id="participant-nom"
+                class="form-input"
+                placeholder="Ex: Jean Dupont"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email <span class="required">*</span></label>
+              <input
+                type="email"
+                id="participant-email"
+                class="form-input"
+                placeholder="votre@email.com"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                Objectif personnel (%) <span class="required">*</span>
+              </label>
+              <input
+                type="number"
+                id="participant-objectif"
+                class="form-input"
+                min="1"
+                max="100"
+                placeholder="Ex: 60"
+                required
+              />
+              <p class="form-help">Quel pourcentage de réduction visez-vous?</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                Motivation <span class="required">*</span>
+                <span class="char-count" id="motivation-count">0/500</span>
+              </label>
+              <textarea
+                id="participant-motivation"
+                class="form-textarea"
+                placeholder="Pourquoi souhaitez-vous participer à ce défi?"
+                maxlength="500"
+                rows="4"
+                required
+                oninput="updateCharCount()"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Première action concrète <span class="required">*</span></label>
+              <textarea
+                id="participant-action"
+                class="form-textarea"
+                placeholder="Quelle sera votre première action pour ce défi?"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-checkbox">
+                <input type="checkbox" id="participant-engagement" required />
+                <span class="checkbox-label">
+                  Je m'engage à participer activement à ce défi
+                </span>
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label class="form-checkbox">
+                <input type="checkbox" id="participant-notifications" />
+                <span class="checkbox-label">
+                  Recevoir des notifications de motivation
+                </span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" onclick="closeParticipationModal()">
+                Annuler
+              </button>
+              <button type="submit" class="btn-primary">
+                <span id="participation-submit-text">Confirmer</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</section>
 
 <!-- ═══════════════════════════════════════════════════════════
      STYLES SPÉCIFIQUES AU MODULE
@@ -861,6 +989,25 @@
 
   .btn-participate:active {
     transform: translateY(0);
+  }
+
+  .btn-participate.is-disabled {
+    opacity: 0.55;
+    filter: grayscale(0.4);
+    cursor: not-allowed;
+  }
+
+  /* Spinner small for buttons */
+  .spinner-small {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
   }
 
   /* Layout du formulaire de participation */
@@ -1689,7 +1836,9 @@
 // Initialisation du module quand il est chargé
 document.addEventListener('moduleLoaded', (e) => {
   if (e.detail.moduleName === 'challenges') {
-    if (typeof loadChallenges === 'function') {
+    if (typeof initChallenges === 'function') {
+      initChallenges();
+    } else if (typeof loadChallenges === 'function') {
       loadChallenges();
     }
   }
@@ -1697,7 +1846,9 @@ document.addEventListener('moduleLoaded', (e) => {
 
 // Au cas où le script est chargé après
 if (document.getElementById('challenges')) {
-  if (typeof loadChallenges === 'function') {
+  if (typeof initChallenges === 'function') {
+    initChallenges();
+  } else if (typeof loadChallenges === 'function') {
     loadChallenges();
   }
 }

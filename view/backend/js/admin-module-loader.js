@@ -374,6 +374,11 @@ document.addEventListener('adminModuleLoaded', (e) => {
         setTimeout(() => loadUsers(), 100);
       }
       break;
+    case 'planning':
+      // Vider le cache pour forcer le rechargement du module
+      delete adminModuleCache['planning'];
+      setTimeout(() => loadPlanningData(), 200);
+      break;
   }
 });
 
@@ -441,6 +446,154 @@ function exportAll() {
   console.log('📥 Export de toutes les données');
   showToast('Export complet en cours...', 'info');
 }
+
+// ==================== PLANNING FUNCTIONS ====================
+let planningDataCache = [];
+
+function loadPlanningData() {
+  const tbody = document.getElementById('planningTableBody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);">⏳ Chargement...</td></tr>';
+
+  // Utiliser XMLHttpRequest comme dans les challenges
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', 'planning/listDemandeplanning.php', true);
+  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+  
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        
+        // Cache data for detail panel
+        planningDataCache = data;
+
+        const tb = document.getElementById('planningTableBody');
+        if (!tb) return;
+
+        if (!data.length) {
+          tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">Aucune demande trouvée.</td></tr>';
+        } else {
+          tb.innerHTML = data.map(d => `
+            <tr class="animate-in">
+              <td>${d.id}</td>
+              <td>${d.id_utilisateur}</td>
+              <td>${d.calories} kcal</td>
+              <td>${parseFloat(d.budget).toFixed(2)} € <span class="badge badge-user">${d.type_budget}</span></td>
+              <td>${d.duree} <span class="badge badge-user">${d.type_duree}</span></td>
+              <td>${d.date_demande || '—'}</td>
+              <td>
+                <div class="action-btns">
+                  <button onclick="showDetailPanel(${d.id})" class="action-btn action-btn-view">👁️ Afficher</button>
+                  <a href="planning/deleteDemandeplanning.php?id=${d.id}" class="action-btn action-btn-delete"
+                     onclick="return confirm('Supprimer cette demande ?')">🗑️ Supprimer</a>
+                </div>
+              </td>
+            </tr>
+          `).join('');
+        }
+
+        // Stats
+        const s = id => document.getElementById(id);
+        if (s('stat-total'))     s('stat-total').textContent     = data.length;
+        if (s('stat-quotidien')) s('stat-quotidien').textContent = data.filter(d => d.type_budget === 'quotidien').length;
+        if (s('stat-hebdo'))     s('stat-hebdo').textContent     = data.filter(d => d.type_budget === 'hebdomadaire').length;
+        if (s('stat-jours'))     s('stat-jours').textContent     = data.filter(d => d.type_duree === 'jours').length;
+
+      } catch(e) {
+        const tb = document.getElementById('planningTableBody');
+        if (tb) tb.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#e74c3c;padding:30px;">❌ Erreur de parsing : ${e.message}</td></tr>`;
+      }
+    } else {
+      const tb = document.getElementById('planningTableBody');
+      if (tb) tb.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#e74c3c;padding:30px;">❌ Erreur HTTP : ${xhr.status}</td></tr>`;
+    }
+  };
+  
+  xhr.onerror = function() {
+    const tb = document.getElementById('planningTableBody');
+    if (tb) tb.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#e74c3c;padding:30px;">❌ Erreur de connexion</td></tr>`;
+  };
+  
+  xhr.send();
+}
+
+function showDetailPanel(id) {
+  // Find demand in cache
+  const demande = planningDataCache.find(d => d.id == id);
+  if (!demande) {
+    alert('Demande introuvable');
+    return;
+  }
+
+  // Update detail panel
+  const detailId = document.getElementById('detail-id');
+  const detailBody = document.getElementById('detailTableBody');
+  const detailPanel = document.getElementById('detailPanel');
+
+  if (!detailId || !detailBody || !detailPanel) return;
+
+  detailId.textContent = demande.id;
+  
+  detailBody.innerHTML = `
+    <tr>
+      <td style="font-weight:600; width:200px; background:rgba(91,62,150,.1);">🆔 ID</td>
+      <td>${demande.id}</td>
+    </tr>
+    <tr>
+      <td style="font-weight:600; background:rgba(91,62,150,.1);">👤 Utilisateur</td>
+      <td>${demande.id_utilisateur}</td>
+    </tr>
+    <tr>
+      <td style="font-weight:600; background:rgba(91,62,150,.1);">🔥 Calories</td>
+      <td>${demande.calories} kcal</td>
+    </tr>
+    <tr>
+      <td style="font-weight:600; background:rgba(91,62,150,.1);">💰 Budget</td>
+      <td>${parseFloat(demande.budget).toFixed(2)} €</td>
+    </tr>
+    <tr>
+      <td style="font-weight:600; background:rgba(91,62,150,.1);">📊 Type Budget</td>
+      <td><span class="badge badge-user">${demande.type_budget}</span></td>
+    </tr>
+    <tr>
+      <td style="font-weight:600; background:rgba(91,62,150,.1);">⏱️ Durée</td>
+      <td>${demande.duree}</td>
+    </tr>
+    <tr>
+      <td style="font-weight:600; background:rgba(91,62,150,.1);">📅 Type Durée</td>
+      <td><span class="badge badge-user">${demande.type_duree}</span></td>
+    </tr>
+    <tr>
+      <td style="font-weight:600; background:rgba(91,62,150,.1);">📆 Date Demande</td>
+      <td>${demande.date_demande || '—'}</td>
+    </tr>
+  `;
+
+  // Show panel with animation
+  detailPanel.style.display = 'block';
+  setTimeout(() => {
+    detailPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function hideDetailPanel() {
+  const detailPanel = document.getElementById('detailPanel');
+  if (detailPanel) {
+    detailPanel.style.display = 'none';
+  }
+}
+
+function filterPlanningTable() {
+  const val = (document.getElementById('planningSearchInput')?.value || '').toLowerCase();
+  document.querySelectorAll('#planningTableBody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+  });
+}
+
+window.loadPlanningData = loadPlanningData;
+window.showDetailPanel = showDetailPanel;
+window.hideDetailPanel = hideDetailPanel;
+window.filterPlanningTable = filterPlanningTable;
 
 function filterByChip(chip, filter) {
   // Retirer la classe active de tous les chips

@@ -1,16 +1,30 @@
 <?php
+require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/../../../controller/Demandeplanning.controller.php');
 require_once(__DIR__ . '/../../../Model/Demandeplanning.php');
 
 $error = "";
 $demandeC = new DemandeplanningController();
 
-if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST["budget"]) && isset($_POST["type_budget"]) && isset($_POST["duree"]) && isset($_POST["type_duree"])) {
-    if (!empty($_POST["id_utilisateur"]) && !empty($_POST["calories"]) && !empty($_POST["budget"]) && !empty($_POST["type_budget"]) && !empty($_POST["duree"]) && !empty($_POST["type_duree"])) {
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    header('Location: listMesDemandes.php');
+    exit;
+}
 
-        $demande = new Demandeplanning(
-            null,
-            (int)$_POST['id_utilisateur'],
+$id = (int)$_GET['id'];
+$demande = $demandeC->getDemandeById($id);
+
+if (!$demande) {
+    header('Location: listMesDemandes.php');
+    exit;
+}
+
+if (isset($_POST["calories"]) && isset($_POST["budget"]) && isset($_POST["type_budget"]) && isset($_POST["duree"]) && isset($_POST["type_duree"])) {
+    if (!empty($_POST["calories"]) && !empty($_POST["budget"]) && !empty($_POST["type_budget"]) && !empty($_POST["duree"]) && !empty($_POST["type_duree"])) {
+
+        $updated = new Demandeplanning(
+            $id,
+            (int)$demande['id_utilisateur'],
             (int)$_POST['calories'],
             (float)$_POST['budget'],
             $_POST['type_budget'],
@@ -19,8 +33,7 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
             null
         );
 
-        $demandeC->addDemande2($demande);
-
+        $demandeC->updateDemande($updated, $id);
         header('Location: listMesDemandes.php');
         exit;
 
@@ -34,7 +47,7 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>GaiaLumen – Nouvelle Demande de Planning</title>
+  <title>GaiaLumen – Modifier Demande</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
@@ -63,12 +76,9 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
-      background: linear-gradient(90deg, var(--violet), var(--blue));
+      background: linear-gradient(90deg, var(--blue), var(--violet));
     }
-    .form-header {
-      text-align: center;
-      margin-bottom: 36px;
-    }
+    .form-header { text-align: center; margin-bottom: 36px; }
     .form-header .form-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
     .form-header h1 { font-size: 2rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
     .form-header p { color: var(--muted); font-size: .9rem; }
@@ -97,13 +107,13 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
       appearance: none;
     }
     .form-control:focus {
-      border-color: var(--violet);
-      box-shadow: 0 0 0 3px rgba(91, 62, 150, .15);
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(58, 134, 196, .15);
     }
     .form-control::placeholder { color: rgba(168, 184, 160, .5); }
     select.form-control {
       cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235B3E96' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233A86C4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 14px center;
       padding-right: 36px;
@@ -121,7 +131,7 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
     .btn-submit {
       width: 100%;
       padding: 14px;
-      background: linear-gradient(135deg, var(--violet), var(--blue));
+      background: linear-gradient(135deg, var(--blue), var(--violet));
       border: none;
       border-radius: 12px;
       color: #fff;
@@ -133,7 +143,7 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
       margin-top: 8px;
       letter-spacing: .04em;
     }
-    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(91, 62, 150, .45); }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(58, 134, 196, .45); }
     .btn-back {
       display: inline-flex;
       align-items: center;
@@ -146,6 +156,17 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
     }
     .btn-back:hover { color: var(--blue); }
     .divider { height: 1px; background: rgba(91, 62, 150, .15); margin: 28px 0; }
+    .demande-id {
+      display: inline-block;
+      background: rgba(58, 134, 196, .15);
+      border: 1px solid rgba(58, 134, 196, .3);
+      color: var(--blue);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: .82rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
   </style>
 </head>
 <body>
@@ -174,7 +195,7 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
   </a>
   <div class="nav-actions">
     <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
-    <a href="../dashboard.html" class="btn-logout">
+    <a href="listMesDemandes.php" class="btn-logout">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
         <path d="M19 12H5M12 5l-7 7 7 7"/>
       </svg>
@@ -186,30 +207,26 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
 <div class="form-page">
   <div class="form-card">
 
-    <a href="../dashboard.html" class="btn-back">← Retour au dashboard</a>
+    <a href="listMesDemandes.php" class="btn-back">← Retour à mes demandes</a>
+    <div class="demande-id">Demande #<?= $id ?></div>
 
     <div class="form-header">
-      <span class="form-icon">📅</span>
-      <h1>Nouvelle Demande</h1>
-      <p>Créer un nouveau planning nutritionnel personnalisé</p>
+      <span class="form-icon">✏️</span>
+      <h1>Modifier la Demande</h1>
+      <p>Mettez à jour votre planning nutritionnel</p>
     </div>
 
-    <?php if (!empty($error)) { echo '<div class="alert-error">' . $error . '</div>'; } ?>
+    <?php if (!empty($error)): ?>
+      <div class="alert-error"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
 
     <form method="POST" action="">
 
       <div class="form-group">
-        <label>� ID Utilisateur</label>
-        <input type="number" name="id_utilisateur" class="form-control"
-               placeholder="ex: 1" min="1"
-               value="<?= htmlspecialchars($_POST['id_utilisateur'] ?? '') ?>" required/>
-      </div>
-
-      <div class="form-group">
-        <label>�🔥 Objectif calorique (kcal/jour)</label>
+        <label>🔥 Objectif calorique (kcal/jour)</label>
         <input type="number" name="calories" class="form-control"
                placeholder="ex: 2000" min="1"
-               value="<?= htmlspecialchars($_POST['calories'] ?? '') ?>" required/>
+               value="<?= htmlspecialchars($_POST['calories'] ?? $demande['calories']) ?>" required/>
       </div>
 
       <div class="form-group">
@@ -217,11 +234,10 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
         <div class="input-row">
           <input type="number" name="budget" class="form-control"
                  placeholder="ex: 50" min="0.01" step="0.01"
-                 value="<?= htmlspecialchars($_POST['budget'] ?? '') ?>" required/>
+                 value="<?= htmlspecialchars($_POST['budget'] ?? $demande['budget']) ?>" required/>
           <select name="type_budget" class="form-control" required>
-            <option value="" disabled <?= empty($_POST['type_budget']) ? 'selected' : '' ?>>Période</option>
-            <option value="quotidien"     <?= ($_POST['type_budget'] ?? '') === 'quotidien'     ? 'selected' : '' ?>>Quotidien</option>
-            <option value="hebdomadaire"  <?= ($_POST['type_budget'] ?? '') === 'hebdomadaire'  ? 'selected' : '' ?>>Hebdomadaire</option>
+            <option value="quotidien"    <?= ($demande['type_budget'] === 'quotidien')    ? 'selected' : '' ?>>Quotidien</option>
+            <option value="hebdomadaire" <?= ($demande['type_budget'] === 'hebdomadaire') ? 'selected' : '' ?>>Hebdomadaire</option>
           </select>
         </div>
       </div>
@@ -231,18 +247,17 @@ if (isset($_POST["id_utilisateur"]) && isset($_POST["calories"]) && isset($_POST
         <div class="input-row">
           <input type="number" name="duree" class="form-control"
                  placeholder="ex: 7" min="1"
-                 value="<?= htmlspecialchars($_POST['duree'] ?? '') ?>" required/>
+                 value="<?= htmlspecialchars($_POST['duree'] ?? $demande['duree']) ?>" required/>
           <select name="type_duree" class="form-control" required>
-            <option value="" disabled <?= empty($_POST['type_duree']) ? 'selected' : '' ?>>Unité</option>
-            <option value="jours"    <?= ($_POST['type_duree'] ?? '') === 'jours'    ? 'selected' : '' ?>>Jours</option>
-            <option value="semaines" <?= ($_POST['type_duree'] ?? '') === 'semaines' ? 'selected' : '' ?>>Semaines</option>
+            <option value="jours"    <?= ($demande['type_duree'] === 'jours')    ? 'selected' : '' ?>>Jours</option>
+            <option value="semaines" <?= ($demande['type_duree'] === 'semaines') ? 'selected' : '' ?>>Semaines</option>
           </select>
         </div>
       </div>
 
       <div class="divider"></div>
 
-      <button type="submit" class="btn-submit">➕ Soumettre ma demande</button>
+      <button type="submit" class="btn-submit">💾 Enregistrer les modifications</button>
 
     </form>
   </div>

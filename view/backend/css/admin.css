@@ -161,8 +161,8 @@ h1, h2, h3, h4 {
 }
 
 /* Animations des cartes et éléments */
-.stat-card, .section, .quick-stat, .data-card, tr {
-  opacity: 0; /* Initialement invisible pour l'animation JS */
+.stat-card, .quick-stat, .data-card {
+  opacity: 0;
 }
 
 .animate-in {
@@ -692,6 +692,71 @@ tbody tr:hover {
   transform: scale(1.005);
 }
 
+/* Detail Panel */
+.table-panel {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(91, 62, 150, .2);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.form-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(91, 62, 150, .2);
+}
+
+.form-panel-header h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.btn-reset {
+  padding: 8px 16px;
+  background: rgba(231, 76, 60, .2);
+  border: 1px solid rgba(231, 76, 60, .3);
+  border-radius: 10px;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: .85rem;
+  transition: all .3s;
+}
+
+.btn-reset:hover {
+  background: rgba(231, 76, 60, .3);
+  transform: scale(1.05);
+}
+
+.table-container-admin {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid rgba(91, 62, 150, .1);
+}
+
+.data-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.data-table td {
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: .9rem;
+}
+
 /* Badges */
 .badge {
   padding: 4px 12px;
@@ -731,9 +796,11 @@ tbody tr:hover {
   padding: 6px 12px;
   border-radius: 8px;
   border: none;
-  cursor: none;
+  cursor: pointer;
   font-size: .8rem;
   transition: all .2s;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .action-btn-edit {
@@ -752,6 +819,16 @@ tbody tr:hover {
 
 .action-btn-delete:hover {
   background: rgba(231, 76, 60, .3);
+}
+
+.action-btn-view {
+  background: rgba(39, 174, 96, .2);
+  color: #27ae60;
+}
+
+.action-btn-view:hover {
+  background: rgba(39, 174, 96, .3);
+  transform: scale(1.05);
 }
 
 /* Charts */

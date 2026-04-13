@@ -6,6 +6,25 @@ class DemandeplanningController {
 
     // ==================== FRONTEND METHODS ====================
 
+    public function addDemande2(Demandeplanning $demande): void {
+        try {
+            $db = config::getConnexion();
+            $stmt = $db->prepare("INSERT INTO demandeplanning 
+                (id_utilisateur, calories, budget, type_budget, duree, type_duree, date_demande)
+                VALUES (:id_utilisateur, :calories, :budget, :type_budget, :duree, :type_duree, NOW())");
+            $stmt->execute([
+                ':id_utilisateur' => $demande->getIdUtilisateur(),
+                ':calories'       => $demande->getCalories(),
+                ':budget'         => $demande->getBudget(),
+                ':type_budget'    => $demande->getTypeBudget(),
+                ':duree'          => $demande->getDuree(),
+                ':type_duree'     => $demande->getTypeDuree(),
+            ]);
+        } catch (PDOException $e) {
+            die("Erreur lors de l'insertion : " . $e->getMessage());
+        }
+    }
+
     public function addDemande(): array {
         $errors = [];
         $result = ['success' => false, 'errors' => []];
@@ -105,28 +124,12 @@ class DemandeplanningController {
         return $result;
     }
 
-    public function listDemandesByUser(int $userId): array {
-        try {
-            $db = config::getConnexion();
-            $sql = "SELECT * FROM demandeplanning WHERE id_utilisateur = :userId ORDER BY date_demande DESC";
-            $stmt = $db->prepare($sql);
-            $stmt->execute([':userId' => $userId]);
-            return $stmt->fetchAll();
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-
     // ==================== BACKEND METHODS ====================
 
     public function listAllDemandes(): array {
         try {
             $db = config::getConnexion();
-            $sql = "SELECT dp.*, u.nom, u.prenom, u.email 
-                    FROM demandeplanning dp 
-                    LEFT JOIN user u ON dp.id_utilisateur = u.id 
-                    ORDER BY dp.date_demande DESC";
-            $stmt = $db->query($sql);
+            $stmt = $db->query("SELECT * FROM demandeplanning ORDER BY date_demande DESC");
             return $stmt->fetchAll();
         } catch (PDOException $e) {
             return [];
@@ -136,11 +139,7 @@ class DemandeplanningController {
     public function getDemandeById(int $id): ?array {
         try {
             $db = config::getConnexion();
-            $sql = "SELECT dp.*, u.nom, u.prenom, u.email 
-                    FROM demandeplanning dp 
-                    LEFT JOIN user u ON dp.id_utilisateur = u.id 
-                    WHERE dp.id = :id";
-            $stmt = $db->prepare($sql);
+            $stmt = $db->prepare("SELECT * FROM demandeplanning WHERE id = :id");
             $stmt->execute([':id' => $id]);
             $result = $stmt->fetch();
             return $result ?: null;
@@ -176,15 +175,7 @@ class DemandeplanningController {
         }
     }
 
-    public function deleteDemande(int $id): bool {
-        try {
-            $db = config::getConnexion();
-            $sql = "DELETE FROM demandeplanning WHERE id = :id";
-            $stmt = $db->prepare($sql);
-            return $stmt->execute([':id' => $id]);
-        } catch (PDOException $e) {
-            return false;
-        }
-    }
+    
+
 }
 ?>

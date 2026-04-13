@@ -1,172 +1,78 @@
+<!-- planning-admin.html - Module Backend -->
 <section class="content-section" id="planning">
   <div class="section-header">
-    <h2 class="module-title">📅 Gestion du Planning</h2>
-    <p>Gérez les plannings hebdomadaires des utilisateurs</p>
+    <h2>📅 Gestion du Planning</h2>
+    <p>Gérez les demandes de planning nutritionnel des utilisateurs</p>
   </div>
 
   <div class="section">
     <div class="section-header">
-      <h2 class="section-title">Plannings Actifs</h2>
+      <h2 class="section-title">Demandes de Planning</h2>
       <div class="section-actions">
-        <button class="btn btn-secondary" onclick="refreshPlannings()">🔄 Actualiser</button>
-        <button class="btn btn-primary" onclick="exportData('planning')">📥 Exporter</button>
+        <button class="btn btn-secondary" onclick="loadPlanningData()">🔄 Actualiser</button>
       </div>
     </div>
 
     <div class="quick-stats">
       <div class="quick-stat">
-        <div class="quick-stat-value">342</div>
-        <div class="quick-stat-label">Plannings actifs</div>
+        <div class="quick-stat-value" id="stat-total">—</div>
+        <div class="quick-stat-label">Total demandes</div>
       </div>
       <div class="quick-stat">
-        <div class="quick-stat-value">1,247</div>
-        <div class="quick-stat-label">Repas planifiés</div>
+        <div class="quick-stat-value" id="stat-quotidien">—</div>
+        <div class="quick-stat-label">Budget quotidien</div>
       </div>
       <div class="quick-stat">
-        <div class="quick-stat-value">89%</div>
-        <div class="quick-stat-label">Taux de complétion</div>
+        <div class="quick-stat-value" id="stat-hebdo">—</div>
+        <div class="quick-stat-label">Budget hebdomadaire</div>
       </div>
       <div class="quick-stat">
-        <div class="quick-stat-value">156</div>
-        <div class="quick-stat-label">Cette semaine</div>
+        <div class="quick-stat-value" id="stat-jours">—</div>
+        <div class="quick-stat-label">Durée en jours</div>
       </div>
     </div>
 
-    <div class="filter-chips">
-      <div class="chip active" onclick="filterPlanningByChip(this,'all')">Tous</div>
-      <div class="chip" onclick="filterPlanningByChip(this,'active')">✅ Actifs</div>
-      <div class="chip" onclick="filterPlanningByChip(this,'completed')">📦 Complétés</div>
-      <div class="chip" onclick="filterPlanningByChip(this,'pending')">⏳ En attente</div>
+    <!-- Zone de détail (cachée par défaut) -->
+    <div id="detailPanel" style="display:none; margin-bottom:24px;">
+      <div class="table-panel">
+        <div class="form-panel-header">
+          <h3>👁️ Détail Demande #<span id="detail-id">—</span></h3>
+          <button class="btn-reset" onclick="hideDetailPanel()">✕ Fermer</button>
+        </div>
+        <div class="table-container-admin" style="margin-top:16px;">
+          <table class="data-table">
+            <tbody id="detailTableBody">
+              <tr><td colspan="2" style="text-align:center;padding:20px;">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="search-bar">
-      <input type="text" class="search-input" id="planningSearchInput" placeholder="Rechercher un planning..." onkeyup="searchPlannings()">
-      <select class="form-select" id="planningWeekFilter" onchange="filterPlannings()">
-        <option value="">Toutes les semaines</option>
-        <option value="current">Semaine actuelle</option>
-        <option value="next">Semaine prochaine</option>
-        <option value="past">Semaines passées</option>
-      </select>
+      <input type="text" class="search-input" id="planningSearchInput"
+             placeholder="🔍 Rechercher..." oninput="filterPlanningTable()"/>
     </div>
 
-    <div class="data-grid">
-      <div class="data-card">
-        <div class="data-card-icon">📅</div>
-        <div class="data-card-title">Plannings créés</div>
-        <div class="data-card-value">342</div>
-      </div>
-      <div class="data-card">
-        <div class="data-card-icon">🍽️</div>
-        <div class="data-card-title">Repas planifiés</div>
-        <div class="data-card-value">1,247</div>
-      </div>
-      <div class="data-card">
-        <div class="data-card-icon">✅</div>
-        <div class="data-card-title">Complétés</div>
-        <div class="data-card-value">304</div>
-      </div>
-      <div class="data-card">
-        <div class="data-card-icon">⏳</div>
-        <div class="data-card-title">En cours</div>
-        <div class="data-card-value">38</div>
-      </div>
-    </div>
-
-    <div class="table-container" style="margin-top:30px;">
+    <div class="table-container">
       <table>
         <thead>
           <tr>
+            <th>#ID</th>
             <th>Utilisateur</th>
-            <th>Semaine</th>
-            <th>Repas planifiés</th>
-            <th>Statut</th>
-            <th>Dernière mise à jour</th>
+            <th>Calories</th>
+            <th>Budget</th>
+            <th>Durée</th>
+            <th>Date demande</th>
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="planningTableBody">
           <tr>
-            <td>Sophie Martin</td>
-            <td>Semaine 15 (2026)</td>
-            <td>18/21 repas</td>
-            <td><span class="badge badge-active">Actif</span></td>
-            <td>Il y a 2 heures</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="viewPlanning('1')">👁️ Voir</button>
-                <button class="action-btn action-btn-delete" onclick="deletePlanning('1')">🗑️ Supprimer</button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>Karim Benali</td>
-            <td>Semaine 15 (2026)</td>
-            <td>21/21 repas</td>
-            <td><span class="badge badge-active">Complet</span></td>
-            <td>Il y a 5 heures</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="viewPlanning('2')">👁️ Voir</button>
-                <button class="action-btn action-btn-delete" onclick="deletePlanning('2')">🗑️ Supprimer</button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>Léa Dubois</td>
-            <td>Semaine 15 (2026)</td>
-            <td>12/21 repas</td>
-            <td><span class="badge badge-inactive">En cours</span></td>
-            <td>Il y a 1 jour</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="viewPlanning('3')">👁️ Voir</button>
-                <button class="action-btn action-btn-delete" onclick="deletePlanning('3')">🗑️ Supprimer</button>
-              </div>
-            </td>
+            <td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">⏳ Chargement...</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 </section>
-
-<script>
-function refreshPlannings() {
-  showToast('Actualisation', 'Plannings actualisés', 'success');
-}
-
-function filterPlanningByChip(chip, type) {
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  console.log('Filtre planning:', type);
-}
-
-function searchPlannings() {
-  const search = document.getElementById('planningSearchInput').value;
-  console.log('Recherche planning:', search);
-}
-
-function filterPlannings() {
-  const week = document.getElementById('planningWeekFilter').value;
-  console.log('Filtre semaine:', week);
-}
-
-function viewPlanning(id) {
-  showToast('Planning', `Affichage du planning ${id}`, 'info');
-}
-
-function deletePlanning(id) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer ce planning?')) {
-    showToast('Suppression', `Planning ${id} supprimé`, 'success');
-  }
-}
-</script>
-
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>

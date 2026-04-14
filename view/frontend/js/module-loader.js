@@ -236,6 +236,9 @@ window.reloadModule = reloadModule;
 let autoReloadInterval = null;
 let lastModuleContent = {};
 
+// Modules à exclure de l'auto-reload (car ils ont des interactions utilisateur)
+const excludeFromAutoReload = ['planning', 'challenges', 'events'];
+
 function startAutoReload() {
   if (autoReloadInterval) return;
   
@@ -245,6 +248,11 @@ function startAutoReload() {
     
     const moduleName = activeMenuItem.dataset.module;
     if (!moduleName) return;
+    
+    // Ne pas recharger certains modules automatiquement
+    if (excludeFromAutoReload.includes(moduleName)) {
+      return;
+    }
     
     // Charger le module avec un timestamp pour éviter le cache
     const timestamp = new Date().getTime();

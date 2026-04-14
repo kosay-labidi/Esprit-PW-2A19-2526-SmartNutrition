@@ -484,8 +484,8 @@ function loadPlanningData() {
               <td>
                 <div class="action-btns">
                   <button onclick="showDetailPanel(${d.id})" class="action-btn action-btn-view">👁️ Afficher</button>
-                  <a href="planning/deleteDemandeplanning.php?id=${d.id}" class="action-btn action-btn-delete"
-                     onclick="return confirm('Supprimer cette demande ?')">🗑️ Supprimer</a>
+                  <a href="javascript:void(0)" class="action-btn action-btn-delete"
+                     onclick="deletePlanningAjax(${d.id}); return false;">🗑️ Supprimer</a>
                 </div>
               </td>
             </tr>
@@ -516,6 +516,34 @@ function loadPlanningData() {
   
   xhr.send();
 }
+
+// Suppression AJAX sans rechargement de page
+async function deletePlanningAjax(id) {
+    if (!confirm('Supprimer cette demande ?')) return;
+    
+    try {
+        const response = await fetch(`planning/deleteDemandeplanning.php?id=${id}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            // Recharger le tableau (sans rafraîchir la page)
+            loadPlanningData();
+            // Optionnel : un petit toast
+            if (typeof showToast === 'function') showToast('Demande supprimée', 'success');
+        } else {
+            alert('Erreur : ' + result.message);
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Erreur réseau');
+    }
+}
+
+// Exposer la fonction globalement
+window.deletePlanningAjax = deletePlanningAjax;
 
 function showDetailPanel(id) {
   // Find demand in cache

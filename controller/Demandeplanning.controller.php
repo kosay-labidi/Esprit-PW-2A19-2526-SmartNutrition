@@ -175,7 +175,25 @@ class DemandeplanningController {
         }
     }
 
-    
+    public function deleteDemande(int $id): bool {
+        try {
+            $db = config::getConnexion();
+            $stmt = $db->prepare("DELETE FROM demandeplanning WHERE id = :id");
+            return $stmt->execute([':id' => $id]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
 
+    public function listDemandesByUser(int $userId): array {
+        try {
+            $db = config::getConnexion();
+            $stmt = $db->prepare("SELECT * FROM demandeplanning WHERE id_utilisateur = :userId ORDER BY date_demande DESC");
+            $stmt->execute([':userId' => $userId]);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
 }
 ?>

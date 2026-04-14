@@ -711,7 +711,7 @@ async function handleLogin(e) {
   btn.disabled = true;
 
   try {
-    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/Controller/user.controller.php?action=login',{
+const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/login.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, mdp: password })

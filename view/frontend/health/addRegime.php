@@ -1,80 +1,55 @@
 <?php
 require_once '../../../config.php';
 require_once '../../../controller/regime.controller.php';
+require_once '../../../Model/Regime.php';
 
 $ctrl = new RegimeController();
-$id = $_GET['id'] ?? null;
-
-if (!$id || !is_numeric($id)) {
-    header('Location: health.html');
-    exit;
-}
-
-$regime = $ctrl->show($id);   // Votre controller doit avoir show($id)
-
-if (!$regime) {
-    header('Location: health.html');
-    exit;
-}
-
 $error = '';
+$success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nom_regime           = trim($_POST['nom_regime'] ?? '');
-    $description          = trim($_POST['description'] ?? '');
-    $type_regime          = $_POST['type_regime'] ?? 'alimentaire';
-    $niveau_difficulte    = $_POST['niveau_difficulte'] ?? 'modere';
-    $aliments_interdits   = trim($_POST['aliments_interdits'] ?? '[]');
-    $aliments_recommandes = trim($_POST['aliments_recommandes'] ?? '[]');
-    $apport_calorique     = !empty($_POST['apport_calorique']) ? (float)$_POST['apport_calorique'] : null;
+    $nom_regime = $_POST['nom_regime'] ?? '';
+    $type_regime = $_POST['type_regime'] ?? '';
+    $niveau_difficulte = $_POST['niveau_difficulte'] ?? '';
 
-    if (empty($nom_regime)) {
-        $error = "Le nom du régime est obligatoire.";
+    if (empty($nom_regime) || empty($type_regime) || empty($niveau_difficulte)) {
+        $error = "Tous les champs marqués d'une * sont obligatoires";
     } else {
-        $aliments_interdits   = json_encode(json_decode($aliments_interdits, true) ?: []);
-        $aliments_recommandes = json_encode(json_decode($aliments_recommandes, true) ?: []);
-
-        $updatedRegime = new Regime(
-            $id,
-            $nom_regime,
-            $regime['slug'] ?? strtolower(str_replace(' ', '-', $nom_regime)),
-            $description,
-            $type_regime,
-            $niveau_difficulte,
-            $aliments_interdits,
-            $aliments_recommandes,
-            $apport_calorique
-        );
-
-        $result = $ctrl->update($updatedRegime, $id);
-
-        if ($result) {
-            // Respect return URL if provided (safe redirect)
-            if (!empty($_GET['return'])) {
-                $return = rawurldecode($_GET['return']);
-                // Only accept internal relative paths starting with /project_v0/
-                // and refuse returning to form pages to avoid loops or wrong pages
-                $blocked = preg_match('/updateRegime\.php|addRegime\.php|updateDossier\.php|addDossier\.php/i', $return);
-                if (strpos($return, '/project_v0/') === 0 && !$blocked) {
-                    header('Location: ' . $return);
-                    exit;
-                }
-            }
-            header('Location: ../modules/health.html?msg=regime_updated');
+        try {
+            $alimentsInterdits = !empty($_POST['aliments_interdits']) ? array_filter(array_map('trim', explode(',', $_POST['aliments_interdits']))) : [];
+            $alimentsRecommandes = !empty($_POST['aliments_recommandes']) ? array_filter(array_map('trim', explode(',', $_POST['aliments_recommandes']))) : [];
+            
+            $r = new Regime(
+                null,
+                $nom_regime,
+                Regime::generateSlug($nom_regime),
+                $_POST['description'] ?? '',
+                $type_regime,
+                $niveau_difficulte,
+                json_encode($alimentsInterdits),
+                json_encode($alimentsRecommandes),
+                floatval($_POST['apport_calorique_moyen'] ?? 0)
+            );
+            $ctrl->add($r);
+            $success = "Régime ajouté avec succès!";
+            header('Location: ../modules/health.html');
             exit;
-        } else {
-            $error = "Erreur lors de la mise à jour.";
+        } catch (Exception $e) {
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false || strpos($e->getMessage(), 'existe déjà') !== false) {
+                $error = "Ce régime existe déjà dans la base de données.";
+            } else {
+                $error = "Erreur : " . $e->getMessage();
+            }
         }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifier Régime - GaiaLumen</title>
+    <title>Ajouter Régime - GaiaLumen</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
@@ -176,6 +151,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: rgba(231, 76, 60, 0.15);
             color: var(--danger);
             border-left-color: var(--danger);
+        }
+        
+        .alert-success {
+            background: rgba(46, 204, 113, 0.15);
+            color: var(--success);
+            border-left-color: var(--success);
         }
         
         .form-section {
@@ -314,8 +295,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="container">
         <div class="header">
-            <h1>✏️ Modifier Régime</h1>
-            <p>ID: <?php echo htmlspecialchars($id); ?> — <?php echo htmlspecialchars($regime['nom_regime'] ?? ''); ?></p>
+            <h1>🍽️ Ajouter Régime Alimentaire</h1>
+            <p>Créez un nouveau régime alimentaire</p>
         </div>
 
         <div class="card">
@@ -333,18 +314,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="nom_regime">Nom du Régime <span class="required">*</span></label>
-                            <input type="text" id="nom_regime" name="nom_regime" required
-                                   value="<?php echo htmlspecialchars($regime['nom_regime'] ?? $_POST['nom_regime'] ?? ''); ?>">
+                            <input type="text" id="nom_regime" name="nom_regime" placeholder="ex: Régime Méditerranéen" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="type_regime">Type <span class="required">*</span></label>
                             <select id="type_regime" name="type_regime" required>
-                                <option value="alimentaire" <?php echo ($regime['type_regime'] ?? '') === 'alimentaire' ? 'selected' : ''; ?>>Alimentaire</option>
-                                <option value="medical" <?php echo ($regime['type_regime'] ?? '') === 'medical' ? 'selected' : ''; ?>>Médical</option>
-                                <option value="sportif" <?php echo ($regime['type_regime'] ?? '') === 'sportif' ? 'selected' : ''; ?>>Sportif</option>
-                                <option value="perte_de_poids" <?php echo ($regime['type_regime'] ?? '') === 'perte_de_poids' ? 'selected' : ''; ?>>Perte de poids</option>
-                                <option value="prise_de_masse" <?php echo ($regime['type_regime'] ?? '') === 'prise_de_masse' ? 'selected' : ''; ?>>Prise de masse</option>
+                                <option value="">-- Sélectionner un type --</option>
+                                <option value="alimentaire">Alimentaire</option>
+                                <option value="medical">Médical</option>
+                                <option value="sportif">Sportif</option>
+                                <option value="perte_de_poids">Perte de poids</option>
+                                <option value="prise_de_masse">Prise de masse</option>
+                                <option value="equilibre">Équilibre</option>
                             </select>
                         </div>
                     </div>
@@ -353,23 +335,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-group">
                             <label for="niveau_difficulte">Niveau de Difficulté <span class="required">*</span></label>
                             <select id="niveau_difficulte" name="niveau_difficulte" required>
-                                <option value="facile" <?php echo ($regime['niveau_difficulte'] ?? '') === 'facile' ? 'selected' : ''; ?>>Facile</option>
-                                <option value="modere" <?php echo ($regime['niveau_difficulte'] ?? '') === 'modere' ? 'selected' : ''; ?>>Modéré</option>
-                                <option value="difficile" <?php echo ($regime['niveau_difficulte'] ?? '') === 'difficile' ? 'selected' : ''; ?>>Difficile</option>
+                                <option value="">-- Sélectionner un niveau --</option>
+                                <option value="facile">Facile</option>
+                                <option value="modere">Modéré</option>
+                                <option value="difficile">Difficile</option>
                             </select>
                         </div>
                         
                         <div class="form-group">
-                            <label for="apport_calorique">Apport Calorique Moyen (kcal/jour)</label>
-                            <input type="number" id="apport_calorique" name="apport_calorique" min="0" step="50"
-                                   value="<?php echo htmlspecialchars($regime['apport_calorique_moyen'] ?? $_POST['apport_calorique'] ?? ''); ?>">
+                            <label for="apport_calorique_moyen">Apport Calorique Moyen (kcal/jour)</label>
+                            <input type="number" id="apport_calorique_moyen" name="apport_calorique_moyen" placeholder="ex: 2000" min="0" step="50">
                         </div>
                     </div>
 
                     <div class="form-grid full">
                         <div class="form-group">
                             <label for="description">Description</label>
-                            <textarea id="description" name="description"><?php echo htmlspecialchars($regime['description'] ?? $_POST['description'] ?? ''); ?></textarea>
+                            <textarea id="description" name="description" placeholder="Décrivez les objectifs et principes de ce régime..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -379,22 +361,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h3 class="section-title">🥗 Aliments</h3>
                     <div class="form-grid full">
                         <div class="form-group">
-                            <label for="aliments_interdits">Aliments Interdits (JSON ou séparés par des virgules)</label>
-                            <textarea id="aliments_interdits" name="aliments_interdits" placeholder='["chocolat", "sucre", "graisse"]'><?php echo htmlspecialchars($regime['aliments_interdits'] ?? $_POST['aliments_interdits'] ?? '[]'); ?></textarea>
+                            <label for="aliments_interdits">Aliments Interdits (séparés par des virgules)</label>
+                            <textarea id="aliments_interdits" name="aliments_interdits" placeholder="ex: chocolat, sucre, graisse..."></textarea>
                         </div>
                     </div>
 
                     <div class="form-grid full">
                         <div class="form-group">
-                            <label for="aliments_recommandes">Aliments Recommandés (JSON ou séparés par des virgules)</label>
-                            <textarea id="aliments_recommandes" name="aliments_recommandes" placeholder='["fruits", "légumes", "protéines"]'><?php echo htmlspecialchars($regime['aliments_recommandes'] ?? $_POST['aliments_recommandes'] ?? '[]'); ?></textarea>
+                            <label for="aliments_recommandes">Aliments Recommandés (séparés par des virgules)</label>
+                            <textarea id="aliments_recommandes" name="aliments_recommandes" placeholder="ex: fruits, légumes, protéines..."></textarea>
                         </div>
                     </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="button-group">
-                    <button type="submit" class="btn btn-primary">💾 Mettre à Jour</button>
+                    <button type="submit" class="btn btn-primary">💾 Ajouter le Régime</button>
                     <a href="../modules/health.html" class="btn btn-secondary">❌ Annuler</a>
                 </div>
             </form>

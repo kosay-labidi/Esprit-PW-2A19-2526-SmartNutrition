@@ -32,7 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dossier) {
         );
 
         $ctrl->update($updated, $id);
-        header('Location: health.html?msg=updated');
+        // Respect return URL when present (only safe internal relative paths, block form pages)
+        if (!empty($_GET['return'])) {
+            $return = rawurldecode($_GET['return']);
+            $blocked = preg_match('/updateRegime\.php|addRegime\.php|updateDossier\.php|addDossier\.php/i', $return);
+            if (strpos($return, '/project_v0/') === 0 && !$blocked) {
+                header('Location: ' . $return);
+                exit;
+            }
+        }
+        header('Location: ../modules/health.html?msg=updated');
         exit;
     } catch (Exception $e) {
         $error = "Erreur : " . $e->getMessage();

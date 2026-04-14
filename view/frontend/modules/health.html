@@ -406,10 +406,10 @@
                 <button type="button" class="health-btn health-btn-bleu" onclick="healthCalculateIMC()">
                     📐 Calculer IMC
                 </button>
-                <a href="health/addDossier.php" class="health-btn" style="background:#013220;color:white;">
+                <a href="/project_v0/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/addDossier.php" class="health-btn" style="background:#013220;color:white;">
                      ➕ Nouveau dossier
                  </a>
-                 <a href="health/updateDossier.php" class="health-btn" style="background:#77B5FE;color:white;">
+                 <a id="modifierDossierLink" href="#" class="health-btn" style="background:#77B5FE;color:white;">
                      ✏️ Modifier dossier
                  </a>
             </div>
@@ -428,12 +428,10 @@
             </div>
 
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="health/addRegime.php" class="health-btn health-btn-bleu">
+                <a href="/project_v0/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/addRegime.php" class="health-btn health-btn-bleu">
                      ➕ Ajouter un régime
                  </a>
-                 <a href="health/updateRegime.php" class="health-btn" style="background:#013220;color:white;">
-                     ✏️ Modifier un régime
-                 </a>
+                 <p class="health-muted" style="padding: 15px 0; font-size: 0.9rem;">Cliquez sur "Modifier" dans un régime pour l'éditer.</p>
             </div>
         </div>
     </div>
@@ -541,7 +539,7 @@
         };
 
         try {
-            const response = await fetch('health/addDossier.php', {
+            const response = await fetch('../health/addDossier.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -583,7 +581,7 @@
         container.innerHTML = '<div style="text-align:center; padding:40px;"><div class="section-loader-spinner"></div><p class="health-muted">Chargement des régimes...</p></div>';
 
         try {
-            const response = await fetch('controller/regime.controller.php?action=list');
+            const response = await fetch('../../controller/regime.controller.php?action=list');
             if (!response.ok) throw new Error('Network response was not ok');
 
             const data = await response.json();
@@ -600,7 +598,8 @@
                             <strong>Calories:</strong> ${regime.apport_calorique_moyen || 'N/A'} kcal/jour
                         </div>
                         <div style="margin-top:10px;">
-                            <a href="../health/updateRegime.php?id=${regime.id_regime}" style="color:#77B5FE; text-decoration:none; font-weight:500;">✏️ Modifier</a>
+                            <a href="#" onclick="openUpdateRegime(${regime.id_regime}); return false;" style="color:#77B5FE; text-decoration:none; font-weight:500;">✏️ Modifier</a>
+                            <button onclick="deleteRegime(${regime.id_regime})" style="color:#e74c3c; background:none; border:none; cursor:pointer; font-weight:500; text-decoration:none; margin-left:10px;">🗑️ Supprimer</button>
                         </div>
                     </div>
                 `).join('');
@@ -628,6 +627,14 @@
         setTimeout(() => loadRegimes(), 300);
     });
 
+    // Open update page for a regime and include a return URL so we can come back
+    function openUpdateRegime(id) {
+        // send a relative path (pathname + search) so server can validate easily
+        const returnPath = encodeURIComponent(window.location.pathname + window.location.search);
+        const url = `/project_v0/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/updateRegime.php?id=${id}&return=${returnPath}`;
+        window.location.href = url;
+    }
+
     // Auto-calculate IMC when weight or height changes
     document.getElementById('healthDossierPoids').addEventListener('input', healthCalculateIMC);
     document.getElementById('healthDossierTaille').addEventListener('input', healthCalculateIMC);
@@ -635,7 +642,7 @@
     // Load existing dossier data on page load
     async function loadExistingDossier() {
         try {
-            const response = await fetch('controller/dossierMedical.controller.php?action=read');
+            const response = await fetch('../../controller/dossierMedical.controller.php?action=read');
             if (!response.ok) return;
 
             const data = await response.json();
@@ -654,6 +661,13 @@
                 if (dossier.poids && dossier.taille) {
                     healthCalculateIMC();
                 }
+
+                // Set the modifier link to include dossier id and return URL
+                const modifierLink = document.getElementById('modifierDossierLink');
+                if (modifierLink) {
+                    const ret = encodeURIComponent(window.location.pathname + window.location.search);
+                    modifierLink.href = `/project_v0/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/updateDossier.php?id=${dossier.id_dossier}&return=${ret}`;
+                }
             }
         } catch (error) {
             console.error('Error loading dossier:', error);
@@ -664,6 +678,26 @@
     document.querySelector('[data-tab="dossier"]').addEventListener('click', function() {
         setTimeout(() => loadExistingDossier(), 300);
     });
+
+    // Delete regime
+    async function deleteRegime(id) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce régime ?')) return;
+        
+        try {
+            const response = await fetch(`../../controller/regime.controller.php?action=delete&id=${id}`, { method: 'POST' });
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Succès', '✅ Régime supprimé avec succès!', 'success');
+                loadRegimes();
+            } else {
+                showToast('Erreur', '❌ Erreur lors de la suppression', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting:', error);
+            showToast('Erreur', '❌ Erreur de connexion', 'error');
+        }
+    }
 </script>
 <script src="js/health.controller.js"></script>
 

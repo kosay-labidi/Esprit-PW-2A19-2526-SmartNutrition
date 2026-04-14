@@ -60,7 +60,6 @@
         
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Cormorant Garamond', serif;
-            font-weight: 700;
         }
         
         /* ═══════════════════════════════════════════════════════════
@@ -74,6 +73,7 @@
         
         h1 {
             font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 700;
             margin-bottom: 30px;
             color: var(--text);
             letter-spacing: .05em;
@@ -101,7 +101,6 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
             transition: all var(--tr);
             letter-spacing: .04em;
         }
@@ -120,13 +119,11 @@
             background: var(--glass);
             color: var(--text);
             border: 1.5px solid rgba(91, 62, 150, 0.5);
-            backdrop-filter: blur(10px);
         }
         
         .btn-secondary:hover {
             background: rgba(91, 62, 150, 0.15);
             border-color: var(--violet);
-            transform: translateY(-2px);
         }
         
         .btn-small {
@@ -143,17 +140,6 @@
         .btn-danger:hover {
             background: #c0392b;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.3);
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #27ae60;
-            transform: translateY(-2px);
         }
         
         a.btn-small {
@@ -165,7 +151,7 @@
            ═══════════════════════════════════════════════════════════ */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
             margin-bottom: 40px;
         }
@@ -176,155 +162,93 @@
             border: 1px solid rgba(91, 62, 150, .2);
             border-radius: var(--radius);
             padding: 28px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
-            transition: all var(--tr);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--violet), var(--blue));
-            opacity: 0;
-            transition: opacity var(--tr);
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(91, 62, 150, .4);
-            box-shadow: var(--shadow);
-        }
-        
-        .stat-card:hover::before {
-            opacity: 1;
+            border: 3px solid var(--bleu);
         }
         
         .stat-card h3 {
-            color: var(--text);
-            margin-bottom: 12px;
-            font-size: 0.95rem;
-            letter-spacing: .05em;
-            text-transform: uppercase;
-            opacity: 0.8;
+            color: var(--vert);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
         }
         
         .stat-value {
             font-size: 2.5rem;
-            font-weight: 700;
+            font-weight: bold;
             color: var(--violet);
-            line-height: 1;
         }
         
-        /* ═══════════════════════════════════════════════════════════
-           SECTIONS
-           ═══════════════════════════════════════════════════════════ */
         .section {
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(91, 62, 150, .2);
-            border-radius: var(--radius);
-            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
             margin-bottom: 30px;
-            transition: all var(--tr);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         .section h2 {
-            color: var(--text);
+            color: var(--vert);
             font-size: 1.8rem;
-            margin-bottom: 28px;
-            letter-spacing: .04em;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .section h2::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(91, 62, 150, .3), transparent);
+            margin-bottom: 20px;
+            border-bottom: 3px solid var(--bleu);
+            padding-bottom: 10px;
         }
         
         .filter-group {
             display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 15px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             align-items: center;
         }
         
         input[type="text"],
         select {
-            padding: 10px 16px;
-            background: rgba(31, 61, 43, 0.3);
-            border: 1px solid rgba(91, 62, 150, .3);
-            border-radius: 12px;
-            font-size: 0.95rem;
-            color: var(--text);
-            font-family: 'Lato', sans-serif;
-            transition: all var(--tr);
-            flex: 0 1 auto;
-            min-width: 180px;
-        }
-        
-        input[type="text"]::placeholder {
-            color: rgba(242, 232, 207, 0.5);
+            padding: 12px 15px;
+            border: 2px solid var(--bleu);
+            border-radius: 8px;
+            font-size: 1rem;
+            flex: 1;
+            min-width: 200px;
         }
         
         input[type="text"]:focus,
         select:focus {
             outline: none;
-            background: rgba(31, 61, 43, 0.5);
             border-color: var(--violet);
-            box-shadow: 0 0 16px rgba(91, 62, 150, .2);
+            box-shadow: 0 0 0 3px rgba(186, 91, 237, 0.1);
         }
         
-        /* ═══════════════════════════════════════════════════════════
-           TABLE
-           ═══════════════════════════════════════════════════════════ */
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        
-        table thead {
-            background: rgba(91, 62, 150, .15);
-            border: 1px solid rgba(91, 62, 150, .2);
         }
         
         table th {
-            color: var(--text);
-            padding: 14px 16px;
+            background: var(--vert);
+            color: white;
+            padding: 15px;
             text-align: left;
             font-weight: 600;
-            letter-spacing: .04em;
-            font-size: 0.9rem;
         }
         
         table td {
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(91, 62, 150, .1);
-            font-size: 0.95rem;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
         }
         
-        table tbody tr:hover {
-            background: rgba(91, 62, 150, .08);
+        table tr:hover {
+            background: rgba(186, 91, 237, 0.05);
         }
         
         table a {
-            color: var(--blue);
+            color: var(--bleu);
             text-decoration: none;
-            font-weight: 500;
-            margin-right: 8px;
-            transition: color var(--tr);
+            font-weight: 600;
+            margin-right: 10px;
         }
         
         table a:hover {
@@ -333,128 +257,88 @@
         
         .loading {
             text-align: center;
-            padding: 60px 40px;
-            color: var(--muted);
-            font-size: 1rem;
+            padding: 40px;
+            color: #999;
         }
         
         .empty-state {
             text-align: center;
-            padding: 60px 40px;
-            color: var(--muted);
-            font-size: 1rem;
-        }
-        
-        /* ═══════════════════════════════════════════════════════════
-           ALERTS
-           ═══════════════════════════════════════════════════════════ */
-        #alertContainer {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 2000;
-            max-width: 400px;
+            padding: 40px;
+            color: #999;
         }
         
         .alert {
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid;
-            animation: slideIn 0.3s ease;
-            font-weight: 500;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
         
         .alert-success {
-            background: rgba(46, 204, 113, 0.15);
-            color: var(--success);
-            border-color: rgba(46, 204, 113, 0.3);
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
         
         .alert-error {
-            background: rgba(231, 76, 60, 0.15);
-            color: var(--danger);
-            border-color: rgba(231, 76, 60, 0.3);
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
         
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
         }
         
-        /* ═══════════════════════════════════════════════════════════
-           RESPONSIVE
-           ═══════════════════════════════════════════════════════════ */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px 3%;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            }
-            
-            .section {
-                padding: 24px;
-            }
-            
-            .filter-group {
-                flex-direction: column;
-            }
-            
-            input[type="text"],
-            select {
-                width: 100%;
-            }
-            
-            table {
-                font-size: 0.85rem;
-            }
-            
-            table th,
-            table td {
-                padding: 10px 8px;
-            }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>❤️ Gestion de la Santé</h1>
+        <h1>🏥 Gestion Santé - Admin</h1>
         
         <div id="alertContainer"></div>
         
-        <!-- Action Buttons -->
         <div class="btn-group">
-            <a href="../health/addDossier.php" class="btn btn-primary">
-                <span>➕</span> Nouveau Dossier
-            </a>
-            <a href="../health/addRegime.php" class="btn btn-primary">
-                <span>➕</span> Nouveau Régime
-            </a>
-            <a href="../health/exportDossiers.php" target="_blank" class="btn btn-secondary">
-                <span>📥</span> Export Dossiers
-            </a>
-            <a href="../health/exportRegimes.php" target="_blank" class="btn btn-secondary">
-                <span>📥</span> Export Régimes
-            </a>
+            <a href="../health/addDossier.php" class="btn btn-primary">+ Nouveau Dossier Médical</a>
+            <a href="../health/addRegime.php" class="btn btn-secondary">+ Nouveau Régime</a>
+            <a href="../health/exportDossiers.php" target="_blank" class="btn" style="background: #4CAF50; color: white;">📥 Export Dossiers PDF</a>
+            <a href="../health/exportRegimes.php" target="_blank" class="btn" style="background: #FF9800; color: white;">📥 Export Régimes PDF</a>
         </div>
         
         <!-- Statistics Section -->
-        <div class="stats-grid">
+        <div class="stats-grid" id="statsContainer">
             <div class="stat-card">
-                <h3>📋 Dossiers Totaux</h3>
+                <h3>📋 Total Dossiers</h3>
                 <div class="stat-value" id="stat-dossiers">0</div>
             </div>
             <div class="stat-card">
-                <h3>🥗 Régimes Totaux</h3>
+                <h3>🥗 Total Régimes</h3>
                 <div class="stat-value" id="stat-regimes">0</div>
             </div>
             <div class="stat-card">
@@ -472,7 +356,7 @@
             <h2>📋 Dossiers Médicaux</h2>
             
             <div class="filter-group">
-                <input type="text" id="searchDossier" placeholder="🔎 Rechercher dossiers...">
+                <input type="text" id="searchDossier" placeholder="🔎 Rechercher...">
                 <select id="filterBloodType">
                     <option value="">Tous groupes sanguins</option>
                     <option value="O+">O+</option>
@@ -485,11 +369,11 @@
                     <option value="AB-">AB-</option>
                 </select>
                 <select id="sortDossier">
-                    <option value="date_mise_a_jour-DESC">Plus récent</option>
-                    <option value="date_mise_a_jour-ASC">Plus ancien</option>
-                    <option value="imc-DESC">IMC (haut→bas)</option>
-                    <option value="imc-ASC">IMC (bas→haut)</option>
-                    <option value="poids-DESC">Poids (lourd→léger)</option>
+                    <option value="date_mise_a_jour-DESC">Trier: Plus récent</option>
+                    <option value="date_mise_a_jour-ASC">Trier: Plus ancien</option>
+                    <option value="imc-DESC">Trier: IMC (haut→bas)</option>
+                    <option value="imc-ASC">Trier: IMC (bas→haut)</option>
+                    <option value="poids-DESC">Trier: Poids (lourd→léger)</option>
                 </select>
                 <button class="btn btn-secondary btn-small" onclick="searchDossiers()">🔍 Chercher</button>
             </div>
@@ -502,7 +386,7 @@
             <h2>🥗 Régimes Alimentaires</h2>
             
             <div class="filter-group">
-                <input type="text" id="searchRegime" placeholder="🔎 Rechercher régimes...">
+                <input type="text" id="searchRegime" placeholder="🔎 Rechercher...">
                 <select id="filterType">
                     <option value="">Tous types</option>
                     <option value="alimentaire">Alimentaire</option>
@@ -567,8 +451,9 @@
                         <td>${d.taille} cm</td>
                         <td>${parseFloat(d.imc).toFixed(1)}</td>
                         <td>${d.groupe_sanguin || '-'}</td>
-                        <td>${d.allergie ? d.allergie.substring(0, 25) + '...' : '-'}</td>
+                        <td>${d.allergie ? d.allergie.substring(0, 30) + '...' : '-'}</td>
                         <td>
+                            <a href="../health/showDossier.php?id=${d.id_dossier}" class="btn-small">👁️ Voir</a>
                             <a href="../health/updateDossier.php?id=${d.id_dossier}" class="btn-small">✏️ Éditer</a>
                             <button class="btn btn-danger btn-small" onclick="deleteDossier(${d.id_dossier})">🗑️ Supprimer</button>
                         </td>
@@ -685,7 +570,7 @@
                         <td>${d.taille} cm</td>
                         <td>${parseFloat(d.imc).toFixed(1)}</td>
                         <td>${d.groupe_sanguin || '-'}</td>
-                        <td>${d.allergie ? d.allergie.substring(0, 25) : '-'}</td>
+                        <td>${d.allergie ? d.allergie.substring(0, 30) : '-'}</td>
                         <td>
                             <a href="../health/updateDossier.php?id=${d.id_dossier}">✏️ Éditer</a>
                             <button class="btn btn-danger btn-small" onclick="deleteDossier(${d.id_dossier})">🗑️</button>

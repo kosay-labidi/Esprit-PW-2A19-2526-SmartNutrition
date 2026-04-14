@@ -38,6 +38,7 @@ class DossierMedicalController {
             ':medecin' => $d->getMedecin(),
             ':contact' => $d->getContactUrgence()
         ]);
+        return true;
     }
 
     public function update(DossierMedical $d, $id) {
@@ -58,6 +59,7 @@ class DossierMedicalController {
             ':medecin' => $d->getMedecin(),
             ':contact' => $d->getContactUrgence()
         ]);
+        return true;
     }
 
     public function delete($id) {
@@ -65,6 +67,7 @@ class DossierMedicalController {
         $db = config::getConnexion();
         $stmt = $db->prepare($sql);
         $stmt->execute([':id' => $id]);
+        return true;
     }
 
     // Statistics and analytics
@@ -307,6 +310,16 @@ class DossierMedicalController {
                 case 'export_pdf':
                     $html = $this->exportToPdf();
                     echo json_encode(['success' => true, 'html' => $html]);
+                    break;
+
+                case 'delete':
+                    $id = $_GET['id'] ?? null;
+                    if (!$id) {
+                        echo json_encode(['success' => false, 'message' => 'ID requis']);
+                        break;
+                    }
+                    $this->delete($id);
+                    echo json_encode(['success' => true, 'message' => 'Dossier supprimé avec succès']);
                     break;
 
                 default:

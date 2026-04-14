@@ -221,6 +221,16 @@ class RegimeController {
                     echo json_encode(['success' => true, 'html' => $html]);
                     break;
 
+                case 'delete':
+                    $id = $_GET['id'] ?? null;
+                    if (!$id) {
+                        echo json_encode(['success' => false, 'message' => 'ID requis']);
+                        break;
+                    }
+                    $this->delete($id);
+                    echo json_encode(['success' => true, 'message' => 'Régime supprimé avec succès']);
+                    break;
+
                 default:
                     echo json_encode(['success' => false, 'message' => 'Action not found']);
                     break;
@@ -267,6 +277,7 @@ class RegimeController {
                 ':recommandes' => $alimentsRecommandes,
                 ':cal' => $r->getApportCalorique()
             ]);
+            return true;
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
                 throw new Exception("Ce régime existe déjà dans la base de données: " . $r->getNomRegime());
@@ -302,6 +313,7 @@ class RegimeController {
             ':recommandes' => $alimentsRecommandes,
             ':cal' => $r->getApportCalorique()
         ]);
+        return true;
     }
 
     public function delete($id) {
@@ -309,6 +321,7 @@ class RegimeController {
         $db = config::getConnexion();
         $stmt = $db->prepare($sql);
         $stmt->execute([':id' => $id]);
+        return true;
     }
 }
 

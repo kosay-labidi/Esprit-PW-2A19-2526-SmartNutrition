@@ -1,0 +1,126 @@
+<section class="content-section" id="health">
+  <div class="section-header">
+    <h2 class="module-title">❤️ Ma Santé</h2>
+    <p>Suivez vos indicateurs de santé et votre progression.</p>
+  </div>
+
+  <div class="health-actions">
+    <button class="btn btn-primary" onclick="window.location.href='health/addDossier.php'">
+      ➕ Ajouter Mesures
+    </button>
+    <button class="btn btn-primary" onclick="window.location.href='health/addRegime.php'">
+      🥗 Créer Régime
+    </button>
+  </div>
+
+  <div class="cards-grid">
+    <div class="info-card">
+      <h3>⚖️ Indicateurs Corporels</h3>
+      <p>Poids, IMC, masse grasse et musculaire</p>
+      <div id="latest-measures"></div>
+    </div>
+    <div class="info-card">
+      <h3>🥗 Mon Régime</h3>
+      <p>Suivi nutritionnel et objectifs</p>
+      <div id="current-regime"></div>
+    </div>
+    <div class="info-card">
+      <h3>💧 Hydratation</h3>
+      <p>Consommation d'eau quotidienne</p>
+      <div class="stat-value">2.1 L/jour</div>
+    </div>
+  </div>
+
+  <div class="health-history">
+    <h3>📊 Historique des Mesures</h3>
+    <div id="measures-list"></div>
+  </div>
+</section>
+
+<style>
+.module-title {
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.health-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.info-card {
+  background: var(--surface);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(168, 184, 160, 0.2);
+}
+
+.info-card h3 {
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--blue);
+  margin-top: 12px;
+}
+
+.health-history {
+  background: var(--surface);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(168, 184, 160, 0.2);
+}
+</style>
+
+<script>
+// Charger les dernières mesures
+fetch('../../controller/dossierMedical.controller.php?action=read')
+  .then(response => response.json())
+  .then(result => {
+    if(result.success && result.data.length > 0) {
+      const latest = result.data[0];
+      document.getElementById('latest-measures').innerHTML = `
+        <div class="stat-value">${latest.poids} kg</div>
+        <div>IMC: ${latest.imc}</div>
+        <div>Date: ${latest.date_mesure}</div>
+      `;
+      
+      // Afficher l'historique
+      const list = result.data.map(item => `
+        <div class="measure-item">
+          <span>${item.date_mesure}</span>
+          <span>${item.poids} kg - IMC: ${item.imc}</span>
+          <button onclick="window.location.href='health/updateDossier.php?id=${item.id}'">✏️</button>
+        </div>
+      `).join('');
+      document.getElementById('measures-list').innerHTML = list;
+    }
+  });
+
+// Charger le régime actuel
+fetch('../../controller/regime.controller.php?action=read')
+  .then(response => response.json())
+  .then(result => {
+    if(result.success && result.data.length > 0) {
+      const regime = result.data[0];
+      document.getElementById('current-regime').innerHTML = `
+        <div class="stat-value">${regime.calories_cible} kcal</div>
+        <div>${regime.type_regime} - ${regime.objectif}</div>
+        <button onclick="window.location.href='health/updateRegime.php?id=${regime.id}'">✏️ Modifier</button>
+      `;
+    }
+  });
+</script>

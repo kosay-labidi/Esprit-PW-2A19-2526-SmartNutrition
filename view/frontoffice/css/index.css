@@ -1,0 +1,67 @@
+/**
+ * Index Page Styles
+ * Note: Les styles principaux sont actuellement inline dans index.html
+ * Ce fichier peut être utilisé pour des styles additionnels
+ */
+
+/* Styles additionnels pour la page d'accueil */
+/* Les styles principaux sont déjà définis dans le <style> inline de index.html */
+
+/* Animations supplémentaires */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Effets hover supplémentaires */
+.hero-badge:hover {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+}
+
+/* Responsive amélioré */
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2.2rem !important;
+  }
+  
+  .hero-slogan {
+    font-size: 0.9rem !important;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px 24px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  #cursor,
+  #cursor-trail,
+  #preloader,
+  #navbar,
+  .hero-cta {
+    display: none !important;
+  }
+  
+  body {
+    cursor: auto !important;
+  }
+}

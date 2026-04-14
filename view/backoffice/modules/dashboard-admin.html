@@ -1,0 +1,97 @@
+<section class="content-section" id="dashboard">
+  <div class="section-header">
+    <h2 class="module-title">📊 Tableau de Bord Admin</h2>
+    <p>Vue d'ensemble des statistiques et activités de GaiaLumen</p>
+  </div>
+
+  <div class="quick-stats">
+    <div class="quick-stat">
+      <div class="quick-stat-value" id="activeToday">-</div>
+      <div class="quick-stat-label">Actifs aujourd'hui</div>
+    </div>
+    <div class="quick-stat">
+      <div class="quick-stat-value" id="newThisWeek">-</div>
+      <div class="quick-stat-label">Nouveaux cette semaine</div>
+    </div>
+    <div class="quick-stat">
+      <div class="quick-stat-value" id="avgEngagement">-</div>
+      <div class="quick-stat-label">Engagement moyen</div>
+    </div>
+    <div class="quick-stat">
+      <div class="quick-stat-value" id="totalRevenue">-</div>
+      <div class="quick-stat-label">Revenus du mois</div>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-card-trend">📈</div>
+      <div class="stat-icon">👥</div>
+      <div class="stat-value" id="totalUsers">1,234</div>
+      <div class="stat-label">Utilisateurs</div>
+      <div class="stat-change positive" id="userGrowth">+12% ce mois</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-trend">🔥</div>
+      <div class="stat-icon">🍽️</div>
+      <div class="stat-value" id="totalMeals">8,567</div>
+      <div class="stat-label">Repas enregistrés</div>
+      <div class="stat-change positive" id="mealGrowth">+8% ce mois</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-trend">⚡</div>
+      <div class="stat-icon">📅</div>
+      <div class="stat-value" id="totalPlannings">456</div>
+      <div class="stat-label">Plannings actifs</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-trend">🎯</div>
+      <div class="stat-icon">🏆</div>
+      <div class="stat-value" id="totalChallenges">23</div>
+      <div class="stat-label">Défis actifs</div>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <h3 style="margin-bottom:20px;color:var(--text);">📈 Activité des 7 derniers jours</h3>
+    <div style="display:flex;align-items:flex-end;justify-content:space-around;height:200px;">
+      <div class="chart-bar" style="height:120px;">
+        <span class="chart-value">120</span>
+        <span class="chart-label">Lun</span>
+      </div>
+      <div class="chart-bar" style="height:150px;">
+        <span class="chart-value">150</span>
+        <span class="chart-label">Mar</span>
+      </div>
+      <div class="chart-bar" style="height:90px;">
+        <span class="chart-value">90</span>
+        <span class="chart-label">Mer</span>
+      </div>
+      <div class="chart-bar" style="height:180px;">
+        <span class="chart-value">180</span>
+        <span class="chart-label">Jeu</span>
+      </div>
+      <div class="chart-bar" style="height:140px;">
+        <span class="chart-value">140</span>
+        <span class="chart-label">Ven</span>
+      </div>
+      <div class="chart-bar" style="height:100px;">
+        <span class="chart-value">100</span>
+        <span class="chart-label">Sam</span>
+      </div>
+      <div class="chart-bar" style="height:80px;">
+        <span class="chart-value">80</span>
+        <span class="chart-label">Dim</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.module-title {
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+</style>

@@ -1,0 +1,229 @@
+<?php
+// Au début de votre fichier (celui qui contient cette section)
+// Connexion à votre base de données
+require_once '../config/database.php'; // Ajustez selon votre configuration
+
+// Récupération des événements depuis la BDD
+$eventsFromDB = [];
+try {
+    $pdo = new PDO("mysql:host=localhost;dbname=votre_base", "root", "");
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    $query = "SELECT id, titre, type, date, heure FROM evenements ORDER BY date DESC";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute();
+    $eventsFromDB = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch(Exception $e) {
+    $eventsFromDB = [];
+}
+?>
+
+<section class="content-section" id="events">
+  <div class="section">
+    <div class="section-header">
+      <h2 class="module-title">🎯 Gestion des Événements</h2>
+      <div class="section-actions">
+        <a href="participation/list.php" class="btn btn-secondary">📋 Participations</a>
+        <a href="evenement/list.php" class="btn btn-secondary">📋 Voir liste complète</a>
+        <a href="evenement/add.php" class="btn btn-primary">➕ Nouvel Événement</a>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" class="search-input" id="eventSearch"
+             placeholder="Rechercher un événement..." onkeyup="filterEventsTable()">
+      <select class="form-select" id="eventTypeFilter" onchange="filterEventsTable()">
+        <option value="">Tous les types</option>
+        <option value="repas">🍲 Repas</option>
+        <option value="sport">🧘 Sport</option>
+        <option value="medical">🥗 Nutrition</option>
+        <option value="atelier">🌱 Atelier</option>
+      </select>
+    </div>
+
+    <div class="table-container">
+      <table class="table" id="events-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Titre</th>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Heure</th>
+          </tr>
+        </thead>
+        <tbody id="events-tbody">
+          <?php if (!empty($eventsFromDB)): ?>
+            <?php foreach($eventsFromDB as $event): ?>
+            <tr data-type="<?= htmlspecialchars($event['type']) ?>">
+              <td><strong>#<?= htmlspecialchars($event['id']) ?></strong></td>
+              <td class="event-title"><?= htmlspecialchars($event['titre']) ?></td>
+              <td class="event-type"><?= htmlspecialchars($event['type']) ?></td>
+              <td class="event-date"><?= htmlspecialchars($event['date']) ?></td>
+              <td class="event-time"><?= htmlspecialchars($event['heure']) ?></td>
+            </tr>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <tr>
+              <td colspan="5" style="text-align:center;padding:40px;">
+                <div style="font-size:3rem;margin-bottom:12px;">📅</div>
+                <p>Aucun événement trouvé.</p>
+                <a href="evenement/add.php" class="btn btn-primary" style="margin-top:12px;">➕ Créer le premier</a>
+              </td>
+            </tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<style>
+.module-title {
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1px;
+}
+
+#events-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  border-radius: 12px;
+}
+
+#events-table th,
+#events-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--glass);
+}
+
+#events-table th {
+  background: var(--green);
+  color: var(--sand);
+  font-weight: 600;
+}
+
+#events-table tr:hover {
+  background: var(--glass);
+}
+
+.search-bar {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 15px;
+  border: 1px solid var(--glass);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.form-select {
+  width: 200px;
+  padding: 10px 15px;
+  border: 1px solid var(--glass);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--green);
+  color: white;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.section {
+  padding: 20px;
+}
+</style>
+
+<script>
+function filterEventsTable() {
+  const searchTerm = document.getElementById('eventSearch').value.toLowerCase();
+  const typeFilter = document.getElementById('eventTypeFilter').value;
+  const rows = document.querySelectorAll('#events-tbody tr');
+  let visibleCount = 0;
+  
+  rows.forEach(row => {
+    const title = row.querySelector('.event-title')?.textContent.toLowerCase() || '';
+    const type = row.querySelector('.event-type')?.textContent || '';
+    const date = row.querySelector('.event-date')?.textContent || '';
+    
+    let matchesSearch = searchTerm === '' || title.includes(searchTerm) || date.includes(searchTerm);
+    let matchesType = typeFilter === '' || type === typeFilter;
+    
+    if (matchesSearch && matchesType) {
+      row.style.display = '';
+      visibleCount++;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+  
+  let noResultRow = document.getElementById('no-results-row');
+  if (visibleCount === 0 && rows.length > 0 && !document.querySelector('#no-events-message')) {
+    if (!noResultRow) {
+      const tbody = document.getElementById('events-tbody');
+      tbody.insertAdjacentHTML('beforeend', `
+        <tr id="no-results-row">
+          <td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">
+            🔍 Aucun événement ne correspond à votre recherche
+          </td>
+        </tr>
+      `);
+    }
+  } else if (noResultRow) {
+    noResultRow.remove(); 
+  }
+}
+</script>

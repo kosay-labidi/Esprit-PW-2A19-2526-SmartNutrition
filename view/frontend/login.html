@@ -695,7 +695,6 @@ window.addEventListener('load',function(){
    FORM HANDLER - CONNEXION AU BACKEND
    ═══════════════════════════════════════════════════════════ */
 const API_URL = 'http://localhost:5000/api';
-
 async function handleLogin(e) {
   e.preventDefault();
   const btn = e.target.querySelector('.btn-submit');
@@ -711,7 +710,7 @@ async function handleLogin(e) {
   btn.disabled = true;
 
   try {
-const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/login.php', {
+    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/login.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, mdp: password })
@@ -721,20 +720,45 @@ const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutritio
     if (!contentType.includes('application/json')) {
       const rawText = await response.text();
       console.error('Réponse PHP brute (pas JSON):', rawText);
-      throw new Error('Le serveur PHP ne renvoie pas du JSON. Vérifiez que le backend est bien démarré et que le chemin est correct.');
+      throw new Error('Le serveur PHP ne renvoie pas du JSON');
     }
 
     const result = await response.json();
-    console.log('Résultat login:', result);
+    console.log('Résultat login complet:', result);
 
     if (result.success) {
-      localStorage.setItem('gaialumen-user', JSON.stringify(result.data));
+      // Les données utilisateur sont dans result.data
+      const userData = result.data;
+      console.log('Données utilisateur:', userData);
+      
+      // Récupérer l'ID (peut être id_utilisateur, id, ou user_id)
+      const userId = userData.id_utilisateur || userData.id || userData.user_id;
+      
+      // STOCKER L'ID UTILISATEUR CORRECTEMENT
+      if (userId) {
+        sessionStorage.setItem('user_id', userId);
+        localStorage.setItem('user_id', userId);
+        console.log('✅ ID stocké:', userId);
+      } else {
+        console.error('❌ Aucun ID trouvé dans userData:', userData);
+      }
+      
+      sessionStorage.setItem('user_email', userData.email);
+      sessionStorage.setItem('user_nom', userData.nom || '');
+      sessionStorage.setItem('user_prenom', userData.prenom || '');
+      
+      localStorage.setItem('user_email', userData.email);
+      localStorage.setItem('user_nom', userData.nom || '');
+      localStorage.setItem('user_prenom', userData.prenom || '');
+      
+      // Garder l'ancien stockage pour compatibilité
+      localStorage.setItem('gaialumen-user', JSON.stringify(userData));
       localStorage.setItem('gaialumen-token', 'session-' + Date.now());
 
       btn.textContent = '✓ Connexion réussie!';
 
       setTimeout(() => {
-        if (result.data.role === 'admin') {
+        if (userData.role === 'admin') {
           window.location.href = '../backend/admin.html';
         } else {
           window.location.href = 'dashboard.html';
@@ -818,6 +842,37 @@ function aiRespond(question){
   }else{
     return "Je suis là pour vous aider! Posez-moi des questions sur la connexion, votre compte, ou GaiaLumen. 😊";
   }
+}
+async function loginUser(email, password) {
+    try {
+        const response = await fetch('../../backend/users/login.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, mdp: password })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Stocker l'ID utilisateur CORRECT
+            sessionStorage.setItem('user_id', result.user.id);
+            sessionStorage.setItem('user_email', result.user.email);
+            sessionStorage.setItem('user_nom', result.user.nom);
+            sessionStorage.setItem('user_prenom', result.user.prenom);
+            
+            // Optionnel : aussi en localStorage pour persistance
+            localStorage.setItem('user_id', result.user.id);
+            localStorage.setItem('user_email', result.user.email);
+            
+            // Redirection vers dashboard
+            window.location.href = 'dashboard.html';
+        } else {
+            showMessage(result.message || "Email ou mot de passe incorrect", "error");
+        }
+    } catch (error) {
+        console.error("Erreur connexion:", error);
+        showMessage("Erreur de connexion au serveur", "error");
+    }
 }
 
 aiSend.addEventListener('click',()=>{

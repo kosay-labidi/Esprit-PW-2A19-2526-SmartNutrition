@@ -67,6 +67,18 @@ class UserController
 
             unset($row['mdp']);
             return ['status' => 'ok', 'data' => $row];
+            if ($user && password_verify($mdp, $user['mdp'])) {
+        return [
+            'status' => 'ok',
+            'data' => [
+                'id_utilisateur' => $user['id_utilisateur'],  // ← Important
+                'nom' => $user['nom'],
+                'prenom' => $user['prenom'],
+                'email' => $user['email'],
+                'role' => $user['role']
+            ]
+        ];
+    }
 
         } catch (Exception $e) {
             return ['status' => 'error', 'data' => null];

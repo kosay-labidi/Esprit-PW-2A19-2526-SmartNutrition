@@ -451,7 +451,6 @@
       <div class="divider"></div>
 
       <div class="danger-zone">
-        <span class="feature-badge">⚠️ ZONE SENSIBLE</span>
         <p>La suppression de votre compte est définitive et irréversible. Toutes vos données personnelles, vos repas, défis et objectifs seront supprimés.</p>
         <button onclick="openDeleteModal()" class="btn btn-danger">🗑️ Supprimer définitivement mon compte</button>
       </div>
@@ -497,58 +496,80 @@
     });
   })();
 
-  // Gestion utilisateur
-  let currentUserId = null;
+// Gestion utilisateur - CORRIGÉE
+let currentUserId = null;
 
-  function getCurrentUserId() {
+function getCurrentUserId() {
     // Récupérer l'ID depuis sessionStorage ou localStorage
     let userId = sessionStorage.getItem('user_id');
     if (!userId) {
-      userId = localStorage.getItem('user_id');
+        userId = localStorage.getItem('user_id');
     }
+    
+    // Ne plus mettre d'ID par défaut - si pas d'ID, utilisateur non connecté
     if (!userId) {
-      // Pour la démo, mais normalement l'utilisateur doit être connecté
-      userId = 1;
+        return null;
     }
-    return userId;
-  }
+    return parseInt(userId);
+}
+function getBaseUrl() {
+    // Retourne la racine de votre projet
+    return 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition';
+}
 
-  async function loadUserProfile() {
+async function loadUserProfile() {
     const userId = getCurrentUserId();
-    if (!userId || userId === 0) {
-      showMessage("Utilisateur non connecté", "error");
-      return;
+    if (!userId) {
+        showMessage("Vous n'êtes pas connecté. Redirection vers la page de connexion...", "error");
+        setTimeout(() => {
+            window.location.href = getBaseUrl() + '/view/frontend/login.html';
+        }, 2000);
+        return;
     }
     
     try {
-      // Chemin corrigé : depuis view/frontend/users/ vers view/backend/users/
-      const response = await fetch(`../../backend/users/updateprofil.php?action=get&id=${userId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (response.ok) {
+        // Chemin ABSOLU vers updateprofil.php
+        const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php?action=get&id=' + userId, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            throw new Error('HTTP error ' + response.status);
+        }
+        
         const data = await response.json();
         if (data.success) {
-          document.getElementById('nom').value = data.user.nom || '';
-          document.getElementById('prenom').value = data.user.prenom || '';
-          document.getElementById('email').value = data.user.email || '';
-          // Stocker l'ID si besoin
-          currentUserId = data.user.id;
+            document.getElementById('nom').value = data.user.nom || '';
+            document.getElementById('prenom').value = data.user.prenom || '';
+            document.getElementById('email').value = data.user.email || '';
+            currentUserId = data.user.id;
         } else {
-          showMessage(data.message || "Erreur de chargement", "error");
+            if (data.message === "Utilisateur non trouvé") {
+                sessionStorage.removeItem('user_id');
+                localStorage.removeItem('user_id');
+                showMessage("Session expirée. Veuillez vous reconnecter.", "error");
+                setTimeout(() => {
+                    window.location.href = getBaseUrl() + '/view/frontend/login.html';
+                }, 2000);
+            } else {
+                showMessage(data.message || "Erreur de chargement", "error");
+            }
         }
-      } else {
-        showMessage("Erreur de connexion au serveur", "error");
-      }
     } catch (error) {
-      console.error("Erreur chargement profil:", error);
-      showMessage("Impossible de charger le profil", "error");
+        console.error("Erreur chargement profil:", error);
+        showMessage("Impossible de charger le profil. Vérifiez que le serveur est accessible.", "error");
     }
-  }
+}
 
-  async function updateProfile(event) {
+async function updateProfile(event) {
     event.preventDefault();
+
+    const userId = getCurrentUserId();
+    if (!userId) {
+        showMessage("Vous n'êtes pas connecté", "error");
+        return false;
+    }
 
     const nom = document.getElementById('nom').value.trim();
     const prenom = document.getElementById('prenom').value.trim();
@@ -558,94 +579,117 @@
     const confirm_password = document.getElementById('confirm_password').value;
 
     if (!nom || !prenom || !email) {
-      showMessage("Tous les champs sont obligatoires", "error");
-      return false;
+        showMessage("Tous les champs sont obligatoires", "error");
+        return false;
     }
 
     if (!email.includes('@')) {
-      showMessage("Email invalide", "error");
-      return false;
+        showMessage("Email invalide", "error");
+        return false;
     }
 
     if (new_password && !old_password) {
-      showMessage("L'ancien mot de passe est requis pour modifier le mot de passe", "error");
-      return false;
+        showMessage("L'ancien mot de passe est requis pour modifier le mot de passe", "error");
+        return false;
     }
 
     if (new_password && new_password !== confirm_password) {
-      showMessage("Les nouveaux mots de passe ne correspondent pas", "error");
-      return false;
+        showMessage("Les nouveaux mots de passe ne correspondent pas", "error");
+        return false;
     }
 
     if (new_password && new_password.length < 6) {
-      showMessage("Le nouveau mot de passe doit contenir au moins 6 caractères", "error");
-      return false;
+        showMessage("Le nouveau mot de passe doit contenir au moins 6 caractères", "error");
+        return false;
     }
 
-    const userId = getCurrentUserId();
-    const formData = { id: userId, nom, prenom, email, old_password, new_password };
+    const formData = { 
+        id: userId, 
+        nom: nom, 
+        prenom: prenom, 
+        email: email, 
+        old_password: old_password, 
+        new_password: new_password 
+    };
 
     try {
-      // Chemin corrigé
-      const response = await fetch('../../backend/users/updateprofil.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        showMessage("✅ " + result.message, "success");
-        document.getElementById('old_password').value = '';
-        document.getElementById('new_password').value = '';
-        document.getElementById('confirm_password').value = '';
-      } else {
-        showMessage(result.message || "Erreur lors de la mise à jour", "error");
-      }
+        // Chemin ABSOLU vers updateprofil.php
+        const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            throw new Error('HTTP error ' + response.status);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage("✅ " + result.message, "success");
+            document.getElementById('old_password').value = '';
+            document.getElementById('new_password').value = '';
+            document.getElementById('confirm_password').value = '';
+            
+            if (email) {
+                sessionStorage.setItem('user_email', email);
+                localStorage.setItem('user_email', email);
+            }
+        } else {
+            showMessage(result.message || "Erreur lors de la mise à jour", "error");
+        }
     } catch (error) {
-      console.error("Erreur update:", error);
-      showMessage("Erreur de connexion au serveur", "error");
+        console.error("Erreur update:", error);
+        showMessage("Erreur de connexion au serveur: " + error.message, "error");
     }
     return false;
-  }
+}
 
-  async function deleteAccount() {
-    const confirmDelete = confirm("⚠️ DERNIER AVERTISSEMENT : Voulez-vous vraiment supprimer définitivement votre compte ?");
-    if (!confirmDelete) {
-      closeDeleteModal();
-      return;
-    }
-
+async function deleteAccount() {
     const userId = getCurrentUserId();
+    if (!userId) {
+        showMessage("Vous n'êtes pas connecté", "error");
+        closeDeleteModal();
+        return;
+    }
     
     try {
-      // Chemin corrigé
-      const response = await fetch('../../backend/users/deleteprofil.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId })
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        showMessage("Votre compte a été supprimé. Redirection...", "success");
-        sessionStorage.removeItem('user_id');
-        localStorage.removeItem('user_id');
-        setTimeout(() => {
-          window.location.href = '../dashboard.html';
-        }, 2000);
-      } else {
-        showMessage(result.message || "Erreur lors de la suppression", "error");
-        closeDeleteModal();
-      }
+        // Chemin ABSOLU vers deleteprofil.php
+        const response = await fetch(getBaseUrl() + '/view/backend/users/deleteprofil.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: userId })
+        });
+        
+        if (!response.ok) {
+            throw new Error('HTTP error ' + response.status);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage("Votre compte a été supprimé. Redirection...", "success");
+            sessionStorage.clear();
+            localStorage.removeItem('user_id');
+            localStorage.removeItem('user_email');
+            setTimeout(() => {
+                window.location.href = getBaseUrl() + '/view/frontend/register.html';
+            }, 2000);
+        } else {
+            showMessage(result.message || "Erreur lors de la suppression", "error");
+            closeDeleteModal();
+        }
     } catch (error) {
-      console.error("Erreur delete:", error);
-      showMessage("Erreur de connexion au serveur", "error");
-      closeDeleteModal();
+        console.error("Erreur delete:", error);
+        showMessage("Erreur de connexion au serveur: " + error.message, "error");
+        closeDeleteModal();
     }
-  }
+}
+
+function goBackToUsers() {
+    window.location.href = getBaseUrl() + '/view/frontend/dashboard.html';
+}
 
   function showMessage(msg, type) {
     const msgDiv = document.getElementById('messageArea');

@@ -7,13 +7,19 @@ session_start();
 try {
     require_once(__DIR__ . '/../../../controller/Demandeplanning.controller.php');
 
-    // Si c'est une requête AJAX
     $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-    // Pour les tests: utiliser l'ID 1 si pas de session
-    // TODO: Remplacer par une vraie gestion de session
+    // ── Suppression AJAX ──────────────────────────────────────────────────────
+    if ($isAjax && isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+        $demandeC = new DemandeplanningController();
+        $demandeC->deleteDemande((int)$_GET['id']);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
     if (!isset($_SESSION['user_id'])) {
-        $userId = 1; // ID utilisateur par défaut pour les tests
+        $userId = 1;
     } else {
         $userId = $_SESSION['user_id'];
     }
@@ -21,7 +27,6 @@ try {
     $demandeC = new DemandeplanningController();
     $demandes = $demandeC->listDemandesByUser($userId);
 
-    // Si c'est une requête AJAX, retourner du JSON
     if ($isAjax) {
         header('Content-Type: application/json');
         echo json_encode($demandes);
@@ -50,10 +55,10 @@ try {
   <style>
     .list-page {
       min-height: 100vh;
-      padding: 100px 20px 40px;
+      padding: 100px 20px 60px;
     }
     .list-container {
-      max-width: 1200px;
+      max-width: 900px;
       margin: 0 auto;
     }
     .page-header {
@@ -63,10 +68,10 @@ try {
     .page-header .icon { font-size: 3.5rem; margin-bottom: 16px; display: block; }
     .page-header h1 { font-size: 2.5rem; font-weight: 700; color: var(--text); margin-bottom: 12px; }
     .page-header p { color: var(--muted); font-size: 1rem; }
-    
+
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 20px;
       margin-bottom: 40px;
     }
@@ -91,11 +96,11 @@ try {
     }
     .stat-label {
       color: var(--muted);
-      font-size: .9rem;
+      font-size: .85rem;
       text-transform: uppercase;
       letter-spacing: .05em;
     }
-    
+
     .actions-bar {
       display: flex;
       justify-content: space-between;
@@ -106,7 +111,7 @@ try {
     }
     .search-box {
       flex: 1;
-      min-width: 250px;
+      min-width: 200px;
       position: relative;
     }
     .search-input {
@@ -114,45 +119,45 @@ try {
       background: rgba(91, 62, 150, .08);
       border: 1.5px solid rgba(91, 62, 150, .25);
       border-radius: 12px;
-      padding: 12px 16px 12px 44px;
+      padding: 11px 16px 11px 44px;
       color: var(--text);
       font-size: .95rem;
       outline: none;
       transition: border-color .25s;
+      box-sizing: border-box;
     }
-    .search-input:focus {
-      border-color: var(--violet);
-    }
+    .search-input:focus { border-color: var(--violet); }
     .search-icon {
       position: absolute;
-      left: 16px;
+      left: 14px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 1.2rem;
+      font-size: 1rem;
+      pointer-events: none;
     }
     .btn-add {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 12px 24px;
+      padding: 11px 22px;
       background: linear-gradient(135deg, var(--violet), var(--blue));
       border: none;
       border-radius: 12px;
       color: #fff;
       font-weight: 600;
+      font-size: .92rem;
       text-decoration: none;
       cursor: pointer;
       transition: transform .2s, box-shadow .3s;
+      white-space: nowrap;
     }
     .btn-add:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(91, 62, 150, .45);
     }
-    
-    .demandes-grid {
-      display: grid;
-      gap: 20px;
-    }
+
+    .demandes-grid { display: grid; gap: 20px; }
+
     .demande-card {
       background: var(--card-bg);
       backdrop-filter: blur(20px);
@@ -181,63 +186,46 @@ try {
       margin-bottom: 20px;
     }
     .demande-id {
-      font-size: .85rem;
+      font-size: .82rem;
       color: var(--muted);
       font-weight: 600;
       letter-spacing: .05em;
     }
-    .demande-date {
-      font-size: .85rem;
-      color: var(--muted);
-    }
+    .demande-date { font-size: .82rem; color: var(--muted); }
+
     .demande-body {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
       margin-bottom: 20px;
     }
-    .demande-info {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+    .demande-info { display: flex; flex-direction: column; gap: 4px; }
     .info-label {
-      font-size: .8rem;
+      font-size: .78rem;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: .05em;
     }
     .info-value {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 600;
       color: var(--text);
     }
     .badge {
       display: inline-block;
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 6px;
-      font-size: .75rem;
+      font-size: .72rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: .05em;
-      margin-left: 6px;
+      letter-spacing: .04em;
+      margin-left: 5px;
     }
-    .badge-quotidien {
-      background: rgba(52, 152, 219, .2);
-      color: #3498db;
-    }
-    .badge-hebdomadaire {
-      background: rgba(155, 89, 182, .2);
-      color: #9b59b6;
-    }
-    .badge-jours {
-      background: rgba(46, 204, 113, .2);
-      color: #2ecc71;
-    }
-    .badge-semaines {
-      background: rgba(241, 196, 15, .2);
-      color: #f1c40f;
-    }
+    .badge-quotidien    { background: rgba(52, 152, 219, .2); color: #3498db; }
+    .badge-hebdomadaire { background: rgba(155, 89, 182, .2); color: #9b59b6; }
+    .badge-jours        { background: rgba(46, 204, 113, .2); color: #2ecc71; }
+    .badge-semaines     { background: rgba(241, 196, 15, .2);  color: #f1c40f; }
+
     .demande-actions {
       display: flex;
       gap: 12px;
@@ -251,7 +239,7 @@ try {
       border-radius: 10px;
       background: transparent;
       color: var(--text);
-      font-size: .9rem;
+      font-size: .88rem;
       font-weight: 600;
       cursor: pointer;
       transition: all .25s;
@@ -262,19 +250,12 @@ try {
       justify-content: center;
       gap: 6px;
     }
-    .btn-action:hover {
-      border-color: var(--violet);
-      background: rgba(91, 62, 150, .1);
-    }
-    .btn-delete {
-      border-color: rgba(231, 76, 60, .3);
-      color: #e74c3c;
-    }
-    .btn-delete:hover {
-      border-color: #e74c3c;
-      background: rgba(231, 76, 60, .1);
-    }
-    
+    .btn-action:hover { border-color: var(--violet); background: rgba(91, 62, 150, .1); }
+    .btn-delete { border-color: rgba(231, 76, 60, .3); color: #e74c3c; }
+    .btn-delete:hover { border-color: #e74c3c; background: rgba(231, 76, 60, .1); }
+    .btn-show   { border-color: rgba(46, 204, 113, .3); color: #2ecc71; }
+    .btn-show:hover { border-color: #2ecc71; background: rgba(46, 204, 113, .1); }
+
     .empty-state {
       text-align: center;
       padding: 80px 20px;
@@ -283,7 +264,7 @@ try {
     .empty-state .icon { font-size: 4rem; margin-bottom: 20px; opacity: .5; }
     .empty-state h3 { font-size: 1.5rem; margin-bottom: 12px; color: var(--text); }
     .empty-state p { margin-bottom: 24px; }
-    
+
     .btn-back {
       display: inline-flex;
       align-items: center;
@@ -295,12 +276,158 @@ try {
       transition: color .2s;
     }
     .btn-back:hover { color: var(--blue); }
+
+    /* ── Modal Show ─────────────────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid rgba(91, 62, 150, .35);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      animation: modalIn .25s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)   scale(1); }
+    }
+    .modal-bar {
+      height: 4px;
+      border-radius: 20px 20px 0 0;
+      background: linear-gradient(90deg, var(--violet), var(--blue));
+    }
+    .modal-inner { padding: 32px; }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .modal-subtitle { font-size: .82rem; color: var(--muted); margin-top: 4px; }
+    .modal-close {
+      background: rgba(91,62,150,.15);
+      border: none;
+      color: var(--text);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+      flex-shrink: 0;
+    }
+    .modal-close:hover { background: rgba(231,76,60,.2); color: #e74c3c; }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .modal-field {
+      background: rgba(91,62,150,.07);
+      border: 1px solid rgba(91,62,150,.18);
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+    .modal-field.full { grid-column: 1 / -1; }
+    .modal-field-label {
+      font-size: .75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+    .modal-field-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      word-break: break-word;
+    }
+    .modal-field-value .badge { margin-left: 0; margin-top: 6px; display: inline-block; }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(91,62,150,.15);
+    }
+
+    /* ── Toast notification ─────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      padding: 14px 22px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: .9rem;
+      color: #fff;
+      z-index: 99999;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-success { background: linear-gradient(135deg,#2ecc71,#27ae60); }
+    .toast-error   { background: linear-gradient(135deg,#e74c3c,#c0392b); }
+
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .demande-body { grid-template-columns: 1fr 1fr; }
+      .modal-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
 <div id="cursor"></div>
 <div id="cursor-trail"></div>
+
+<!-- ── Modal Détails ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-bar"></div>
+    <div class="modal-inner">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modalTitle">Détails de la demande</div>
+          <div class="modal-subtitle" id="modalSubtitle"></div>
+        </div>
+        <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      </div>
+      <div class="modal-grid" id="modalBody"></div>
+      <div class="modal-footer">
+        <a id="modalEditBtn" href="#" class="btn-action" style="flex:1">✏️ Modifier</a>
+        <button class="btn-action btn-delete" style="flex:1" id="modalDeleteBtn">🗑️ Supprimer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ─────────────────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
 
 <nav id="navbar">
   <a href="../dashboard.html" class="nav-logo">
@@ -345,13 +472,13 @@ try {
 
     <?php
     $totalDemandes = count($demandes);
-    $quotidien = count(array_filter($demandes, fn($d) => $d['type_budget'] === 'quotidien'));
-    $hebdomadaire = count(array_filter($demandes, fn($d) => $d['type_budget'] === 'hebdomadaire'));
+    $quotidien     = count(array_filter($demandes, fn($d) => $d['type_budget'] === 'quotidien'));
+    $hebdomadaire  = count(array_filter($demandes, fn($d) => $d['type_budget'] === 'hebdomadaire'));
     ?>
 
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-value"><?= $totalDemandes ?></div>
+        <div class="stat-value" id="statTotal"><?= $totalDemandes ?></div>
         <div class="stat-label">Total demandes</div>
       </div>
       <div class="stat-card">
@@ -367,13 +494,11 @@ try {
     <div class="actions-bar">
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" id="searchInput" 
-               placeholder="Rechercher dans mes demandes..." 
+        <input type="text" class="search-input" id="searchInput"
+               placeholder="Rechercher dans mes demandes..."
                oninput="filterDemandes()"/>
       </div>
-      <a href="addDemandeplanning.php" class="btn-add">
-        ➕ Nouvelle demande
-      </a>
+      <a href="addDemandeplanning.php" class="btn-add">➕ Nouvelle demande</a>
     </div>
 
     <div class="demandes-grid" id="demandesGrid">
@@ -386,20 +511,23 @@ try {
         </div>
       <?php else: ?>
         <?php foreach ($demandes as $d): ?>
-        <div class="demande-card" data-search="<?= htmlspecialchars(json_encode($d)) ?>">
+        <div class="demande-card"
+             id="card-<?= $d['id'] ?>"
+             data-search="<?= htmlspecialchars(strtolower(json_encode($d))) ?>"
+             data-demande='<?= htmlspecialchars(json_encode($d), ENT_QUOTES) ?>'>
+
           <div class="demande-header">
             <div class="demande-id">DEMANDE #<?= htmlspecialchars($d['id']) ?></div>
             <div class="demande-date">
               <?= $d['date_demande'] ? date('d/m/Y', strtotime($d['date_demande'])) : '—' ?>
             </div>
           </div>
-          
+
           <div class="demande-body">
             <div class="demande-info">
               <div class="info-label">🔥 Calories</div>
               <div class="info-value"><?= htmlspecialchars($d['calories']) ?> kcal</div>
             </div>
-            
             <div class="demande-info">
               <div class="info-label">💰 Budget</div>
               <div class="info-value">
@@ -409,7 +537,6 @@ try {
                 </span>
               </div>
             </div>
-            
             <div class="demande-info">
               <div class="info-label">⏱️ Durée</div>
               <div class="info-value">
@@ -420,16 +547,19 @@ try {
               </div>
             </div>
           </div>
-          
+
           <div class="demande-actions">
+            <button class="btn-action btn-show"
+                    onclick="showDemande(<?= $d['id'] ?>)">
+              👁️ Voir
+            </button>
             <a href="updateDemandeplanning.php?id=<?= $d['id'] ?>" class="btn-action">
               ✏️ Modifier
             </a>
-            <a href="deleteDemandeplanning.php?id=<?= $d['id'] ?>" 
-               class="btn-action btn-delete"
-               onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')">
+            <button class="btn-action btn-delete"
+                    onclick="deleteDemande(<?= $d['id'] ?>, this)">
               🗑️ Supprimer
-            </a>
+            </button>
           </div>
         </div>
         <?php endforeach; ?>
@@ -440,7 +570,7 @@ try {
 </div>
 
 <script>
-// Theme toggle
+/* ── Thème ──────────────────────────────────────────────────────────────── */
 const themeBtn = document.getElementById('theme-toggle');
 const html = document.documentElement;
 const saved = localStorage.getItem('theme') || 'dark';
@@ -453,18 +583,143 @@ themeBtn.addEventListener('click', () => {
   themeBtn.textContent = t === 'dark' ? '🌙 Sombre' : '☀️ Clair';
 });
 
-// Search filter
+/* ── Recherche ──────────────────────────────────────────────────────────── */
 function filterDemandes() {
   const val = document.getElementById('searchInput').value.toLowerCase();
-  const cards = document.querySelectorAll('.demande-card');
-  
-  cards.forEach(card => {
-    const searchData = card.getAttribute('data-search').toLowerCase();
-    card.style.display = searchData.includes(val) ? '' : 'none';
+  document.querySelectorAll('.demande-card').forEach(card => {
+    card.style.display = card.getAttribute('data-search').includes(val) ? '' : 'none';
   });
 }
 
-// Cursor effects
+/* ── Toast ──────────────────────────────────────────────────────────────── */
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast toast-${type} show`;
+  setTimeout(() => { t.classList.remove('show'); }, 3200);
+}
+
+/* ── Suppression AJAX (sans rechargement de page) ───────────────────────── */
+function deleteDemande(id, btn) {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')) return;
+
+  // Désactiver le bouton pendant la requête
+  btn.disabled = true;
+  btn.textContent = '⏳';
+
+  fetch(`?action=delete&id=${id}`, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      // Supprimer la carte avec une animation
+      const card = document.getElementById(`card-${id}`);
+      card.style.transition = 'opacity .3s, transform .3s';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(.95)';
+      setTimeout(() => {
+        card.remove();
+        // Mettre à jour le compteur
+        const statEl = document.getElementById('statTotal');
+        if (statEl) statEl.textContent = parseInt(statEl.textContent) - 1;
+        // Si modal ouvert sur cette demande, le fermer
+        if (currentModalId === id) closeModalDirect();
+      }, 300);
+      showToast('✅ Demande supprimée avec succès');
+    } else {
+      showToast('❌ Erreur : ' + (data.error || 'Suppression échouée'), 'error');
+      btn.disabled = false;
+      btn.innerHTML = '🗑️ Supprimer';
+    }
+  })
+  .catch(() => {
+    showToast('❌ Erreur réseau, réessayez.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '🗑️ Supprimer';
+  });
+}
+
+/* ── Modal Show ─────────────────────────────────────────────────────────── */
+let currentModalId = null;
+
+function showDemande(id) {
+  const card = document.getElementById(`card-${id}`);
+  if (!card) return;
+
+  const d = JSON.parse(card.getAttribute('data-demande'));
+  currentModalId = id;
+
+  // Titre & sous-titre
+  document.getElementById('modalTitle').textContent = `Demande #${d.id}`;
+  document.getElementById('modalSubtitle').textContent = d.date_demande
+    ? 'Créée le ' + formatDate(d.date_demande)
+    : '';
+
+  // Contenu
+  const fields = [
+    { label: '🔥 Calories',       value: `${d.calories} kcal` },
+    { label: '💰 Budget',         value: `${parseFloat(d.budget).toFixed(2)} €`, badge: d.type_budget },
+    { label: '⏱️ Durée',          value: d.duree,              badge: d.type_duree },
+    { label: '📋 Type budget',    value: d.type_budget },
+    { label: '📏 Type durée',     value: d.type_duree },
+    { label: '📅 Date demande',   value: d.date_demande ? formatDate(d.date_demande) : '—', full: true },
+  ];
+
+  // Ajouter tous les autres champs présents dans l'objet
+  const known = ['id','calories','budget','type_budget','duree','type_duree','date_demande'];
+  Object.entries(d).forEach(([k, v]) => {
+    if (!known.includes(k) && v !== null && v !== '') {
+      fields.push({ label: '📌 ' + k.replace(/_/g,' '), value: String(v) });
+    }
+  });
+
+  document.getElementById('modalBody').innerHTML = fields.map(f => `
+    <div class="modal-field${f.full ? ' full' : ''}">
+      <div class="modal-field-label">${f.label}</div>
+      <div class="modal-field-value">
+        ${f.value}
+        ${f.badge ? `<span class="badge badge-${f.badge}">${f.badge}</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  // Boutons du footer
+  document.getElementById('modalEditBtn').href = `updateDemandeplanning.php?id=${d.id}`;
+  document.getElementById('modalDeleteBtn').onclick = () => {
+    closeModalDirect();
+    // Simuler un clic sur le bouton supprimer de la carte
+    const cardBtn = card.querySelector('.btn-delete');
+    if (cardBtn) cardBtn.click();
+  };
+
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  // Fermer uniquement si clic sur l'overlay (pas sur le modal lui-même)
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  currentModalId = null;
+}
+
+// Fermer avec Echap
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModalDirect();
+});
+
+function formatDate(str) {
+  if (!str) return '—';
+  const d = new Date(str);
+  return isNaN(d) ? str : d.toLocaleDateString('fr-FR');
+}
+
+/* ── Curseur ────────────────────────────────────────────────────────────── */
 (function(){
   const cur = document.getElementById('cursor');
   const trail = document.getElementById('cursor-trail');

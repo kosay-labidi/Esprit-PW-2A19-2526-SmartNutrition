@@ -3,15 +3,15 @@ require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/../../../controller/Demandeplanning.controller.php');
 require_once(__DIR__ . '/../../../Model/Demandeplanning.php');
 
-$error = "";
+$errors   = [];
 $demandeC = new DemandeplanningController();
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+if (!isset($_GET['id']) || !ctype_digit($_GET['id'])) {
     header('Location: listMesDemandes.php');
     exit;
 }
 
-$id = (int)$_GET['id'];
+$id     = (int)$_GET['id'];
 $demande = $demandeC->getDemandeById($id);
 
 if (!$demande) {
@@ -19,28 +19,72 @@ if (!$demande) {
     exit;
 }
 
-if (isset($_POST["calories"]) && isset($_POST["budget"]) && isset($_POST["type_budget"]) && isset($_POST["duree"]) && isset($_POST["type_duree"])) {
-    if (!empty($_POST["calories"]) && !empty($_POST["budget"]) && !empty($_POST["type_budget"]) && !empty($_POST["duree"]) && !empty($_POST["type_duree"])) {
+// ── Validation côté serveur (PHP) ────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    $calories    = trim($_POST['calories']    ?? '');
+    $budget      = trim($_POST['budget']      ?? '');
+    $type_budget  = $_POST['type_budget']     ?? '';
+    $duree       = trim($_POST['duree']       ?? '');
+    $type_duree   = $_POST['type_duree']      ?? '';
+
+    if ($calories === '') {
+        $errors['calories'] = "L'objectif calorique est requis.";
+    } elseif (!ctype_digit($calories) || (int)$calories <= 0) {
+        $errors['calories'] = "Les calories doivent être un entier positif (les lettres ne sont pas acceptées).";
+    } elseif ((int)$calories < 500 || (int)$calories > 10000) {
+        $errors['calories'] = "Les calories doivent être comprises entre 500 et 10 000 kcal.";
+    }
+
+    if ($budget === '') {
+        $errors['budget'] = "Le budget est requis.";
+    } elseif (!is_numeric(str_replace(',', '.', $budget)) || (float)str_replace(',', '.', $budget) <= 0) {
+        $errors['budget'] = "Le budget doit être un nombre positif (les lettres ne sont pas acceptées).";
+    } elseif ((float)str_replace(',', '.', $budget) > 100000) {
+        $errors['budget'] = "Le budget semble trop élevé (max 100 000).";
+    }
+
+    if (!in_array($type_budget, ['quotidien', 'hebdomadaire'])) {
+        $errors['type_budget'] = "Veuillez sélectionner une période valide.";
+    }
+
+    if ($duree === '') {
+        $errors['duree'] = "La durée est requise.";
+    } elseif (!ctype_digit($duree) || (int)$duree <= 0) {
+        $errors['duree'] = "La durée doit être un entier positif (les lettres ne sont pas acceptées).";
+    } elseif ((int)$duree > 365) {
+        $errors['duree'] = "La durée ne peut pas dépasser 365 unités.";
+    }
+
+    if (!in_array($type_duree, ['jours', 'semaines'])) {
+        $errors['type_duree'] = "Veuillez sélectionner une unité valide.";
+    }
+
+    if (empty($errors)) {
         $updated = new Demandeplanning(
             $id,
             (int)$demande['id_utilisateur'],
-            (int)$_POST['calories'],
-            (float)$_POST['budget'],
-            $_POST['type_budget'],
-            (int)$_POST['duree'],
-            $_POST['type_duree'],
+            (int)$calories,
+            (float)str_replace(',', '.', $budget),
+            $type_budget,
+            (int)$duree,
+            $type_duree,
             null
         );
-
         $demandeC->updateDemande($updated, $id);
         header('Location: listMesDemandes.php');
         exit;
-
-    } else {
-        $error = "Informations manquantes";
     }
 }
+
+// Valeurs affichées dans le formulaire (POST prioritaire sur BDD)
+$val = [
+    'calories'    => $_POST['calories']    ?? $demande['calories'],
+    'budget'      => $_POST['budget']      ?? $demande['budget'],
+    'type_budget' => $_POST['type_budget'] ?? $demande['type_budget'],
+    'duree'       => $_POST['duree']       ?? $demande['duree'],
+    'type_duree'  => $_POST['type_duree']  ?? $demande['type_duree'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="fr" data-theme="dark">
@@ -53,120 +97,35 @@ if (isset($_POST["calories"]) && isset($_POST["budget"]) && isset($_POST["type_b
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/dashboard.css"/>
   <style>
-    .form-page {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 100px 20px 40px;
-    }
-    .form-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(91, 62, 150, .25);
-      border-radius: var(--radius);
-      padding: 48px;
-      width: 100%;
-      max-width: 580px;
-      position: relative;
-      overflow: hidden;
-    }
-    .form-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--blue), var(--violet));
-    }
-    .form-header { text-align: center; margin-bottom: 36px; }
-    .form-header .form-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
-    .form-header h1 { font-size: 2rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-    .form-header p { color: var(--muted); font-size: .9rem; }
-    .form-group { margin-bottom: 22px; }
-    .form-group label {
-      display: block;
-      font-size: .88rem;
-      font-weight: 600;
-      color: var(--muted);
-      margin-bottom: 8px;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-    }
-    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-control {
-      width: 100%;
-      background: rgba(91, 62, 150, .08);
-      border: 1.5px solid rgba(91, 62, 150, .25);
-      border-radius: 12px;
-      padding: 12px 16px;
-      color: var(--text);
-      font-family: 'Lato', sans-serif;
-      font-size: .95rem;
-      outline: none;
-      transition: border-color .25s, box-shadow .25s;
-      appearance: none;
-    }
-    .form-control:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(58, 134, 196, .15);
-    }
-    .form-control::placeholder { color: rgba(168, 184, 160, .5); }
-    select.form-control {
-      cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233A86C4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      padding-right: 36px;
-    }
-    select.form-control option { background: #0f2318; color: var(--text); }
-    .alert-error {
-      background: rgba(231, 76, 60, .12);
-      border: 1px solid rgba(231, 76, 60, .3);
-      color: #e74c3c;
-      border-radius: 12px;
-      padding: 14px 18px;
-      margin-bottom: 24px;
-      font-size: .9rem;
-    }
-    .btn-submit {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, var(--blue), var(--violet));
-      border: none;
-      border-radius: 12px;
-      color: #fff;
-      font-family: 'Lato', sans-serif;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform .2s, box-shadow .3s;
-      margin-top: 8px;
-      letter-spacing: .04em;
-    }
-    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(58, 134, 196, .45); }
-    .btn-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-      text-decoration: none;
-      font-size: .88rem;
-      margin-bottom: 28px;
-      transition: color .2s;
-    }
-    .btn-back:hover { color: var(--blue); }
-    .divider { height: 1px; background: rgba(91, 62, 150, .15); margin: 28px 0; }
-    .demande-id {
-      display: inline-block;
-      background: rgba(58, 134, 196, .15);
-      border: 1px solid rgba(58, 134, 196, .3);
-      color: var(--blue);
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: .82rem;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
+    .form-page { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:100px 20px 40px; }
+    .form-card { background:var(--card-bg); backdrop-filter:blur(20px); border:1px solid rgba(91,62,150,.25); border-radius:var(--radius); padding:48px; width:100%; max-width:560px; margin:0 auto; position:relative; overflow:hidden; }
+    .form-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--blue),var(--violet)); }
+    .form-header { text-align:center; margin-bottom:36px; }
+    .form-header .form-icon { font-size:3rem; margin-bottom:12px; display:block; }
+    .form-header h1 { font-size:2rem; font-weight:700; color:var(--text); margin-bottom:8px; }
+    .form-header p  { color:var(--muted); font-size:.9rem; }
+    .form-group { margin-bottom:22px; }
+    .form-group label { display:block; font-size:.88rem; font-weight:600; color:var(--muted); margin-bottom:8px; letter-spacing:.04em; text-transform:uppercase; }
+    .input-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-control { width:100%; background:rgba(91,62,150,.08); border:1.5px solid rgba(91,62,150,.25); border-radius:12px; padding:12px 16px; color:var(--text); font-family:'Lato',sans-serif; font-size:.95rem; outline:none; transition:border-color .25s,box-shadow .25s; appearance:none; box-sizing:border-box; }
+    .form-control:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(58,134,196,.15); }
+    .form-control::placeholder { color:rgba(168,184,160,.5); }
+    .form-control.is-invalid { border-color:#e74c3c !important; box-shadow:0 0 0 3px rgba(231,76,60,.15) !important; background:rgba(231,76,60,.06) !important; }
+    .form-control.is-valid   { border-color:#2ecc71 !important; box-shadow:0 0 0 3px rgba(46,204,113,.12) !important; }
+    .field-error { display:flex; align-items:center; gap:6px; margin-top:6px; font-size:.82rem; color:#e74c3c; font-weight:500; animation:fadeInDown .2s ease; }
+    .field-error::before { content:'⚠'; font-size:.75rem; }
+    @keyframes fadeInDown { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+    .alert-error { background:rgba(231,76,60,.12); border:1px solid rgba(231,76,60,.3); color:#e74c3c; border-radius:12px; padding:14px 18px; margin-bottom:24px; font-size:.9rem; display:flex; align-items:center; gap:10px; }
+    .alert-error strong { font-weight:700; }
+    select.form-control { cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233A86C4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; }
+    select.form-control option { background:#0f2318; color:var(--text); }
+    .field-hint { font-size:.78rem; color:var(--muted); margin-top:5px; opacity:.75; }
+    .btn-submit { width:100%; padding:14px; background:linear-gradient(135deg,var(--blue),var(--violet)); border:none; border-radius:12px; color:#fff; font-family:'Lato',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; transition:transform .2s,box-shadow .3s; margin-top:8px; letter-spacing:.04em; }
+    .btn-submit:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(58,134,196,.45); }
+    .btn-back { display:inline-flex; align-items:center; gap:8px; color:var(--muted); text-decoration:none; font-size:.88rem; margin-bottom:28px; transition:color .2s; }
+    .btn-back:hover { color:var(--blue); }
+    .divider { height:1px; background:rgba(91,62,150,.15); margin:28px 0; }
+    .demande-id-badge { display:inline-block; background:rgba(58,134,196,.15); border:1px solid rgba(58,134,196,.3); color:var(--blue); padding:4px 14px; border-radius:20px; font-size:.82rem; font-weight:600; margin-bottom:16px; }
   </style>
 </head>
 <body>
@@ -179,14 +138,8 @@ if (isset($_POST["calories"]) && isset($_POST["budget"]) && isset($_POST["type_b
     <svg viewBox="0 0 60 60" fill="none">
       <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
       <defs>
-        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#3A86C4"/>
-          <stop offset="100%" stop-color="#5B3E96"/>
-        </radialGradient>
-        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#1F3D2B"/>
-          <stop offset="100%" stop-color="#3A86C4"/>
-        </linearGradient>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#3A86C4"/><stop offset="100%" stop-color="#5B3E96"/></radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1F3D2B"/><stop offset="100%" stop-color="#3A86C4"/></linearGradient>
       </defs>
       <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
       <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
@@ -196,9 +149,7 @@ if (isset($_POST["calories"]) && isset($_POST["budget"]) && isset($_POST["type_b
   <div class="nav-actions">
     <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
     <a href="listMesDemandes.php" class="btn-logout">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-        <path d="M19 12H5M12 5l-7 7 7 7"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
       Retour
     </a>
   </div>
@@ -208,7 +159,7 @@ if (isset($_POST["calories"]) && isset($_POST["budget"]) && isset($_POST["type_b
   <div class="form-card">
 
     <a href="listMesDemandes.php" class="btn-back">← Retour à mes demandes</a>
-    <div class="demande-id">Demande #<?= $id ?></div>
+    <div class="demande-id-badge">Demande #<?= $id ?></div>
 
     <div class="form-header">
       <span class="form-icon">✏️</span>
@@ -216,42 +167,80 @@ if (isset($_POST["calories"]) && isset($_POST["budget"]) && isset($_POST["type_b
       <p>Mettez à jour votre planning nutritionnel</p>
     </div>
 
-    <?php if (!empty($error)): ?>
-      <div class="alert-error"><?= htmlspecialchars($error) ?></div>
+    <?php if (!empty($errors)): ?>
+      <div class="alert-error">
+        ⛔ <span><strong><?= count($errors) ?> erreur(s) détectée(s).</strong> Veuillez corriger les champs en rouge.</span>
+      </div>
     <?php endif; ?>
 
-    <form method="POST" action="">
+    <!-- novalidate : désactive toute validation HTML5 native du navigateur -->
+    <form method="POST" action="" id="updateForm" novalidate>
 
+      <!-- Calories -->
       <div class="form-group">
-        <label>🔥 Objectif calorique (kcal/jour)</label>
-        <input type="number" name="calories" class="form-control"
-               placeholder="ex: 2000" min="1"
-               value="<?= htmlspecialchars($_POST['calories'] ?? $demande['calories']) ?>" required/>
+        <label for="calories">🔥 Objectif calorique (kcal/jour)</label>
+        <input type="text" name="calories" id="calories"
+               class="form-control <?= isset($errors['calories']) ? 'is-invalid' : (isset($_POST['calories']) && !isset($errors['calories']) ? 'is-valid' : '') ?>"
+               placeholder="ex: 2000"
+               value="<?= htmlspecialchars($val['calories']) ?>"
+               autocomplete="off"/>
+        <div class="field-hint">Entre 500 et 10 000 kcal/jour</div>
+        <?php if (isset($errors['calories'])): ?>
+          <div class="field-error"><?= htmlspecialchars($errors['calories']) ?></div>
+        <?php endif; ?>
       </div>
 
+      <!-- Budget -->
       <div class="form-group">
         <label>💰 Budget</label>
         <div class="input-row">
-          <input type="number" name="budget" class="form-control"
-                 placeholder="ex: 50" min="0.01" step="0.01"
-                 value="<?= htmlspecialchars($_POST['budget'] ?? $demande['budget']) ?>" required/>
-          <select name="type_budget" class="form-control" required>
-            <option value="quotidien"    <?= ($demande['type_budget'] === 'quotidien')    ? 'selected' : '' ?>>Quotidien</option>
-            <option value="hebdomadaire" <?= ($demande['type_budget'] === 'hebdomadaire') ? 'selected' : '' ?>>Hebdomadaire</option>
-          </select>
+          <div>
+            <input type="text" name="budget" id="budget"
+                   class="form-control <?= isset($errors['budget']) ? 'is-invalid' : (isset($_POST['budget']) && !isset($errors['budget']) ? 'is-valid' : '') ?>"
+                   placeholder="ex: 50.00"
+                   value="<?= htmlspecialchars($val['budget']) ?>"
+                   autocomplete="off"/>
+            <?php if (isset($errors['budget'])): ?>
+              <div class="field-error"><?= htmlspecialchars($errors['budget']) ?></div>
+            <?php endif; ?>
+          </div>
+          <div>
+            <select name="type_budget" id="type_budget"
+                    class="form-control <?= isset($errors['type_budget']) ? 'is-invalid' : '' ?>">
+              <option value="quotidien"    <?= $val['type_budget'] === 'quotidien'    ? 'selected' : '' ?>>Quotidien</option>
+              <option value="hebdomadaire" <?= $val['type_budget'] === 'hebdomadaire' ? 'selected' : '' ?>>Hebdomadaire</option>
+            </select>
+            <?php if (isset($errors['type_budget'])): ?>
+              <div class="field-error"><?= htmlspecialchars($errors['type_budget']) ?></div>
+            <?php endif; ?>
+          </div>
         </div>
       </div>
 
+      <!-- Durée -->
       <div class="form-group">
         <label>⏱️ Durée du planning</label>
         <div class="input-row">
-          <input type="number" name="duree" class="form-control"
-                 placeholder="ex: 7" min="1"
-                 value="<?= htmlspecialchars($_POST['duree'] ?? $demande['duree']) ?>" required/>
-          <select name="type_duree" class="form-control" required>
-            <option value="jours"    <?= ($demande['type_duree'] === 'jours')    ? 'selected' : '' ?>>Jours</option>
-            <option value="semaines" <?= ($demande['type_duree'] === 'semaines') ? 'selected' : '' ?>>Semaines</option>
-          </select>
+          <div>
+            <input type="text" name="duree" id="duree"
+                   class="form-control <?= isset($errors['duree']) ? 'is-invalid' : (isset($_POST['duree']) && !isset($errors['duree']) ? 'is-valid' : '') ?>"
+                   placeholder="ex: 7"
+                   value="<?= htmlspecialchars($val['duree']) ?>"
+                   autocomplete="off"/>
+            <?php if (isset($errors['duree'])): ?>
+              <div class="field-error"><?= htmlspecialchars($errors['duree']) ?></div>
+            <?php endif; ?>
+          </div>
+          <div>
+            <select name="type_duree" id="type_duree"
+                    class="form-control <?= isset($errors['type_duree']) ? 'is-invalid' : '' ?>">
+              <option value="jours"    <?= $val['type_duree'] === 'jours'    ? 'selected' : '' ?>>Jours</option>
+              <option value="semaines" <?= $val['type_duree'] === 'semaines' ? 'selected' : '' ?>>Semaines</option>
+            </select>
+            <?php if (isset($errors['type_duree'])): ?>
+              <div class="field-error"><?= htmlspecialchars($errors['type_duree']) ?></div>
+            <?php endif; ?>
+          </div>
         </div>
       </div>
 
@@ -264,23 +253,26 @@ if (isset($_POST["calories"]) && isset($_POST["budget"]) && isset($_POST["type_b
 </div>
 
 <script>
-const themeBtn = document.getElementById('theme-toggle');
-const html = document.documentElement;
-const saved = localStorage.getItem('theme') || 'dark';
+/* ── Thème ───────────────────────────────────────────────────────────────── */
+var themeBtn = document.getElementById('theme-toggle');
+var html     = document.documentElement;
+var saved    = localStorage.getItem('theme') || 'dark';
 html.setAttribute('data-theme', saved);
 themeBtn.textContent = saved === 'dark' ? '🌙 Sombre' : '☀️ Clair';
-themeBtn.addEventListener('click', () => {
-  const t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+themeBtn.addEventListener('click', function() {
+  var t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', t);
   localStorage.setItem('theme', t);
   themeBtn.textContent = t === 'dark' ? '🌙 Sombre' : '☀️ Clair';
 });
+
+/* ── Curseur ─────────────────────────────────────────────────────────────── */
 (function(){
-  const cur = document.getElementById('cursor');
-  const trail = document.getElementById('cursor-trail');
+  var cur   = document.getElementById('cursor');
+  var trail = document.getElementById('cursor-trail');
   if (!cur || !trail) return;
-  let mx = 0, my = 0, tx = 0, ty = 0;
-  document.addEventListener('mousemove', e => {
+  var mx=0, my=0, tx=0, ty=0;
+  document.addEventListener('mousemove', function(e) {
     mx = e.clientX; my = e.clientY;
     cur.style.left = mx + 'px'; cur.style.top = my + 'px';
   });
@@ -289,11 +281,94 @@ themeBtn.addEventListener('click', () => {
     trail.style.left = tx + 'px'; trail.style.top = ty + 'px';
     requestAnimationFrame(loop);
   })();
-  document.querySelectorAll('a, button, .form-control').forEach(el => {
-    el.addEventListener('mouseenter', () => cur.classList.add('hover'));
-    el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
-  });
+  var els = document.querySelectorAll('a, button, .form-control');
+  for (var i = 0; i < els.length; i++) {
+    els[i].addEventListener('mouseenter', function(){ cur.classList.add('hover'); });
+    els[i].addEventListener('mouseleave', function(){ cur.classList.remove('hover'); });
+  }
 })();
+
+/* ══════════════════════════════════════════════════════════════════════════
+   VALIDATION CÔTÉ CLIENT — JavaScript pur (aucun attribut HTML5)
+══════════════════════════════════════════════════════════════════════════ */
+
+var rules = {
+  calories: function(v) {
+    if (!v)                return "L'objectif calorique est requis.";
+    if (!/^\d+$/.test(v)) return "Entier uniquement — les lettres ne sont pas acceptées.";
+    var n = parseInt(v, 10);
+    if (n < 500)           return "Minimum 500 kcal/jour.";
+    if (n > 10000)         return "Maximum 10 000 kcal/jour.";
+    return null;
+  },
+  budget: function(v) {
+    if (!v)                return "Le budget est requis.";
+    if (!/^\d+([.,]\d{1,2})?$/.test(v)) return "Format invalide — exemple : 50 ou 50.00 (les lettres ne sont pas acceptées).";
+    if (parseFloat(v.replace(',', '.')) <= 0)      return "Doit être supérieur à 0.";
+    if (parseFloat(v.replace(',', '.')) > 100000)  return "Montant trop élevé (max 100 000).";
+    return null;
+  },
+  duree: function(v) {
+    if (!v)                return "La durée est requise.";
+    if (!/^\d+$/.test(v)) return "Entier uniquement — les lettres ne sont pas acceptées.";
+    var n = parseInt(v, 10);
+    if (n <= 0)            return "Doit être supérieur à 0.";
+    if (n > 365)           return "Maximum 365 unités.";
+    return null;
+  }
+};
+
+function showErr(input, msg) {
+  input.classList.add('is-invalid');
+  input.classList.remove('is-valid');
+  var parent = input.parentNode;
+  var existing = parent.querySelector('.field-error-js');
+  if (!existing) {
+    existing = document.createElement('div');
+    existing.className = 'field-error field-error-js';
+    input.insertAdjacentElement('afterend', existing);
+  }
+  existing.textContent = msg;
+}
+
+function clearErr(input) {
+  input.classList.remove('is-invalid');
+  input.classList.add('is-valid');
+  var parent = input.parentNode;
+  var existing = parent.querySelector('.field-error-js');
+  if (existing) existing.remove();
+}
+
+function validate(input) {
+  var r = rules[input.name];
+  if (!r) return true;
+  var msg = r(input.value.trim());
+  if (msg) { showErr(input, msg); return false; }
+  clearErr(input);
+  return true;
+}
+
+var fields = document.querySelectorAll('.form-control');
+for (var i = 0; i < fields.length; i++) {
+  (function(inp) {
+    inp.addEventListener('blur',   function() { validate(inp); });
+    inp.addEventListener('input',  function() { if (inp.classList.contains('is-invalid')) validate(inp); });
+    inp.addEventListener('change', function() { validate(inp); });
+  })(fields[i]);
+}
+
+document.getElementById('updateForm').addEventListener('submit', function(e) {
+  var ok = true;
+  var allFields = document.querySelectorAll('.form-control');
+  for (var i = 0; i < allFields.length; i++) {
+    if (!validate(allFields[i])) ok = false;
+  }
+  if (!ok) {
+    e.preventDefault();
+    var first = document.querySelector('.is-invalid');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
 </script>
 
 </body>

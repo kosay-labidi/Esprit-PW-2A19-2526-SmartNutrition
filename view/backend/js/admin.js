@@ -292,7 +292,181 @@ window.showAddUserModal = function() {
     if (e.target === modal) modal.remove();
   });
 };
+window.showEditUserModal = async function(id) {
+  document.getElementById('modal-edit-user')?.remove();
 
+  console.log(`🔍 Chargement des données utilisateur ID: ${id}`);
+
+  try {
+    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php?id=' + id, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      cache: 'no-cache'
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const result = await response.json();
+    console.log('✅ Données reçues:', result);
+
+    if (!result.success || !result.data) {
+      showToast('Erreur', result.message || 'Impossible de charger les données', 'error');
+      return;
+    }
+
+    const user = result.data;
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-edit-user';
+    modal.style.cssText = `
+      position:fixed;inset:0;z-index:99998;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;transition:opacity .3s ease;
+    `;
+
+    modal.innerHTML = `
+      <div style="background:#1e1e2e;border:1px solid rgba(91,62,150,.5);border-radius:18px;padding:36px;width:100%;max-width:480px;box-shadow:0 24px 64px rgba(0,0,0,.6);transform:translateY(20px);transition:transform .3s ease;color:#f0f0f0;" id="modal-edit-user-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+          <h2 style="margin:0;font-size:1.3rem;font-weight:700">✏️ Modifier l'utilisateur</h2>
+          <button onclick="document.getElementById('modal-edit-user').remove()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:1.4rem;line-height:1">×</button>
+        </div>
+        
+        <div id="modal-edit-user-errors" style="display:none;background:rgba(231,76,60,.1);border:1px solid #e74c3c;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:.85rem;color:#e74c3c"></div>
+        
+        <div style="display:grid;gap:14px">
+          <input type="hidden" id="eu-id" value="${user.id}">
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Nom</label>
+              <input id="eu-nom" type="text" value="${user.nom}" style="${inputStyle()}">
+            </div>
+            <div>
+              <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Prénom</label>
+              <input id="eu-prenom" type="text" value="${user.prenom}" style="${inputStyle()}">
+            </div>
+          </div>
+          
+          <div>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Email</label>
+            <input id="eu-email" type="text" value="${user.email}" style="${inputStyle()}">
+          </div>
+          
+          <div>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Rôle</label>
+            <select id="eu-role" style="${inputStyle()}">
+              <option value="utilisateur"    ${user.role === 'utilisateur' ? 'selected' : ''}>Utilisateur</option>
+              <option value="nutritionniste" ${user.role === 'nutritionniste' ? 'selected' : ''}>Nutritionniste</option>
+              <option value="ecologiste"     ${user.role === 'ecologiste' ? 'selected' : ''}>Écologiste</option>
+              <option value="admin"          ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:24px;justify-content:flex-end">
+          <button onclick="document.getElementById('modal-edit-user').remove()" style="padding:10px 22px;border-radius:50px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#f0f0f0;cursor:pointer;">Annuler</button>
+          <button onclick="submitEditUser()" style="padding:10px 26px;border-radius:50px;border:none;background:linear-gradient(135deg,#5B3E96,#3A86C4);color:#fff;cursor:pointer;font-weight:600;">Enregistrer les modifications</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    setTimeout(() => {
+      modal.style.opacity = '1';
+      document.getElementById('modal-edit-user-box').style.transform = 'translateY(0)';
+    }, 10);
+
+    modal.addEventListener('click', e => {
+      if (e.target === modal) modal.remove();
+    });
+
+  } catch (error) {
+    console.error('Erreur complète:', error);
+    showToast('Erreur Réseau', 'Impossible d\'accéder à <b>users/updateUser.php</b><br>Vérifie que XAMPP est démarré', 'error');
+  }
+};
+
+// ==================== VALIDATION & SOUMISSION MODIFICATION ====================
+window.submitEditUser = async function() {
+  const id     = document.getElementById('eu-id')?.value;
+  const nom    = document.getElementById('eu-nom')?.value.trim();
+  const prenom = document.getElementById('eu-prenom')?.value.trim();
+  const email  = document.getElementById('eu-email')?.value.trim();
+  const role   = document.getElementById('eu-role')?.value;
+
+  const errDiv = document.getElementById('modal-edit-user-errors');
+  const errors = [];
+
+  // Validation champ par champ (sans HTML5)
+  if (!nom) {
+    errors.push('Le nom est requis');
+  } else if (/\d/.test(nom)) {
+    errors.push('Le nom ne doit pas contenir de chiffres');
+  }
+
+  if (!prenom) {
+    errors.push('Le prénom est requis');
+  } else if (/\d/.test(prenom)) {
+    errors.push('Le prénom ne doit pas contenir de chiffres');
+  }
+
+  if (!email) {
+    errors.push("L'email est requis");
+  } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+    errors.push('Adresse email invalide');
+  }
+
+  if (errors.length > 0) {
+    errDiv.style.display = 'block';
+    errDiv.innerHTML = errors.map(e => `• ${e}`).join('<br>');
+    return;
+  }
+
+  errDiv.style.display = 'none';
+
+  // URL absolue cohérente avec le reste du projet
+  const BASE_URL = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php';
+
+  try {
+    const response = await fetch(BASE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: parseInt(id), nom, prenom, email, role })
+    });
+
+    // Lire la réponse brute d'abord pour diagnostiquer les erreurs PHP
+    const rawText = await response.text();
+
+    let result;
+    try {
+      result = JSON.parse(rawText);
+    } catch (parseErr) {
+      // Le serveur a retourné du HTML (erreur PHP, require_once introuvable, etc.)
+      console.error('Réponse non-JSON du serveur :', rawText.substring(0, 300));
+      errDiv.style.display = 'block';
+      errDiv.innerHTML = '• Erreur serveur : le PHP a retourné une réponse inattendue (voir console)';
+      return;
+    }
+
+    if (result.success) {
+      document.getElementById('modal-edit-user')?.remove();
+      showToast('Succès', 'Utilisateur modifié avec succès !', 'success');
+      if (typeof loadUsers === 'function') loadUsers();
+    } else {
+      errDiv.style.display = 'block';
+      errDiv.innerHTML = `• ${result.message || 'Erreur lors de la mise à jour'}`;
+    }
+  } catch (err) {
+    // Vraie erreur réseau (XAMPP éteint, CORS, etc.)
+    console.error('Erreur réseau :', err);
+    errDiv.style.display = 'block';
+    errDiv.innerHTML = '• Erreur réseau — Vérifiez que XAMPP est démarré';
+  }
+};
 function inputStyle() {
   return `
     width:100%;box-sizing:border-box;padding:10px 14px;

@@ -111,10 +111,15 @@ class User
         return $this->role === 'admin';
     }
 
-    public function isMedecin(): bool
-    {
-        return $this->role === 'medecin';
-    }
+    public function isNutritionniste(): bool
+{
+    return $this->role === 'nutritionniste';
+}
+
+public function isEcologiste(): bool
+{
+    return $this->role === 'ecologiste';
+}
 
     public function isUtilisateur(): bool
     {

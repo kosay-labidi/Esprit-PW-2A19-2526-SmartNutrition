@@ -1291,3 +1291,23 @@ tbody tr:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(91,62,150,0.4);
 }
+.error-field {
+    border: 2px solid #e74c3c !important;
+    background-color: rgba(231, 76, 60, 0.1) !important;
+}
+
+.edit-error-messages {
+    background: rgba(231, 76, 60, 0.15);
+    border-left: 3px solid #e74c3c;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+.edit-error-messages li {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin: 5px 0;
+    list-style: none;
+}

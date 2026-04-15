@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
+/* ... vos styles existants ... */
 :root{
   --green:#1F3D2B;--sand:#F2E8CF;--violet:#5B3E96;--blue:#3A86C4;
   --bg:#0a1a10;--text:#F2E8CF;--muted:#a8b8a0;
@@ -450,15 +451,15 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
     <p>Nutrition Écologique & Intelligente</p>
   </div>
   
-  <form onsubmit="handleLogin(event)">
+  <form id="loginForm" novalidate>
     <div class="form-group">
       <label for="email-input">Email</label>
-      <input type="email" id="email-input" placeholder="votre@email.com" required aria-required="true"/>
+      <input type="text" id="email-input" placeholder="votre@email.com"/>
     </div>
     
     <div class="form-group">
       <label for="password-input">Mot de passe</label>
-      <input type="password" id="password-input" placeholder="••••••••" required aria-required="true"/>
+      <input type="password" id="password-input" placeholder="••••••••"/>
     </div>
     
     <div class="remember">
@@ -469,7 +470,7 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
     <!-- Message d'erreur login -->
     <div id="login-error" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;background:rgba(220,53,69,0.15);border:1px solid rgba(220,53,69,0.4);color:#ff6b7a;font-size:0.88rem;text-align:center;animation:slideUp .3s ease;"></div>
 
-    <button type="submit" class="btn-submit">Se connecter</button>
+    <button type="submit" class="btn-submit" id="btn-login">Se connecter</button>
   </form>
   
   <div class="links">
@@ -599,7 +600,7 @@ window.addEventListener('load',function(){
   pl.position.set(-3,2,2);
   scene.add(pl);
   
-  // Globe Terre (centré et plus grand)
+  // Globe Terre
   const loader=new THREE.TextureLoader();
   const earth=new THREE.Mesh(
     new THREE.SphereGeometry(2,64,64),
@@ -692,20 +693,60 @@ window.addEventListener('load',function(){
 });
 
 /* ═══════════════════════════════════════════════════════════
-   FORM HANDLER - CONNEXION AU BACKEND
+   CONTROLE DE SAISIE - FORMULAIRE LOGIN (sans HTML5)
    ═══════════════════════════════════════════════════════════ */
-const API_URL = 'http://localhost:5000/api';
-async function handleLogin(e) {
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const btn = e.target.querySelector('.btn-submit');
-  const email    = document.getElementById('email-input').value;
-  const password = document.getElementById('password-input').value;
+
+  const btn = document.getElementById('btn-login');
   const errorDiv = document.getElementById('login-error');
+  const email = document.getElementById('email-input').value.trim();
+  const password = document.getElementById('password-input').value;
 
   // Réinitialiser le message d'erreur
   errorDiv.style.display = 'none';
   errorDiv.textContent = '';
 
+  // ═══════════════════════════════════════════════════════════
+  // 1. Vérification des champs vides (les deux)
+  // ═══════════════════════════════════════════════════════════
+  if (!email && !password) {
+    errorDiv.textContent = "L'email et le mot de passe sont obligatoires";
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 2. Vérification de l'email (champ vide)
+  // ═══════════════════════════════════════════════════════════
+  if (!email) {
+    errorDiv.textContent = "L'email est obligatoire.";
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 3. Validation du format email (regex personnalisée)
+  // ═══════════════════════════════════════════════════════════
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    errorDiv.textContent = "Format d'email invalide. Exemple: nom@domaine.com";
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 4. Vérification du mot de passe (champ vide)
+  // ═══════════════════════════════════════════════════════════
+  if (!password) {
+    errorDiv.textContent = "Le mot de passe est obligatoire.";
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Tous les contrôles sont passés → appel API
+  // ═══════════════════════════════════════════════════════════
   btn.textContent = 'Connexion en cours...';
   btn.disabled = true;
 
@@ -719,7 +760,7 @@ async function handleLogin(e) {
     const contentType = response.headers.get('content-type') || '';
     if (!contentType.includes('application/json')) {
       const rawText = await response.text();
-      console.error('Réponse PHP brute (pas JSON):', rawText);
+      console.error('Réponse PHP brute:', rawText);
       throw new Error('Le serveur PHP ne renvoie pas du JSON');
     }
 
@@ -727,14 +768,11 @@ async function handleLogin(e) {
     console.log('Résultat login complet:', result);
 
     if (result.success) {
-      // Les données utilisateur sont dans result.data
       const userData = result.data;
       console.log('Données utilisateur:', userData);
       
-      // Récupérer l'ID (peut être id_utilisateur, id, ou user_id)
       const userId = userData.id_utilisateur || userData.id || userData.user_id;
       
-      // STOCKER L'ID UTILISATEUR CORRECTEMENT
       if (userId) {
         sessionStorage.setItem('user_id', userId);
         localStorage.setItem('user_id', userId);
@@ -746,16 +784,17 @@ async function handleLogin(e) {
       sessionStorage.setItem('user_email', userData.email);
       sessionStorage.setItem('user_nom', userData.nom || '');
       sessionStorage.setItem('user_prenom', userData.prenom || '');
+      sessionStorage.setItem('user_role', userData.role || '');
       
       localStorage.setItem('user_email', userData.email);
       localStorage.setItem('user_nom', userData.nom || '');
       localStorage.setItem('user_prenom', userData.prenom || '');
+      localStorage.setItem('user_role', userData.role || '');
       
-      // Garder l'ancien stockage pour compatibilité
       localStorage.setItem('gaialumen-user', JSON.stringify(userData));
       localStorage.setItem('gaialumen-token', 'session-' + Date.now());
 
-      btn.textContent = '✓ Connexion réussie!';
+      btn.textContent = '✓ Connexion réussie !';
 
       setTimeout(() => {
         if (userData.role === 'admin') {
@@ -779,7 +818,7 @@ async function handleLogin(e) {
     errorDiv.textContent = err.message || 'Impossible de contacter le serveur.';
     errorDiv.style.display = 'block';
   }
-}
+});
 
 // Nettoyer toute session précédente à l'arrivée sur la page de login
 localStorage.removeItem('gaialumen-token');
@@ -842,37 +881,6 @@ function aiRespond(question){
   }else{
     return "Je suis là pour vous aider! Posez-moi des questions sur la connexion, votre compte, ou GaiaLumen. 😊";
   }
-}
-async function loginUser(email, password) {
-    try {
-        const response = await fetch('../../backend/users/login.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, mdp: password })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Stocker l'ID utilisateur CORRECT
-            sessionStorage.setItem('user_id', result.user.id);
-            sessionStorage.setItem('user_email', result.user.email);
-            sessionStorage.setItem('user_nom', result.user.nom);
-            sessionStorage.setItem('user_prenom', result.user.prenom);
-            
-            // Optionnel : aussi en localStorage pour persistance
-            localStorage.setItem('user_id', result.user.id);
-            localStorage.setItem('user_email', result.user.email);
-            
-            // Redirection vers dashboard
-            window.location.href = 'dashboard.html';
-        } else {
-            showMessage(result.message || "Email ou mot de passe incorrect", "error");
-        }
-    } catch (error) {
-        console.error("Erreur connexion:", error);
-        showMessage("Erreur de connexion au serveur", "error");
-    }
 }
 
 aiSend.addEventListener('click',()=>{

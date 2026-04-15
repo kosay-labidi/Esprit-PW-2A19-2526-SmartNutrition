@@ -27,12 +27,13 @@ switch ($result['status']) {
     case 'ok':
         echo json_encode(['success' => true, 'data' => $result['data']]);
         break;
-    case 'account_not_found':
-        echo json_encode(['success' => false, 'message' => 'Aucun compte associé à cet email']);
-        break;
     case 'wrong_password':
         echo json_encode(['success' => false, 'message' => 'Mot de passe incorrect']);
         break;
+    case 'account_not_found':
+        echo json_encode(['success' => false, 'message' => 'Aucun compte trouvé']);
+        break;
+    
     default:
         echo json_encode(['success' => false, 'message' => 'Erreur serveur']);
 }

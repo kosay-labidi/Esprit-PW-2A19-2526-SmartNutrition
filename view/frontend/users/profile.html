@@ -1,150 +1,686 @@
-<section class="content-section" id="profile">
-  <div class="section-header">
-    <h2 class="module-title">👤 Mon Profil</h2>
-    <p>Gérez vos informations personnelles</p>
-  </div>
-
-  <div class="profile-container">
-    <div class="profile-card" id="profile-info">
-      <!-- Chargé dynamiquement -->
-    </div>
-
-    <div class="profile-actions">
-      <button class="btn btn-primary" onclick="window.location.href='updateProfile.php'">
-        ✏️ Modifier mon profil
-      </button>
-      <button class="btn btn-secondary" onclick="window.location.href='../../view/frontend/login.html'">
-        🚪 Déconnexion
-      </button>
-    </div>
-  </div>
-</section>
-
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GaiaLumen – Mon Profil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
 <style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-.profile-container {
-  max-width: 800px;
-  margin: 0 auto;
-}
+  body {
+    background: radial-gradient(circle at 20% 30%, #0a0f1a, #05080f);
+    font-family: 'Lato', sans-serif;
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
+    overflow-x: hidden;
+  }
 
-.profile-card {
-  background: var(--surface);
-  padding: 32px;
-  border-radius: 16px;
-  border: 1px solid rgba(168, 184, 160, 0.2);
-  margin-bottom: 24px;
-}
+  /* Curseur personnalisé */
+  #cursor {
+    position: fixed;
+    width: 12px;
+    height: 12px;
+    background: #3A86C4;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s ease;
+    box-shadow: 0 0 12px rgba(58,134,196,0.8);
+  }
 
-.profile-avatar {
-  text-align: center;
-  margin-bottom: 24px;
-}
+  #cursor.hover {
+    transform: scale(2.5);
+    background: #5B3E96;
+    box-shadow: 0 0 20px rgba(91,62,150,0.8);
+  }
 
-.profile-avatar img {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid var(--blue);
-}
+  #cursor-trail {
+    position: fixed;
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid rgba(58,134,196,0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.05s ease;
+  }
 
-.profile-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 24px;
-}
+  /* Container principal */
+  .profile-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    animation: fadeInUp 0.6s ease-out;
+  }
 
-.profile-info-item {
-  padding: 16px;
-  background: rgba(168, 184, 160, 0.1);
-  border-radius: 12px;
-}
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-.profile-info-label {
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-bottom: 4px;
-}
+  /* Glassmorphism card */
+  .profile-card {
+    background: rgba(15, 25, 35, 0.6);
+    backdrop-filter: blur(12px);
+    border-radius: 2rem;
+    border: 1px solid rgba(58, 134, 196, 0.2);
+    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+    overflow: hidden;
+  }
 
-.profile-info-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
+  /* Header avec flèche */
+  .profile-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(58, 134, 196, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(135deg, rgba(31,61,43,0.3), rgba(58,134,196,0.1));
+  }
 
-.profile-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
+  .back-btn {
+    background: rgba(58, 134, 196, 0.15);
+    border: 1px solid rgba(58, 134, 196, 0.3);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.8rem;
+    color: #3A86C4;
+    transition: all 0.3s ease;
+  }
+
+  .back-btn:hover {
+    background: rgba(58, 134, 196, 0.3);
+    transform: translateX(-5px);
+    border-color: #3A86C4;
+  }
+
+  .profile-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #E8DCC8, #3A86C4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Formulaire */
+  .profile-form {
+    padding: 2rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    color: #9CA3AF;
+    margin-bottom: 0.5rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    background: rgba(10, 20, 30, 0.6);
+    border: 1px solid rgba(58, 134, 196, 0.3);
+    border-radius: 1rem;
+    font-size: 1rem;
+    color: #E8DCC8;
+    transition: all 0.3s ease;
+    font-family: 'Lato', sans-serif;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #3A86C4;
+    box-shadow: 0 0 0 3px rgba(58, 134, 196, 0.2);
+    background: rgba(10, 20, 30, 0.8);
+  }
+
+  input::placeholder {
+    color: rgba(156, 163, 175, 0.5);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  small {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.75rem;
+    color: #6B7280;
+  }
+
+  /* Boutons */
+  .btn-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .btn {
+    padding: 0.9rem 1.8rem;
+    border: none;
+    border-radius: 2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #1F3D2B, #3A86C4);
+    color: white;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn-primary:hover::before {
+    left: 100%;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(58, 134, 196, 0.3);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #7F1D1D, #991B1B);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(153, 27, 27, 0.3);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid rgba(58, 134, 196, 0.4);
+    color: #3A86C4;
+  }
+
+  .btn-outline:hover {
+    background: rgba(58, 134, 196, 0.1);
+    border-color: #3A86C4;
+  }
+
+  /* Messages */
+  .message {
+    padding: 1rem 1.2rem;
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+    display: none;
+    animation: slideDown 0.3s ease;
+    font-size: 0.9rem;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .message.success {
+    background: rgba(16, 185, 129, 0.15);
+    border-left: 3px solid #10B981;
+    color: #6EE7B7;
+  }
+
+  .message.error {
+    background: rgba(239, 68, 68, 0.15);
+    border-left: 3px solid #EF4444;
+    color: #FCA5A5;
+  }
+
+  .divider {
+    margin: 2rem 0 1.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(58,134,196,0.4), transparent);
+  }
+
+  /* Badge */
+  .feature-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #3A86C4, #5B3E96);
+    color: white;
+    padding: 0.3rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+  }
+
+  /* Zone dangereuse */
+  .danger-zone {
+    text-align: center;
+    padding: 1rem 0;
+  }
+
+  .danger-zone p {
+    color: #9CA3AF;
+    font-size: 0.85rem;
+    margin: 0.8rem 0;
+  }
+
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+
+  .modal.active {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .modal-content {
+    background: rgba(15, 25, 35, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    animation: scaleIn 0.2s ease;
+  }
+
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.9);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .modal-content h3 {
+    color: #EF4444;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal-content p {
+    color: #D1D5DB;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    body {
+      padding: 1rem;
+    }
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .btn-group {
+      flex-direction: column;
+    }
+    .profile-header {
+      padding: 1rem 1.5rem;
+    }
+    .profile-form {
+      padding: 1.5rem;
+    }
+  }
 </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<div class="profile-wrapper">
+  <div class="profile-card">
+    <div class="profile-header">
+      <button class="back-btn" onclick="goBackToUsers()" aria-label="Retour">←</button>
+      <h1>👤 Mon Profil GaiaLumen</h1>
+    </div>
+
+    <div class="profile-form">
+      <div id="messageArea" class="message"></div>
+
+      <form id="profileForm" onsubmit="return updateProfile(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nom">Nom</label>
+            <input type="text" id="nom" name="nom" required placeholder="Votre nom">
+          </div>
+          <div class="form-group">
+            <label for="prenom">Prénom</label>
+            <input type="text" id="prenom" name="prenom" required placeholder="Votre prénom">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required placeholder="exemple@gaialumen.com">
+        </div>
+
+        <div class="form-group">
+          <label for="old_password">🔐 Ancien mot de passe</label>
+          <input type="password" id="old_password" name="old_password" placeholder="Requis pour modifier le mot de passe">
+          <small>L'ancien mot de passe est obligatoire pour toute modification du mot de passe</small>
+        </div>
+
+        <div class="form-group">
+          <label for="new_password">✨ Nouveau mot de passe <span style="font-weight: normal;">(optionnel)</span></label>
+          <input type="password" id="new_password" name="new_password" placeholder="Laissez vide pour ne pas changer">
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password">✓ Confirmer le nouveau mot de passe</label>
+          <input type="password" id="confirm_password" name="confirm_password" placeholder="Retapez le nouveau mot de passe">
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">💾 Mettre à jour mon profil</button>
+        </div>
+      </form>
+
+      <div class="divider"></div>
+
+      <div class="danger-zone">
+        <span class="feature-badge">⚠️ ZONE SENSIBLE</span>
+        <p>La suppression de votre compte est définitive et irréversible. Toutes vos données personnelles, vos repas, défis et objectifs seront supprimés.</p>
+        <button onclick="openDeleteModal()" class="btn btn-danger">🗑️ Supprimer définitivement mon compte</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmation suppression -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <h3>⚠️ Suppression définitive</h3>
+    <p>Êtes-vous absolument sûr de vouloir supprimer votre compte GaiaLumen ?<br><br>Toutes vos données seront perdues pour toujours.</p>
+    <div class="modal-buttons">
+      <button onclick="closeDeleteModal()" class="btn btn-outline">Annuler</button>
+      <button onclick="deleteAccount()" class="btn btn-danger">Oui, supprimer</button>
+    </div>
+  </div>
+</div>
 
 <script>
-function roleLabel(role) {
-  if (role === 'admin') return '👑 Admin';
-  if (role === 'medecin') return '⚕️ Médecin';
-  return '👤 Utilisateur';
-}
-
-function loadProfile() {
-  const userId = 1; // À remplacer par l'ID de l'utilisateur connecté
-
-  fetch('../../../controller/user.controller.php?action=readOne&id=' + userId)
-    .then(response => response.json())
-    .then(result => {
-      if (result.success) {
-        displayProfile(result.data);
-      } else {
-        const el = document.getElementById('profile-info');
-        if (el) el.innerHTML = '<p style="color: var(--muted);">Impossible de charger le profil.</p>';
-      }
-    })
-    .catch(() => {
-      const el = document.getElementById('profile-info');
-      if (el) el.innerHTML = '<p style="color: var(--muted);">Erreur réseau.</p>';
+  // Curseur personnalisé
+  (function(){
+    const cur = document.getElementById('cursor');
+    const trail = document.getElementById('cursor-trail');
+    if(!cur || !trail) return;
+    let mx = 0, my = 0, tx = 0, ty = 0;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX;
+      my = e.clientY;
+      cur.style.left = mx + 'px';
+      cur.style.top = my + 'px';
     });
-}
+    (function loop(){
+      tx += (mx - tx) * 0.12;
+      ty += (my - ty) * 0.12;
+      trail.style.left = tx + 'px';
+      trail.style.top = ty + 'px';
+      requestAnimationFrame(loop);
+    })();
+    document.querySelectorAll('button, .back-btn, .btn').forEach(el => {
+      el.addEventListener('mouseenter', () => cur.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+    });
+  })();
 
-function displayProfile(user) {
-  const initials = (user.prenom && user.nom)
-    ? user.prenom.charAt(0) + user.nom.charAt(0)
-    : '?';
-  const created = user.created_at || user.date_creation;
-  const createdStr = created ? new Date(created).toLocaleDateString('fr-FR') : '—';
+  // Gestion utilisateur
+  let currentUserId = null;
 
-  const html = `
-    <div class="profile-avatar">
-      <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--violet)); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; margin: 0 auto;">
-        ${initials}
-      </div>
-      <h2 style="margin-top: 16px;">${user.prenom} ${user.nom}</h2>
-      <p style="color: var(--muted);">${user.email}</p>
-    </div>
+  function getCurrentUserId() {
+    // Récupérer l'ID depuis sessionStorage ou localStorage
+    let userId = sessionStorage.getItem('user_id');
+    if (!userId) {
+      userId = localStorage.getItem('user_id');
+    }
+    if (!userId) {
+      // Pour la démo, mais normalement l'utilisateur doit être connecté
+      userId = 1;
+    }
+    return userId;
+  }
 
-    <div class="profile-info-grid">
-      <div class="profile-info-item">
-        <div class="profile-info-label">Rôle</div>
-        <div class="profile-info-value">${roleLabel(user.role)}</div>
-      </div>
-      <div class="profile-info-item">
-        <div class="profile-info-label">Membre depuis</div>
-        <div class="profile-info-value">${createdStr}</div>
-      </div>
-      <div class="profile-info-item">
-        <div class="profile-info-label">Dernière mise à jour</div>
-        <div class="profile-info-value">${user.date_mise_a_jour ? new Date(user.date_mise_a_jour).toLocaleString('fr-FR') : '—'}</div>
-      </div>
-    </div>
-  `;
+  async function loadUserProfile() {
+    const userId = getCurrentUserId();
+    if (!userId || userId === 0) {
+      showMessage("Utilisateur non connecté", "error");
+      return;
+    }
+    
+    try {
+      // Chemin corrigé : depuis view/frontend/users/ vers view/backend/users/
+      const response = await fetch(`../../backend/users/updateprofil.php?action=get&id=${userId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('nom').value = data.user.nom || '';
+          document.getElementById('prenom').value = data.user.prenom || '';
+          document.getElementById('email').value = data.user.email || '';
+          // Stocker l'ID si besoin
+          currentUserId = data.user.id;
+        } else {
+          showMessage(data.message || "Erreur de chargement", "error");
+        }
+      } else {
+        showMessage("Erreur de connexion au serveur", "error");
+      }
+    } catch (error) {
+      console.error("Erreur chargement profil:", error);
+      showMessage("Impossible de charger le profil", "error");
+    }
+  }
 
-  document.getElementById('profile-info').innerHTML = html;
-}
+  async function updateProfile(event) {
+    event.preventDefault();
 
-window.addEventListener('load', loadProfile);
+    const nom = document.getElementById('nom').value.trim();
+    const prenom = document.getElementById('prenom').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const old_password = document.getElementById('old_password').value;
+    const new_password = document.getElementById('new_password').value;
+    const confirm_password = document.getElementById('confirm_password').value;
+
+    if (!nom || !prenom || !email) {
+      showMessage("Tous les champs sont obligatoires", "error");
+      return false;
+    }
+
+    if (!email.includes('@')) {
+      showMessage("Email invalide", "error");
+      return false;
+    }
+
+    if (new_password && !old_password) {
+      showMessage("L'ancien mot de passe est requis pour modifier le mot de passe", "error");
+      return false;
+    }
+
+    if (new_password && new_password !== confirm_password) {
+      showMessage("Les nouveaux mots de passe ne correspondent pas", "error");
+      return false;
+    }
+
+    if (new_password && new_password.length < 6) {
+      showMessage("Le nouveau mot de passe doit contenir au moins 6 caractères", "error");
+      return false;
+    }
+
+    const userId = getCurrentUserId();
+    const formData = { id: userId, nom, prenom, email, old_password, new_password };
+
+    try {
+      // Chemin corrigé
+      const response = await fetch('../../backend/users/updateprofil.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        showMessage("✅ " + result.message, "success");
+        document.getElementById('old_password').value = '';
+        document.getElementById('new_password').value = '';
+        document.getElementById('confirm_password').value = '';
+      } else {
+        showMessage(result.message || "Erreur lors de la mise à jour", "error");
+      }
+    } catch (error) {
+      console.error("Erreur update:", error);
+      showMessage("Erreur de connexion au serveur", "error");
+    }
+    return false;
+  }
+
+  async function deleteAccount() {
+    const confirmDelete = confirm("⚠️ DERNIER AVERTISSEMENT : Voulez-vous vraiment supprimer définitivement votre compte ?");
+    if (!confirmDelete) {
+      closeDeleteModal();
+      return;
+    }
+
+    const userId = getCurrentUserId();
+    
+    try {
+      // Chemin corrigé
+      const response = await fetch('../../backend/users/deleteprofil.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        showMessage("Votre compte a été supprimé. Redirection...", "success");
+        sessionStorage.removeItem('user_id');
+        localStorage.removeItem('user_id');
+        setTimeout(() => {
+          window.location.href = '../dashboard.html';
+        }, 2000);
+      } else {
+        showMessage(result.message || "Erreur lors de la suppression", "error");
+        closeDeleteModal();
+      }
+    } catch (error) {
+      console.error("Erreur delete:", error);
+      showMessage("Erreur de connexion au serveur", "error");
+      closeDeleteModal();
+    }
+  }
+
+  function showMessage(msg, type) {
+    const msgDiv = document.getElementById('messageArea');
+    msgDiv.textContent = msg;
+    msgDiv.className = `message ${type}`;
+    msgDiv.style.display = 'block';
+    
+    setTimeout(() => {
+      msgDiv.style.opacity = '0';
+      setTimeout(() => {
+        msgDiv.style.display = 'none';
+        msgDiv.style.opacity = '1';
+      }, 300);
+    }, 5000);
+  }
+
+  function openDeleteModal() {
+    document.getElementById('deleteModal').classList.add('active');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+  }
+
+  function goBackToUsers() {
+    window.location.href = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/dashboard.html';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadUserProfile();
+    window.onclick = function(event) {
+      const modal = document.getElementById('deleteModal');
+      if (event.target === modal) closeDeleteModal();
+    };
+  });
 </script>
+</body>
+</html>

@@ -184,14 +184,34 @@ window.showToast = function(title, message, type = 'info') {
       <div class="toast-title">${title}</div>
       <div class="toast-message">${message}</div>
     </div>
+    <div class="toast-progress"></div>
     <button class="toast-close" onclick="this.parentElement.remove()">×</button>
   `;
   document.body.appendChild(toast);
+  
+  const progressBar = toast.querySelector('.toast-progress');
   setTimeout(() => toast.classList.add('show'), 100);
-  setTimeout(() => {
+  
+  let duration = 4000;
+  let start = Date.now();
+  
+  const timer = setInterval(() => {
+    let elapsed = Date.now() - start;
+    let progress = 100 - (elapsed / duration) * 100;
+    if (progressBar) progressBar.style.width = Math.max(0, progress) + '%';
+    
+    if (elapsed >= duration) {
+      clearInterval(timer);
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, 10);
+
+  toast.querySelector('.toast-close').onclick = () => {
+    clearInterval(timer);
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 300);
-  }, 4000);
+  };
 };
 
 // Gestion des modales

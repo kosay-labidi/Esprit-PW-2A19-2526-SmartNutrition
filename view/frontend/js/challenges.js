@@ -285,11 +285,13 @@ function generateInlineFormHTML(challenge, steaker) {
           <div class="form-group">
             <label class="form-label">Email <span class="required">*</span></label>
             <input type="email" name="email" class="form-input" placeholder="votre@email.com" required>
+            <span class="error-msg" id="error-email-${challenge.id}"></span>
           </div>
           
           <div class="form-group">
             <label class="form-label">Nom complet <span class="required">*</span></label>
             <input type="text" name="nom" class="form-input" placeholder="Ex: Jean Dupont" required>
+            <span class="error-msg" id="error-nom-${challenge.id}"></span>
           </div>
         </div>
         
@@ -303,6 +305,7 @@ function generateInlineFormHTML(challenge, steaker) {
             <div class="slider-value" id="objectif-value-${challenge.id}">50%</div>
           </div>
           <p class="form-help">Quel pourcentage de réduction visez-vous?</p>
+          <span class="error-msg" id="error-objectif-${challenge.id}"></span>
         </div>
         
         <div class="form-group">
@@ -319,6 +322,7 @@ function generateInlineFormHTML(challenge, steaker) {
             required
             oninput="window.updateCharCount(this, 'inline-motivation-count-${challenge.id}')"
           ></textarea>
+          <span class="error-msg" id="error-motivation-${challenge.id}"></span>
         </div>
         
         <div class="form-group">
@@ -330,6 +334,7 @@ function generateInlineFormHTML(challenge, steaker) {
             rows="2"
             required
           ></textarea>
+          <span class="error-msg" id="error-action-${challenge.id}"></span>
         </div>
         
         <div class="form-group">
@@ -464,11 +469,6 @@ window.handleInlineParticipationSubmit = function(event, challengeId) {
   const form = event.target;
   const submitBtn = form.querySelector('button[type="submit"]');
   
-  // Disable submit button and show loading state
-  submitBtn.disabled = true;
-  const originalBtnText = submitBtn.innerHTML;
-  submitBtn.innerHTML = '<span class="spinner-small"></span> Envoi...';
-  
   // Extract form data using FormData API
   const formData = new FormData(form);
   const data = {
@@ -481,6 +481,36 @@ window.handleInlineParticipationSubmit = function(event, challengeId) {
     engagement: formData.get('engagement') === 'on' ? 1 : 0,
     notifications: formData.get('notifications') === 'on' ? 1 : 0
   };
+
+  // Clear previous errors
+  form.querySelectorAll('.error-msg').forEach(s => s.innerText = '');
+  form.querySelectorAll('.invalid').forEach(i => i.classList.remove('invalid'));
+
+  // Validate data
+  let isValid = true;
+  if (!data.nom || data.nom.trim().length < 2) {
+    showInlineError(challengeId, 'nom', 'Le nom doit faire au moins 2 caractères');
+    isValid = false;
+  }
+  if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    showInlineError(challengeId, 'email', 'Email invalide');
+    isValid = false;
+  }
+  if (!data.motivation || data.motivation.trim().length < 10) {
+    showInlineError(challengeId, 'motivation', 'La motivation doit faire au moins 10 caractères');
+    isValid = false;
+  }
+  if (!data.action || data.action.trim().length < 5) {
+    showInlineError(challengeId, 'action', 'L\'action doit faire au moins 5 caractères');
+    isValid = false;
+  }
+
+  if (!isValid) return;
+
+  // Disable submit button and show loading state
+  submitBtn.disabled = true;
+  const originalBtnText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<span class="spinner-small"></span> Envoi...';
   
   // Call backend API
   fetch('../backend/challenges/addParticipant.php', {
@@ -530,6 +560,13 @@ window.handleInlineParticipationSubmit = function(event, challengeId) {
     submitBtn.innerHTML = originalBtnText;
   });
 };
+
+function showInlineError(challengeId, fieldName, message) {
+  const errorSpan = document.getElementById(`error-${fieldName}-${challengeId}`);
+  const input = document.querySelector(`#inline-participation-form-${challengeId} [name="${fieldName}"]`);
+  if (errorSpan) errorSpan.innerText = message;
+  if (input) input.classList.add('invalid');
+}
 
 // Helper function to validate participation data
 function validateParticipationData(data) {

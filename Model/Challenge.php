@@ -1,5 +1,5 @@
 <?php
-class Challenge {
+class Challenge  {
     private ?int $id;
     private ?string $titre;
     private ?string $description;

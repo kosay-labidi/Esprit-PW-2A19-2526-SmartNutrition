@@ -33,8 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_challenge'])) {
 
 $list = $challengeC->listChallenges();
 
-// Si c'est une requête AJAX (XMLHttpRequest), on retourne du JSON
-if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+// Si c'est une requête AJAX (XMLHttpRequest) ou avec le paramètre ajax=1, on retourne du JSON
+$isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_GET['ajax']);
+
+if ($isAjax) {
+    if (ob_get_length()) ob_clean(); // Nettoyer le tampon pour éviter les warnings parasites
     header('Content-Type: application/json');
     echo json_encode($list);
     exit;

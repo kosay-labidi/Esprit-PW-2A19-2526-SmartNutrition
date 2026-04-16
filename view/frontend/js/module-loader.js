@@ -89,28 +89,35 @@ function injectModuleStyles(moduleName, container) {
   });
 }
 
-// Fonction pour exécuter les scripts d'un module
-function executeModuleScripts(container) {
-  const scripts = container.querySelectorAll('script');
-  scripts.forEach(oldScript => {
-    const newScript = document.createElement('script');
-    Array.from(oldScript.attributes).forEach(attr => {
-      newScript.setAttribute(attr.name, attr.value);
+// Fonction pour exécuter les scripts d'un module dans l'ordre
+async function executeModuleScripts(container) {
+  const scripts = Array.from(container.querySelectorAll('script'));
+
+  for (const oldScript of scripts) {
+    await new Promise((resolve, reject) => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach(attr => {
+        newScript.setAttribute(attr.name, attr.value);
+      });
+
+      if (oldScript.src) {
+        const url = new URL(oldScript.src, window.location.href);
+        url.searchParams.set('v', Date.now());
+        newScript.src = url.href;
+        newScript.async = false;
+        newScript.onload = () => resolve();
+        newScript.onerror = () => reject(new Error(`Impossible de charger le script ${url.href}`));
+      } else {
+        newScript.textContent = oldScript.textContent;
+      }
+
+      document.body.appendChild(newScript);
+
+      if (!oldScript.src) {
+        resolve();
+      }
     });
-    
-    // Si le script a un src, ajouter un timestamp pour éviter le cache
-    if (oldScript.src) {
-      const url = new URL(oldScript.src, window.location.href);
-      url.searchParams.set('v', Date.now());
-      newScript.src = url.href;
-    } else {
-      newScript.textContent = oldScript.textContent;
-    }
-    
-    document.body.appendChild(newScript);
-    // Supprimer le script après exécution pour éviter de polluer le DOM (facultatif)
-    // if (!oldScript.src) newScript.remove();
-  });
+  }
 }
 
 // Fonction pour afficher un module
@@ -151,9 +158,17 @@ async function showModule(moduleName) {
         if (mainContent) {
           mainContent.appendChild(newSection);
           targetSection = newSection;
-          
+
+          // Rendre la section visible avant les scripts pour que leur init trouve le DOM attendu
+          targetSection.style.display = 'block';
+          targetSection.classList.add('active');
+
           // Exécuter les scripts du module (APRÈS l'ajout au DOM)
-          executeModuleScripts(tempDiv);
+          try {
+            await executeModuleScripts(tempDiv);
+          } catch (error) {
+            console.error(`❌ Erreur lors de l'exécution des scripts du module ${moduleName}:`, error);
+          }
         }
       }
     } else {
@@ -284,10 +299,14 @@ function startAutoReload() {
             mainContent.appendChild(newSection);
             newSection.style.display = 'block';
             newSection.classList.add('active');
-            
+
             // Exécuter les scripts du module (APRÈS l'ajout au DOM)
-            executeModuleScripts(tempDiv);
-            
+            try {
+              await executeModuleScripts(tempDiv);
+            } catch (error) {
+              console.error(`❌ Erreur lors de la mise à jour automatique du module ${moduleName}:`, error);
+            }
+
             // Déclencher l'événement de chargement du module
             const event = new CustomEvent('moduleLoaded', { detail: { moduleName } });
             document.dispatchEvent(event);
@@ -330,12 +349,14 @@ document.addEventListener('DOMContentLoaded', () => {
     reloadBtn.title = 'Recharger le module actuel';
     reloadBtn.style.cssText = 'background:var(--glass);border:1.5px solid rgba(91,62,150,.5);border-radius:50px;padding:6px 14px;color:var(--text);cursor:pointer;font-size:.82rem;transition:all .3s;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:4px;margin-right:8px;';
     reloadBtn.innerHTML = '🔄 Recharger';
-    reloadBtn.addEventListener('click', () => {
+    reloadBtn.addEventListener('click', async () => {
       const activeMenuItem = document.querySelector('.menu-item.active');
       if (activeMenuItem) {
         const moduleName = activeMenuItem.dataset.module;
-        reloadModule(moduleName);
-        showToast('Module rechargé!', 'success');
+        await reloadModule(moduleName);
+        if (typeof showToast === 'function') {
+          showToast('Module rechargé!', 'success');
+        }
       }
     });
     reloadBtn.addEventListener('mouseenter', () => {

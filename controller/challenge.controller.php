@@ -28,7 +28,15 @@ class ChallengeController {
     }
 
     public function listChallenges() {
-        $sql = "SELECT * FROM challenge";
+        $sql = "SELECT 
+                    c.*,
+                    COUNT(p.id) AS participants_count
+                FROM challenge c
+                LEFT JOIN participant p ON p.id_challenge = c.id
+                GROUP BY 
+                    c.id, c.titre, c.description, c.type, c.objectif, c.valeur_cible,
+                    c.date_debut, c.date_fin, c.statut, c.streak_icon, c.image
+                ORDER BY c.date_debut DESC, c.id DESC";
         $db = Config::getConnexion();
         try {
             $list = $db->query($sql);

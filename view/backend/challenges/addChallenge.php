@@ -6,11 +6,12 @@ $error = "";
 $challengeC = new ChallengeController();
 
 if (
-    isset($_POST["titre"]) && isset($_POST["description"]) && isset($_POST["type"]) && isset($_POST["objectif"]) && isset($_POST["valeur_cible"]) && isset($_POST["date_debut"]) && isset($_POST["date_fin"]) && isset($_POST["statut"]) && isset($_POST["streak_icon"]) && isset($_POST["image"])
+    isset($_POST["titre"]) && isset($_POST["description"]) && isset($_POST["type"]) && isset($_POST["objectif"]) && isset($_POST["valeur_cible"]) && isset($_POST["date_debut"]) && isset($_POST["date_fin"]) && isset($_POST["statut"]) && isset($_POST["streak_icon"])
 ) {
     if (
-        !empty($_POST["titre"]) && !empty($_POST["description"]) && !empty($_POST["type"]) && !empty($_POST["objectif"]) && !empty($_POST["valeur_cible"]) && !empty($_POST["date_debut"]) && !empty($_POST["date_fin"]) && !empty($_POST["statut"]) && !empty($_POST["streak_icon"]) && !empty($_POST["image"])
+        !empty($_POST["titre"]) && !empty($_POST["description"]) && !empty($_POST["type"]) && !empty($_POST["objectif"]) && !empty($_POST["valeur_cible"]) && !empty($_POST["date_debut"]) && !empty($_POST["date_fin"]) && !empty($_POST["statut"]) && !empty($_POST["streak_icon"])
     ) {
+        $image = isset($_POST["image"]) ? $_POST["image"] : "";
         $challenge = new Challenge(
             null, // id
             $_POST['titre'],
@@ -22,7 +23,7 @@ if (
             $_POST['date_fin'],
             $_POST['statut'],
             $_POST['streak_icon'],
-            $_POST['image']
+            $image
         );
         $challengeC->addChallenge($challenge);
         

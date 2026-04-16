@@ -18,6 +18,7 @@ let currentUser = {
   email: 'test@gaialumen.com',
   avatar: '👤'
 };
+const CHALLENGES_ENDPOINT = '../backend/challenges/listChallenges.php?ajax=1';
 
 // Données d'exemple des défis
 const sampleChallenges = [
@@ -203,6 +204,19 @@ function createSteakerHTML(icon, niveau, size = 'medium') {
   `;
 }
 
+function mapChallengesData(data) {
+  return data.map(c => ({
+    ...c,
+    id: parseInt(c.id, 10),
+    valeur_cible: parseInt(c.valeur_cible || 0, 10),
+    participants_count: parseInt(c.participants_count || 0, 10),
+    progression: parseInt(c.progression || 0, 10),
+    statut: normalizeChallengeStatus(c.statut),
+    steaker: c.streak_icon || c.steaker || '🏆',
+    steaker_nom: c.steaker_nom || c.objectif || 'Défi'
+  }));
+}
+
 // ═══════════════════════════════════════════════════════════
 // CHARGEMENT DES DÉFIS
 // ═══════════════════════════════════════════════════════════
@@ -219,28 +233,30 @@ function loadChallenges() {
   empty.style.display = 'none';
   
   // Fetch data from backend
-  fetch('../backend/challenges/listChallenges.php', {
+  fetch(`${CHALLENGES_ENDPOINT}&t=${Date.now()}`, {
     headers: {
-      'X-Requested-With': 'XMLHttpRequest'
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json'
     }
   })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('Réponse serveur invalide');
+      }
+
+      return response.json();
+    })
     .then(data => {
       if (!Array.isArray(data)) {
         console.error('Données reçues non valides:', data);
         allChallenges = [];
       } else {
-        // Transformer les données pour correspondre au format attendu par le frontend si nécessaire
-        allChallenges = data.map(c => ({
-          ...c,
-          id: parseInt(c.id),
-          valeur_cible: parseInt(c.valeur_cible),
-          participants_count: parseInt(c.participants_count || 0),
-          progression: parseInt(c.progression || 0),
-          statut: normalizeChallengeStatus(c.statut),
-          steaker: c.streak_icon || '🏆',
-          steaker_nom: c.objectif || 'Défi' // Utiliser l'objectif comme nom par défaut
-        }));
+        allChallenges = mapChallengesData(data);
       }
       
       allParticipants = sampleParticipants; // Garder les participants fictifs pour l'instant
@@ -248,14 +264,17 @@ function loadChallenges() {
       filterChallenges();
       renderRanking();
       renderMyRank();
-      
-      loading.style.display = 'none';
     })
     .catch(err => {
       console.error('Erreur lors du chargement des défis:', err);
       // Fallback sur les données d'exemple en cas d'erreur
-      allChallenges = sampleChallenges;
+      allChallenges = mapChallengesData(sampleChallenges);
+      allParticipants = sampleParticipants;
       filterChallenges();
+      renderRanking();
+      renderMyRank();
+    })
+    .finally(() => {
       loading.style.display = 'none';
     });
 }
@@ -264,6 +283,7 @@ function normalizeChallengeStatus(value) {
   const raw = (value ?? '').toString().trim().toLowerCase();
   if (!raw) return 'actif';
   if (raw === 'active') return 'actif';
+  if (raw === 'en cours' || raw === 'en_cours') return 'actif';
   if (raw === 'terminé') return 'termine';
   if (raw === 'terminée') return 'termine';
   if (raw === 'a venir') return 'futur';
@@ -283,8 +303,9 @@ function filterChallenges() {
   const status = statusFilter?.value || '';
   
   const filtered = allChallenges.filter(c => {
-    const matchSearch = c.titre.toLowerCase().includes(search) || 
-                       c.description.toLowerCase().includes(search);
+    const titre = (c.titre || '').toLowerCase();
+    const description = (c.description || '').toLowerCase();
+    const matchSearch = titre.includes(search) || description.includes(search);
     const matchStatus = !status || c.statut === status;
     return matchSearch && matchStatus;
   });
@@ -306,10 +327,14 @@ function renderChallenges(challenges) {
   grid.innerHTML = challenges.map(c => {
     const dateDebut = new Date(c.date_debut);
     const dateFin = new Date(c.date_fin);
+    const hasValidDates = !Number.isNaN(dateDebut.getTime()) && !Number.isNaN(dateFin.getTime());
     const niveau = getSteakerLevel(c.progression);
     const progressColor = getProgressColor(c.progression);
     const statut = normalizeChallengeStatus(c.statut);
     const canParticipate = statut === 'actif';
+    const dateLabel = hasValidDates
+      ? `${dateDebut.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'})} - ${dateFin.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'})}`
+      : 'Dates non disponibles';
     
     return `
       <div class="challenge-card" data-challenge-id="${c.id}">
@@ -345,7 +370,7 @@ function renderChallenges(challenges) {
             </div>
             <div class="challenge-stat">
               <span>📅</span>
-              <span>${dateDebut.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'})} - ${dateFin.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'})}</span>
+              <span>${dateLabel}</span>
             </div>
           </div>
           
@@ -803,6 +828,9 @@ function closeUserProfileModal() {
 // ═══════════════════════════════════════════════════════════
 
 function initChallenges() {
+  const section = document.getElementById('challenges');
+  if (!section) return;
+
   console.log('🎯 Initialisation du module Défis...');
   
   // Event listeners
@@ -811,16 +839,30 @@ function initChallenges() {
   const refreshBtn = document.getElementById('challenge-refresh');
   const participationForm = document.getElementById('participation-form');
   const motivationTextarea = document.getElementById('participant-motivation');
-  const toggleRanking = document.getElementById('toggle-ranking');
   const grid = document.getElementById('challenges-grid');
   
-  if (searchInput) searchInput.addEventListener('input', filterChallenges);
-  if (statusFilter) statusFilter.addEventListener('change', filterChallenges);
-  if (refreshBtn) refreshBtn.addEventListener('click', loadChallenges);
-  if (participationForm) participationForm.addEventListener('submit', handleParticipationSubmit);
-  if (motivationTextarea) motivationTextarea.addEventListener('input', updateCharCount);
+  if (searchInput && searchInput.dataset.bound !== 'true') {
+    searchInput.addEventListener('input', filterChallenges);
+    searchInput.dataset.bound = 'true';
+  }
+  if (statusFilter && statusFilter.dataset.bound !== 'true') {
+    statusFilter.addEventListener('change', filterChallenges);
+    statusFilter.dataset.bound = 'true';
+  }
+  if (refreshBtn && refreshBtn.dataset.bound !== 'true') {
+    refreshBtn.addEventListener('click', loadChallenges);
+    refreshBtn.dataset.bound = 'true';
+  }
+  if (participationForm && participationForm.dataset.bound !== 'true') {
+    participationForm.addEventListener('submit', handleParticipationSubmit);
+    participationForm.dataset.bound = 'true';
+  }
+  if (motivationTextarea && motivationTextarea.dataset.bound !== 'true') {
+    motivationTextarea.addEventListener('input', updateCharCount);
+    motivationTextarea.dataset.bound = 'true';
+  }
 
-  if (grid) {
+  if (grid && grid.dataset.bound !== 'true') {
     grid.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-participate');
       if (btn) {
@@ -847,20 +889,24 @@ function initChallenges() {
 
       showChallengeDetail(id);
     });
+    grid.dataset.bound = 'true';
   }
   
   // Gestion des onglets de classement
   const rankingTabs = document.querySelectorAll('.ranking-tab');
   rankingTabs.forEach(tab => {
+    if (tab.dataset.bound === 'true') return;
     tab.addEventListener('click', () => {
       rankingTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       renderRanking(tab.dataset.type);
     });
+    tab.dataset.bound = 'true';
   });
   
   // Fermer modals en cliquant sur overlay
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    if (overlay.dataset.bound === 'true') return;
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) {
         closeChallengeModal();
@@ -868,6 +914,7 @@ function initChallenges() {
         closeUserProfileModal();
       }
     });
+    overlay.dataset.bound = 'true';
   });
   
   // Charger les données
@@ -899,10 +946,14 @@ setTimeout(() => {
 }, 500);
 
 // Exposer les fonctions globalement
+window.initChallenges = initChallenges;
+window.loadChallenges = loadChallenges;
 window.showChallengeDetail = showChallengeDetail;
 window.closeChallengeModal = closeChallengeModal;
 window.openParticipationForm = openParticipationForm;
 window.closeParticipationModal = closeParticipationModal;
+window.updateCharCount = updateCharCount;
+window.handleParticipationSubmit = handleParticipationSubmit;
 window.showMyChallenge = showMyChallenge;
 window.showCollection = showCollection;
 window.showProfile = showProfile;

@@ -70,7 +70,7 @@ h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
 #pl-text{
   margin-top:20px;
   font-family:'Cormorant Garamond',serif;
-  font-size:1.5rem;letter-spacing:.3em;color:var(--sand);
+  font-size:1.5rem;letter-spacing:.3em;color:var(--text);
   animation:pulse 1.5s ease-in-out infinite;
 }
 #pl-bar{
@@ -170,7 +170,7 @@ h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
 .hero-title{
   font-size:clamp(2.8rem,7vw,5.5rem);
   font-weight:700;line-height:1.1;margin-bottom:20px;
-  background:linear-gradient(135deg,var(--sand) 0%,var(--blue) 50%,var(--violet) 100%);
+  background:linear-gradient(135deg,var(--text) 0%,var(--blue) 50%,var(--violet) 100%);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   background-clip:text;
@@ -281,6 +281,10 @@ h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
   background:linear-gradient(135deg,var(--green) 0%,#0d2218 100%);
   padding:100px 5%;text-align:center;
 }
+[data-theme="light"] #stats{
+  background:linear-gradient(135deg,var(--surface) 0%,var(--bg) 100%);
+}
+
 .stats-grid{
   display:flex;justify-content:center;gap:60px;
   flex-wrap:wrap;max-width:900px;margin:0 auto;
@@ -290,9 +294,13 @@ h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
   font-family:'Cormorant Garamond',serif;
   font-size:clamp(3rem,6vw,5rem);
   font-weight:700;line-height:1;
-  background:linear-gradient(135deg,var(--sand),var(--blue));
+  background:linear-gradient(135deg,var(--text),var(--blue));
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+}
+[data-theme="light"] .stat-number {
+  background: linear-gradient(135deg, var(--violet), var(--blue));
+  -webkit-background-clip: text;
 }
 .stat-suffix{
   font-family:'Cormorant Garamond',serif;
@@ -314,6 +322,9 @@ h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
   position:relative;background:#050e08;
   padding:0;overflow:hidden;
 }
+[data-theme="light"] #footer{
+  background:var(--surface);
+}
 #footer-canvas{width:100%;height:200px;display:block;}
 .footer-content{
   padding:40px 5% 30px;
@@ -322,7 +333,7 @@ h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
 }
 .footer-logo{
   display:flex;align-items:center;gap:10px;
-  text-decoration:none;color:var(--sand);
+  text-decoration:none;color:var(--text);
 }
 .footer-logo svg{width:32px;height:32px;}
 .footer-logo-text{

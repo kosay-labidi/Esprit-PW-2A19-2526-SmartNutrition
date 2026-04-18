@@ -36,15 +36,26 @@ function initTheme() {
   const html = document.documentElement;
   const saved = localStorage.getItem('gaialumen-theme') || 'dark';
   
+  const updateBtn = (theme) => {
+    if (!btn) return;
+    // Plus intuitif : l'icône représente le thème actuel
+    const icon = theme === 'dark' ? '🌙' : '☀️';
+    const text = theme === 'dark' ? 'Sombre' : 'Clair';
+    btn.innerHTML = `
+      <span class="menu-item-icon">${icon}</span>
+      <span class="menu-item-text">${text}</span>
+    `;
+  };
+
   html.setAttribute('data-theme', saved);
-  if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+  updateBtn(saved);
   
   if (btn) {
     btn.addEventListener('click', () => {
       const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', n);
       localStorage.setItem('gaialumen-theme', n);
-      btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+      updateBtn(n);
     });
   }
 }

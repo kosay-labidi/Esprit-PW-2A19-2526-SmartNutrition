@@ -56,7 +56,9 @@ if ($isAjax) {
 </head>
 <body>
     <div id="preloader">
-      <div class="spinner"></div>
+      <canvas id="pl-canvas"></canvas>
+      <div id="pl-text">GAIALUMEN ADMIN</div>
+      <div id="pl-bar"><div id="pl-fill"></div></div>
     </div>
 
     <aside class="sidebar-nav-wrapper">
@@ -318,6 +320,12 @@ if ($isAjax) {
                               <?php } ?>
                             </td>
                             <td>
+                              <a
+                                href="updateParticipant.php?id=<?php echo (int)$p['id']; ?>"
+                                class="btn btn-warning btn-sm"
+                              >
+                                <i class="lni lni-pencil"></i>
+                              </a>
                               <a
                                 href="deleteParticipant.php?id=<?php echo (int)$p['id']; ?>&id_challenge=<?php echo (int)$p['id_challenge']; ?>"
                                 class="btn btn-danger btn-sm"

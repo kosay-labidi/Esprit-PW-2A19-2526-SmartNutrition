@@ -339,40 +339,6 @@ window.addEventListener('load', () => {
 window.startAutoReload = startAutoReload;
 window.stopAutoReload = stopAutoReload;
 
-// Ajouter un bouton de rechargement dans la navbar (optionnel)
-document.addEventListener('DOMContentLoaded', () => {
-  // Ajouter un bouton de rechargement rapide
-  const navActions = document.querySelector('.nav-actions');
-  if (navActions) {
-    const reloadBtn = document.createElement('button');
-    reloadBtn.id = 'reload-module-btn';
-    reloadBtn.title = 'Recharger le module actuel';
-    reloadBtn.style.cssText = 'background:var(--glass);border:1.5px solid rgba(91,62,150,.5);border-radius:50px;padding:6px 14px;color:var(--text);cursor:pointer;font-size:.82rem;transition:all .3s;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:4px;margin-right:8px;';
-    reloadBtn.innerHTML = '🔄 Recharger';
-    reloadBtn.addEventListener('click', async () => {
-      const activeMenuItem = document.querySelector('.menu-item.active');
-      if (activeMenuItem) {
-        const moduleName = activeMenuItem.dataset.module;
-        await reloadModule(moduleName);
-        if (typeof showToast === 'function') {
-          showToast('Module rechargé!', 'success');
-        }
-      }
-    });
-    reloadBtn.addEventListener('mouseenter', () => {
-      reloadBtn.style.background = 'rgba(91,62,150,.2)';
-      reloadBtn.style.transform = 'scale(1.05)';
-      reloadBtn.style.borderColor = 'var(--violet)';
-    });
-    reloadBtn.addEventListener('mouseleave', () => {
-      reloadBtn.style.background = 'var(--glass)';
-      reloadBtn.style.transform = 'scale(1)';
-      reloadBtn.style.borderColor = 'rgba(91,62,150,.5)';
-    });
-    navActions.insertBefore(reloadBtn, navActions.firstChild);
-  }
-});
-
 // Événement personnalisé pour les modules
 document.addEventListener('moduleLoaded', (e) => {
   const { moduleName } = e.detail;

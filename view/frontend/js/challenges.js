@@ -695,14 +695,16 @@ window.showParticipationForm = function(challengeId) {
 
         <form id="participation-form-${challengeId}" onsubmit="window.handleParticipationSubmit(event, ${challengeId})">
 
-          <div class="form-group">
-            <label class="form-label">Nom complet <span class="required">*</span></label>
-            <input type="text" name="nom" class="form-input" placeholder="Ex: Jean Dupont" required>
-          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nom complet <span class="required">*</span></label>
+              <input type="text" name="nom" class="form-input" placeholder="Ex: Jean Dupont" required>
+            </div>
 
-          <div class="form-group">
-            <label class="form-label">Email <span class="required">*</span></label>
-            <input type="email" name="email" class="form-input" placeholder="votre@email.com" required>
+            <div class="form-group">
+              <label class="form-label">Email <span class="required">*</span></label>
+              <input type="email" name="email" class="form-input" placeholder="votre@email.com" required>
+            </div>
           </div>
 
           <div class="form-group">

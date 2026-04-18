@@ -61,7 +61,9 @@ if ($isAjax) {
 <body>
     <!-- ======== Preloader =========== -->
     <div id="preloader">
-      <div class="spinner"></div>
+      <canvas id="pl-canvas"></canvas>
+      <div id="pl-text">GAIALUMEN ADMIN</div>
+      <div id="pl-bar"><div id="pl-fill"></div></div>
     </div>
     <!-- ======== Preloader =========== -->
 

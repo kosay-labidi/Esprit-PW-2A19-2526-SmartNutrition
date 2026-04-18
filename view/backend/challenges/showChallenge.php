@@ -2,6 +2,7 @@
 require_once(__DIR__ . '/../../../controller/challenge.controller.php');
 
 $challengeC = new ChallengeController();
+$challenge = null;
 
 if (isset($_GET['id'])) {
     $challenge = $challengeC->showChallenge($_GET['id']);
@@ -25,7 +26,9 @@ if (isset($_GET['id'])) {
 <body>
     <!-- ======== Preloader =========== -->
     <div id="preloader">
-      <div class="spinner"></div>
+      <canvas id="pl-canvas"></canvas>
+      <div id="pl-text">GAIALUMEN ADMIN</div>
+      <div id="pl-bar"><div id="pl-fill"></div></div>
     </div>
     <!-- ======== Preloader =========== -->
 

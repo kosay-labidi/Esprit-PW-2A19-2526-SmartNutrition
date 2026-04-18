@@ -231,64 +231,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
 
        <div class="content">
-    
     <div class="container mt-4">
-      <?php if (!empty($error)) { echo '<div class="alert alert-danger" role="alert">'.$error.'</div>'; } ?>
-      
-        <form action="" method="POST">
-          <div class="mb-3">
-            <label for="id_challenge" class="form-label">Challenge</label>
-            <select class="form-select" id="id_challenge" name="id_challenge" required>
-              <option value="">Select a challenge</option>
-              <?php foreach ($challenges as $c) { ?>
-                <option value="<?php echo (int)$c['id']; ?>" <?php echo (isset($_GET['id_challenge']) && (int)$_GET['id_challenge'] === (int)$c['id']) ? 'selected' : ''; ?>>
-                  <?php echo htmlspecialchars($c['titre']); ?>
-                </option>
-              <?php } ?>
-            </select>
+      <div class="card card-style">
+        <div class="card-body p-4">
+          <div class="mb-4">
+            <h3 class="mb-2">Nouveau Participant</h3>
+            <p class="text-muted">Inscrire manuellement un utilisateur à un défi</p>
           </div>
 
-          <div class="mb-3">
-            <label for="nom" class="form-label">Name</label>
-            <input type="text" class="form-control" id="nom" name="nom" placeholder="Enter participant name" required>
-          </div>
+          <?php if (!empty($error)) { echo '<div class="alert alert-danger" role="alert">'.$error.'</div>'; } ?>
+          
+          <form action="" method="POST" class="participation-form">
+            <div class="row">
+              <div class="col-md-6 mb-4">
+                <div class="form-group">
+                  <label for="id_challenge" class="form-label">Défi à rejoindre <span class="required">*</span></label>
+                  <select class="form-select" id="id_challenge" name="id_challenge" required>
+                    <option value="">Sélectionnez un défi</option>
+                    <?php foreach ($challenges as $c) { ?>
+                      <option value="<?php echo (int)$c['id']; ?>" <?php echo (isset($_GET['id_challenge']) && (int)$_GET['id_challenge'] === (int)$c['id']) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($c['streak_icon'] . ' ' . $c['titre']); ?>
+                      </option>
+                    <?php } ?>
+                  </select>
+                </div>
+              </div>
 
-          <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" placeholder="Enter participant email" required>
-          </div>
+              <div class="col-md-6 mb-4">
+                <div class="form-group">
+                  <label for="nom" class="form-label">Nom complet <span class="required">*</span></label>
+                  <input type="text" class="form-control form-input" id="nom" name="nom" placeholder="Ex: Jean Dupont" required>
+                </div>
+              </div>
+            </div>
 
-          <div class="mb-3">
-            <label for="objectif" class="form-label">Objective</label>
-            <input type="number" class="form-control" id="objectif" name="objectif" placeholder="Enter objective value" required>
-          </div>
+            <div class="row">
+              <div class="col-md-6 mb-4">
+                <div class="form-group">
+                  <label for="email" class="form-label">Email <span class="required">*</span></label>
+                  <input type="email" class="form-control form-input" id="email" name="email" placeholder="votre@email.com" required>
+                </div>
+              </div>
 
-          <div class="mb-3">
-            <label for="motivation" class="form-label">Motivation</label>
-            <textarea class="form-control" id="motivation" name="motivation" placeholder="Enter motivation" required></textarea>
-          </div>
+              <div class="col-md-6 mb-4">
+                <div class="form-group">
+                  <label for="objectif" class="form-label">Objectif personnel (%) <span class="required">*</span></label>
+                  <input type="number" class="form-control form-input" id="objectif" name="objectif" min="1" max="100" placeholder="Ex: 60" required>
+                </div>
+              </div>
+            </div>
 
-          <div class="mb-3">
-            <label for="action" class="form-label">Action</label>
-            <textarea class="form-control" id="action" name="action" placeholder="Enter planned action" required></textarea>
-          </div>
+            <div class="mb-4">
+              <div class="form-group">
+                <label for="motivation" class="form-label">Motivation <span class="required">*</span></label>
+                <textarea class="form-control form-textarea" id="motivation" name="motivation" rows="4" placeholder="Pourquoi participer à ce défi ?" required></textarea>
+              </div>
+            </div>
 
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" value="1" id="engagement" name="engagement">
-            <label class="form-check-label" for="engagement">Engagement</label>
-          </div>
+            <div class="mb-4">
+              <div class="form-group">
+                <label for="action" class="form-label">Première action <span class="required">*</span></label>
+                <textarea class="form-control form-textarea" id="action" name="action" rows="3" placeholder="Quelle sera la première action concrète ?" required></textarea>
+              </div>
+            </div>
 
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" value="1" id="notifications" name="notifications">
-            <label class="form-check-label" for="notifications">Notifications</label>
-          </div>
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" value="1" id="engagement" name="engagement" checked>
+                  <label class="form-check-label" for="engagement">Engagement formel</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" value="1" id="notifications" name="notifications">
+                  <label class="form-check-label" for="notifications">Activer les notifications</label>
+                </div>
+              </div>
+            </div>
 
-          <div class="text-center">
-            <button type="submit" class="btn btn-primary">
-              <i class="lni lni-plus"></i> Add Participant
-            </button>
-          </div>
-    </form>
+            <div class="d-flex justify-content-between align-items-center mt-5">
+              <a href="showParticipant.php" class="btn btn-secondary">
+                <i class="lni lni-arrow-left"></i> Retour
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="lni lni-plus"></i> Ajouter le Participant
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
         </div>

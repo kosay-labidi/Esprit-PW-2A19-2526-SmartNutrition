@@ -9,122 +9,25 @@ console.log('🏆 Challenges Complete JS chargé');
 // DONNÉES
 // ═══════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════
+// CONFIGURATION ET ENDPOINTS
+// ═══════════════════════════════════════════════════════════
+
+// Détection dynamique du chemin de base du backend
+const getBackendPath = (file) => {
+  const isModule = window.location.pathname.includes('/modules/');
+  const base = isModule ? '../../backend' : '../backend';
+  return `${base}/challenges/${file}`;
+};
+
+const CHALLENGES_ENDPOINT = getBackendPath('listChallenges.php?ajax=1');
+const PARTICIPANTS_ENDPOINT = getBackendPath('listParticipants.php');
+const ADD_PARTICIPANT_ENDPOINT = getBackendPath('addParticipant.php');
+
+// État global du module
 let allChallenges = [];
 let allParticipants = [];
-let currentUser = {
-  id: 1,
-  nom: 'Utilisateur Test',
-  pseudo: 'user_test',
-  email: 'test@gaialumen.com',
-  avatar: '👤'
-};
-const CHALLENGES_ENDPOINT = '../backend/challenges/listChallenges.php?ajax=1';
-
-// Données d'exemple des défis
-const sampleChallenges = [
-  {
-    id: 1,
-    titre: 'Défi Zéro Déchet',
-    description: 'Réduisez vos déchets alimentaires de 50% en 30 jours',
-    type: 'collectif',
-    objectif: 'dechets',
-    valeur_cible: 50,
-    date_debut: '2026-04-01',
-    date_fin: '2026-04-30',
-    statut: 'actif',
-    participants_count: 142,
-    progression: 65,
-    image: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800',
-    steaker: '🌱',
-    steaker_nom: 'Feuille Verte',
-    validation_mode: 'auto'
-  },
-  {
-    id: 2,
-    titre: 'Économie d\'Eau',
-    description: 'Réduisez votre consommation d\'eau de 30% pendant 21 jours',
-    type: 'individuel',
-    objectif: 'eau',
-    valeur_cible: 30,
-    date_debut: '2026-04-10',
-    date_fin: '2026-05-01',
-    statut: 'actif',
-    participants_count: 89,
-    progression: 42,
-    image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=800',
-    steaker: '💧',
-    steaker_nom: 'Goutte d\'Eau',
-    validation_mode: 'manuel'
-  },
-  {
-    id: 3,
-    titre: 'Végan 30 Jours',
-    description: 'Adoptez une alimentation 100% végétale pendant un mois',
-    type: 'collectif',
-    objectif: 'repas',
-    valeur_cible: 90,
-    date_debut: '2026-03-01',
-    date_fin: '2026-03-31',
-    statut: 'termine',
-    participants_count: 234,
-    progression: 100,
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
-    steaker: '🥗',
-    steaker_nom: 'Salade Verte',
-    validation_mode: 'auto'
-  },
-  {
-    id: 4,
-    titre: 'Transport Vert',
-    description: 'Utilisez uniquement des transports écologiques pendant 2 semaines',
-    type: 'individuel',
-    objectif: 'transport',
-    valeur_cible: 14,
-    date_debut: '2026-04-15',
-    date_fin: '2026-04-29',
-    statut: 'actif',
-    participants_count: 67,
-    progression: 28,
-    image: 'https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800',
-    steaker: '🚲',
-    steaker_nom: 'Vélo Vert',
-    validation_mode: 'auto'
-  },
-  {
-    id: 5,
-    titre: 'Compostage Maison',
-    description: 'Compostez 100% de vos déchets organiques pendant 60 jours',
-    type: 'collectif',
-    objectif: 'compost',
-    valeur_cible: 100,
-    date_debut: '2026-05-01',
-    date_fin: '2026-06-30',
-    statut: 'futur',
-    participants_count: 45,
-    progression: 0,
-    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800',
-    steaker: '♻️',
-    steaker_nom: 'Recyclage',
-    validation_mode: 'manuel'
-  },
-  {
-    id: 6,
-    titre: 'Énergie Renouvelable',
-    description: 'Réduisez votre consommation électrique de 40% en 45 jours',
-    type: 'individuel',
-    objectif: 'energie',
-    valeur_cible: 40,
-    date_debut: '2026-04-05',
-    date_fin: '2026-05-20',
-    statut: 'actif',
-    participants_count: 112,
-    progression: 55,
-    image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800',
-    steaker: '⚡',
-    steaker_nom: 'Éclair',
-    validation_mode: 'auto'
-  }
-];
+const currentUser = window.__USER__ || { id: 1, nom: 'Utilisateur', pseudo: 'user1' };
 
 // Données classement
 const sampleParticipants = [
@@ -204,16 +107,25 @@ function createSteakerHTML(icon, niveau, size = 'medium') {
   `;
 }
 
+/**
+ * Mappe les données du backend vers le format attendu par le frontend
+ */
 function mapChallengesData(data) {
+  if (!Array.isArray(data)) return [];
   return data.map(c => ({
     ...c,
     id: parseInt(c.id, 10),
+    titre: c.titre || 'Défi sans titre',
+    description: c.description || 'Aucune description disponible',
+    type: c.type || 'collectif',
+    objectif: c.objectif || 'écologie',
     valeur_cible: parseInt(c.valeur_cible || 0, 10),
     participants_count: parseInt(c.participants_count || 0, 10),
     progression: parseInt(c.progression || 0, 10),
     statut: normalizeChallengeStatus(c.statut),
     steaker: c.streak_icon || c.steaker || '🏆',
-    steaker_nom: c.steaker_nom || c.objectif || 'Défi'
+    steaker_nom: c.steaker_nom || c.objectif || 'Défi',
+    image: c.image || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800'
   }));
 }
 
@@ -221,7 +133,7 @@ function mapChallengesData(data) {
 // CHARGEMENT DES DÉFIS
 // ═══════════════════════════════════════════════════════════
 
-function loadChallenges() {
+async function loadChallenges() {
   const grid = document.getElementById('challenges-grid');
   const loading = document.getElementById('challenges-loading');
   const empty = document.getElementById('challenges-empty');
@@ -232,63 +144,48 @@ function loadChallenges() {
   grid.style.display = 'none';
   empty.style.display = 'none';
   
-  // Fetch data from backend
-  fetch(`${CHALLENGES_ENDPOINT}&t=${Date.now()}`, {
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest',
-      'Accept': 'application/json'
-    }
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP ${response.status}`);
+  try {
+    const response = await fetch(`${CHALLENGES_ENDPOINT}&t=${Date.now()}`, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
       }
-
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        throw new Error('Réponse serveur invalide');
-      }
-
-      return response.json();
-    })
-    .then(data => {
-      if (!Array.isArray(data)) {
-        console.error('Données reçues non valides:', data);
-        allChallenges = [];
-      } else {
-        allChallenges = mapChallengesData(data);
-      }
-      
-      allParticipants = sampleParticipants; // Garder les participants fictifs pour l'instant
-      
-      filterChallenges();
-      renderRanking();
-      renderMyRank();
-    })
-    .catch(err => {
-      console.error('Erreur lors du chargement des défis:', err);
-      // Fallback sur les données d'exemple en cas d'erreur
-      allChallenges = mapChallengesData(sampleChallenges);
-      allParticipants = sampleParticipants;
-      filterChallenges();
-      renderRanking();
-      renderMyRank();
-    })
-    .finally(() => {
-      loading.style.display = 'none';
     });
+
+    if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
+
+    const data = await response.json();
+    if (!Array.isArray(data)) {
+      console.error('Données reçues non valides:', data);
+      allChallenges = [];
+    } else {
+      allChallenges = mapChallengesData(data);
+    }
+    
+    filterChallenges();
+    populateRankingSelect();
+    await loadParticipantsForRanking();
+  } catch (err) {
+    console.error('Erreur lors du chargement des défis:', err);
+    allChallenges = [];
+    filterChallenges();
+    populateRankingSelect();
+    await loadParticipantsForRanking();
+  } finally {
+    loading.style.display = 'none';
+  }
 }
 
+/**
+ * Normalise le statut des défis pour correspondre aux classes CSS et filtres
+ */
 function normalizeChallengeStatus(value) {
   const raw = (value ?? '').toString().trim().toLowerCase();
   if (!raw) return 'actif';
-  if (raw === 'active') return 'actif';
-  if (raw === 'en cours' || raw === 'en_cours') return 'actif';
-  if (raw === 'terminé') return 'termine';
-  if (raw === 'terminée') return 'termine';
-  if (raw === 'a venir') return 'futur';
-  if (raw === 'à venir') return 'futur';
-  return raw;
+  if (raw === 'active' || raw === 'en cours' || raw === 'en_cours' || raw === 'actif') return 'actif';
+  if (raw === 'termine' || raw === 'terminé' || raw === 'terminée') return 'termine';
+  if (raw === 'futur' || raw === 'a venir' || raw === 'à venir') return 'futur';
+  return 'actif'; // Par défaut
 }
 
 function filterChallenges() {
@@ -323,7 +220,16 @@ function filterChallenges() {
 function renderChallenges(challenges) {
   const grid = document.getElementById('challenges-grid');
   if (!grid) return;
-  
+
+  if (challenges.length === 0) {
+    grid.style.display = 'none';
+    document.getElementById('challenges-empty').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('challenges-empty').style.display = 'none';
+  grid.style.display = 'grid';
+
   grid.innerHTML = challenges.map(c => {
     const dateDebut = new Date(c.date_debut);
     const dateFin = new Date(c.date_fin);
@@ -338,59 +244,60 @@ function renderChallenges(challenges) {
     
     return `
       <div class="challenge-card" data-challenge-id="${c.id}">
-        ${c.image ? `<img src="${c.image}" alt="${c.titre}" class="challenge-image">` : ''}
-        
-        <div class="challenge-steaker">
-          ${createSteakerHTML(c.steaker, niveau, 'small')}
-        </div>
-        
-        <div class="challenge-badge ${statut}">
-          ${statut === 'actif' ? '✅ Actif' : statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}
-        </div>
-        
-        <div class="challenge-content">
-          <h3 class="challenge-title">${c.titre}</h3>
-          <p class="challenge-description">${c.description}</p>
+        <div class="challenge-card-main">
+          ${c.image ? `<img src="${c.image}" alt="${c.titre}" class="challenge-image">` : ''}
           
-          <!-- Récompense 3D -->
-          <div class="challenge-reward">
-            <div class="reward-icon">
-              ${createSteakerHTML(c.steaker, 'gold', 'small')}
-            </div>
-            <div class="reward-info">
-              <div class="reward-label">Récompense à gagner</div>
-              <div class="reward-name">Steaker 3D: ${c.steaker_nom}</div>
-            </div>
-          </div>
-
-          <div class="challenge-stats">
-            <div class="challenge-stat">
-              <span>👥</span>
-              <span>${c.participants_count} participants</span>
-            </div>
-            <div class="challenge-stat">
-              <span>📅</span>
-              <span>${dateLabel}</span>
-            </div>
+          <div class="challenge-steaker">
+            ${createSteakerHTML(c.steaker, niveau, 'small')}
           </div>
           
-          <div class="progress-wrapper">
-            <div class="progress-header">
-              <span class="progress-label">Progression</span>
-              <span class="progress-value" style="color: var(--progress-${progressColor})">${c.progression}%</span>
-            </div>
-            <div class="progress-bar-container" data-progress="${c.progression}">
-              <div class="progress-bar-fill ${progressColor}" style="width: ${c.progression}%"></div>
-            </div>
+          <div class="challenge-badge ${statut}">
+            ${statut === 'actif' ? '✅ Actif' : statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}
           </div>
+          
+          <div class="challenge-content">
+            <h3 class="challenge-title">${c.titre}</h3>
+            <p class="challenge-description">${c.description}</p>
+            
+            <div class="challenge-reward">
+              <div class="reward-icon">
+                ${createSteakerHTML(c.steaker, 'gold', 'small')}
+              </div>
+              <div class="reward-info">
+                <div class="reward-label">Récompense à gagner</div>
+                <div class="reward-name">Steaker 3D: ${c.steaker_nom}</div>
+              </div>
+            </div>
 
-          <button
-            class="btn-participate ${canParticipate ? '' : 'is-disabled'}"
-            data-challenge-id="${c.id}"
-            data-challenge-status="${statut}"
-          >
-            Participer
-          </button>
+            <div class="challenge-stats">
+              <div class="challenge-stat">
+                <span>👥</span>
+                <span class="challenge-participants-count">${c.participants_count} participants</span>
+              </div>
+              <div class="challenge-stat">
+                <span>📅</span>
+                <span>${dateLabel}</span>
+              </div>
+            </div>
+            
+            <div class="progress-wrapper">
+              <div class="progress-header">
+                <span class="progress-label">Progression</span>
+                <span class="progress-value" style="color: var(--progress-${progressColor})">${c.progression}%</span>
+              </div>
+              <div class="progress-bar-container" data-progress="${c.progression}">
+                <div class="progress-bar-fill ${progressColor}" style="width: ${c.progression}%"></div>
+              </div>
+            </div>
+
+            <button
+              class="btn-participate ${canParticipate ? '' : 'is-disabled'}"
+              data-challenge-id="${c.id}"
+              data-challenge-status="${statut}"
+            >
+              Participer
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -401,7 +308,99 @@ function renderChallenges(challenges) {
 // CLASSEMENT
 // ═══════════════════════════════════════════════════════════
 
-let currentRankingType = 'global';
+async function loadParticipantsForRanking(challengeId = null) {
+  const loader = document.getElementById('ranking-loader');
+  if (loader) loader.style.display = 'flex';
+
+  try {
+    const url = challengeId 
+      ? `${PARTICIPANTS_ENDPOINT}?id_challenge=${challengeId}`
+      : PARTICIPANTS_ENDPOINT;
+
+    const response = await fetch(url, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+
+    if (!response.ok) throw new Error('Erreur réseau');
+    
+    const data = await response.json();
+    
+    if (data && Array.isArray(data)) {
+      allParticipants = data.map(p => ({
+        id: parseInt(p.id_user || p.id, 10),
+        nom: p.nom || p.pseudo || 'Anonyme',
+        pseudo: p.pseudo || 'anonyme',
+        avatar: p.avatar || '👤',
+        progression: Math.min(100, Math.round((parseInt(p.score || 0, 10) / (parseInt(p.objectif || 100, 10) || 100)) * 100)),
+        points: parseInt(p.points || p.score || 0, 10)
+      }));
+    } else {
+      allParticipants = sampleParticipants;
+    }
+  } catch (err) {
+    console.error('Erreur classement:', err);
+    allParticipants = sampleParticipants;
+  } finally {
+    if (loader) loader.style.display = 'none';
+    renderPodium();
+    renderRanking();
+    renderMyRank();
+  }
+}
+
+function populateRankingSelect() {
+  const select = document.getElementById('ranking-challenge-filter');
+  if (!select || select.dataset.bound === 'true') return;
+
+  const activeChallenges = allChallenges.filter(c => c.statut === 'actif');
+  
+  let html = '<option value="">Global</option>';
+  activeChallenges.forEach(c => {
+    html += `<option value="${c.id}">${c.titre}</option>`;
+  });
+  
+  select.innerHTML = html;
+  select.addEventListener('change', (e) => {
+    loadParticipantsForRanking(e.target.value);
+  });
+  select.dataset.bound = 'true';
+}
+
+function renderPodium() {
+  const podium = document.getElementById('ranking-podium');
+  if (!podium) return;
+
+  const sorted = [...allParticipants].sort((a, b) => b.progression - a.progression);
+  const top3 = sorted.slice(0, 3);
+
+  if (top3.length === 0) {
+    podium.innerHTML = '<p style="color:var(--muted);text-align:center;width:100%;">Aucun participant</p>';
+    return;
+  }
+
+  // Ordre visuel: 2nd (gauche), 1er (centre), 3ème (droite)
+  const displayOrder = [];
+  if (top3[1]) displayOrder.push({ ...top3[1], rank: 2 });
+  if (top3[0]) displayOrder.push({ ...top3[0], rank: 1 });
+  if (top3[2]) displayOrder.push({ ...top3[2], rank: 3 });
+
+  podium.innerHTML = displayOrder.map(p => {
+    const medal = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : '🥉';
+    return `
+      <div class="podium-item podium-rank-${p.rank}" onclick="showUserProfile(${p.id})">
+        <div class="podium-avatar-wrapper">
+          <div class="podium-avatar">${p.avatar}</div>
+          <div class="podium-medal">${medal}</div>
+        </div>
+        <div class="podium-column">
+          <span>${p.progression}%</span>
+        </div>
+        <div class="podium-name">${p.pseudo}</div>
+        <div class="podium-pts">${p.points} pts</div>
+      </div>
+    `;
+  }).join('');
+}
 
 function renderMyRank() {
   const myRankCard = document.getElementById('my-ranking-card');
@@ -409,10 +408,14 @@ function renderMyRank() {
   
   const sorted = [...allParticipants].sort((a, b) => b.progression - a.progression);
   const myIndex = sorted.findIndex(p => p.id === currentUser.id);
+  
+  if (myIndex === -1) {
+    myRankCard.style.display = 'none';
+    return;
+  }
+  
+  myRankCard.style.display = 'flex';
   const myData = sorted[myIndex];
-  
-  if (!myData) return;
-  
   const rang = myIndex + 1;
   const niveau = getSteakerLevel(myData.progression);
   const progressColor = getProgressColor(myData.progression);
@@ -434,31 +437,27 @@ function renderMyRank() {
   `;
 }
 
-function renderRanking(type = 'global') {
+function renderRanking() {
   const rankingList = document.getElementById('ranking-list');
   if (!rankingList) return;
   
-  currentRankingType = type;
-  
-  // Simulation de filtrage par type
-  let participants = [...allParticipants];
-  if (type === 'friends') {
-    participants = participants.filter(p => p.id % 2 === 0 || p.id === currentUser.id);
+  const sorted = [...allParticipants].sort((a, b) => b.progression - a.progression);
+  const others = sorted.slice(3); // À partir du rang 4
+
+  if (others.length === 0 && sorted.length <= 3) {
+    rankingList.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">Fin du classement</p>';
+    return;
   }
   
-  // Trier par progression
-  const sorted = participants.sort((a, b) => b.progression - a.progression);
-  
-  rankingList.innerHTML = sorted.map((p, index) => {
-    const rang = index + 1;
-    const isTop3 = rang <= 3;
+  rankingList.innerHTML = others.map((p, index) => {
+    const rang = index + 4;
     const isCurrentUser = p.id === currentUser.id;
     const niveau = getSteakerLevel(p.progression);
     const progressColor = getProgressColor(p.progression);
     
     return `
       <div class="ranking-item ${isCurrentUser ? 'current-user' : ''}" onclick="showUserProfile(${p.id})">
-        <div class="ranking-position ${isTop3 ? 'top3' : ''}">
+        <div class="ranking-position">
           ${rang}
         </div>
         
@@ -547,7 +546,7 @@ function showChallengeDetail(challengeId) {
       </div>
 
       ${isActif ? `
-        <button onclick="openParticipationForm(${challenge.id})" class="btn-primary" style="width:100%;padding:16px;font-size:1.1rem;">
+        <button onclick="openDrawer(${challenge.id}); closeChallengeModal();" class="btn-primary" style="width:100%;padding:16px;font-size:1.1rem;">
           ✅ Participer à ce défi
         </button>
       ` : isTermine ? `
@@ -575,145 +574,346 @@ function closeChallengeModal() {
 // ═══════════════════════════════════════════════════════════
 
 let currentChallengeId = null;
+let activeCardId = null;
 
-function openParticipationForm(challengeId) {
-  currentChallengeId = challengeId;
-  const challenge = allChallenges.find(c => c.id === challengeId);
-  const modal = document.getElementById('participation-modal');
-  const title = document.getElementById('modal-challenge-title');
-  const desc = document.getElementById('modal-challenge-desc');
+// Ouvrir le drawer
+function openDrawer(challengeId) {
+  const normalizedId = parseInt(challengeId, 10);
+  const challenge = allChallenges.find(c => c.id === normalizedId);
+  if (!challenge) return;
+
+  // Retirer l'ancien highlight
+  if (activeCardId) {
+    const oldMain = document.querySelector(`.challenge-card[data-challenge-id="${activeCardId}"] .challenge-card-main`);
+    if (oldMain) oldMain.classList.remove('card-active');
+  }
+
+  // Ajouter le highlight à la nouvelle carte
+  activeCardId = normalizedId;
+  const newMain = document.querySelector(`.challenge-card[data-challenge-id="${normalizedId}"] .challenge-card-main`);
+  if (newMain) newMain.classList.add('card-active');
+
+  const drawer = document.getElementById('participation-drawer');
+  const summary = document.getElementById('drawer-challenge-summary');
+  const formWrapper = document.getElementById('drawer-form-wrapper');
+
+  if (!drawer || !summary || !formWrapper) return;
+
+  currentChallengeId = normalizedId;
+
+  // Remplir le résumé
+  const niveau = getSteakerLevel(challenge.progression);
+  const statut = normalizeChallengeStatus(challenge.statut);
   
-  if (!challenge || !modal || !title || !desc) return;
+  summary.style.backgroundImage = `url('${challenge.image || ''}')`;
+  summary.innerHTML = `
+    <div class="drawer-summary-overlay">
+      <h3 class="drawer-summary-title">${challenge.titre}</h3>
+      <div class="drawer-summary-meta">
+        <span class="status-${statut}">${statut === 'actif' ? '✅ Actif' : statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}</span>
+        <span>👥 ${challenge.participants_count} inscrits</span>
+        <span>🏆 ${challenge.steaker_nom}</span>
+      </div>
+    </div>
+  `;
+
+  // Remplir le formulaire
+  formWrapper.innerHTML = getParticipationFormHTML(challenge);
+
+  // Afficher le drawer
+  drawer.setAttribute('aria-hidden', 'false');
+  drawer.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
   
-  title.textContent = `Défi: ${challenge.titre}`;
-  desc.textContent = challenge.description || '';
-  closeChallengeModal();
-  modal.classList.add('active');
-  
-  // Reset form
-  const form = document.getElementById('participation-form');
-  if (form) form.reset();
-  const submitText = document.getElementById('participation-submit-text');
-  if (submitText) submitText.textContent = 'Confirmer';
-  updateCharCount();
+  // Focus sur le premier champ
+  setTimeout(() => {
+    const firstField = formWrapper.querySelector('input[name="nom"]');
+    if (firstField) firstField.focus();
+  }, 400);
 }
 
-function closeParticipationModal() {
-  const modal = document.getElementById('participation-modal');
-  if (modal) modal.classList.remove('active');
+// Fermer le drawer
+function closeDrawer() {
+  const drawer = document.getElementById('participation-drawer');
+  if (drawer) {
+    drawer.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+  document.body.style.overflow = '';
+
+  // Retirer le highlight
+  if (activeCardId) {
+    const main = document.querySelector(`.challenge-card[data-challenge-id="${activeCardId}"] .challenge-card-main`);
+    if (main) main.classList.remove('card-active');
+    activeCardId = null;
+  }
+  
   currentChallengeId = null;
 }
 
-function updateCharCount() {
-  const textarea = document.getElementById('participant-motivation');
-  const charCount = document.getElementById('motivation-count');
-  if (textarea && charCount) {
-    const length = textarea.value.length;
-    charCount.textContent = `${length}/500`;
-    charCount.style.color = length >= 10 ? 'var(--success)' : 'var(--muted)';
+function getParticipationFormHTML(challenge) {
+  const objectiveValue = Math.max(1, Math.min(100, parseInt(challenge.valeur_cible || 50, 10) || 50));
+  const objectiveLabel = `${objectiveValue}%`;
+
+  return `
+    <div class="drawer-form-content">
+      <div id="inline-feedback-${challenge.id}" class="inline-form-feedback" aria-live="polite"></div>
+
+      <form id="inline-participation-form-${challenge.id}" onsubmit="window.handleParticipationSubmit(event, ${challenge.id})" novalidate>
+        <div class="form-group">
+          <label class="form-label">Nom complet <span class="required">*</span></label>
+          <input type="text" name="nom" class="form-input" placeholder="Ex: Jean Dupont" required>
+          <span class="error-msg" id="error-nom-${challenge.id}"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email <span class="required">*</span></label>
+          <input type="email" name="email" class="form-input" placeholder="votre@email.com" required>
+          <span class="error-msg" id="error-email-${challenge.id}"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Objectif personnel (%) <span class="required">*</span>
+            <span class="char-count" id="objectif-label-${challenge.id}">${objectiveLabel}</span>
+          </label>
+          <div class="slider-container">
+            <input
+              type="range"
+              name="objectif"
+              class="form-slider"
+              min="1"
+              max="100"
+              value="${objectiveValue}"
+              required
+              oninput="window.updateCharCount(this, 'objectif-value-${challenge.id}')"
+            >
+            <div class="slider-value" id="objectif-value-${challenge.id}">${objectiveLabel}</div>
+          </div>
+          <p class="form-help">Définissez votre objectif personnel pour ce défi.</p>
+          <span class="error-msg" id="error-objectif-${challenge.id}"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Motivation <span class="required">*</span>
+            <span class="char-count" id="motivation-count-${challenge.id}">0/500</span>
+          </label>
+          <textarea
+            name="motivation"
+            class="form-textarea"
+            placeholder="Pourquoi souhaitez-vous participer à ce défi ?"
+            maxlength="500"
+            rows="4"
+            required
+            oninput="window.updateCharCount(this, 'motivation-count-${challenge.id}')"
+          ></textarea>
+          <span class="error-msg" id="error-motivation-${challenge.id}"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Première action concrète <span class="required">*</span></label>
+          <textarea
+            name="action"
+            class="form-textarea"
+            placeholder="Quelle sera votre première action pour commencer ?"
+            rows="3"
+            required
+          ></textarea>
+          <span class="error-msg" id="error-action-${challenge.id}"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-checkbox">
+            <input type="checkbox" name="engagement" required>
+            <span class="checkbox-label">Je m'engage à participer activement à ce défi.</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-checkbox">
+            <input type="checkbox" name="notifications">
+            <span class="checkbox-label">Recevoir des notifications de motivation.</span>
+          </label>
+        </div>
+
+        <div class="form-actions" style="position: sticky; bottom: -24px; background: var(--surface); margin: 32px -24px -24px; padding: 20px 24px; border-top: 1px solid rgba(91,62,150,0.2);">
+          <button type="button" class="btn-secondary" onclick="window.closeDrawer()" style="flex: 1;">Fermer</button>
+          <button type="submit" class="btn-primary" style="flex: 2;">
+            <span class="participation-submit-text">Confirmer ma participation</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function setInlineFormFeedback(challengeId, message = '', type = '') {
+  const feedback = document.getElementById(`inline-feedback-${challengeId}`);
+  if (!feedback) return;
+
+  feedback.textContent = message;
+  feedback.className = 'inline-form-feedback';
+
+  if (!message) return;
+
+  feedback.classList.add('is-visible');
+  if (type) feedback.classList.add(`is-${type}`);
+}
+
+function clearInlineValidation(challengeId) {
+  const form = document.getElementById(`inline-participation-form-${challengeId}`);
+  if (!form) return;
+
+  form.querySelectorAll('.error-msg').forEach(node => {
+    node.textContent = '';
+  });
+  form.querySelectorAll('.invalid').forEach(field => {
+    field.classList.remove('invalid');
+  });
+  setInlineFormFeedback(challengeId);
+}
+
+function showInlineFieldError(challengeId, fieldName, message) {
+  const errorNode = document.getElementById(`error-${fieldName}-${challengeId}`);
+  const form = document.getElementById(`inline-participation-form-${challengeId}`);
+  const field = form?.querySelector(`[name="${fieldName}"]`);
+
+  if (errorNode) errorNode.textContent = message;
+  if (field) field.classList.add('invalid');
+}
+
+function updateCharCount(source, outputId) {
+  if (typeof source === 'string') {
+    const output = document.getElementById(source);
+    if (output) output.textContent = outputId;
+    return;
+  }
+
+  const field = source;
+  const output = document.getElementById(outputId);
+  if (!field || !output) return;
+
+  if (field.type === 'range') {
+    const value = `${field.value}%`;
+    output.textContent = value;
+    const labelId = outputId.replace('objectif-value-', 'objectif-label-');
+    const label = document.getElementById(labelId);
+    if (label) label.textContent = value;
+    return;
+  }
+
+  const length = field.value.length;
+  output.textContent = `${length}/500`;
+  output.style.color = length >= 10 ? 'var(--success)' : 'var(--muted)';
+}
+
+function updateChallengeParticipationCount(challengeId, count) {
+  const card = document.querySelector(`.challenge-card[data-challenge-id="${challengeId}"]`);
+  const countNode = card?.querySelector('.challenge-participants-count');
+  if (countNode) {
+    countNode.textContent = `${count} participants`;
   }
 }
 
-function handleParticipationSubmit(event) {
+function handleParticipationSubmit(event, challengeId = currentChallengeId) {
   event.preventDefault();
-  
-  // 💡 Protection anti-double-clic et vérification du statut
-  const submitText = document.getElementById('participation-submit-text');
-  const btnSubmit = event.target.querySelector('button[type="submit"]');
-  if (btnSubmit && btnSubmit.disabled) return;
-  if (btnSubmit) btnSubmit.disabled = true;
 
-  const challenge = allChallenges.find(c => c.id === currentChallengeId);
-  if (!challenge) {
-    if (btnSubmit) btnSubmit.disabled = false;
-    return;
-  }
-  
-  const nom = document.getElementById('participant-nom')?.value || '';
-  const email = document.getElementById('participant-email')?.value || '';
-  const objectif = parseInt(document.getElementById('participant-objectif')?.value || '0', 10);
-  const motivation = document.getElementById('participant-motivation')?.value || '';
-  const action = document.getElementById('participant-action')?.value || '';
-  const engagementChecked = !!document.getElementById('participant-engagement')?.checked;
-  const notificationsChecked = !!document.getElementById('participant-notifications')?.checked;
+  const normalizedId = parseInt(challengeId, 10);
+  const form = event.target;
+  const challenge = allChallenges.find(c => c.id === normalizedId);
+  const btnSubmit = form.querySelector('button[type="submit"]');
+  const submitText = form.querySelector('.participation-submit-text');
+  if (!challenge || !btnSubmit || !submitText) return;
+  if (btnSubmit.disabled) return;
 
-  const resetBtn = () => {
-    if (btnSubmit) btnSubmit.disabled = false;
-    if (submitText) submitText.textContent = 'Confirmer';
+  clearInlineValidation(normalizedId);
+
+  const formData = new FormData(form);
+  const data = {
+    id_challenge: normalizedId,
+    nom: (formData.get('nom') || '').toString().trim(),
+    email: (formData.get('email') || '').toString().trim(),
+    objectif: parseInt((formData.get('objectif') || '0').toString(), 10),
+    motivation: (formData.get('motivation') || '').toString().trim(),
+    action: (formData.get('action') || '').toString().trim(),
+    engagement: formData.get('engagement') === 'on' ? 1 : 0,
+    notifications: formData.get('notifications') === 'on' ? 1 : 0
   };
 
-  if (nom.trim().length < 2) {
-    showToast('❌ Le nom doit contenir au moins 2 caractères', 'error');
-    resetBtn();
+  let hasErrors = false;
+
+  if (data.nom.length < 2) {
+    showInlineFieldError(normalizedId, 'nom', 'Le nom doit contenir au moins 2 caractères.');
+    hasErrors = true;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    showInlineFieldError(normalizedId, 'email', 'Veuillez saisir un email valide.');
+    hasErrors = true;
+  }
+  if (!data.objectif || data.objectif < 1 || data.objectif > 100) {
+    showInlineFieldError(normalizedId, 'objectif', 'L’objectif doit être compris entre 1 et 100%.');
+    hasErrors = true;
+  }
+  if (data.motivation.length < 10) {
+    showInlineFieldError(normalizedId, 'motivation', 'La motivation doit contenir au moins 10 caractères.');
+    hasErrors = true;
+  }
+  if (data.action.length < 5) {
+    showInlineFieldError(normalizedId, 'action', 'Décrivez une action concrète en au moins 5 caractères.');
+    hasErrors = true;
+  }
+  if (!data.engagement) {
+    setInlineFormFeedback(normalizedId, 'Vous devez confirmer votre engagement avant de participer.', 'error');
+    hasErrors = true;
+  }
+
+  if (hasErrors) {
+    showToast('Merci de corriger les champs indiqués.', 'error');
     return;
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    showToast('❌ Email invalide', 'error');
-    resetBtn();
-    return;
-  }
+  btnSubmit.disabled = true;
+  submitText.textContent = 'Envoi...';
 
-  if (!objectif || objectif < 1 || objectif > 100) {
-    showToast('❌ L\'objectif doit être entre 1 et 100%', 'error');
-    resetBtn();
-    return;
-  }
-
-  if (motivation.trim().length < 10) {
-    showToast('❌ La motivation doit contenir au moins 10 caractères', 'error');
-    resetBtn();
-    return;
-  }
-
-  if (action.trim().length < 5) {
-    showToast('❌ L\'action doit contenir au moins 5 caractères', 'error');
-    resetBtn();
-    return;
-  }
-
-  if (!engagementChecked) {
-    showToast('❌ Vous devez accepter l\'engagement', 'error');
-    resetBtn();
-    return;
-  }
-
-  if (submitText) submitText.textContent = 'Envoi...';
-
-  fetch('../backend/challenges/addParticipant.php', {
+  fetch(ADD_PARTICIPANT_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest'
     },
-    body: JSON.stringify({
-      id_challenge: currentChallengeId,
-      nom,
-      email,
-      objectif,
-      motivation,
-      action,
-      engagement: engagementChecked ? 1 : 0,
-      notifications: notificationsChecked ? 1 : 0
-    })
+    body: JSON.stringify(data)
   })
     .then(r => r.json())
     .then(result => {
       if (!result || !result.success) {
-        showToast(result?.message || '❌ Erreur lors de l\'inscription', 'error');
-        resetBtn();
+        setInlineFormFeedback(normalizedId, result?.message || 'Erreur lors de l’inscription.', 'error');
+        showToast(result?.message || 'Erreur lors de l’inscription', 'error');
+        btnSubmit.disabled = false;
+        submitText.textContent = 'Confirmer ma participation';
         return;
       }
 
       challenge.participants_count = parseInt(challenge.participants_count || 0, 10) + 1;
-      closeParticipationModal();
-      showToast(`✅ Participation confirmée au défi "${challenge.titre}"!`, 'success');
-      filterChallenges();
-      resetBtn(); // Réactiver pour les prochaines fois
+      updateChallengeParticipationCount(normalizedId, challenge.participants_count);
+      setInlineFormFeedback(normalizedId, `Participation confirmée pour "${challenge.titre}".`, 'success');
+      showToast(`Participation confirmée au défi "${challenge.titre}"`, 'success');
+      form.reset();
+      const motivationField = form.querySelector('[name="motivation"]');
+      const objectifField = form.querySelector('[name="objectif"]');
+      if (motivationField) updateCharCount(motivationField, `motivation-count-${normalizedId}`);
+      if (objectifField) updateCharCount(objectifField, `objectif-value-${normalizedId}`);
+
+      setTimeout(() => {
+        closeDrawer();
+        filterChallenges();
+      }, 900);
     })
     .catch(() => {
-      showToast('❌ Une erreur réseau est survenue', 'error');
-      resetBtn();
+      setInlineFormFeedback(normalizedId, 'Une erreur réseau est survenue. Réessayez dans un instant.', 'error');
+      showToast('Une erreur réseau est survenue', 'error');
+      btnSubmit.disabled = false;
+      submitText.textContent = 'Confirmer ma participation';
     });
 }
 
@@ -837,8 +1037,6 @@ function initChallenges() {
   const searchInput = document.getElementById('challenge-search');
   const statusFilter = document.getElementById('challenge-status-filter');
   const refreshBtn = document.getElementById('challenge-refresh');
-  const participationForm = document.getElementById('participation-form');
-  const motivationTextarea = document.getElementById('participant-motivation');
   const grid = document.getElementById('challenges-grid');
   
   if (searchInput && searchInput.dataset.bound !== 'true') {
@@ -853,15 +1051,6 @@ function initChallenges() {
     refreshBtn.addEventListener('click', loadChallenges);
     refreshBtn.dataset.bound = 'true';
   }
-  if (participationForm && participationForm.dataset.bound !== 'true') {
-    participationForm.addEventListener('submit', handleParticipationSubmit);
-    participationForm.dataset.bound = 'true';
-  }
-  if (motivationTextarea && motivationTextarea.dataset.bound !== 'true') {
-    motivationTextarea.addEventListener('input', updateCharCount);
-    motivationTextarea.dataset.bound = 'true';
-  }
-
   if (grid && grid.dataset.bound !== 'true') {
     grid.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-participate');
@@ -877,14 +1066,17 @@ function initChallenges() {
           return;
         }
 
-        openParticipationForm(id);
+        openDrawer(id);
         return;
       }
 
-      const card = e.target.closest('.challenge-card');
+      if (e.target.closest('.drawer-panel')) return;
+
+      const card = e.target.closest('.challenge-card-main');
       if (!card) return;
 
-      const id = parseInt(card.getAttribute('data-challenge-id') || '0', 10);
+      const challengeCard = card.closest('.challenge-card');
+      const id = parseInt(challengeCard?.getAttribute('data-challenge-id') || '0', 10);
       if (!id) return;
 
       showChallengeDetail(id);
@@ -892,30 +1084,30 @@ function initChallenges() {
     grid.dataset.bound = 'true';
   }
   
-  // Gestion des onglets de classement
-  const rankingTabs = document.querySelectorAll('.ranking-tab');
-  rankingTabs.forEach(tab => {
-    if (tab.dataset.bound === 'true') return;
-    tab.addEventListener('click', () => {
-      rankingTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      renderRanking(tab.dataset.type);
-    });
-    tab.dataset.bound = 'true';
-  });
-  
   // Fermer modals en cliquant sur overlay
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     if (overlay.dataset.bound === 'true') return;
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) {
         closeChallengeModal();
-        closeParticipationModal();
+        closeDrawer();
         closeUserProfileModal();
       }
     });
     overlay.dataset.bound = 'true';
   });
+
+  // Fermer sur Escape
+  if (window.__ESCAPE_BOUND__ !== true) {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeChallengeModal();
+        closeDrawer();
+        closeUserProfileModal();
+      }
+    });
+    window.__ESCAPE_BOUND__ = true;
+  }
   
   // Charger les données
   loadChallenges();
@@ -950,8 +1142,8 @@ window.initChallenges = initChallenges;
 window.loadChallenges = loadChallenges;
 window.showChallengeDetail = showChallengeDetail;
 window.closeChallengeModal = closeChallengeModal;
-window.openParticipationForm = openParticipationForm;
-window.closeParticipationModal = closeParticipationModal;
+window.openDrawer = openDrawer;
+window.closeDrawer = closeDrawer;
 window.updateCharCount = updateCharCount;
 window.handleParticipationSubmit = handleParticipationSubmit;
 window.showMyChallenge = showMyChallenge;

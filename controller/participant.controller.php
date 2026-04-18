@@ -76,5 +76,50 @@ class ParticipantController {
             return false;
         }
     }
+
+    public function showParticipant($id) {
+        $sql = "SELECT * FROM participant WHERE id = :id";
+        $db = Config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute(['id' => (int)$id]);
+            return $query->fetch();
+        } catch (Exception $e) {
+            error_log('Error showing participant: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function updateParticipant(Participant $participant, $id) {
+        $sql = "UPDATE participant SET 
+                id_challenge = :id_challenge, 
+                nom = :nom, 
+                email = :email, 
+                objectif = :objectif, 
+                motivation = :motivation, 
+                action = :action, 
+                engagement = :engagement, 
+                notifications = :notifications 
+                WHERE id = :id";
+        $db = Config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute([
+                'id_challenge' => $participant->getIdChallenge(),
+                'nom' => $participant->getNom(),
+                'email' => $participant->getEmail(),
+                'objectif' => $participant->getObjectif(),
+                'motivation' => $participant->getMotivation(),
+                'action' => $participant->getAction(),
+                'engagement' => $participant->getEngagement(),
+                'notifications' => $participant->getNotifications(),
+                'id' => (int)$id
+            ]);
+            return true;
+        } catch (Exception $e) {
+            error_log('Error updating participant: ' . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

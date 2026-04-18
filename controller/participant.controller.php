@@ -5,8 +5,8 @@ require_once(__DIR__ . '/../Model/Participant.php');
 class ParticipantController {
 
     public function addParticipant(Participant $participant) {
-        $sql = "INSERT INTO participant (id_challenge, nom, email, objectif, motivation, action, engagement, notifications) 
-                VALUES (:id_challenge, :nom, :email, :objectif, :motivation, :action, :engagement, :notifications)";
+        $sql = "INSERT INTO participant (id_challenge, nom, email, objectif, motivation, action, engagement, notifications, score, xp, level)
+                VALUES (:id_challenge, :nom, :email, :objectif, :motivation, :action, :engagement, :notifications, :score, :xp, :level)";
         $db = Config::getConnexion();
         try {
             $query = $db->prepare($sql);
@@ -18,7 +18,10 @@ class ParticipantController {
                 'motivation' => $participant->getMotivation(),
                 'action' => $participant->getAction(),
                 'engagement' => $participant->getEngagement(),
-                'notifications' => $participant->getNotifications()
+                'notifications' => $participant->getNotifications(),
+                'score' => $participant->getScore() ?? 0,
+                'xp' => $participant->getXp() ?? 0,
+                'level' => $participant->getLevel() ?? 1
             ]);
             return true;
         } catch (Exception $e) {
@@ -99,7 +102,10 @@ class ParticipantController {
                 motivation = :motivation, 
                 action = :action, 
                 engagement = :engagement, 
-                notifications = :notifications 
+                notifications = :notifications,
+                score = :score,
+                xp = :xp,
+                level = :level
                 WHERE id = :id";
         $db = Config::getConnexion();
         try {
@@ -113,6 +119,9 @@ class ParticipantController {
                 'action' => $participant->getAction(),
                 'engagement' => $participant->getEngagement(),
                 'notifications' => $participant->getNotifications(),
+                'score' => $participant->getScore(),
+                'xp' => $participant->getXp(),
+                'level' => $participant->getLevel(),
                 'id' => (int)$id
             ]);
             return true;

@@ -9,8 +9,11 @@ class Participant {
     private ?string $action;
     private ?int $engagement;
     private ?int $notifications;
+    private ?int $score;
+    private ?int $xp;
+    private ?int $level;
 
-    public function __construct(?int $id_challenge, ?string $nom, ?string $email, ?int $objectif, ?string $motivation, ?string $action, ?int $engagement, ?int $notifications) {
+    public function __construct(?int $id_challenge, ?string $nom, ?string $email, ?int $objectif, ?string $motivation, ?string $action, ?int $engagement, ?int $notifications, ?int $score = 0, ?int $xp = 0, ?int $level = 1) {
         $this->id_challenge = $id_challenge;
         $this->nom = $nom;
         $this->email = $email;
@@ -19,6 +22,9 @@ class Participant {
         $this->action = $action;
         $this->engagement = $engagement;
         $this->notifications = $notifications;
+        $this->score = $score;
+        $this->xp = $xp;
+        $this->level = $level;
     }
 
     // Getters
@@ -31,6 +37,9 @@ class Participant {
     public function getAction(): ?string { return $this->action; }
     public function getEngagement(): ?int { return $this->engagement; }
     public function getNotifications(): ?int { return $this->notifications; }
+    public function getScore(): ?int { return $this->score; }
+    public function getXp(): ?int { return $this->xp; }
+    public function getLevel(): ?int { return $this->level; }
 
     // Setters
     public function setId(?int $id): void { $this->id = $id; }
@@ -42,5 +51,8 @@ class Participant {
     public function setAction(?string $action): void { $this->action = $action; }
     public function setEngagement(?int $engagement): void { $this->engagement = $engagement; }
     public function setNotifications(?int $notifications): void { $this->notifications = $notifications; }
+    public function setScore(?int $score): void { $this->score = $score; }
+    public function setXp(?int $xp): void { $this->xp = $xp; }
+    public function setLevel(?int $level): void { $this->level = $level; }
 }
 ?>

@@ -203,7 +203,14 @@ function filterChallenges() {
     const titre = (c.titre || '').toLowerCase();
     const description = (c.description || '').toLowerCase();
     const matchSearch = titre.includes(search) || description.includes(search);
-    const matchStatus = !status || c.statut === status;
+
+    let matchStatus = true;
+    if (status === 'mine') {
+      matchStatus = c.is_participating === true || c.is_participating === 1;
+    } else if (status) {
+      matchStatus = c.statut === status;
+    }
+
     return matchSearch && matchStatus;
   });
 
@@ -332,7 +339,9 @@ async function loadParticipantsForRanking(challengeId = null) {
         pseudo: p.pseudo || 'anonyme',
         avatar: p.avatar || '👤',
         progression: Math.min(100, Math.round((parseInt(p.score || 0, 10) / (parseInt(p.objectif || 100, 10) || 100)) * 100)),
-        points: parseInt(p.points || p.score || 0, 10)
+        points: parseInt(p.points || p.score || 0, 10),
+        xp: parseInt(p.xp || 0, 10),
+        level: parseInt(p.level || 1, 10)
       }));
     } else {
       allParticipants = sampleParticipants;
@@ -402,6 +411,19 @@ function renderPodium() {
   }).join('');
 }
 
+function updateMiniDashboard(userData) {
+  const miniDashboard = document.getElementById('mini-dashboard');
+  const streakValue = document.getElementById('mini-stat-streak');
+  const pointsValue = document.getElementById('mini-stat-points');
+
+  if (!miniDashboard || !userData) return;
+
+  if (streakValue) streakValue.textContent = `${userData.streak || 0} jours`;
+  if (pointsValue) pointsValue.textContent = (userData.points || 0).toLocaleString();
+
+  miniDashboard.style.display = 'flex';
+}
+
 function renderMyRank() {
   const myRankCard = document.getElementById('my-ranking-card');
   if (!myRankCard) return;
@@ -420,12 +442,26 @@ function renderMyRank() {
   const niveau = getSteakerLevel(myData.progression);
   const progressColor = getProgressColor(myData.progression);
   
+  // Niveaux et XP réels ou simulés
+  const level = myData.level || Math.floor(myData.points / 500) + 1;
+  const xp = myData.xp || (myData.points % 500);
+  const xpPercent = Math.min(100, (xp / 500) * 100);
+
+  // Mise à jour du mini-dashboard
+  updateMiniDashboard({
+    streak: myData.streak || 5, // Simulation si non présent
+    points: myData.points
+  });
+
   myRankCard.innerHTML = `
     <div class="my-ranking-rank">#${rang}</div>
     <div class="my-ranking-details">
-      <div class="my-ranking-name">${myData.avatar} ${myData.pseudo}</div>
+      <div class="my-ranking-name">${myData.avatar} ${myData.pseudo} <span class="badge-level">Lvl ${level}</span></div>
       <div class="my-ranking-stats">
         <span>${myData.progression}%</span> • <span>${myData.points} pts</span>
+      </div>
+      <div class="xp-bar-container" title="XP: ${xp}/500">
+        <div class="xp-bar-fill" style="width: ${xpPercent}%"></div>
       </div>
       <div class="ranking-progress-bar">
         <div class="ranking-progress-fill ${progressColor}" style="width: ${myData.progression}%"></div>
@@ -1095,6 +1131,17 @@ function initChallenges() {
       }
     });
     overlay.dataset.bound = 'true';
+  });
+
+  // Tabs classement
+  document.querySelectorAll('.ranking-tab').forEach(tab => {
+    if (tab.dataset.bound === 'true') return;
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.ranking-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      loadParticipantsForRanking();
+    });
+    tab.dataset.bound = 'true';
   });
 
   // Fermer sur Escape

@@ -9,8 +9,25 @@
   <!-- En-tête -->
   <div class="section-header challenges-header">
     <div class="challenges-title-group">
-      <h2>Défis Collaboratifs</h2>
+      <h2>🏆 Défis Collaboratifs</h2>
       <p>Participez aux défis et gagnez des steakers 3D!</p>
+    </div>
+
+    <div class="my-mini-dashboard" id="mini-dashboard" style="display: none">
+      <div class="mini-stat">
+        <span class="mini-stat-icon">🔥</span>
+        <div class="mini-stat-info">
+          <span class="mini-stat-value" id="mini-stat-streak">0 jour</span>
+          <span class="mini-stat-label">Série actuelle</span>
+        </div>
+      </div>
+      <div class="mini-stat">
+        <span class="mini-stat-icon">💎</span>
+        <div class="mini-stat-info">
+          <span class="mini-stat-value" id="mini-stat-points">0</span>
+          <span class="mini-stat-label">Points totaux</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -29,6 +46,7 @@
         <option value="actif">Actifs</option>
         <option value="termine">Terminés</option>
         <option value="futur">À venir</option>
+        <option value="mine">Mes participations</option>
       </select>
 
       <button id="challenge-refresh" class="btn-icon" title="Actualiser">
@@ -64,11 +82,15 @@
     <aside class="challenges-ranking">
       <div class="ranking-header">
         <div class="ranking-title-group">
-          <h3 class="ranking-title">Classement</h3>
+          <h3 class="ranking-title">🏆 Classement</h3>
           <select id="ranking-challenge-filter" class="ranking-select">
             <option value="">Global</option>
             <!-- Rempli par JS -->
           </select>
+        </div>
+        <div class="ranking-tabs">
+          <button class="ranking-tab active" data-tab="top">Top Joueurs</button>
+          <button class="ranking-tab" data-tab="friends">Amis</button>
         </div>
       </div>
 
@@ -170,6 +192,45 @@
     color: var(--muted);
     font-size: 1.05rem;
     line-height: 1.6;
+  }
+
+  .my-mini-dashboard {
+    display: flex;
+    gap: 20px;
+    background: var(--glass);
+    padding: 15px 25px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .mini-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .mini-stat-icon {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+  }
+
+  .mini-stat-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mini-stat-value {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #fff;
+  }
+
+  .mini-stat-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .challenges-nav-buttons {
@@ -350,10 +411,31 @@
   }
 
   .challenge-card:hover .challenge-card-main {
-    transform: translateY(-10px);
-    background: rgba(255, 255, 255, 0.07);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    border-color: rgba(58, 134, 196, 0.3);
+    transform: translateY(-10px) scale(1.02);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+    border-color: var(--blue);
+  }
+
+  .challenge-card-main::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    transform: skewX(-25deg);
+    transition: 0.75s;
+  }
+
+  .challenge-card:hover .challenge-card-main::after {
+    left: 125%;
   }
 
   /* Carte active pendant que le drawer est ouvert */
@@ -569,6 +651,36 @@
     margin-bottom: 20px;
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .ranking-tabs {
+    display: flex;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    border-radius: 12px;
+  }
+
+  .ranking-tab {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .ranking-tab.active {
+    background: var(--violet);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(91, 62, 150, 0.3);
   }
 
   .ranking-title-group {
@@ -768,6 +880,34 @@
     font-weight: 700;
     font-size: 1rem;
     margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-level {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    background: var(--violet);
+    color: #fff;
+    border-radius: 20px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .xp-bar-container {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+
+  .xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    transition: width 1s ease;
   }
 
   .my-ranking-stats,

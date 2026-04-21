@@ -13,6 +13,376 @@
 <!-- Styles -->
 <link rel="stylesheet" href="css/admin.css?v=20260415-5"/>
 
+<!-- ═══════════════════════════════════════════════════════════
+     ADM FRAME SYSTEM — Cadre 3D GaiaLumen (même style que challenges-admin)
+     ═══════════════════════════════════════════════════════════ -->
+<style>
+/* ── ADM FRAME BASE ─────────────────────────────────────── */
+.adm-frame {
+  position: relative;
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(91, 62, 150, 0.28);
+  border-radius: var(--radius);
+  padding: 24px;
+  overflow: visible;
+}
+
+.adm-frame--hero {
+  padding: 22px 28px 20px;
+  background: linear-gradient(135deg,
+    rgba(15, 35, 24, 0.95) 0%,
+    rgba(31, 61, 43, 0.65) 100%);
+  border-color: rgba(91, 62, 150, 0.45);
+  margin-bottom: 0;
+}
+
+.adm-frame--section {
+  margin-bottom: 24px;
+}
+
+.adm-frame--preview {
+  background: rgba(58, 134, 196, 0.06);
+  border-color: rgba(58, 134, 196, 0.35);
+}
+
+/* ── COIN DÉCORATIFS ────────────────────────────────────── */
+.adm-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 2;
+}
+.adm-corner--tl {
+  top: -2px; left: -2px;
+  border-top: 2.5px solid var(--violet);
+  border-left: 2.5px solid var(--violet);
+  border-radius: 4px 0 0 0;
+}
+.adm-corner--tr {
+  top: -2px; right: -2px;
+  border-top: 2.5px solid var(--blue);
+  border-right: 2.5px solid var(--blue);
+  border-radius: 0 4px 0 0;
+}
+.adm-corner--br {
+  bottom: -2px; right: -2px;
+  border-bottom: 2.5px solid var(--violet);
+  border-right: 2.5px solid var(--violet);
+  border-radius: 0 0 4px 0;
+}
+.adm-corner--bl {
+  bottom: -2px; left: -2px;
+  border-bottom: 2.5px solid var(--blue);
+  border-left: 2.5px solid var(--blue);
+  border-radius: 0 0 0 4px;
+}
+.adm-corner--accent {
+  border-color: var(--blue) !important;
+}
+.adm-corner--sm {
+  width: 10px;
+  height: 10px;
+}
+.adm-corner--sm.adm-corner--tl,
+.adm-corner--sm.adm-corner--tr,
+.adm-corner--sm.adm-corner--br,
+.adm-corner--sm.adm-corner--bl {
+  border-width: 2px !important;
+}
+
+/* ── BANDE SUPÉRIEURE LUMINEUSE ─────────────────────────── */
+.adm-top-edge {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--violet) 35%,
+    var(--blue) 65%,
+    transparent
+  );
+  border-radius: 2px;
+  pointer-events: none;
+  opacity: 0.75;
+}
+.adm-top-edge--thin {
+  height: 1px;
+  opacity: 0.4;
+}
+
+/* ── BOUTONS ADM ────────────────────────────────────────── */
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  font-family: 'Lato', sans-serif;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.adm-btn--primary {
+  background: linear-gradient(135deg, var(--violet), var(--blue));
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(91, 62, 150, 0.32);
+}
+.adm-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(91, 62, 150, 0.52);
+}
+.adm-btn--ghost {
+  background: var(--glass);
+  border: 1.5px solid rgba(91, 62, 150, 0.4);
+  color: var(--text);
+  backdrop-filter: blur(8px);
+}
+.adm-btn--ghost:hover {
+  background: rgba(91, 62, 150, 0.2);
+  border-color: var(--violet);
+  transform: translateY(-1px);
+}
+.adm-btn--sm {
+  padding: 5px 13px;
+  font-size: 0.78rem;
+  border-radius: 8px;
+}
+.adm-btn--danger {
+  background: rgba(231, 76, 60, 0.15);
+  border: 1.5px solid rgba(231, 76, 60, 0.35);
+  color: #e74c3c;
+}
+.adm-btn--danger:hover {
+  background: rgba(231, 76, 60, 0.28);
+  border-color: #e74c3c;
+  transform: translateY(-1px);
+}
+
+/* ── HERO SIDEBAR ───────────────────────────────────────── */
+.adm-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+.adm-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 8px var(--blue);
+  flex-shrink: 0;
+  animation: adm-pulse-dot 2.4s ease-in-out infinite;
+}
+@keyframes adm-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+.adm-hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px 0;
+  line-height: 1.25;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.adm-hero-sub {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── STAT PILLS SIDEBAR ─────────────────────────────────── */
+.adm-sidebar-pills {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.adm-stat-pill {
+  background: rgba(91, 62, 150, 0.14);
+  border: 1px solid rgba(91, 62, 150, 0.28);
+  border-radius: 50px;
+  padding: 5px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56px;
+  transition: all 0.3s;
+  cursor: none;
+}
+.adm-stat-pill:hover {
+  border-color: var(--violet);
+  background: rgba(91, 62, 150, 0.24);
+  transform: translateY(-2px);
+}
+.adm-stat-pill--accent {
+  background: rgba(58, 134, 196, 0.12);
+  border-color: rgba(58, 134, 196, 0.28);
+}
+.adm-stat-pill--accent:hover {
+  border-color: var(--blue);
+  background: rgba(58, 134, 196, 0.24);
+}
+.adm-stat-pill__val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.adm-stat-pill__lbl {
+  font-size: 0.58rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+/* ── SECTION HEADER ADM ─────────────────────────────────── */
+.adm-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+}
+.adm-section-header__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.adm-section-icon {
+  font-size: 1.15rem;
+}
+.adm-section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── STEP FRAME ─────────────────────────────────────────── */
+.adm-step-frame {
+  position: relative;
+  background: rgba(31, 61, 43, 0.18);
+  border: 1px solid rgba(91, 62, 150, 0.14);
+  border-radius: 12px;
+  padding: 20px 22px 22px;
+  overflow: visible;
+}
+.adm-step-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(91, 62, 150, 0.14);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.adm-step-num {
+  width: 21px;
+  height: 21px;
+  background: linear-gradient(135deg, var(--violet), var(--blue));
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* ── AMÉLIORATION SÉPARATEUR MENU ───────────────────────── */
+.sidebar-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 10%,
+    rgba(91, 62, 150, 0.25) 50%,
+    transparent 90%
+  );
+  margin: 8px 20px;
+}
+
+/* ── MENU ITEM BADGE ────────────────────────────────────── */
+.menu-item-badge {
+  margin-left: auto;
+  background: linear-gradient(135deg, var(--violet), var(--blue));
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+/* ── NAVBAR AMÉLIORATION ────────────────────────────────── */
+.nav-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding: 5px 12px;
+  background: var(--glass);
+  border: 1px solid rgba(91, 62, 150, 0.2);
+  border-radius: 50px;
+  backdrop-filter: blur(8px);
+}
+.nav-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #27ae60;
+  box-shadow: 0 0 6px #27ae60;
+  animation: adm-pulse-dot 2s ease-in-out infinite;
+}
+
+/* ── SIDEBAR BOTTOM ─────────────────────────────────────── */
+.sidebar-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(91, 62, 150, 0.15);
+  background: linear-gradient(to top, rgba(10,26,16,0.9) 0%, transparent 100%);
+}
+.sidebar-version {
+  font-size: 0.65rem;
+  color: rgba(168, 184, 160, 0.4);
+  text-align: center;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+</style>
+
 <!-- Librairies externes -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -27,6 +397,9 @@
   <div id="pl-bar"><div id="pl-fill"></div></div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     NAVBAR — barre de navigation améliorée
+     ══════════════════════════════════════════════════════════ -->
 <nav id="navbar">
   <a href="admin.html" class="nav-logo">
     <svg viewBox="0 0 60 60" fill="none">
@@ -47,15 +420,24 @@
     </svg>
     <span class="nav-logo-text">🛡️ Admin GaiaLumen</span>
   </a>
+
   <div class="nav-actions">
+    <!-- Indicateur de statut en ligne -->
+    <div class="nav-status-indicator">
+      <span class="nav-status-dot"></span>
+      En ligne
+    </div>
+
     <button id="menu-toggle" title="Menu">
       <span></span>
       <span></span>
       <span></span>
     </button>
-    <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
-    <button class="btn-logout" onclick="logout()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+
+    <button id="theme-toggle" title="Changer le thème" class="adm-btn adm-btn--ghost adm-btn--sm">🌙 Sombre</button>
+
+    <button class="adm-btn adm-btn--danger adm-btn--sm" onclick="logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
         <polyline points="16 17 21 12 16 7"/>
         <line x1="21" y1="12" x2="9" y2="12"/>
@@ -65,62 +447,162 @@
   </div>
 </nav>
 
+<!-- Bouton toggle sidebar (inchangé) -->
 <button id="sidebar-toggle" title="Toggle sidebar">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
     <path d="M15 18l-6-6 6-6"/>
   </svg>
 </button>
 
+<!-- ══════════════════════════════════════════════════════════
+     LAYOUT PRINCIPAL
+     ══════════════════════════════════════════════════════════ -->
 <div class="dashboard-container">
+
+  <!-- ╔═══════════════════════════════════════════════════════╗
+       ║   SIDEBAR — cadre 3D + hero header                   ║
+       ╚═══════════════════════════════════════════════════════╝ -->
   <aside class="sidebar-menu">
-    <div class="menu-title">📊 Modules Admin</div>
-    <a href="#" class="menu-item" data-module="dashboard">
-      <span class="menu-item-icon">🏠</span>
-      <span class="menu-item-text">Dashboard</span>
-    </a>
-    <a href="#" class="menu-item" data-module="users">
-      <span class="menu-item-icon">👥</span>
-      <span class="menu-item-text">GS Utilisateurs</span>
-    </a>
-    <a href="#" class="menu-item" data-module="planning">
-      <span class="menu-item-icon">📅</span>
-      <span class="menu-item-text">GS Planning</span>
-    </a>
-    <a href="#" class="menu-item" data-module="events">
-      <span class="menu-item-icon">🎯</span>
-      <span class="menu-item-text">GS Events</span>
-    </a>
-    <a href="#" class="menu-item" data-module="meals">
-      <span class="menu-item-icon">🍽️</span>
-      <span class="menu-item-text">GS Repas</span>
-    </a>
-    <a href="#" class="menu-item" data-module="health">
-      <span class="menu-item-icon">❤️</span>
-      <span class="menu-item-text">GS Santé</span>
-    </a>
-    <a href="#" class="menu-item" data-module="challenges">
-      <span class="menu-item-icon">🏆</span>
-      <span class="menu-item-text">GS Défis</span>
-    </a>
-    <a href="#" class="menu-item" data-module="activity">
-      <span class="menu-item-icon">📜</span>
-      <span class="menu-item-text">Logs Activité</span>
-    </a>
+
+    <!-- HERO HEADER SIDEBAR — cadre adm-frame -->
+    <div style="padding: 20px 20px 0;">
+      <div class="adm-frame adm-frame--hero" style="padding:18px 20px 16px; border-radius:14px;">
+        <div class="adm-corner adm-corner--tl"></div>
+        <div class="adm-corner adm-corner--tr"></div>
+        <div class="adm-corner adm-corner--bl"></div>
+        <div class="adm-corner adm-corner--br"></div>
+        <div class="adm-top-edge"></div>
+
+        <!-- Eyebrow -->
+        <div class="adm-hero-eyebrow">
+          <span class="adm-eyebrow-dot"></span>
+          Administration · GaiaLumen
+        </div>
+
+        <!-- Titre principal -->
+        <div class="adm-hero-title">
+          <span>📊</span>
+          Modules Admin
+        </div>
+        <p class="adm-hero-sub">Panneau de gestion complet</p>
+
+        <!-- Stat pills -->
+        <div class="adm-sidebar-pills">
+          <div class="adm-stat-pill">
+            <span class="adm-stat-pill__val" id="sidebar-stat-modules">8</span>
+            <span class="adm-stat-pill__lbl">Modules</span>
+          </div>
+          <div class="adm-stat-pill adm-stat-pill--accent">
+            <span class="adm-stat-pill__val">✓</span>
+            <span class="adm-stat-pill__lbl">Actif</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Séparateur -->
+    <div class="sidebar-divider" style="margin-top:16px;"></div>
+
+    <!-- ── NAVIGATION ITEMS ─────────────────────────────────── -->
+    <div style="padding: 12px 16px 6px;">
+      <div class="adm-frame" style="padding: 6px 0; border-radius: 12px; overflow: hidden;">
+        <div class="adm-corner adm-corner--tl adm-corner--sm"></div>
+        <div class="adm-corner adm-corner--tr adm-corner--sm"></div>
+        <div class="adm-corner adm-corner--bl adm-corner--sm"></div>
+        <div class="adm-corner adm-corner--br adm-corner--sm"></div>
+        <div class="adm-top-edge adm-top-edge--thin"></div>
+
+        <a href="#" class="menu-item" data-module="dashboard" style="padding: 12px 20px;">
+          <span class="menu-item-icon">🏠</span>
+          <span class="menu-item-text">Dashboard</span>
+        </a>
+
+        <a href="#" class="menu-item" data-module="users" style="padding: 12px 20px;">
+          <span class="menu-item-icon">👥</span>
+          <span class="menu-item-text">GS Utilisateurs</span>
+        </a>
+
+        <a href="#" class="menu-item" data-module="planning" style="padding: 12px 20px;">
+          <span class="menu-item-icon">📅</span>
+          <span class="menu-item-text">GS Planning</span>
+        </a>
+
+        <a href="#" class="menu-item" data-module="events" style="padding: 12px 20px;">
+          <span class="menu-item-icon">🎯</span>
+          <span class="menu-item-text">GS Events</span>
+        </a>
+
+        <a href="#" class="menu-item" data-module="meals" style="padding: 12px 20px;">
+          <span class="menu-item-icon">🍽️</span>
+          <span class="menu-item-text">GS Repas</span>
+        </a>
+
+        <a href="#" class="menu-item" data-module="health" style="padding: 12px 20px;">
+          <span class="menu-item-icon">❤️</span>
+          <span class="menu-item-text">GS Santé</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Séparateur avant Défis -->
+    <div class="sidebar-divider" style="margin-top: 8px; margin-bottom: 8px;"></div>
+
+    <div style="padding: 0 16px 6px;">
+      <div class="adm-frame" style="padding: 6px 0; border-radius: 12px; overflow: hidden; border-color: rgba(58,134,196,0.32);">
+        <div class="adm-corner adm-corner--tl adm-corner--sm adm-corner--accent"></div>
+        <div class="adm-corner adm-corner--tr adm-corner--sm adm-corner--accent"></div>
+        <div class="adm-corner adm-corner--bl adm-corner--sm adm-corner--accent"></div>
+        <div class="adm-corner adm-corner--br adm-corner--sm adm-corner--accent"></div>
+        <div class="adm-top-edge adm-top-edge--thin" style="background: linear-gradient(90deg, transparent, var(--blue) 50%, transparent);"></div>
+
+        <a href="#" class="menu-item" data-module="challenges" style="padding: 12px 20px;">
+          <span class="menu-item-icon">🏆</span>
+          <span class="menu-item-text">GS Défis</span>
+          <span class="menu-item-badge">NEW</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="sidebar-divider" style="margin-top: 8px; margin-bottom: 8px;"></div>
+
+    <div style="padding: 0 16px 6px;">
+      <div class="adm-frame" style="padding: 6px 0; border-radius: 12px; overflow: hidden;">
+        <div class="adm-corner adm-corner--tl adm-corner--sm"></div>
+        <div class="adm-corner adm-corner--tr adm-corner--sm"></div>
+        <div class="adm-corner adm-corner--bl adm-corner--sm"></div>
+        <div class="adm-corner adm-corner--br adm-corner--sm"></div>
+        <div class="adm-top-edge adm-top-edge--thin"></div>
+
+        <a href="#" class="menu-item" data-module="activity" style="padding: 12px 20px;">
+          <span class="menu-item-icon">📜</span>
+          <span class="menu-item-text">Logs Activité</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer version -->
+    <div class="sidebar-bottom">
+      <div class="sidebar-version">GaiaLumen Admin · v4.0</div>
+    </div>
+
   </aside>
 
+  <!-- ── CONTENU PRINCIPAL ───────────────────────────────────── -->
   <main class="main-content">
-      <div id="module-initial-loader" class="section-loader">
-        <div class="section-loader-spinner"></div>
-        <p style="color:var(--muted); font-size:1.1rem;">Initialisation du dashboard...</p>
-      </div>
-    </main>
+    <div id="module-initial-loader" class="section-loader">
+      <div class="section-loader-spinner"></div>
+      <p style="color:var(--muted); font-size:1.1rem;">Initialisation du dashboard...</p>
+    </div>
+  </main>
+
 </div>
 
+<!-- Barre de progression -->
 <div class="progress-bar">
   <div class="progress-bar-fill" id="progressBar"></div>
 </div>
 
-<!-- Scripts -->
+<!-- ── SCRIPTS (inchangés) ──────────────────────────────────── -->
 <script src="js/admin.js?v=20260415-5"></script>
 <script src="js/challenges-admin.js?v=20260415-5"></script>
 <script src="js/admin-module-loader.js?v=20260415-5"></script>

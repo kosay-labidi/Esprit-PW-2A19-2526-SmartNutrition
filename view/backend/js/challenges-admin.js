@@ -7,6 +7,9 @@ console.log('🏆 Admin Challenges (Mode Ajout/Affichage) chargé');
 
 let adminChallenges = [];
 let adminParticipants = [];
+let filteredParticipants = [];
+let participantsPage = 1;
+const PARTICIPANTS_PER_PAGE = 8;
 
 // ═══════════════════════════════════════════════════════════
 // INITIALISATION
@@ -89,9 +92,10 @@ function initChallengeForm() {
       const url = isUpdate ? 'challenges/updateChallenge.php?id=' + challengeId : 'challenges/addChallenge.php';
       
       const submitBtn = document.getElementById('form-submit-btn');
-      const originalText = submitBtn.innerText;
+      const isEditMode = submitBtn.getAttribute('data-mode') === 'edit';
+      const originalHTML = submitBtn.innerHTML;
       submitBtn.disabled = true;
-      submitBtn.innerText = '⌛ Envoi...';
+      submitBtn.innerHTML = '<span class="btn-label">⌛ Envoi...</span>';
 
       fetch(url, {
         method: 'POST',
@@ -133,7 +137,7 @@ function initChallengeForm() {
       })
       .finally(() => {
         submitBtn.disabled = false;
-        submitBtn.innerText = originalText;
+        submitBtn.innerHTML = originalHTML;
       });
     };
   }
@@ -378,7 +382,10 @@ function resetForm() {
     if (idField) idField.value = '';
     document.getElementById('form-title').innerHTML = '<span>➕</span> Nouveau Défi';
     const submitBtn = document.getElementById('form-submit-btn');
-    if (submitBtn) submitBtn.innerText = '🚀 Publier le Défi';
+    if (submitBtn) {
+      submitBtn.removeAttribute('data-mode');
+      submitBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span class="btn-label">🚀 Publier le Défi</span>';
+    }
     updateCharCountAdmin(document.getElementById('challenge-description'), 'description-count', 500);
     clearErrors();
     updatePreview();
@@ -490,19 +497,32 @@ function editChallenge(id) {
   // Mettre à jour le compteur de caractères
   updateCharCountAdmin(document.getElementById('challenge-description'), 'description-count', 500);
 
-  // Changer le titre et le bouton du formulaire
+  // Changer le titre et le bouton du formulaire (sans détruire l'icône SVG)
   document.getElementById('form-title').innerHTML = '<span>✏️</span> Modifier le Défi';
-  document.getElementById('form-submit-btn').innerText = '💾 Enregistrer les modifications';
+  const submitBtn2 = document.getElementById('form-submit-btn');
+  if (submitBtn2) {
+    submitBtn2.setAttribute('data-mode', 'edit');
+    const btnText = submitBtn2.querySelector('.btn-label') || submitBtn2;
+    submitBtn2.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span class="btn-label">💾 Enregistrer les modifications</span>';
+  }
   
-  // Scroll vers le formulaire
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Scroll vers le formulaire (scroll le conteneur principal, pas la window)
+  const mainContent = document.querySelector('.main-content');
+  if (mainContent) {
+    mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  // Scroll de secours vers l'élément du formulaire
+  const formSection = document.getElementById('challenge-form');
+  if (formSection) {
+    setTimeout(() => formSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
 
   // Mettre à jour l'aperçu
   updatePreview();
 }
 
 function deleteChallenge(id) {
-  if (confirm('⚠️ Voulez-vous vraiment supprimer ce défi ? Cette action est irréversible.')) {
+  openAdmModal('⚠️ Voulez-vous vraiment supprimer ce défi ? Cette action est irréversible.', () => {
     fetch(`challenges/deleteChallenge.php?id=${id}`, {
       method: 'GET',
       headers: {
@@ -527,7 +547,7 @@ function deleteChallenge(id) {
       console.error('Erreur suppression:', err);
       showToast('Erreur', 'Une erreur est survenue lors de la suppression.', 'error');
     });
-  }
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -540,16 +560,13 @@ function formatDate(dateStr) {
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function getJoursRestants(dateFin) {
-  if (!dateFin) return '-';
-  const fin = new Date(dateFin);
-  const maintenant = new Date();
-  const diff = Math.ceil((fin - maintenant) / (1000 * 60 * 60 * 24));
-  
-  if (diff < 0) return 'Terminé';
-  if (diff === 0) return 'Aujourd\'hui';
-  if (diff === 1) return 'Demain';
-  return `Dans ${diff} jours`;
+function getDaysLeft(dateFin) {
+  const diff = new Date(dateFin) - new Date();
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  if (days < 0) return `<span class="adm-days adm-days--over">Expiré</span>`;
+  if (days === 0) return `<span class="adm-days adm-days--today">Aujourd'hui</span>`;
+  if (days <= 7) return `<span class="adm-days adm-days--soon">${days}j</span>`;
+  return `<span class="adm-days">${days}j</span>`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -593,7 +610,7 @@ function renderChallengesTable() {
 
   if (filtered.length === 0) {
     console.log('ℹ️ Aucun défi ne correspond aux critères');
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted);">
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">
       <div style="font-size:3rem;margin-bottom:10px;">🏆</div>
       <div>${adminChallenges.length === 0 ? 'Aucun défi dans la base de données' : 'Aucun défi trouvé pour ces critères'}</div>
     </td></tr>`;
@@ -616,8 +633,15 @@ function renderChallengesTable() {
       statusLabel = '🔜 À venir';
     }
 
-    const statusClass = `badge-status-${normalizedStatus}`;
-    const progress = 0; 
+    const statusMap = {
+      'actif': { label: '✅ Actif', cls: 'adm-badge--green' },
+      'termine': { label: '📦 Terminé', cls: 'adm-badge--grey' },
+      'futur': { label: '🔜 À venir', cls: 'adm-badge--blue' }
+    };
+    const s = statusMap[normalizedStatus] || { label: c.statut || '—', cls: '' };
+    const target = parseInt(c.valeur_cible || 0, 10);
+    const participantsCount = parseInt(c.participants_count || 0, 10);
+    const pct = target > 0 ? Math.min(100, Math.round((participantsCount / target) * 100)) : 0;
     
     return `
       <tr class="challenge-row-admin" data-id="${c.id}">
@@ -637,19 +661,15 @@ function renderChallengesTable() {
         </td>
         <td class="target-cell">${c.valeur_cible || 0}%</td>
         <td>
-          <div class="progress-container-mini">
-            <div class="progress-bar-mini">
-              <div class="progress-fill-mini" style="width: ${progress}%; background: ${getProgressColor(progress)};"></div>
+          <div class="adm-prog-wrap">
+            <div class="adm-prog-bar">
+              <div class="adm-prog-fill" style="width: ${pct}%"></div>
             </div>
-            <span class="progress-text-mini">${Math.round(progress)}%</span>
+            <span class="adm-prog-val">${pct}%</span>
           </div>
         </td>
-        <td>
-          <span class="badge-status ${statusClass}">
-            <span class="status-dot"></span>
-            ${statusLabel}
-          </span>
-        </td>
+        <td><span class="adm-badge ${s.cls}">${s.label}</span></td>
+        <td>${getDaysLeft(c.date_fin)}</td>
         <td>
           <div class="table-actions">
             <button class="btn-icon edit" onclick="editChallenge(${c.id})" title="Modifier">✏️</button>
@@ -724,7 +744,7 @@ function renderParticipantsTable() {
   const challengeFilter = document.getElementById('challenge-filter')?.value || '';
   const progressFilter = document.getElementById('progress-filter')?.value || '';
 
-  const filteredParticipants = adminParticipants.filter(p => {
+  filteredParticipants = adminParticipants.filter(p => {
     const nom = String(p.nom || '');
     const email = String(p.email || '');
     const challengeTitre = String(p.challenge_titre || '');
@@ -758,27 +778,47 @@ function renderParticipantsTable() {
     updateParticipantsPagination(0, 0);
     return;
   }
-  
-  tbody.innerHTML = filteredParticipants.map(p => {
+  participantsPage = 1;
+  renderParticipantsPage();
+}
+
+function getInitials(nom) {
+  return (nom || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+
+function getAvatarColor(nom) {
+  const colors = ['#5B3E96', '#3A86C4', '#27ae60', '#e67e22', '#e74c3c', '#8e44ad'];
+  let hash = 0;
+  for (let c of (nom || '')) {
+    hash = c.charCodeAt(0) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function renderParticipantRows(rows) {
+  const tbody = document.getElementById('participants-tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = rows.map(p => {
     const nom = String(p.nom || '');
     const email = String(p.email || '');
-    const initials = nom ? nom.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() : '??';
-    const avatarColor = getAvatarColor(nom);
-    
     const prog = clampInt(p.objectif, 0, 100);
-    const progColor = getProgressColor(prog);
     const challengeTarget = clampInt(p.challenge_target, 0, 100);
     const joinedDate = formatParticipantDate(p.date_inscription);
-    const statusLabel = p.engagement > 0 ? '🔥 Actif' : '💤 Passif';
-    
+    const engBadge = p.engagement == 1
+      ? `<span class="adm-engage-badge adm-engage-badge--on">🔥 Engagé</span>`
+      : `<span class="adm-engage-badge adm-engage-badge--off">😴 Inactif</span>`;
+
     return `
       <tr class="participant-row-admin">
         <td>
-          <div class="participant-cell">
-            <div class="avatar-circle" style="background: ${avatarColor}">${initials}</div>
-            <div class="participant-info">
-              <div class="participant-name">${escapeHtml(nom)}</div>
-              <div class="participant-email">${escapeHtml(email)}</div>
+          <div class="adm-participant-cell">
+            <div class="adm-avatar" style="background:${getAvatarColor(nom)}">
+              ${getInitials(nom)}
+            </div>
+            <div class="adm-participant-info">
+              <span class="adm-participant-name">${escapeHtml(nom)}</span>
+              <span class="adm-participant-email">${escapeHtml(email)}</span>
             </div>
           </div>
         </td>
@@ -791,7 +831,6 @@ function renderParticipantsTable() {
         <td>
           <div class="progress-wrapper-large">
             <div class="progress-header-flex">
-              <span class="progress-dot-status" style="background: ${progColor}"></span>
               <span class="progress-value-text">${prog}%</span>
             </div>
             <div class="progress-bar-large">
@@ -805,14 +844,8 @@ function renderParticipantsTable() {
             <span class="tag-text">${challengeTarget}%</span>
           </div>
         </td>
-        <td>
-          <span class="participant-email">${escapeHtml(joinedDate)}</span>
-        </td>
-        <td>
-          <span class="engagement-badge ${p.engagement > 0 ? 'engaged' : 'passive'}">
-            ${statusLabel}
-          </span>
-        </td>
+        <td><span class="participant-email">${escapeHtml(joinedDate)}</span></td>
+        <td>${engBadge}</td>
         <td>
           <div class="table-actions">
             <button class="btn-icon" onclick="viewParticipant(${p.id})" title="Voir">👁️</button>
@@ -822,17 +855,28 @@ function renderParticipantsTable() {
       </tr>
     `;
   }).join('');
-
-  updateParticipantsPagination(filteredParticipants.length, filteredParticipants.length);
 }
 
-function getAvatarColor(name) {
-  const colors = ['#A8B8A0', '#E8DCC4', '#4CAF50', '#8D6E63', '#607D8B'];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+function renderParticipantsPage() {
+  const total = filteredParticipants.length;
+  const totalPages = Math.max(1, Math.ceil(total / PARTICIPANTS_PER_PAGE));
+  participantsPage = Math.min(Math.max(1, participantsPage), totalPages);
+
+  const start = (participantsPage - 1) * PARTICIPANTS_PER_PAGE;
+  const slice = filteredParticipants.slice(start, start + PARTICIPANTS_PER_PAGE);
+
+  const info = document.getElementById('participants-pagination-info');
+  if (info) {
+    const from = total > 0 ? start + 1 : 0;
+    const to = total > 0 ? Math.min(start + PARTICIPANTS_PER_PAGE, total) : 0;
+    info.textContent = `Affichage de ${from} à ${to} sur ${total} participants`;
   }
-  return colors[Math.abs(hash) % colors.length];
+
+  const btns = document.querySelectorAll('.adm-pagination .pagination-controls .adm-btn');
+  if (btns[0]) btns[0].disabled = participantsPage <= 1;
+  if (btns[1]) btns[1].disabled = participantsPage >= totalPages;
+
+  renderParticipantRows(slice);
 }
 
 function updateParticipantsPagination(visibleCount, totalCount = visibleCount) {
@@ -918,7 +962,119 @@ function exportParticipants() {
 function viewParticipant(id) {
   const p = adminParticipants.find(x => String(x.id) === String(id));
   if (!p) return;
-  alert(`Participant: ${p.nom}\nEmail: ${p.email}\nDéfi: ${p.challenge_titre || p.id_challenge}\nMotivation: ${p.motivation || '-'}\nAction: ${p.action || '-'}`);
+  openParticipantModal(p);
+}
+
+function openParticipantModal(p) {
+  // Create or get modal
+  let overlay = document.getElementById('adm-participant-modal');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'adm-participant-modal';
+    overlay.style.cssText = 'display:none;position:fixed;inset:0;z-index:99000;background:rgba(0,0,0,.72);backdrop-filter:blur(7px);align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `
+      <div id="adm-pm-card" style="
+        position:relative;width:520px;max-width:96vw;max-height:90vh;overflow-y:auto;
+        background:linear-gradient(160deg,rgba(15,35,24,.98),rgba(10,26,16,.99));
+        border:1px solid rgba(91,62,150,.38);border-radius:24px;
+        box-shadow:0 0 0 1px rgba(255,255,255,.05),0 30px 70px rgba(0,0,0,.6);
+        animation:admPmSlide .32s cubic-bezier(.34,1.56,.64,1);
+      ">
+        <style>
+        @keyframes admPmSlide{from{opacity:0;transform:translateY(24px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .adm-pm-section{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px 18px;margin-bottom:12px;}
+        .adm-pm-row{display:flex;gap:16px;margin-bottom:10px;align-items:flex-start;}
+        .adm-pm-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(168,184,160,.6);margin-bottom:3px;}
+        .adm-pm-val{font-size:.9rem;color:#F2E8CF;font-weight:500;line-height:1.5;word-break:break-word;}
+        .adm-pm-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700;}
+        </style>
+
+        <!-- Top edge glow -->
+        <div style="position:absolute;top:0;left:22px;right:22px;height:2px;background:linear-gradient(90deg,transparent,#5B3E96 35%,#3A86C4 65%,transparent);border-radius:2px;opacity:.85;pointer-events:none;"></div>
+        <!-- Corners -->
+        <div style="position:absolute;top:-2px;left:-2px;width:16px;height:16px;border-top:2.5px solid #5B3E96;border-left:2.5px solid #5B3E96;border-radius:4px 0 0 0;pointer-events:none;"></div>
+        <div style="position:absolute;top:-2px;right:-2px;width:16px;height:16px;border-top:2.5px solid #3A86C4;border-right:2.5px solid #3A86C4;border-radius:0 4px 0 0;pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-bottom:2.5px solid #5B3E96;border-right:2.5px solid #5B3E96;border-radius:0 0 4px 0;pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-2px;left:-2px;width:16px;height:16px;border-bottom:2.5px solid #3A86C4;border-left:2.5px solid #3A86C4;border-radius:0 0 0 4px;pointer-events:none;"></div>
+
+        <!-- Header -->
+        <div style="padding:28px 24px 20px;background:linear-gradient(180deg,rgba(91,62,150,.12),transparent);border-bottom:1px solid rgba(91,62,150,.18);text-align:center;">
+          <div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,rgba(91,62,150,.3),rgba(58,134,196,.2));border:2.5px solid rgba(91,62,150,.4);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 14px;box-shadow:0 0 24px rgba(91,62,150,.25);">👤</div>
+          <h3 id="adm-pm-name" style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:#F2E8CF;margin:0 0 5px;"></h3>
+          <p id="adm-pm-email" style="font-size:.82rem;color:#a8b8a0;margin:0;"></p>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:20px 22px 8px;" id="adm-pm-body"></div>
+
+        <!-- Footer -->
+        <div style="padding:14px 22px 22px;display:flex;gap:10px;">
+          <button onclick="document.getElementById('adm-participant-modal').style.display='none'" style="
+            flex:1;padding:12px;border-radius:13px;border:1.5px solid rgba(91,62,150,.35);
+            background:rgba(91,62,150,.1);color:#F2E8CF;font-size:.87rem;font-weight:600;
+            cursor:pointer;transition:all .25s;font-family:'Lato',sans-serif;
+          " onmouseover="this.style.background='rgba(91,62,150,.25)'" onmouseout="this.style.background='rgba(91,62,150,.1)'">
+            Fermer
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.style.display = 'none'; });
+  }
+
+  // Fill data
+  const prog = Math.min(100, Math.max(0, parseInt(p.objectif) || 0));
+  const target = Math.min(100, Math.max(0, parseInt(p.challenge_target || p.objectif_defi) || 0));
+  const progColor = prog >= target ? '#2ecc71' : prog >= target * 0.6 ? '#f1c40f' : '#e74c3c';
+  const engBg = p.engagement ? 'rgba(231,76,60,.15)' : 'rgba(168,184,160,.1)';
+  const engColor = p.engagement ? '#e74c3c' : '#a8b8a0';
+  const engText = p.engagement ? '🔥 Engagé' : '😴 Inactif';
+
+  document.getElementById('adm-pm-name').textContent  = p.nom || '—';
+  document.getElementById('adm-pm-email').textContent = p.email || '—';
+
+  document.getElementById('adm-pm-body').innerHTML = `
+    <!-- Statut & défi -->
+    <div class="adm-pm-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div class="adm-pm-label">Défi</div>
+          <div class="adm-pm-val" style="font-weight:700;">${escapeHtml(p.challenge_titre || String(p.id_challenge) || '—')}</div>
+        </div>
+        <span class="adm-pm-badge" style="background:${engBg};border:1px solid ${engColor};color:${engColor};">${engText}</span>
+      </div>
+      <!-- Progress bar -->
+      <div style="margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:.72rem;color:#a8b8a0;">Progression</span>
+        <span style="font-size:.9rem;font-weight:700;color:${progColor};">${prog}%</span>
+      </div>
+      <div style="height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-bottom:10px;">
+        <div style="height:100%;width:${prog}%;background:linear-gradient(90deg,${progColor},${progColor}cc);border-radius:99px;transition:width .6s ease;"></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;background:rgba(91,62,150,.1);border:1px solid rgba(91,62,150,.22);border-radius:12px;padding:10px;text-align:center;">
+          <div class="adm-pm-label">Objectif défi</div>
+          <div class="adm-pm-val" style="font-size:1.1rem;font-weight:700;color:#3A86C4;">${target}%</div>
+        </div>
+        <div style="flex:1;background:rgba(91,62,150,.1);border:1px solid rgba(91,62,150,.22);border-radius:12px;padding:10px;text-align:center;">
+          <div class="adm-pm-label">Date inscription</div>
+          <div class="adm-pm-val" style="font-size:.85rem;">${escapeHtml(formatParticipantDate(p.date_inscription))}</div>
+        </div>
+      </div>
+    </div>
+    <!-- Motivation -->
+    <div class="adm-pm-section">
+      <div class="adm-pm-label" style="margin-bottom:7px;">💬 Motivation</div>
+      <div class="adm-pm-val" style="font-style:italic;color:rgba(242,232,207,.7);line-height:1.6;">${escapeHtml(p.motivation || '—')}</div>
+    </div>
+    <!-- Action -->
+    <div class="adm-pm-section">
+      <div class="adm-pm-label" style="margin-bottom:7px;">⚡ Plan d'action</div>
+      <div class="adm-pm-val" style="line-height:1.6;">${escapeHtml(p.action || '—')}</div>
+    </div>
+  `;
+
+  overlay.style.display = 'flex';
 }
 
 function deleteParticipant(id, idChallenge) {
@@ -933,15 +1089,34 @@ function deleteParticipant(id, idChallenge) {
     .then(r => r.json())
     .then(result => {
       if (result && result.success) {
+        showToast('Participant supprimé', 'Le participant a été retiré du défi.', 'success');
         loadAdminParticipants();
       } else {
-        alert('❌ Erreur: Impossible de supprimer le participant');
+        showToast('Erreur', 'Impossible de supprimer le participant.', 'error');
       }
     })
     .catch(err => {
       console.error('Erreur suppression participant:', err);
-      alert('❌ Erreur de connexion');
+      showToast('Erreur', 'Erreur de connexion au serveur.', 'error');
     });
+}
+
+function openAdmModal(msg, onConfirm) {
+  const msgEl = document.getElementById('adm-modal-msg');
+  const modalEl = document.getElementById('adm-confirm-modal');
+  const confirmBtn = document.getElementById('adm-modal-confirm');
+  if (!msgEl || !modalEl || !confirmBtn) {
+    onConfirm();
+    return;
+  }
+  msgEl.textContent = msg;
+  modalEl.style.display = 'flex';
+  confirmBtn.onclick = () => { closeAdmModal(); onConfirm(); };
+}
+
+function closeAdmModal() {
+  const modalEl = document.getElementById('adm-confirm-modal');
+  if (modalEl) modalEl.style.display = 'none';
 }
 
 function clampInt(value, min, max) {
@@ -966,3 +1141,6 @@ function csvEscape(value) {
   }
   return s;
 }
+
+window.renderParticipantsPage = renderParticipantsPage;
+window.closeAdmModal = closeAdmModal;

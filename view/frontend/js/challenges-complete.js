@@ -77,6 +77,15 @@ function getProgressColor(progression) {
   return 'green';
 }
 
+function renderDaysLeftBadge(dateFin) {
+  const days = Math.ceil((new Date(dateFin) - new Date()) / 86400000);
+  if (days < 0) return `<span class="gl-days-badge gl-days-badge--over">Terminé</span>`;
+  if (days === 0) return `<span class="gl-days-badge gl-days-badge--today">Dernier jour !</span>`;
+  if (days <= 3) return `<span class="gl-days-badge gl-days-badge--urgent">${days}j restants</span>`;
+  if (days <= 7) return `<span class="gl-days-badge gl-days-badge--soon">${days}j restants</span>`;
+  return `<span class="gl-days-badge">${days}j restants</span>`;
+}
+
 function createSteakerHTML(icon, niveau, size = 'medium') {
   const steakerClass = getSteakerClass(niveau);
   
@@ -241,6 +250,7 @@ function renderChallenges(challenges) {
     const dateLabel = hasValidDates
       ? `${dateDebut.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'})} - ${dateFin.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'})}`
       : 'Dates non disponibles';
+    const daysLeftBadge = hasValidDates ? renderDaysLeftBadge(c.date_fin) : '';
     
     return `
       <div class="challenge-card" data-challenge-id="${c.id}">
@@ -277,6 +287,10 @@ function renderChallenges(challenges) {
               <div class="challenge-stat">
                 <span>📅</span>
                 <span>${dateLabel}</span>
+              </div>
+              <div class="challenge-stat">
+                <span>⏳</span>
+                <span>${daysLeftBadge}</span>
               </div>
             </div>
             
@@ -898,6 +912,7 @@ function handleParticipationSubmit(event, challengeId = currentChallengeId) {
       updateChallengeParticipationCount(normalizedId, challenge.participants_count);
       setInlineFormFeedback(normalizedId, `Participation confirmée pour "${challenge.titre}".`, 'success');
       showToast(`Participation confirmée au défi "${challenge.titre}"`, 'success');
+      markChallengeJoined(normalizedId);
       form.reset();
       const motivationField = form.querySelector('[name="motivation"]');
       const objectifField = form.querySelector('[name="objectif"]');
@@ -915,6 +930,30 @@ function handleParticipationSubmit(event, challengeId = currentChallengeId) {
       btnSubmit.disabled = false;
       submitText.textContent = 'Confirmer ma participation';
     });
+}
+
+function markChallengeJoined(challengeId) {
+  const btn = document.querySelector(`.btn-participate[data-challenge-id="${challengeId}"]`);
+  if (!btn) return;
+  btn.disabled = true;
+  btn.innerHTML = '✅ Inscrit !';
+  btn.classList.add('gl-btn--joined');
+}
+
+function handleJoinChallenge(btn, challengeId) {
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="gl-spinner"></span> Inscription...`;
+  try {
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = originalHTML;
+      openDrawer(challengeId);
+    }, 350);
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = originalHTML;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1066,7 +1105,7 @@ function initChallenges() {
           return;
         }
 
-        openDrawer(id);
+        handleJoinChallenge(btn, id);
         return;
       }
 

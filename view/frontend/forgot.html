@@ -29,7 +29,7 @@ body{
   align-items:center;
   justify-content:center;
   overflow:hidden;
-  cursor:none;
+  cursor:default;
   transition:background 0.3s,color 0.3s;
 }
 h1,h2,h3{font-family:'Cormorant Garamond',serif;}
@@ -88,6 +88,23 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
   animation:slideUp .8s ease;
   margin-left:auto;
   margin-right:10%;
+  position:relative;
+  overflow:hidden;
+}
+.container::before{
+  content:'';
+  position:absolute;
+  top:0;left:16px;right:16px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+  pointer-events:none;
+}
+.container::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:20px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.25);
+  pointer-events:none;
 }
 @keyframes slideUp{
   from{opacity:0;transform:translateY(40px);}
@@ -172,6 +189,10 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
   transition:transform 0.2s,box-shadow 0.3s;
   position:relative;
   overflow:hidden;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
 }
 .btn-submit:hover{
   transform:translateY(-2px);
@@ -333,6 +354,20 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
 #ai-toggle:hover{
   transform:scale(1.1) translateY(-2px);
   box-shadow:0 12px 35px rgba(91,62,150,0.6);
+}
+
+.btn-loading-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.35);
+  border-top-color:#fff;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media (pointer:fine){
+  body{cursor:none;}
 }
 
 /* TOOLTIP */
@@ -939,18 +974,18 @@ function handleReset(e){
   const success=document.getElementById('success');
   const email=document.getElementById('email').value;
   
-  btn.textContent='Envoi en cours...';
+  btn.innerHTML='<span class="btn-loading-dot"></span> Envoi en cours...';
   btn.disabled=true;
   
   setTimeout(()=>{
-    btn.textContent='Email envoyé!';
+    btn.innerHTML='Email envoyé!';
     success.classList.add('show');
     
     // Animer les steps
     document.querySelectorAll('.step')[1].classList.add('active');
     
     setTimeout(()=>{
-      btn.textContent='Envoyer le lien de réinitialisation';
+      btn.innerHTML='Envoyer le lien de réinitialisation';
       btn.disabled=false;
     },3000);
   },1500);

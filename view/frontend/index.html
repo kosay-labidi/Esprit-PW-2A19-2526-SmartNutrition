@@ -31,7 +31,7 @@ body{
   background:var(--bg);
   color:var(--text);
   overflow-x:hidden;
-  cursor:none;
+  cursor:default;
   transition:background var(--tr),color var(--tr);
 }
 h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
@@ -54,6 +54,10 @@ h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
   width:36px;height:36px;border-radius:50%;
   border:1.5px solid rgba(91,62,150,.5);
   transform:translate(-50%,-50%);
+}
+
+@media (pointer:fine){
+  body{cursor:none;}
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -364,6 +368,7 @@ h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
 @media(max-width:600px){
   .modules-grid{grid-template-columns:1fr;}
   .nav-links{display:none;}
+  #cursor,#cursor-trail{display:none;}
 }
 </style>
 </head>

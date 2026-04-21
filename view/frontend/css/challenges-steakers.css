@@ -287,3 +287,14 @@
   .steaker-large  { width: 90px; height: 90px; }
   .steaker-large .steaker-icon, .steaker-large .steaker-icon-main { font-size: 3.5rem; }
 }
+
+.gl-spinner { display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.gl-btn--joined { background:rgba(39,174,96,.2) !important; border-color:rgba(39,174,96,.5) !important; color:#27ae60 !important; cursor:default; }
+
+.gl-days-badge { display:inline-block; padding:2px 8px; border-radius:99px; font-size:.68rem; font-weight:800; background:rgba(255,255,255,.07); color:var(--muted,#a8b8a0); }
+.gl-days-badge--over { background:rgba(150,150,150,.12); color:#888; }
+.gl-days-badge--today { background:rgba(231,76,60,.2); color:#e74c3c; animation:urgentPulse 1s infinite; }
+.gl-days-badge--urgent { background:rgba(231,76,60,.15); color:#e74c3c; }
+.gl-days-badge--soon { background:rgba(243,156,18,.15); color:#f39c12; }
+@keyframes urgentPulse { 0%,100%{opacity:1}50%{opacity:.6} }

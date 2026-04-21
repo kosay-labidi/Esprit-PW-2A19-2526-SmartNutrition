@@ -483,6 +483,41 @@
   }
 }
 
+.adm-prog-wrap { display:flex; align-items:center; gap:8px; min-width:110px; }
+.adm-prog-bar { flex:1; height:6px; background:rgba(255,255,255,.08); border-radius:99px; overflow:hidden; }
+.adm-prog-fill { height:100%; background:linear-gradient(90deg,var(--violet,#5B3E96),var(--blue,#3A86C4)); border-radius:99px; transition:width .6s ease; }
+.adm-prog-val { font-size:.72rem; font-weight:700; color:var(--blue,#3A86C4); white-space:nowrap; }
+
+.adm-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:99px; font-size:.7rem; font-weight:800; letter-spacing:.5px; }
+.adm-badge--green { background:rgba(39,174,96,.15); border:1px solid rgba(39,174,96,.35); color:#27ae60; }
+.adm-badge--grey  { background:rgba(150,150,150,.12); border:1px solid rgba(150,150,150,.25); color:#9aa; }
+.adm-badge--blue  { background:rgba(58,134,196,.15); border:1px solid rgba(58,134,196,.35); color:var(--blue,#3A86C4); }
+
+.adm-days { font-size:.75rem; font-weight:700; padding:3px 8px; border-radius:8px; background:rgba(255,255,255,.06); color:var(--muted,#a8b8a0); }
+.adm-days--over { background:rgba(231,76,60,.12); color:#e74c3c; }
+.adm-days--today { background:rgba(243,156,18,.15); color:#f39c12; }
+.adm-days--soon { background:rgba(243,156,18,.1); color:#f39c12; }
+
+.adm-participant-cell { display:flex; align-items:center; gap:10px; }
+.adm-avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:900; color:#fff; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,.3); }
+.adm-participant-info { display:flex; flex-direction:column; gap:1px; }
+.adm-participant-name { font-size:.86rem; font-weight:700; color:var(--text,#F2E8CF); }
+.adm-participant-email { font-size:.72rem; color:var(--muted,#a8b8a0); }
+
+.adm-engage-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:99px; font-size:.7rem; font-weight:800; }
+.adm-engage-badge--on { background:rgba(231,76,60,.15); border:1px solid rgba(231,76,60,.3); color:#e74c3c; animation:engPulse 2s infinite; }
+.adm-engage-badge--off { background:rgba(150,150,150,.1); border:1px solid rgba(150,150,150,.2); color:#888; }
+@keyframes engPulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+
+.adm-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:9999; }
+.adm-modal-box { padding:32px 28px; max-width:360px; width:90%; text-align:center; }
+.adm-modal-icon { font-size:2.5rem; margin-bottom:12px; }
+.adm-modal-title { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:700; color:var(--text,#F2E8CF); margin-bottom:8px; }
+.adm-modal-msg { color:var(--muted,#a8b8a0); font-size:.88rem; margin-bottom:22px; }
+.adm-modal-actions { display:flex; gap:10px; justify-content:center; }
+.adm-btn--danger { background:linear-gradient(135deg,#c0392b,#e74c3c); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 4px 0 rgba(0,0,0,.28), 0 8px 20px rgba(231,76,60,.4); }
+.adm-btn--danger:hover { transform:translateY(-2px); box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 0 rgba(0,0,0,.22), 0 12px 24px rgba(231,76,60,.55); }
+
 /* ══════════════════════════════════════════════════════════
    FORMULAIRE EN HAUT (compact avec animations) - COULEURS ADMIN
    ══════════════════════════════════════════════════════════ */

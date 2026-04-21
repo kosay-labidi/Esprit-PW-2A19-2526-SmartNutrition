@@ -259,66 +259,94 @@
 
 
     <!-- ╔═══════════════════════════════════════════════════════╗
-         ║   SECTION 2 : MÉTRIQUES — 3 CADRES 3D                ║
+         ║   SECTION 2 : STATISTIQUES 3D ANIMÉES                ║
          ╚═══════════════════════════════════════════════════════╝ -->
-    <div class="adm-metrics-grid">
+    <div class="adm-stats-3d-grid">
 
-      <div class="adm-frame adm-frame--metric" style="--metric-color: #A8B8A0;">
-        <div class="adm-corner adm-corner--tl"></div>
-        <div class="adm-corner adm-corner--tr"></div>
-        <div class="adm-top-edge"></div>
-        <div class="adm-metric-inner">
-          <div class="adm-metric-icon">🏆</div>
-          <div class="adm-metric-content">
-            <div class="metric-value" id="metric-active">28</div>
-            <div class="metric-label">Défis Actifs</div>
-            <div class="metric-trend positive">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-              <span>+3</span> ce mois
+      <!-- Carte 1 — Défis Actifs -->
+      <div class="stat3d-card" data-tilt>
+        <div class="stat3d-glow stat3d-glow--green"></div>
+        <div class="stat3d-inner">
+          <div class="stat3d-top">
+            <div class="stat3d-icon-wrap stat3d-icon-wrap--green">
+              <span class="stat3d-icon">🏆</span>
+              <div class="stat3d-icon-ring"></div>
+            </div>
+            <div class="stat3d-trend positive">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+              +3 ce mois
             </div>
           </div>
-          <div class="adm-metric-orb"></div>
+          <div class="stat3d-value" id="metric-active" data-target="28">0</div>
+          <div class="stat3d-label">Défis Actifs</div>
+          <div class="stat3d-bar-wrap">
+            <div class="stat3d-bar stat3d-bar--green" data-width="72"></div>
+          </div>
+        </div>
+        <div class="stat3d-particles">
+          <span></span><span></span><span></span>
         </div>
       </div>
 
-      <div class="adm-frame adm-frame--metric" style="--metric-color: #E8DCC4;">
-        <div class="adm-corner adm-corner--tl"></div>
-        <div class="adm-corner adm-corner--tr"></div>
-        <div class="adm-top-edge"></div>
-        <div class="adm-metric-inner">
-          <div class="adm-metric-icon">👥</div>
-          <div class="adm-metric-content">
-            <div class="metric-value" id="metric-participants">1 847</div>
-            <div class="metric-label">Participants</div>
-            <div class="metric-trend positive">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-              <span>+12%</span> vs semaine
+      <!-- Carte 2 — Participants -->
+      <div class="stat3d-card" data-tilt>
+        <div class="stat3d-glow stat3d-glow--blue"></div>
+        <div class="stat3d-inner">
+          <div class="stat3d-top">
+            <div class="stat3d-icon-wrap stat3d-icon-wrap--blue">
+              <span class="stat3d-icon">👥</span>
+              <div class="stat3d-icon-ring"></div>
+            </div>
+            <div class="stat3d-trend positive">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+              +12% semaine
             </div>
           </div>
-          <div class="adm-metric-orb"></div>
+          <div class="stat3d-value" id="metric-participants" data-target="1847">0</div>
+          <div class="stat3d-label">Participants</div>
+          <div class="stat3d-bar-wrap">
+            <div class="stat3d-bar stat3d-bar--blue" data-width="85"></div>
+          </div>
+        </div>
+        <div class="stat3d-particles">
+          <span></span><span></span><span></span>
         </div>
       </div>
 
-      <div class="adm-frame adm-frame--metric" style="--metric-color: #4CAF50;">
-        <div class="adm-corner adm-corner--tl"></div>
-        <div class="adm-corner adm-corner--tr"></div>
-        <div class="adm-top-edge"></div>
-        <div class="adm-metric-inner">
-          <div class="adm-metric-icon">🎯</div>
-          <div class="adm-metric-content">
-            <div class="metric-value" id="metric-completion">82%</div>
-            <div class="metric-label">Taux de Complétion</div>
-            <div class="metric-trend positive">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-              <span>+5%</span> progress
+      <!-- Carte 3 — Taux Complétion avec ring SVG 3D -->
+      <div class="stat3d-card stat3d-card--ring" data-tilt>
+        <div class="stat3d-glow stat3d-glow--gold"></div>
+        <div class="stat3d-inner">
+          <div class="stat3d-top">
+            <div class="stat3d-icon-wrap stat3d-icon-wrap--gold">
+              <span class="stat3d-icon">🎯</span>
+              <div class="stat3d-icon-ring"></div>
+            </div>
+            <div class="stat3d-trend positive">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+              +5% progress
             </div>
           </div>
-          <div class="adm-metric-orb"></div>
+          <div class="stat3d-ring-wrap">
+            <svg class="stat3d-ring-svg" viewBox="0 0 80 80">
+              <circle class="stat3d-ring-bg" cx="40" cy="40" r="32"/>
+              <circle class="stat3d-ring-fill stat3d-ring-fill--gold" cx="40" cy="40" r="32"
+                stroke-dasharray="201" stroke-dashoffset="201" data-pct="82"/>
+            </svg>
+            <div class="stat3d-ring-center">
+              <span class="stat3d-value stat3d-value--sm" id="metric-completion" data-target="82">0</span>
+              <span class="stat3d-pct">%</span>
+            </div>
+          </div>
+          <div class="stat3d-label">Taux de Complétion</div>
+        </div>
+        <div class="stat3d-particles">
+          <span></span><span></span><span></span>
         </div>
       </div>
 
     </div>
-    <!-- /MÉTRIQUES -->
+    <!-- /STATS 3D -->
 
 
     <!-- ╔═══════════════════════════════════════════════════════╗
@@ -368,6 +396,7 @@
                 <th>Objectif</th>
                 <th>Progression</th>
                 <th>Statut</th>
+                <th>Durée</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -479,13 +508,28 @@
       <div class="table-pagination adm-pagination">
         <div class="pagination-info" id="participants-pagination-info">Affichage de 0 à 0 sur 0 participants</div>
         <div class="pagination-controls">
-          <button class="adm-btn adm-btn--ghost adm-btn--sm" disabled>← Précédent</button>
-          <button class="adm-btn adm-btn--ghost adm-btn--sm">Suivant →</button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="participantsPage--; renderParticipantsPage()">← Précédent</button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="participantsPage++; renderParticipantsPage()">Suivant →</button>
         </div>
       </div>
     </div>
     <!-- /PARTICIPANTS -->
 
+  </div>
+
+  <div id="adm-confirm-modal" class="adm-modal-overlay" style="display:none" role="dialog" aria-modal="true">
+    <div class="adm-modal-box adm-frame">
+      <div class="adm-corner adm-corner--tl"></div>
+      <div class="adm-corner adm-corner--tr"></div>
+      <div class="adm-top-edge"></div>
+      <div class="adm-modal-icon">🗑️</div>
+      <h4 class="adm-modal-title">Supprimer ce défi ?</h4>
+      <p class="adm-modal-msg" id="adm-modal-msg">Cette action est irréversible.</p>
+      <div class="adm-modal-actions">
+        <button class="adm-btn adm-btn--ghost" onclick="closeAdmModal()">Annuler</button>
+        <button class="adm-btn adm-btn--danger" id="adm-modal-confirm">Supprimer</button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1140,4 +1184,609 @@
   .adm-section-header--participants { flex-direction: column; align-items: flex-start; }
   .form-container-with-preview { grid-template-columns: 1fr !important; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   STAT3D — CARTES STATISTIQUES 3D ANIMÉES
+   Styles manquants — correction complète
+   ══════════════════════════════════════════════════════════ */
+
+/* Grille 3 colonnes */
+.adm-stats-3d-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+/* ── CARD DE BASE ───────────────────────────────────────── */
+.stat3d-card {
+  position: relative;
+  border-radius: 20px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.09);
+  overflow: hidden;
+  cursor: default;
+  transition: transform .35s cubic-bezier(.4,0,.2,1), box-shadow .35s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(0,0,0,.22),
+    0 4px 8px rgba(0,0,0,.14),
+    0 14px 32px rgba(0,0,0,.22),
+    0 0 0 1px rgba(255,255,255,.05);
+  /* Perspective pour l'effet tilt */
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.stat3d-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    inset 0 -1px 0 rgba(0,0,0,.22),
+    0 12px 24px rgba(0,0,0,.22),
+    0 28px 56px rgba(0,0,0,.32),
+    0 0 0 1px rgba(58,134,196,.2);
+}
+
+/* Ligne biseau supérieure */
+.stat3d-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 16px; right: 16px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.3) 30%,
+    rgba(255,255,255,.5) 50%,
+    rgba(255,255,255,.3) 70%,
+    transparent);
+  z-index: 10;
+}
+
+/* ── GLOW DE FOND ──────────────────────────────────────── */
+.stat3d-glow {
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: .22;
+  pointer-events: none;
+  transition: opacity .4s ease;
+}
+
+.stat3d-card:hover .stat3d-glow { opacity: .38; }
+
+.stat3d-glow--green { background: radial-gradient(circle, #27ae60, #2ecc71); }
+.stat3d-glow--blue  { background: radial-gradient(circle, #3A86C4, #5dade2); }
+.stat3d-glow--gold  { background: radial-gradient(circle, #f1c40f, #f39c12); }
+
+/* ── CONTENU INTERNE ────────────────────────────────────── */
+.stat3d-inner {
+  position: relative;
+  z-index: 2;
+  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Ligne du haut : icône + tendance */
+.stat3d-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ── ICÔNE 3D ─────────────────────────────────────────── */
+.stat3d-icon-wrap {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.15),
+    inset 0 -1px 0 rgba(0,0,0,.15),
+    0 4px 12px rgba(0,0,0,.2);
+  transition: transform .3s ease;
+}
+
+.stat3d-card:hover .stat3d-icon-wrap {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.stat3d-icon-wrap--green { background: linear-gradient(135deg, rgba(39,174,96,.3), rgba(46,204,113,.2)); border: 1px solid rgba(39,174,96,.4); }
+.stat3d-icon-wrap--blue  { background: linear-gradient(135deg, rgba(58,134,196,.3), rgba(52,152,219,.2)); border: 1px solid rgba(58,134,196,.4); }
+.stat3d-icon-wrap--gold  { background: linear-gradient(135deg, rgba(241,196,15,.25), rgba(243,156,18,.18)); border: 1px solid rgba(241,196,15,.4); }
+
+.stat3d-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
+  line-height: 1;
+}
+
+/* Anneau pulsant autour de l'icône */
+.stat3d-icon-ring {
+  position: absolute;
+  inset: -5px;
+  border-radius: 18px;
+  border: 1.5px solid rgba(255,255,255,.12);
+  animation: stat3dRingPulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes stat3dRingPulse {
+  0%,100% { transform: scale(1); opacity: .4; }
+  50% { transform: scale(1.12); opacity: .12; }
+}
+
+/* ── TENDANCE ─────────────────────────────────────────── */
+.stat3d-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .72rem;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.stat3d-trend.positive {
+  background: rgba(39,174,96,.12);
+  border: 1px solid rgba(39,174,96,.25);
+  color: #2ecc71;
+}
+
+.stat3d-trend.positive svg { flex-shrink: 0; }
+
+/* ── VALEUR PRINCIPALE ────────────────────────────────── */
+.stat3d-value {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: var(--text, #F2E8CF);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  transition: all .3s ease;
+}
+
+.stat3d-card:hover .stat3d-value {
+  transform: scale(1.06);
+  display: inline-block;
+}
+
+.stat3d-value--sm {
+  font-size: 1.8rem;
+}
+
+/* ── LABEL ────────────────────────────────────────────── */
+.stat3d-label {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--muted, #a8b8a0);
+  margin-top: -4px;
+}
+
+/* ── BARRE DE PROGRESSION ─────────────────────────────── */
+.stat3d-bar-wrap {
+  height: 6px;
+  background: rgba(255,255,255,.07);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 4px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.18);
+}
+
+.stat3d-bar {
+  height: 100%;
+  border-radius: 20px;
+  width: 0%;
+  transition: width 1.4s cubic-bezier(.4,0,.2,1);
+}
+
+.stat3d-bar--green { background: linear-gradient(90deg, #27ae60, #2ecc71); box-shadow: 0 0 8px rgba(39,174,96,.5); }
+.stat3d-bar--blue  { background: linear-gradient(90deg, #3A86C4, #5dade2); box-shadow: 0 0 8px rgba(58,134,196,.5); }
+
+/* ── RING SVG (3e carte) ──────────────────────────────── */
+.stat3d-card--ring .stat3d-inner {
+  align-items: center;
+}
+
+.stat3d-ring-wrap {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto 0;
+}
+
+.stat3d-ring-svg {
+  width: 90px;
+  height: 90px;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.stat3d-ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,.07);
+  stroke-width: 7;
+}
+
+.stat3d-ring-fill {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1);
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.stat3d-ring-fill--gold {
+  stroke: #f1c40f;
+  filter: drop-shadow(0 0 6px rgba(241,196,15,.7));
+}
+
+.stat3d-ring-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.stat3d-pct {
+  font-size: .95rem;
+  font-weight: 800;
+  color: var(--muted, #a8b8a0);
+  line-height: 1;
+}
+
+/* ── PARTICULES ───────────────────────────────────────── */
+.stat3d-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.stat3d-particles span {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.35);
+  animation: stat3dFloat 4s ease-in-out infinite;
+  opacity: 0;
+}
+
+.stat3d-particles span:nth-child(1) { left: 20%; top: 30%; animation-delay: 0s; }
+.stat3d-particles span:nth-child(2) { left: 65%; top: 20%; animation-delay: 1.2s; background: rgba(58,134,196,.6); }
+.stat3d-particles span:nth-child(3) { left: 80%; top: 60%; animation-delay: 2.4s; background: rgba(91,62,150,.6); }
+
+.stat3d-card:hover .stat3d-particles span { animation-play-state: running; }
+
+@keyframes stat3dFloat {
+  0%   { transform: translateY(0) scale(0); opacity: 0; }
+  20%  { opacity: 1; transform: translateY(-8px) scale(1); }
+  80%  { opacity: .6; transform: translateY(-24px) scale(.8); }
+  100% { transform: translateY(-36px) scale(0); opacity: 0; }
+}
+
+/* ── LIGHT MODE ───────────────────────────────────────── */
+[data-theme="light"] .stat3d-card {
+  background: rgba(255,255,255,.92);
+  border-color: rgba(31,61,43,.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    0 4px 8px rgba(31,61,43,.06),
+    0 14px 32px rgba(31,61,43,.1),
+    0 0 0 1px rgba(31,61,43,.07);
+}
+
+[data-theme="light"] .stat3d-value { color: #1F3D2B; }
+[data-theme="light"] .stat3d-bar-wrap { background: rgba(31,61,43,.08); }
+[data-theme="light"] .stat3d-ring-bg { stroke: rgba(31,61,43,.1); }
+
+/* ── RESPONSIVE ───────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .adm-stats-3d-grid { grid-template-columns: 1fr 1fr; }
+  .stat3d-card--ring { grid-column: 1 / -1; max-width: 360px; margin: 0 auto; width: 100%; }
+}
+
+@media (max-width: 768px) {
+  .adm-stats-3d-grid { grid-template-columns: 1fr; }
+  .stat3d-card--ring { grid-column: 1; max-width: 100%; }
+  .stat3d-value { font-size: 2rem; }
+}
 </style>
+
+<!-- ═══════════════════════════════════════════════════════════
+     JS — STAT3D : Compteur animé · Barre · Ring · Tilt 3D
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+'use strict';
+
+/* ══ 1. COMPTEUR ANIMÉ (count-up) ═══════════════════════ */
+function animateCounter(el, target, duration) {
+  if (!el) return;
+  var start = 0;
+  var startTime = null;
+  var isFloat = target % 1 !== 0;
+
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var progress = Math.min((ts - startTime) / duration, 1);
+    // Easing ease-out-cubic
+    var ease = 1 - Math.pow(1 - progress, 3);
+    var current = Math.round(start + (target - start) * ease);
+    el.textContent = current.toLocaleString('fr-FR');
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = isFloat ? target : current.toLocaleString('fr-FR');
+  }
+  requestAnimationFrame(step);
+}
+
+/* ══ 2. BARRE DE PROGRESSION ANIMÉE ══════════════════════ */
+function animateBars() {
+  document.querySelectorAll('.stat3d-bar[data-width]').forEach(function(bar) {
+    var w = parseFloat(bar.getAttribute('data-width')) || 0;
+    setTimeout(function() {
+      bar.style.width = w + '%';
+    }, 300);
+  });
+}
+
+/* ══ 3. RING SVG ANIMÉ ════════════════════════════════════ */
+function animateRings() {
+  document.querySelectorAll('.stat3d-ring-fill[data-pct]').forEach(function(circle) {
+    var pct = parseFloat(circle.getAttribute('data-pct')) || 0;
+    var r = parseFloat(circle.getAttribute('r')) || 32;
+    var circ = 2 * Math.PI * r;
+    var offset = circ - (pct / 100) * circ;
+    circle.setAttribute('stroke-dasharray', circ.toFixed(1));
+    circle.setAttribute('stroke-dashoffset', circ.toFixed(1)); // départ à 0%
+    setTimeout(function() {
+      circle.style.transition = 'stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1)';
+      circle.setAttribute('stroke-dashoffset', offset.toFixed(1));
+    }, 400);
+  });
+}
+
+/* ══ 4. LANCEMENT DES COMPTEURS ══════════════════════════ */
+function launchCounters() {
+  document.querySelectorAll('.stat3d-value[data-target]').forEach(function(el) {
+    var target = parseFloat(el.getAttribute('data-target')) || 0;
+    animateCounter(el, target, 1800);
+  });
+}
+
+/* ══ 5. EFFET TILT 3D AU SURVOL ══════════════════════════ */
+function setupTilt() {
+  document.querySelectorAll('[data-tilt]').forEach(function(card) {
+    var rect, cx, cy;
+
+    card.addEventListener('mouseenter', function() {
+      rect = card.getBoundingClientRect();
+      cx = rect.left + rect.width / 2;
+      cy = rect.top  + rect.height / 2;
+      card.style.transition = 'transform .1s ease, box-shadow .35s ease';
+    });
+
+    card.addEventListener('mousemove', function(e) {
+      var dx = (e.clientX - cx) / (rect.width  / 2);
+      var dy = (e.clientY - cy) / (rect.height / 2);
+      var rx =  dy * -10; // rotation X (haut/bas)
+      var ry =  dx *  10; // rotation Y (gauche/droite)
+      card.style.transform =
+        'translateY(-8px) scale(1.02) perspective(600px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+    });
+
+    card.addEventListener('mouseleave', function() {
+      card.style.transition = 'transform .45s cubic-bezier(.4,0,.2,1), box-shadow .35s ease';
+      card.style.transform = 'translateY(0) scale(1) perspective(600px) rotateX(0deg) rotateY(0deg)';
+    });
+  });
+}
+
+/* ══ 6. INTERSECTION OBSERVER — déclenchement au scroll ═ */
+function initStats3D() {
+  var grid = document.querySelector('.adm-stats-3d-grid');
+  if (!grid) return;
+
+  var launched = false;
+
+  function launch() {
+    if (launched) return;
+    launched = true;
+    launchCounters();
+    animateBars();
+    animateRings();
+    setupTilt();
+  }
+
+  // Observer pour déclencher quand visible
+  if ('IntersectionObserver' in window) {
+    var obs = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting) {
+        launch();
+        obs.disconnect();
+      }
+    }, { threshold: 0.2 });
+    obs.observe(grid);
+  } else {
+    // Fallback : lancement direct
+    setTimeout(launch, 300);
+  }
+}
+
+/* ══ 7. BOUTON AFFICHER/MASQUER LES STATS ════════════════ */
+function setupStatsToggleButton() {
+  var grid = document.querySelector('.adm-stats-3d-grid');
+  if (!grid) return;
+
+  // Créer le bouton toggle s'il n'existe pas
+  if (document.getElementById('stats-toggle-btn')) return;
+
+  var btn = document.createElement('button');
+  btn.id = 'stats-toggle-btn';
+  btn.className = 'stats-toggle-btn';
+  btn.innerHTML =
+    '<svg class="stats-btn-icon stats-btn-icon--show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+      '<polyline points="18 15 12 9 6 15"/>' +
+    '</svg>' +
+    '<svg class="stats-btn-icon stats-btn-icon--hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none">' +
+      '<polyline points="6 9 12 15 18 9"/>' +
+    '</svg>' +
+    '<span class="stats-btn-text">Masquer les statistiques</span>';
+
+  // Insérer le bouton avant la grille
+  grid.parentNode.insertBefore(btn, grid);
+
+  var visible = true;
+  var launched = false;
+
+  btn.addEventListener('click', function() {
+    visible = !visible;
+
+    if (visible) {
+      // Afficher avec animation
+      grid.style.display = 'grid';
+      grid.style.opacity = '0';
+      grid.style.transform = 'translateY(-16px)';
+      requestAnimationFrame(function() {
+        grid.style.transition = 'opacity .45s ease, transform .45s cubic-bezier(.4,0,.2,1)';
+        grid.style.opacity = '1';
+        grid.style.transform = 'translateY(0)';
+      });
+      btn.querySelector('.stats-btn-icon--show').style.display = '';
+      btn.querySelector('.stats-btn-icon--hide').style.display = 'none';
+      btn.querySelector('.stats-btn-text').textContent = 'Masquer les statistiques';
+      btn.classList.remove('stats-toggle-btn--hidden');
+
+      // Relancer les animations si pas encore faites
+      if (!launched) {
+        launched = true;
+        setTimeout(function() {
+          launchCounters();
+          animateBars();
+          animateRings();
+        }, 100);
+      }
+
+    } else {
+      // Masquer avec animation
+      grid.style.transition = 'opacity .35s ease, transform .35s ease';
+      grid.style.opacity = '0';
+      grid.style.transform = 'translateY(-16px)';
+      setTimeout(function() {
+        grid.style.display = 'none';
+        grid.style.transition = '';
+      }, 350);
+      btn.querySelector('.stats-btn-icon--show').style.display = 'none';
+      btn.querySelector('.stats-btn-icon--hide').style.display = '';
+      btn.querySelector('.stats-btn-text').textContent = 'Afficher les statistiques';
+      btn.classList.add('stats-toggle-btn--hidden');
+    }
+  });
+}
+
+/* ══ 8. STYLES DU BOUTON TOGGLE (injectés dynamiquement) ═ */
+(function injectToggleStyles() {
+  var s = document.createElement('style');
+  s.textContent = [
+    '.stats-toggle-btn {',
+    '  display: inline-flex;',
+    '  align-items: center;',
+    '  gap: 8px;',
+    '  padding: 9px 18px;',
+    '  margin-bottom: 12px;',
+    '  background: rgba(255,255,255,.05);',
+    '  border: 1.5px solid rgba(255,255,255,.12);',
+    '  border-radius: 12px;',
+    '  color: var(--text, #F2E8CF);',
+    '  font-size: .84rem;',
+    '  font-weight: 700;',
+    '  font-family: inherit;',
+    '  cursor: pointer;',
+    '  transition: all .3s cubic-bezier(.4,0,.2,1);',
+    '  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 2px 8px rgba(0,0,0,.14);',
+    '  position: relative;',
+    '  overflow: hidden;',
+    '}',
+    '.stats-toggle-btn::before {',
+    '  content: "";',
+    '  position: absolute;',
+    '  inset: 0;',
+    '  background: linear-gradient(135deg, rgba(91,62,150,.0), rgba(58,134,196,.0));',
+    '  transition: background .3s ease;',
+    '}',
+    '.stats-toggle-btn:hover {',
+    '  background: rgba(91,62,150,.15);',
+    '  border-color: var(--violet, #5B3E96);',
+    '  transform: translateY(-2px);',
+    '  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 6px 16px rgba(91,62,150,.25);',
+    '}',
+    '.stats-toggle-btn:active {',
+    '  transform: translateY(0);',
+    '  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 2px 6px rgba(0,0,0,.12);',
+    '}',
+    '.stats-toggle-btn--hidden {',
+    '  border-color: rgba(58,134,196,.3);',
+    '  background: rgba(58,134,196,.08);',
+    '  color: var(--blue, #3A86C4);',
+    '}',
+    '.stats-toggle-btn svg { flex-shrink: 0; transition: transform .3s ease; }',
+    '.stats-toggle-btn:hover svg { transform: scale(1.15); }',
+    '[data-theme="light"] .stats-toggle-btn {',
+    '  background: rgba(255,255,255,.8);',
+    '  border-color: rgba(31,61,43,.12);',
+    '  color: #1F3D2B;',
+    '  box-shadow: 0 2px 8px rgba(31,61,43,.08);',
+    '}',
+    '[data-theme="light"] .stats-toggle-btn:hover {',
+    '  background: rgba(91,62,150,.08);',
+    '  border-color: var(--violet, #5B3E96);',
+    '}',
+  ].join('\n');
+  document.head.appendChild(s);
+})();
+
+/* ══ 9. POINT D'ENTRÉE ═══════════════════════════════════ */
+function boot() {
+  initStats3D();
+  setupStatsToggleButton();
+}
+
+// Écouter le chargement du module admin
+document.addEventListener('adminModuleLoaded', function(e) {
+  if (e.detail && e.detail.moduleName === 'challenges') {
+    setTimeout(boot, 80);
+  }
+});
+
+// Si le DOM est déjà prêt
+if (document.querySelector('.adm-stats-3d-grid')) {
+  setTimeout(boot, 80);
+} else if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(boot, 80);
+  });
+} else {
+  setTimeout(boot, 80);
+}
+
+})();
+</script>

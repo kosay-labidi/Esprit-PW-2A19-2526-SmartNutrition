@@ -483,7 +483,7 @@
   #challenges *::after {
     box-sizing: border-box;
   }
-#challenges {
+  #challenges {
     isolation: isolate;
   }
 
@@ -521,15 +521,19 @@
     }
   }
   @keyframes pulseGlow {
-    0%, 100% {
+    0%,
+    100% {
       box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
     }
     50% {
-      box-shadow: 0 0 40px rgba(102, 126, 234, 0.6), 0 0 60px rgba(0, 212, 255, 0.3);
+      box-shadow:
+        0 0 40px rgba(102, 126, 234, 0.6),
+        0 0 60px rgba(0, 212, 255, 0.3);
     }
   }
   @keyframes float {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateY(0);
     }
     50% {
@@ -545,7 +549,8 @@
     }
   }
   @keyframes borderGlow {
-    0%, 100% {
+    0%,
+    100% {
       border-color: rgba(102, 126, 234, 0.3);
     }
     50% {
@@ -553,7 +558,8 @@
     }
   }
   @keyframes tilt3d {
-    0%, 100% {
+    0%,
+    100% {
       transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
     }
     25% {
@@ -2148,9 +2154,15 @@
     transition: transform 0.3s ease;
     animation: fadeInScale 0.5s ease both;
   }
-  .podium-item:nth-child(1) { animation-delay: 0.1s; }
-  .podium-item:nth-child(2) { animation-delay: 0.2s; }
-  .podium-item:nth-child(3) { animation-delay: 0.3s; }
+  .podium-item:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+  .podium-item:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .podium-item:nth-child(3) {
+    animation-delay: 0.3s;
+  }
 
   .podium-item:hover {
     transform: translateY(-8px) scale(1.06);
@@ -2180,7 +2192,7 @@
   }
 
   .podium-avatar-wrapper::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: -8px;
     border-radius: 50%;
@@ -3253,7 +3265,7 @@
     content: "❌";
   }
 
-/* ═══════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════
     RESPONSIVE - MODERNE & COMPLET
     ═══════════════════════════════════════════════════ */
   @media (max-width: 1400px) {

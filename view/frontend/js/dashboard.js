@@ -72,13 +72,41 @@ function initNavbar() {
 function initMobileMenu() {
   const menuToggle = document.getElementById('menu-toggle');
   const sidebar = document.querySelector('.sidebar-menu');
+  const mobilePanel = document.getElementById('mobileMenuPanel');
+  const mobileOverlay = document.getElementById('mobileMenuOverlay');
+  const mobileClose = document.getElementById('mobileMenuClose');
   
   if (menuToggle) {
     menuToggle.addEventListener('click', () => {
       menuToggle.classList.toggle('active');
-      sidebar?.classList.toggle('mobile-open');
+      mobilePanel?.classList.toggle('active');
+      mobileOverlay?.classList.toggle('active');
     });
   }
+  
+  if (mobileOverlay) {
+    mobileOverlay.addEventListener('click', () => {
+      menuToggle?.classList.remove('active');
+      mobilePanel?.classList.remove('active');
+      mobileOverlay?.classList.remove('active');
+    });
+  }
+  
+  if (mobileClose) {
+    mobileClose.addEventListener('click', () => {
+      menuToggle?.classList.remove('active');
+      mobilePanel?.classList.remove('active');
+      mobileOverlay?.classList.remove('active');
+    });
+  }
+  
+  document.querySelectorAll('.mobile-menu-item[data-module]').forEach(item => {
+    item.addEventListener('click', () => {
+      menuToggle?.classList.remove('active');
+      mobilePanel?.classList.remove('active');
+      mobileOverlay?.classList.remove('active');
+    });
+  });
 }
 
 // Gestion du toggle sidebar

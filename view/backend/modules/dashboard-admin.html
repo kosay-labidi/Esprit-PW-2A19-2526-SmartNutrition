@@ -1,59 +1,114 @@
 <section class="content-section" id="dashboard">
-  <div class="section-header">
-    <h2 class="module-title">📊 Tableau de Bord Admin</h2>
-    <p>Vue d'ensemble des statistiques et activités de GaiaLumen</p>
-  </div>
-
-  <div class="quick-stats">
-    <div class="quick-stat">
-      <div class="quick-stat-value" id="activeToday">-</div>
-      <div class="quick-stat-label">Actifs aujourd'hui</div>
+  <div class="gf-frame gf-frame--hero">
+    <div class="gf-frame__edge gf-frame__edge--top"></div>
+    <div class="gf-frame__edge gf-frame__edge--left"></div>
+    <div class="gf-frame__corner gf-frame__corner--tl"></div>
+    <div class="gf-frame__corner gf-frame__corner--tr"></div>
+    <div class="gf-frame__corner gf-frame__corner--br"></div>
+    <div class="gl-hero__bg-decor" aria-hidden="true">
+      <div class="gl-hero__orb gl-hero__orb--1"></div>
+      <div class="gl-hero__orb gl-hero__orb--2"></div>
+      <div class="gl-hero__orb gl-hero__orb--3"></div>
+      <div class="gl-hero__grid"></div>
     </div>
-    <div class="quick-stat">
-      <div class="quick-stat-value" id="newThisWeek">-</div>
-      <div class="quick-stat-label">Nouveaux cette semaine</div>
-    </div>
-    <div class="quick-stat">
-      <div class="quick-stat-value" id="avgEngagement">-</div>
-      <div class="quick-stat-label">Engagement moyen</div>
-    </div>
-    <div class="quick-stat">
-      <div class="quick-stat-value" id="totalRevenue">-</div>
-      <div class="quick-stat-label">Revenus du mois</div>
-    </div>
-  </div>
-
-  <div class="stats-grid" id="statsGrid">
-    <div class="stat-card">
-      <div class="stat-card-trend">📈</div>
-      <div class="stat-icon">👥</div>
-      <div class="stat-value" id="totalUsers">1,234</div>
-      <div class="stat-label">Utilisateurs</div>
-      <div class="stat-change positive" id="userGrowth">+12% ce mois</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card-trend">🔥</div>
-      <div class="stat-icon">🍽️</div>
-      <div class="stat-value" id="totalMeals">8,567</div>
-      <div class="stat-label">Repas enregistrés</div>
-      <div class="stat-change positive" id="mealGrowth">+8% ce mois</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card-trend">⚡</div>
-      <div class="stat-icon">📅</div>
-      <div class="stat-value" id="totalPlannings">456</div>
-      <div class="stat-label">Plannings actifs</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card-trend">🎯</div>
-      <div class="stat-icon">🏆</div>
-      <div class="stat-value" id="totalChallenges">23</div>
-      <div class="stat-label">Défis actifs</div>
+    <div class="gl-hero__content">
+      <div class="gl-hero__eyebrow">
+        <span class="gl-eyebrow-dot"></span>
+        GaiaLumen · Admin
+      </div>
+      <h2 class="gl-hero__title">
+        Tableau de Bord Admin<br />Vue d'ensemble des statistiques
+      </h2>
+      <p class="gl-hero__subtitle">
+        Surveillance en temps réel des activités et performances de la plateforme
+      </p>
+      <div class="gl-hero__stats" id="admin-global-stats">
+        <div class="gl-stat-card">
+          <div class="gl-stat-card__icon">👥</div>
+          <div class="gl-stat-card__val" id="activeToday">-</div>
+          <div class="gl-stat-card__label">Actifs aujourd'hui</div>
+        </div>
+        <div class="gl-stat-card gl-stat-card--accent">
+          <div class="gl-stat-card__icon">✨</div>
+          <div class="gl-stat-card__val" id="newThisWeek">-</div>
+          <div class="gl-stat-card__label">Nouveaux cette semaine</div>
+        </div>
+        <div class="gl-stat-card">
+          <div class="gl-stat-card__icon">📈</div>
+          <div class="gl-stat-card__val" id="avgEngagement">-</div>
+          <div class="gl-stat-card__label">Engagement moyen</div>
+        </div>
+        <div class="gl-stat-card">
+          <div class="gl-stat-card__icon">💰</div>
+          <div class="gl-stat-card__val" id="totalRevenue">-</div>
+          <div class="gl-stat-card__label">Revenus du mois</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="chart-container">
-    <h3 style="margin-bottom:20px;color:var(--text);">📈 Activité des 7 derniers jours</h3>
+  <div class="gf-frame gf-frame--stats-grid">
+    <div class="gf-frame__edge gf-frame__edge--top"></div>
+    <div class="gf-frame__corner gf-frame__corner--tl"></div>
+    <div class="gf-frame__corner gf-frame__corner--tr"></div>
+    <div class="gf-frame__header">
+      <div class="gf-frame__header-left">
+        <span class="gf-frame__icon">📊</span>
+        <h3 class="gf-frame__title">Statistiques Principales</h3>
+      </div>
+    </div>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card gf-frame">
+        <div class="gf-frame__edge gf-frame__edge--top"></div>
+        <div class="gf-frame__corner gf-frame__corner--tl"></div>
+        <div class="gf-frame__corner gf-frame__corner--tr"></div>
+        <div class="stat-card-trend">📈</div>
+        <div class="stat-icon">👥</div>
+        <div class="stat-value" id="totalUsers">1,234</div>
+        <div class="stat-label">Utilisateurs</div>
+        <div class="stat-change positive" id="userGrowth">+12% ce mois</div>
+      </div>
+      <div class="stat-card gf-frame">
+        <div class="gf-frame__edge gf-frame__edge--top"></div>
+        <div class="gf-frame__corner gf-frame__corner--tl"></div>
+        <div class="gf-frame__corner gf-frame__corner--tr"></div>
+        <div class="stat-card-trend">🔥</div>
+        <div class="stat-icon">🍽️</div>
+        <div class="stat-value" id="totalMeals">8,567</div>
+        <div class="stat-label">Repas enregistrés</div>
+        <div class="stat-change positive" id="mealGrowth">+8% ce mois</div>
+      </div>
+      <div class="stat-card gf-frame">
+        <div class="gf-frame__edge gf-frame__edge--top"></div>
+        <div class="gf-frame__corner gf-frame__corner--tl"></div>
+        <div class="gf-frame__corner gf-frame__corner--tr"></div>
+        <div class="stat-card-trend">⚡</div>
+        <div class="stat-icon">📅</div>
+        <div class="stat-value" id="totalPlannings">456</div>
+        <div class="stat-label">Plannings actifs</div>
+      </div>
+      <div class="stat-card gf-frame">
+        <div class="gf-frame__edge gf-frame__edge--top"></div>
+        <div class="gf-frame__corner gf-frame__corner--tl"></div>
+        <div class="gf-frame__corner gf-frame__corner--tr"></div>
+        <div class="stat-card-trend">🎯</div>
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value" id="totalChallenges">23</div>
+        <div class="stat-label">Défis actifs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gf-frame gf-frame--chart-container">
+    <div class="gf-frame__edge gf-frame__edge--top"></div>
+    <div class="gf-frame__corner gf-frame__corner--tl"></div>
+    <div class="gf-frame__corner gf-frame__corner--tr"></div>
+    <div class="gf-frame__header">
+      <div class="gf-frame__header-left">
+        <span class="gf-frame__icon">📈</span>
+        <h3 class="gf-frame__title">Activité des 7 derniers jours</h3>
+      </div>
+    </div>
     <div style="display:flex;align-items:flex-end;justify-content:space-around;height:200px;">
       <div class="chart-bar" style="height:120px;"><span class="chart-value">120</span><span class="chart-label">Lun</span></div>
       <div class="chart-bar" style="height:150px;"><span class="chart-value">150</span><span class="chart-label">Mar</span></div>
@@ -72,5 +127,116 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Dashboard Admin - gf-frame Styles */
+.gf-frame--hero {
+  padding: 44px 42px;
+  margin-bottom: 22px;
+  background: linear-gradient(135deg, rgba(15, 35, 24, 0.97) 0%, rgba(31, 61, 43, 0.9) 45%, rgba(58, 134, 196, 0.22) 100%);
+  border-color: rgba(58, 134, 196, 0.2);
+}
+
+[data-theme="light"] .gf-frame--hero {
+  background: linear-gradient(135deg, rgba(242, 232, 207, 0.98) 0%, rgba(255, 255, 255, 0.92) 50%, rgba(58, 134, 196, 0.08) 100%);
+}
+
+.gf-frame--stats-grid {
+  margin-bottom: 22px;
+}
+
+.gf-frame--stats-grid .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  padding: 20px;
+}
+
+.gf-frame--stats-grid .stat-card {
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  flex: 1;
+  transition:
+    transform 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.38s ease,
+    border-color 0.3s ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 2px 6px rgba(0, 0, 0, 0.12),
+    0 8px 26px rgba(0, 0, 0, 0.22),
+    0 20px 50px rgba(0, 0, 0, 0.14);
+  animation: borderGlow 4s ease-in-out infinite;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  position: relative;
+}
+
+.gf-frame--stats-grid .stat-card:hover {
+  transform: translateY(-10px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    0 20px 52px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(58, 134, 196, 0.2),
+    var(--glow-primary);
+  border-color: rgba(58, 134, 196, 0.28);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.gf-frame--stats-grid .stat-card:hover .stat-card-trend {
+  transform: scale(1.2);
+}
+
+.gf-frame--stats-grid .stat-value {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1;
+  margin: 8px 0;
+}
+
+.gf-frame--stats-grid .stat-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+
+.gf-frame--stats-grid .stat-change {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.gf-frame--stats-grid .stat-change.positive {
+  background: rgba(39, 174, 96, 0.12);
+  color: #27ae60;
+  border: 1px solid rgba(39, 174, 96, 0.2);
+}
+
+.gf-frame--chart-container {
+  margin-bottom: 0;
+}
+
+.gf-frame--chart-container .gf-frame__header {
+  padding: 16px 20px;
+}
+
+[data-theme="light"] .gf-frame--stats-grid .stat-card {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(31, 61, 43, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 2px 6px rgba(31, 61, 43, 0.05),
+    0 8px 22px rgba(31, 61, 43, 0.1);
 }
 </style>

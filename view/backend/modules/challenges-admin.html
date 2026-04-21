@@ -1,358 +1,1143 @@
 <!-- ═══════════════════════════════════════════════════════════
-     MODULE ADMIN DÉFIS - GaiaLumen Backend
-     Formulaire en haut + Tableau des défis + Tableau des participants
+     MODULE ADMIN DÉFIS — GaiaLumen v4.0
+     3D Frames · Form + Preview · Table Défis · Participants
      ═══════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="../frontend/css/challenges-steakers.css?v=20260415-3">
-<link rel="stylesheet" href="css/challenges-admin.css?v=20260415-3">
+<link rel="stylesheet" href="../frontend/css/challenges-steakers.css?v=20260415-4">
+<link rel="stylesheet" href="css/challenges-admin.css?v=20260415-4">
 
 <section class="content-section" id="challenges">
-  <div class="section-header">
-    <h2 class="module-title">🏆 Gestion des Défis Collaboratifs</h2>
-    <p>Créez et gérez les défis collaboratifs</p>
+
+  <!-- ╔═══════════════════════════════════════════╗
+       ║   HERO HEADER ADMIN — CADRE 3D            ║
+       ╚═══════════════════════════════════════════╝ -->
+  <div class="adm-frame adm-frame--hero">
+    <div class="adm-corner adm-corner--tl"></div>
+    <div class="adm-corner adm-corner--tr"></div>
+    <div class="adm-top-edge"></div>
+    <div class="adm-hero-inner">
+      <div class="adm-hero-left">
+        <div class="adm-hero-eyebrow">
+          <span class="adm-eyebrow-dot"></span>
+          Administration · Défis Collaboratifs
+        </div>
+        <h2 class="adm-hero-title">🏆 Gestion des Défis</h2>
+        <p class="adm-hero-sub">Créez, modifiez et suivez les défis collaboratifs de la plateforme.</p>
+      </div>
+      <!-- Stats rapides hero -->
+      <div class="adm-hero-stats">
+        <div class="adm-stat-pill">
+          <span class="adm-stat-pill__val" id="stat-total-hero">—</span>
+          <span class="adm-stat-pill__lbl">Total</span>
+        </div>
+        <div class="adm-stat-pill adm-stat-pill--accent">
+          <span class="adm-stat-pill__val" id="stat-actif-hero">—</span>
+          <span class="adm-stat-pill__lbl">Actifs</span>
+        </div>
+        <div class="adm-stat-pill">
+          <span class="adm-stat-pill__val" id="stat-part-hero">—</span>
+          <span class="adm-stat-pill__lbl">Participants</span>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Layout: Formulaire (haut) + Tableaux (bas) -->
   <div class="admin-layout">
-    
-    <!-- ══════════════════════════════════════════════════════
-         FORMULAIRE EN HAUT (compact et visible)
-         ══════════════════════════════════════════════════════ -->
-    <div class="form-container-with-preview">
-      <div class="form-panel">
-        <div class="form-panel-header">
-          <h3 id="form-title"><span>➕</span> Nouveau Défi</h3>
-          <button class="btn-reset" onclick="resetForm()" title="Réinitialiser">
-            🔄 Réinitialiser
-          </button>
+
+    <!-- ╔═══════════════════════════════════════════════════════╗
+         ║   SECTION 1 : FORMULAIRE + APERÇU — CADRE 3D         ║
+         ╚═══════════════════════════════════════════════════════╝ -->
+    <div class="adm-frame adm-frame--section">
+      <div class="adm-corner adm-corner--tl"></div>
+      <div class="adm-corner adm-corner--tr"></div>
+      <div class="adm-corner adm-corner--br"></div>
+      <div class="adm-top-edge"></div>
+
+      <!-- Header de section -->
+      <div class="adm-section-header">
+        <div class="adm-section-header__left">
+          <span class="adm-section-icon">✏️</span>
+          <h3 class="adm-section-title" id="form-title">Nouveau Défi</h3>
         </div>
+        <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="resetForm()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Réinitialiser
+        </button>
+      </div>
 
-        <form id="challenge-form" action="challenges/addChallenge.php" method="POST">
-          <input type="hidden" id="challenge-id" name="id">
-          
-          <div class="form-steps-container">
-            <!-- Étape 1: Infos de base -->
-            <div class="form-step active" id="step-1">
-              <h4 class="step-title">1. Informations de base</h4>
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label">Titre du défi <span class="required">*</span></label>
-                  <input type="text" name="titre" id="challenge-titre" class="form-input" placeholder="Ex: Défi Zéro Déchet" required oninput="updatePreview()">
-                  <span class="error-msg" id="error-titre"></span>
+      <div class="form-container-with-preview adm-form-wrap">
+
+        <!-- FORMULAIRE -->
+        <div class="form-panel adm-form-panel">
+          <form id="challenge-form" action="challenges/addChallenge.php" method="POST">
+            <input type="hidden" id="challenge-id" name="id">
+
+            <div class="form-steps-container">
+
+              <!-- Étape 1 -->
+              <div class="adm-step-frame form-step active" id="step-1">
+                <div class="adm-corner adm-corner--tl adm-corner--sm"></div>
+                <div class="adm-corner adm-corner--tr adm-corner--sm"></div>
+                <div class="adm-top-edge adm-top-edge--thin"></div>
+                <h4 class="step-title adm-step-title">
+                  <span class="adm-step-num">1</span>
+                  Informations de base
+                </h4>
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label">Titre du défi <span class="required">*</span></label>
+                    <input type="text" name="titre" id="challenge-titre" class="form-input adm-input" placeholder="Ex: Défi Zéro Déchet" required oninput="updatePreview()">
+                    <span class="error-msg" id="error-titre"></span>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Type de défi <span class="required">*</span></label>
+                    <div class="visual-select-grid">
+                      <label class="visual-option">
+                        <input type="radio" name="type" value="collectif" checked onchange="updatePreview()">
+                        <div class="visual-option-content adm-radio-card">
+                          <span class="icon">👥</span>
+                          <span class="text">Collectif</span>
+                        </div>
+                      </label>
+                      <label class="visual-option">
+                        <input type="radio" name="type" value="individuel" onchange="updatePreview()">
+                        <div class="visual-option-content adm-radio-card">
+                          <span class="icon">👤</span>
+                          <span class="text">Individuel</span>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
                 </div>
-
                 <div class="form-group">
-                  <label class="form-label">Type de défi <span class="required">*</span></label>
-                  <div class="visual-select-grid">
-                    <label class="visual-option">
-                      <input type="radio" name="type" value="collectif" checked onchange="updatePreview()">
-                      <div class="visual-option-content">
-                        <span class="icon">👥</span>
-                        <span class="text">Collectif</span>
-                      </div>
-                    </label>
-                    <label class="visual-option">
-                      <input type="radio" name="type" value="individuel" onchange="updatePreview()">
-                      <div class="visual-option-content">
-                        <span class="icon">👤</span>
-                        <span class="text">Individuel</span>
-                      </div>
-                    </label>
+                  <label class="form-label">Description <span class="required">*</span></label>
+                  <textarea name="description" id="challenge-description" class="form-textarea adm-input" rows="3" maxlength="500" oninput="updateCharCountAdmin(this, 'description-count', 500); updatePreview()" required></textarea>
+                  <div class="char-count-wrapper">
+                    <div class="char-count-bar"><div id="char-count-progress" class="char-count-fill"></div></div>
+                    <span class="char-count-text" id="description-count">0/500</span>
+                  </div>
+                  <span class="error-msg" id="error-description"></span>
+                </div>
+              </div>
+
+              <!-- Étape 2 -->
+              <div class="adm-step-frame form-step" id="step-2">
+                <div class="adm-corner adm-corner--tl adm-corner--sm"></div>
+                <div class="adm-corner adm-corner--tr adm-corner--sm"></div>
+                <div class="adm-top-edge adm-top-edge--thin"></div>
+                <h4 class="step-title adm-step-title">
+                  <span class="adm-step-num">2</span>
+                  Objectifs & Configuration
+                </h4>
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label">Catégorie <span class="required">*</span></label>
+                    <select name="objectif" id="challenge-objectif" class="form-select adm-input" required onchange="updatePreview()">
+                      <option value="dechets">♻️ Déchets</option>
+                      <option value="eau">💧 Eau</option>
+                      <option value="repas">🥗 Repas</option>
+                      <option value="transport">🚲 Transport</option>
+                      <option value="energie">⚡ Énergie</option>
+                      <option value="co2">🌍 CO2</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Objectif cible (%) <span class="required">*</span></label>
+                    <input type="number" name="valeur_cible" id="challenge-valeur" class="form-input adm-input" min="1" max="100" value="50" required oninput="updatePreview()">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Date de début <span class="required">*</span></label>
+                    <input type="date" name="date_debut" id="challenge-date-debut" class="form-input adm-input" required onchange="updatePreview()">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Date de fin <span class="required">*</span></label>
+                    <input type="date" name="date_fin" id="challenge-date-fin" class="form-input adm-input" required onchange="updatePreview()">
                   </div>
                 </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">
-                  Description <span class="required">*</span>
-                </label>
-                <textarea name="description" id="challenge-description" class="form-textarea" rows="3" maxlength="500" oninput="updateCharCountAdmin(this, 'description-count', 500); updatePreview()" required></textarea>
-                <div class="char-count-wrapper">
-                  <div class="char-count-bar"><div id="char-count-progress" class="char-count-fill"></div></div>
-                  <span class="char-count-text" id="description-count">0/500</span>
+              <!-- Étape 3 -->
+              <div class="adm-step-frame form-step" id="step-3">
+                <div class="adm-corner adm-corner--tl adm-corner--sm"></div>
+                <div class="adm-corner adm-corner--tr adm-corner--sm"></div>
+                <div class="adm-top-edge adm-top-edge--thin"></div>
+                <h4 class="step-title adm-step-title">
+                  <span class="adm-step-num">3</span>
+                  Apparence
+                </h4>
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label">Sticker / Icône <span class="required">*</span></label>
+                    <select name="streak_icon" id="challenge-streak-icon" class="form-select adm-input" required onchange="updatePreview()">
+                      <option value="♻️">♻️ Recyclage</option>
+                      <option value="💧">💧 Eau</option>
+                      <option value="🥗">🥗 Repas</option>
+                      <option value="🚲">🚲 Transport</option>
+                      <option value="⚡">⚡ Énergie</option>
+                      <option value="🌍">🌍 Planète</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Statut <span class="required">*</span></label>
+                    <select name="statut" id="challenge-statut" class="form-select adm-input" required onchange="updatePreview()">
+                      <option value="actif">✅ Actif</option>
+                      <option value="termine">📦 Terminé</option>
+                      <option value="futur">🔜 À venir</option>
+                    </select>
+                  </div>
                 </div>
-                <span class="error-msg" id="error-description"></span>
-              </div>
-            </div>
-
-            <!-- Étape 2: Objectifs et Dates -->
-            <div class="form-step" id="step-2">
-              <h4 class="step-title">2. Objectifs & Configuration</h4>
-              <div class="form-grid-2">
                 <div class="form-group">
-                  <label class="form-label">Catégorie <span class="required">*</span></label>
-                  <select name="objectif" id="challenge-objectif" class="form-select" required onchange="updatePreview()">
-                    <option value="dechets">♻️ Déchets</option>
-                    <option value="eau">💧 Eau</option>
-                    <option value="repas">🥗 Repas</option>
-                    <option value="transport">🚲 Transport</option>
-                    <option value="energie">⚡ Énergie</option>
-                    <option value="co2">🌍 CO2</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Objectif cible (%) <span class="required">*</span></label>
-                  <input type="number" name="valeur_cible" id="challenge-valeur" class="form-input" min="1" max="100" value="50" required oninput="updatePreview()">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Date de début <span class="required">*</span></label>
-                  <input type="date" name="date_debut" id="challenge-date-debut" class="form-input" required onchange="updatePreview()">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Date de fin <span class="required">*</span></label>
-                  <input type="date" name="date_fin" id="challenge-date-fin" class="form-input" required onchange="updatePreview()">
+                  <label class="form-label">Image (URL)</label>
+                  <input type="url" name="image" id="challenge-image" class="form-input adm-input" placeholder="https://…" oninput="updatePreview()">
                 </div>
               </div>
             </div>
 
-            <!-- Étape 3: Apparence -->
-            <div class="form-step" id="step-3">
-              <h4 class="step-title">3. Apparence</h4>
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label">Sticker / Icône <span class="required">*</span></label>
-                  <select name="streak_icon" id="challenge-streak-icon" class="form-select" required onchange="updatePreview()">
-                    <option value="♻️">♻️ Recyclage</option>
-                    <option value="💧">💧 Eau</option>
-                    <option value="🥗">🥗 Repas</option>
-                    <option value="🚲">🚲 Transport</option>
-                    <option value="⚡">⚡ Énergie</option>
-                    <option value="🌍">🌍 Planète</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Statut <span class="required">*</span></label>
-                  <select name="statut" id="challenge-statut" class="form-select" required onchange="updatePreview()">
-                    <option value="actif">✅ Actif</option>
-                    <option value="termine">📦 Terminé</option>
-                    <option value="futur">🔜 À venir</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label class="form-label">Image (URL)</label>
-                <input type="url" name="image" id="challenge-image" class="form-input" placeholder="https://..." oninput="updatePreview()">
-              </div>
+            <!-- Actions formulaire -->
+            <div class="form-footer-actions adm-form-actions">
+              <button type="button" class="adm-btn adm-btn--ghost" onclick="resetForm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Annuler
+              </button>
+              <button type="submit" class="adm-btn adm-btn--primary" id="form-submit-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Publier le Défi
+              </button>
             </div>
-          </div>
-
-          <div class="form-footer-actions">
-            <button type="button" class="btn btn-secondary" onclick="resetForm()">❌ Annuler</button>
-            <button type="submit" class="btn btn-primary" id="form-submit-btn">🚀 Publier le Défi</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Preview Card (Live) -->
-      <div class="preview-panel">
-        <div class="preview-header">
-          <h4>👁️ Aperçu en temps réel</h4>
-          <p>Voici comment les utilisateurs verront le défi</p>
+          </form>
         </div>
-        <div class="challenge-preview-card" id="challenge-preview">
-          <div class="preview-image" id="preview-img-container">
-            <span class="preview-category-badge" id="preview-category">Catégorie</span>
-            <span class="preview-icon-large" id="preview-icon">♻️</span>
-          </div>
-          <div class="preview-body">
-            <div class="preview-type" id="preview-type-label">👥 Collectif</div>
-            <h3 class="preview-title" id="preview-title">Titre du défi</h3>
-            <p class="preview-desc" id="preview-desc">La description apparaîtra ici...</p>
-            <div class="preview-stats">
-              <div class="preview-stat">
-                <span class="label">Objectif</span>
-                <span class="value" id="preview-target">50%</span>
+
+        <!-- ╔══════════════════════════════╗
+             ║  APERÇU LIVE — CADRE 3D     ║
+             ╚══════════════════════════════╝ -->
+        <div class="preview-panel">
+          <div class="adm-frame adm-frame--preview">
+            <div class="adm-corner adm-corner--tl adm-corner--accent"></div>
+            <div class="adm-corner adm-corner--tr adm-corner--accent"></div>
+            <div class="adm-corner adm-corner--br adm-corner--accent"></div>
+            <div class="adm-top-edge adm-top-edge--accent"></div>
+            <div class="adm-preview-header">
+              <div class="adm-preview-live-dot">
+                <span></span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
               </div>
-              <div class="preview-stat">
-                <span class="label">Fin</span>
-                <span class="value" id="preview-date">-</span>
-              </div>
+              <h4 class="adm-preview-title">Aperçu en temps réel</h4>
+              <p class="adm-preview-sub">Vue utilisateur</p>
             </div>
-            <div class="preview-progress-bar">
-              <div class="bar-fill" style="width: 30%;"></div>
+            <div class="adm-preview-body">
+              <div class="challenge-preview-card" id="challenge-preview">
+                <div class="preview-image" id="preview-img-container">
+                  <span class="preview-category-badge" id="preview-category">Catégorie</span>
+                  <span class="preview-icon-large" id="preview-icon">♻️</span>
+                </div>
+                <div class="preview-body">
+                  <div class="preview-type" id="preview-type-label">👥 Collectif</div>
+                  <h3 class="preview-title" id="preview-title">Titre du défi</h3>
+                  <p class="preview-desc" id="preview-desc">La description apparaîtra ici...</p>
+                  <div class="preview-stats">
+                    <div class="preview-stat">
+                      <span class="label">Objectif</span>
+                      <span class="value" id="preview-target">50%</span>
+                    </div>
+                    <div class="preview-stat">
+                      <span class="label">Fin</span>
+                      <span class="value" id="preview-date">-</span>
+                    </div>
+                  </div>
+                  <div class="preview-progress-bar">
+                    <div class="bar-fill" style="width:30%"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
+    <!-- /FORMULAIRE + APERÇU -->
 
-    <!-- ══════════════════════════════════════════════════════
-         TABLEAU DES DÉFIS
-         ══════════════════════════════════════════════════════ -->
-    <div class="table-panel">
-      
-      <!-- Statistiques rapides (Metric Cards) -->
-      <div class="quick-stats-grid">
-        <div class="metric-card" style="--accent: #A8B8A0;">
-          <div class="metric-icon">🏆</div>
-          <div class="metric-content">
-            <div class="metric-value">28</div>
+
+    <!-- ╔═══════════════════════════════════════════════════════╗
+         ║   SECTION 2 : MÉTRIQUES — 3 CADRES 3D                ║
+         ╚═══════════════════════════════════════════════════════╝ -->
+    <div class="adm-metrics-grid">
+
+      <div class="adm-frame adm-frame--metric" style="--metric-color: #A8B8A0;">
+        <div class="adm-corner adm-corner--tl"></div>
+        <div class="adm-corner adm-corner--tr"></div>
+        <div class="adm-top-edge"></div>
+        <div class="adm-metric-inner">
+          <div class="adm-metric-icon">🏆</div>
+          <div class="adm-metric-content">
+            <div class="metric-value" id="metric-active">28</div>
             <div class="metric-label">Défis Actifs</div>
             <div class="metric-trend positive">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
               <span>+3</span> ce mois
             </div>
           </div>
-        </div>
-        
-        <div class="metric-card" style="--accent: #E8DCC4;">
-          <div class="metric-icon">👥</div>
-          <div class="metric-content">
-            <div class="metric-value">1,847</div>
-            <div class="metric-label">Participants</div>
-            <div class="metric-trend positive">
-              <span>+12%</span> vs last week
-            </div>
-          </div>
-        </div>
-        
-        <div class="metric-card" style="--accent: #4CAF50;">
-          <div class="metric-icon">🎯</div>
-          <div class="metric-content">
-            <div class="metric-value">82%</div>
-            <div class="metric-label">Taux de Complétion</div>
-            <div class="metric-trend positive">
-              <span>+5%</span> progress
-            </div>
-          </div>
+          <div class="adm-metric-orb"></div>
         </div>
       </div>
 
-      <!-- Filtres -->
-      <div class="table-filters">
-        <input 
-          type="text" 
-          class="search-input-admin" 
-          id="search-input-admin" 
-          placeholder="🔍 Rechercher..."
-          onkeyup="searchChallengesAdmin()">
-        
-        <select class="form-select" id="status-filter-admin" onchange="filterChallengesAdmin()" style="background: rgba(232, 220, 196, 0.15); color: #E8DCC4; border: 2px solid rgba(232, 220, 196, 0.3);">
+      <div class="adm-frame adm-frame--metric" style="--metric-color: #E8DCC4;">
+        <div class="adm-corner adm-corner--tl"></div>
+        <div class="adm-corner adm-corner--tr"></div>
+        <div class="adm-top-edge"></div>
+        <div class="adm-metric-inner">
+          <div class="adm-metric-icon">👥</div>
+          <div class="adm-metric-content">
+            <div class="metric-value" id="metric-participants">1 847</div>
+            <div class="metric-label">Participants</div>
+            <div class="metric-trend positive">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+              <span>+12%</span> vs semaine
+            </div>
+          </div>
+          <div class="adm-metric-orb"></div>
+        </div>
+      </div>
+
+      <div class="adm-frame adm-frame--metric" style="--metric-color: #4CAF50;">
+        <div class="adm-corner adm-corner--tl"></div>
+        <div class="adm-corner adm-corner--tr"></div>
+        <div class="adm-top-edge"></div>
+        <div class="adm-metric-inner">
+          <div class="adm-metric-icon">🎯</div>
+          <div class="adm-metric-content">
+            <div class="metric-value" id="metric-completion">82%</div>
+            <div class="metric-label">Taux de Complétion</div>
+            <div class="metric-trend positive">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+              <span>+5%</span> progress
+            </div>
+          </div>
+          <div class="adm-metric-orb"></div>
+        </div>
+      </div>
+
+    </div>
+    <!-- /MÉTRIQUES -->
+
+
+    <!-- ╔═══════════════════════════════════════════════════════╗
+         ║   SECTION 3 : TABLEAU DES DÉFIS — CADRE 3D           ║
+         ╚═══════════════════════════════════════════════════════╝ -->
+    <div class="adm-frame adm-frame--section table-panel">
+      <div class="adm-corner adm-corner--tl"></div>
+      <div class="adm-corner adm-corner--tr"></div>
+      <div class="adm-corner adm-corner--br"></div>
+      <div class="adm-top-edge"></div>
+
+      <div class="adm-section-header">
+        <div class="adm-section-header__left">
+          <span class="adm-section-icon">📋</span>
+          <h3 class="adm-section-title">Liste des Défis</h3>
+          <span class="adm-section-badge" id="challenges-count-badge">—</span>
+        </div>
+        <div class="adm-section-header__actions">
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="refreshTableAdmin()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtres table -->
+      <div class="adm-table-filters">
+        <div class="adm-search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="adm-search" id="search-input-admin" placeholder="Rechercher un défi…" onkeyup="searchChallengesAdmin()">
+        </div>
+        <select class="adm-select" id="status-filter-admin" onchange="filterChallengesAdmin()">
           <option value="">Tous statuts</option>
           <option value="actif">✅ Actif</option>
           <option value="termine">📦 Terminé</option>
           <option value="futur">🔜 À venir</option>
         </select>
-
-        <button class="btn btn-secondary btn-sm" onclick="refreshTableAdmin()">
-          🔄
-        </button>
       </div>
 
-      <div class="table-container-admin">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Défi</th>
-              <th>Type</th>
-              <th>Objectif</th>
-              <th>Progression</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="challenges-tbody">
-            <!-- Les défis chargés depuis la base de données apparaîtront ici -->
-          </tbody>
-        </table>
+      <!-- Table wrapper 3D -->
+      <div class="adm-table-3d-wrap">
+        <div class="adm-table-3d-inner table-container-admin">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Défi</th>
+                <th>Type</th>
+                <th>Objectif</th>
+                <th>Progression</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="challenges-tbody">
+              <tr>
+                <td colspan="6" class="adm-table-loading">
+                  <div class="adm-table-empty-icon">⏳</div>
+                  Chargement des défis…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Pagination -->
-      <div class="table-pagination" style="display: none;">
-        <div class="pagination-info">
-          Affichage de 1 à 3 sur 28 défis
-        </div>
+      <div class="table-pagination adm-pagination" style="display:none">
+        <div class="pagination-info">Affichage de 1 à 3 sur 28 défis</div>
         <div class="pagination-controls">
-          <button class="btn btn-sm" disabled>← Précédent</button>
-          <button class="btn btn-sm">Suivant →</button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" disabled>← Précédent</button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm">Suivant →</button>
         </div>
       </div>
     </div>
+    <!-- /TABLEAU DÉFIS -->
 
-    <!-- ══════════════════════════════════════════════════════
-         TABLEAU DES PARTICIPANTS
-         ══════════════════════════════════════════════════════ -->
-    <div class="participants-section">
-      <div class="participants-header">
-        <h3>👥 Gestion des Participants</h3>
-        <div class="participants-stats">
-          <div class="participant-stat">
-            <div class="participant-stat-value" id="participants-total">-</div>
-            <div class="participant-stat-label">Total</div>
+
+    <!-- ╔═══════════════════════════════════════════════════════╗
+         ║   SECTION 4 : PARTICIPANTS — CADRE 3D                 ║
+         ╚═══════════════════════════════════════════════════════╝ -->
+    <div class="adm-frame adm-frame--section participants-section">
+      <div class="adm-corner adm-corner--tl"></div>
+      <div class="adm-corner adm-corner--tr"></div>
+      <div class="adm-corner adm-corner--br"></div>
+      <div class="adm-top-edge adm-top-edge--accent"></div>
+
+      <!-- Header participants avec mini stats 3D -->
+      <div class="adm-section-header adm-section-header--participants">
+        <div class="adm-section-header__left">
+          <span class="adm-section-icon">👥</span>
+          <h3 class="adm-section-title">Gestion des Participants</h3>
+        </div>
+        <!-- Mini stat pills 3D -->
+        <div class="adm-mini-stats">
+          <div class="adm-mini-stat">
+            <span class="adm-mini-stat__val" id="participants-total">—</span>
+            <span class="adm-mini-stat__lbl">Total</span>
           </div>
-          <div class="participant-stat">
-            <div class="participant-stat-value" id="participants-active">-</div>
-            <div class="participant-stat-label">Actifs</div>
+          <div class="adm-mini-stat adm-mini-stat--accent">
+            <span class="adm-mini-stat__val" id="participants-active">—</span>
+            <span class="adm-mini-stat__lbl">Actifs</span>
           </div>
-          <div class="participant-stat">
-            <div class="participant-stat-value" id="participants-engagement">-</div>
-            <div class="participant-stat-label">Engagement</div>
+          <div class="adm-mini-stat">
+            <span class="adm-mini-stat__val" id="participants-engagement">—</span>
+            <span class="adm-mini-stat__lbl">Engagement</span>
           </div>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="exportParticipants()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exporter
+          </button>
         </div>
       </div>
 
       <!-- Filtres participants -->
-      <div class="participants-filters">
-        <input 
-          type="text" 
-          class="search-input-admin" 
-          id="search-participants" 
-          placeholder="🔍 Rechercher un participant..."
-          onkeyup="searchParticipants()">
-        
-        <select class="form-select" id="challenge-filter" onchange="filterParticipantsByChallenge()" style="background: rgba(232, 220, 196, 0.15); color: #E8DCC4; border: 2px solid rgba(232, 220, 196, 0.3);">
+      <div class="adm-table-filters adm-table-filters--part">
+        <div class="adm-search-wrap" style="flex:1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="adm-search" id="search-participants" placeholder="Rechercher un participant…" onkeyup="searchParticipants()">
+        </div>
+        <select class="adm-select" id="challenge-filter" onchange="filterParticipantsByChallenge()">
           <option value="">Tous les défis</option>
         </select>
-
-        <select class="form-select" id="progress-filter" onchange="filterParticipantsByProgress()" style="background: rgba(232, 220, 196, 0.15); color: #E8DCC4; border: 2px solid rgba(232, 220, 196, 0.3);">
+        <select class="adm-select" id="progress-filter" onchange="filterParticipantsByProgress()">
           <option value="">Toutes progressions</option>
-          <option value="low">0-30%</option>
-          <option value="medium">31-70%</option>
-          <option value="high">71-100%</option>
+          <option value="low">0–30%</option>
+          <option value="medium">31–70%</option>
+          <option value="high">71–100%</option>
         </select>
-
-        <button class="btn btn-secondary btn-sm" onclick="exportParticipants()">
-          📥 Exporter
-        </button>
       </div>
 
-      <!-- Tableau participants -->
-      <div class="participants-table-container">
-        <table class="participants-table">
-          <thead>
-            <tr>
-              <th>Participant</th>
-              <th>Défi</th>
-              <th>Progression</th>
-              <th>Objectif</th>
-              <th>Date inscription</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="participants-tbody">
-            <tr>
-              <td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">
-                <div style="font-size:2rem;margin-bottom:10px;">⏳</div>
-                Chargement des participants...
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Table participants wrapper 3D -->
+      <div class="adm-table-3d-wrap">
+        <div class="adm-table-3d-inner participants-table-container">
+          <table class="participants-table">
+            <thead>
+              <tr>
+                <th>Participant</th>
+                <th>Défi</th>
+                <th>Progression</th>
+                <th>Objectif</th>
+                <th>Date inscription</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="participants-tbody">
+              <tr>
+                <td colspan="7" class="adm-table-loading">
+                  <div class="adm-table-empty-icon">⏳</div>
+                  Chargement des participants…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Pagination participants -->
-      <div class="table-pagination">
+      <div class="table-pagination adm-pagination">
         <div class="pagination-info" id="participants-pagination-info">Affichage de 0 à 0 sur 0 participants</div>
         <div class="pagination-controls">
-          <button class="btn btn-sm" disabled>← Précédent</button>
-          <button class="btn btn-sm">Suivant →</button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" disabled>← Précédent</button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm">Suivant →</button>
         </div>
       </div>
     </div>
+    <!-- /PARTICIPANTS -->
+
   </div>
 </section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     CSS 3D FRAMES — MODULE ADMIN CHALLENGES
+     ═══════════════════════════════════════════════════════════ -->
+<style>
+/* ── RESET ─────────────────────────────────────────────── */
+#challenges *, #challenges *::before, #challenges *::after { box-sizing: border-box; }
+
+/* ══════════════════════════════════════════════════════════
+   SYSTÈME ADM-FRAME — Cadres 3D admin
+   ══════════════════════════════════════════════════════════ */
+.adm-frame {
+  position: relative;
+  border-radius: 20px;
+  background: rgba(255,255,255,.028);
+  border: 1px solid rgba(255,255,255,.08);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(0,0,0,.26),
+    0 4px 6px  rgba(0,0,0,.14),
+    0 12px 28px rgba(0,0,0,.22),
+    0 28px 60px rgba(0,0,0,.14),
+    0 0 0 1px  rgba(255,255,255,.05);
+  margin-bottom: 22px;
+  transition: box-shadow .32s ease;
+}
+
+/* Coin décoratif TL (::after) */
+.adm-corner {
+  position: absolute;
+  width: 13px; height: 13px;
+  z-index: 11;
+  pointer-events: none;
+}
+.adm-corner::before, .adm-corner::after {
+  content: '';
+  position: absolute;
+  background: rgba(58,134,196,.55);
+}
+.adm-corner--tl { top:0;left:0; }
+.adm-corner--tl::before { top:0;left:0;width:13px;height:1.5px; }
+.adm-corner--tl::after  { top:0;left:0;width:1.5px;height:13px; }
+.adm-corner--tr { top:0;right:0; }
+.adm-corner--tr::before { top:0;right:0;width:13px;height:1.5px; }
+.adm-corner--tr::after  { top:0;right:0;width:1.5px;height:13px; }
+.adm-corner--br { bottom:0;right:0; }
+.adm-corner--br::before { bottom:0;right:0;width:13px;height:1.5px; }
+.adm-corner--br::after  { bottom:0;right:0;width:1.5px;height:13px; }
+
+.adm-corner--sm { width:9px; height:9px; }
+.adm-corner--accent::before, .adm-corner--accent::after { background: var(--violet,#5B3E96); }
+
+/* Bord supérieur lumineux */
+.adm-top-edge {
+  position: absolute;
+  top:0; left:18px; right:18px; height:1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.28) 30%,
+    rgba(255,255,255,.48) 50%,
+    rgba(255,255,255,.28) 70%,
+    transparent);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.adm-top-edge--thin { left:12px; right:12px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.18) 50%, transparent); }
+.adm-top-edge--accent {
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(91,62,150,.6) 20%,
+    rgba(58,134,196,.85) 50%,
+    rgba(91,62,150,.6) 80%,
+    transparent);
+}
+
+/* Light mode */
+[data-theme="light"] .adm-frame {
+  background: rgba(255,255,255,.9);
+  border-color: rgba(31,61,43,.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 -1px 0 rgba(31,61,43,.05),
+    0 4px 6px rgba(31,61,43,.05),
+    0 12px 28px rgba(31,61,43,.09),
+    0 28px 60px rgba(31,61,43,.07),
+    0 0 0 1px rgba(31,61,43,.06);
+}
+
+/* ── HERO FRAME ─────────────────────────────────────────── */
+.adm-frame--hero {
+  padding: 36px 40px;
+  background: linear-gradient(135deg,
+    rgba(10,20,14,.97) 0%,
+    rgba(20,50,30,.92) 40%,
+    rgba(58,134,196,.2) 100%);
+  border-color: rgba(58,134,196,.18);
+  margin-bottom: 22px;
+}
+
+.adm-hero-inner {
+  position: relative; z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.adm-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--blue,#3A86C4);
+  margin-bottom: 12px;
+  padding: 5px 13px;
+  background: rgba(58,134,196,.12);
+  border: 1px solid rgba(58,134,196,.24);
+  border-radius: 50px;
+}
+
+.adm-eyebrow-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--blue,#3A86C4);
+  animation: admDot 2s infinite;
+}
+@keyframes admDot { 0%,100%{opacity:1}50%{opacity:.3;transform:scale(1.5)} }
+
+.adm-hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, var(--text,#F2E8CF) 0%, var(--blue,#3A86C4) 55%, var(--violet,#5B3E96) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.adm-hero-sub { color: var(--muted,#a8b8a0); font-size: .92rem; line-height: 1.7; max-width: 500px; }
+
+.adm-hero-stats {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.adm-stat-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 18px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 2px 8px rgba(0,0,0,.2);
+  min-width: 76px;
+  transition: all .3s ease;
+}
+.adm-stat-pill:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 8px 20px rgba(58,134,196,.18); border-color: rgba(58,134,196,.3); }
+.adm-stat-pill--accent { background: linear-gradient(135deg,rgba(91,62,150,.2),rgba(58,134,196,.2)); border-color: rgba(91,62,150,.38); }
+.adm-stat-pill__val { font-size: 1.5rem; font-weight: 900; color: var(--text,#F2E8CF); line-height:1; }
+.adm-stat-pill__lbl { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing:1px; color: var(--muted,#a8b8a0); }
+
+/* ── SECTION HEADER interne ─────────────────────────────── */
+.adm-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+[data-theme="light"] .adm-section-header { border-bottom-color: rgba(31,61,43,.07); }
+
+.adm-section-header__left { display: flex; align-items: center; gap: 9px; }
+.adm-section-header__actions { display: flex; gap: 8px; align-items: center; }
+.adm-section-icon { font-size: 1.1rem; }
+
+.adm-section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.12rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text,#F2E8CF);
+}
+
+.adm-section-badge {
+  padding: 3px 9px;
+  background: rgba(58,134,196,.12);
+  border: 1px solid rgba(58,134,196,.24);
+  border-radius: 50px;
+  font-size: .68rem;
+  font-weight: 800;
+  color: var(--blue,#3A86C4);
+}
+
+/* ── FORM WRAPPER ──────────────────────────────────────── */
+.adm-form-wrap { padding: 20px; }
+.adm-form-panel { }
+
+/* Steps 3D */
+.adm-step-frame {
+  position: relative;
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 -1px 0 rgba(0,0,0,.15),
+    0 3px 8px rgba(0,0,0,.1);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+[data-theme="light"] .adm-step-frame {
+  background: rgba(31,61,43,.03);
+  border-color: rgba(31,61,43,.08);
+}
+
+.adm-step-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .88rem;
+  font-weight: 800;
+  color: var(--muted,#a8b8a0);
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.adm-step-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--violet,#5B3E96), var(--blue,#3A86C4));
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(91,62,150,.4);
+}
+
+/* Inputs 3D */
+.adm-input {
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,.14),
+    inset 0 1px 0 rgba(0,0,0,.08),
+    0 1px 0 rgba(255,255,255,.05) !important;
+  transition: all .28s ease !important;
+}
+
+.adm-input:focus {
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,.08),
+    0 0 0 3px rgba(58,134,196,.14),
+    0 4px 12px rgba(58,134,196,.1) !important;
+}
+
+/* Radio cards 3D */
+.adm-radio-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset 0 -1px 0 rgba(0,0,0,.1),
+    0 2px 6px rgba(0,0,0,.12) !important;
+  transition: all .25s ease !important;
+}
+
+.visual-option input:checked + .adm-radio-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 4px 12px rgba(91,62,150,.3),
+    0 0 0 1px rgba(91,62,150,.5) !important;
+}
+
+/* Form actions */
+.adm-form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  margin-top: 6px;
+}
+
+/* ── PREVIEW FRAME ─────────────────────────────────────── */
+.adm-frame--preview {
+  background: rgba(10,20,14,.85);
+  border-color: rgba(91,62,150,.3);
+  margin-bottom: 0;
+  height: 100%;
+}
+
+.adm-preview-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(91,62,150,.15);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.adm-preview-live-dot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .62rem;
+  font-weight: 800;
+  color: #27ae60;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.adm-preview-live-dot span {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #27ae60;
+  animation: livePulse 1.5s infinite;
+}
+
+@keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 3px rgba(39,174,96,.5)}50%{opacity:.4;box-shadow:0 0 8px rgba(39,174,96,.8)} }
+
+.adm-preview-title { font-size: .95rem; font-weight: 700; margin: 0; color: var(--text,#F2E8CF); }
+.adm-preview-sub { font-size: .72rem; color: var(--muted,#a8b8a0); margin: 0; }
+
+.adm-preview-body { padding: 14px; }
+
+/* ── METRICS GRID ──────────────────────────────────────── */
+.adm-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.adm-frame--metric {
+  padding: 0;
+  margin-bottom: 0;
+  cursor: default;
+}
+
+.adm-metric-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Bande gauche colorée */
+.adm-frame--metric::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 3px;
+  background: var(--metric-color, var(--violet,#5B3E96));
+  z-index: 5;
+  border-radius: 0;
+  opacity: .8;
+}
+
+.adm-metric-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.3));
+}
+
+.adm-metric-content { flex: 1; }
+
+/* Orbe décoratif */
+.adm-metric-orb {
+  position: absolute;
+  right: -20px; top: -20px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.04), transparent);
+  pointer-events: none;
+}
+
+.adm-frame--metric .metric-value {
+  font-size: 1.65rem;
+  font-weight: 900;
+  color: var(--text,#F2E8CF);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.adm-frame--metric .metric-label {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--muted,#a8b8a0);
+  margin-bottom: 6px;
+}
+
+.adm-frame--metric .metric-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--muted,#a8b8a0);
+}
+
+.adm-frame--metric .metric-trend.positive { color: #27ae60; }
+.adm-frame--metric .metric-trend.positive span { font-weight: 800; }
+
+.adm-frame--metric:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 -1px 0 rgba(0,0,0,.26),
+    0 8px 16px rgba(0,0,0,.18),
+    0 20px 44px rgba(0,0,0,.26),
+    0 0 0 1px rgba(58,134,196,.14) !important;
+}
+
+/* ── FILTRES TABLE ─────────────────────────────────────── */
+.adm-table-filters {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+.adm-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.adm-search-wrap svg {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted,#a8b8a0);
+  pointer-events: none;
+}
+
+.adm-search {
+  width: 100%;
+  padding: 9px 14px 9px 36px;
+  background: rgba(0,0,0,.14);
+  border: 1.5px solid rgba(255,255,255,.08);
+  border-radius: 11px;
+  color: var(--text,#F2E8CF);
+  font-size: .86rem;
+  font-family: inherit;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.12), inset 0 1px 0 rgba(0,0,0,.06), 0 1px 0 rgba(255,255,255,.04);
+  transition: all .28s ease;
+}
+
+.adm-search:focus {
+  outline: none;
+  border-color: var(--blue,#3A86C4);
+  background: rgba(58,134,196,.07);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.08), 0 0 0 3px rgba(58,134,196,.12), 0 4px 12px rgba(58,134,196,.1);
+}
+
+.adm-select {
+  padding: 9px 13px;
+  background: rgba(0,0,0,.14);
+  border: 1.5px solid rgba(255,255,255,.08);
+  border-radius: 11px;
+  color: var(--text,#F2E8CF);
+  font-size: .84rem;
+  font-family: inherit;
+  cursor: pointer;
+  min-width: 148px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.12), 0 1px 0 rgba(255,255,255,.04);
+  transition: all .28s ease;
+}
+
+.adm-select:focus { outline: none; border-color: var(--violet,#5B3E96); box-shadow: inset 0 1px 3px rgba(0,0,0,.08), 0 0 0 3px rgba(91,62,150,.1); }
+
+[data-theme="light"] .adm-search, [data-theme="light"] .adm-select {
+  background: rgba(255,255,255,.8);
+  border-color: rgba(31,61,43,.12);
+  box-shadow: inset 0 2px 4px rgba(31,61,43,.06), 0 1px 0 rgba(255,255,255,.9);
+}
+
+/* ── TABLE 3D ──────────────────────────────────────────── */
+.adm-table-3d-wrap {
+  margin: 0 20px 16px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset 0 -1px 0 rgba(0,0,0,.18),
+    0 4px 8px rgba(0,0,0,.14),
+    0 12px 28px rgba(0,0,0,.18);
+}
+
+[data-theme="light"] .adm-table-3d-wrap {
+  border-color: rgba(31,61,43,.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 8px rgba(31,61,43,.06), 0 12px 28px rgba(31,61,43,.08);
+}
+
+.adm-table-3d-inner { overflow-x: auto; }
+
+.adm-table-loading {
+  text-align: center;
+  padding: 36px;
+  color: var(--muted,#a8b8a0);
+}
+
+.adm-table-empty-icon { font-size: 1.8rem; margin-bottom: 8px; opacity: .5; }
+
+/* ── PARTICIPANTS HEADER ────────────────────────────────── */
+.adm-section-header--participants { flex-wrap: wrap; gap: 14px; }
+
+.adm-mini-stats {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.adm-mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 2px 6px rgba(0,0,0,.12);
+  min-width: 60px;
+  transition: all .25s ease;
+}
+
+.adm-mini-stat:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 6px 14px rgba(58,134,196,.15); }
+.adm-mini-stat--accent { background: linear-gradient(135deg,rgba(91,62,150,.18),rgba(58,134,196,.18)); border-color: rgba(91,62,150,.32); }
+.adm-mini-stat__val { font-size: 1.1rem; font-weight: 900; color: var(--text,#F2E8CF); line-height:1; }
+.adm-mini-stat__lbl { font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted,#a8b8a0); }
+
+/* ── PAGINATION ────────────────────────────────────────── */
+.adm-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  font-size: .78rem;
+  color: var(--muted,#a8b8a0);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+[data-theme="light"] .adm-pagination { border-top-color: rgba(31,61,43,.07); }
+
+.adm-pagination .pagination-controls { display: flex; gap: 8px; }
+
+/* ── BOUTONS 3D ────────────────────────────────────────── */
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 11px;
+  font-size: .85rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .28s cubic-bezier(.4,0,.2,1);
+  white-space: nowrap;
+}
+
+.adm-btn--primary {
+  background: linear-gradient(135deg, var(--violet,#5B3E96), var(--blue,#3A86C4));
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 4px 0 rgba(0,0,0,.28),
+    0 8px 20px rgba(91,62,150,.4);
+}
+.adm-btn--primary:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 7px 0 rgba(0,0,0,.22),
+    0 14px 28px rgba(91,62,150,.55);
+}
+.adm-btn--primary:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.1),
+    0 2px 0 rgba(0,0,0,.28),
+    0 4px 10px rgba(91,62,150,.3);
+}
+
+.adm-btn--ghost {
+  background: rgba(255,255,255,.05);
+  border: 1.5px solid rgba(255,255,255,.12);
+  color: var(--text,#F2E8CF);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 2px 6px rgba(0,0,0,.12);
+}
+.adm-btn--ghost:hover {
+  background: rgba(91,62,150,.14);
+  border-color: var(--violet,#5B3E96);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.1),
+    0 4px 12px rgba(91,62,150,.2);
+}
+
+.adm-btn--sm { padding: 7px 13px; font-size: .78rem; border-radius: 9px; }
+
+/* ── RESPONSIVE ────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .adm-metrics-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .adm-frame--hero { padding: 24px 18px; }
+  .adm-hero-inner { flex-direction: column; }
+  .adm-metrics-grid { grid-template-columns: 1fr; }
+  .adm-table-filters { flex-direction: column; }
+  .adm-search-wrap { min-width: 0; width: 100%; }
+  .adm-select { width: 100%; min-width: 0; }
+  .adm-section-header--participants { flex-direction: column; align-items: flex-start; }
+  .form-container-with-preview { grid-template-columns: 1fr !important; }
+}
+</style>

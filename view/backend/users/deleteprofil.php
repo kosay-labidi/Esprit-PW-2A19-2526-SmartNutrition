@@ -35,14 +35,6 @@ try {
         exit();
     }
     
-    // Grâce à ON DELETE CASCADE, une seule suppression suffit !
-    // Toutes les tables liées seront automatiquement nettoyées :
-    // - repas (et repas_aliment via CASCADE)
-    // - participations (événements)
-    // - dossier_medical (et dossier_regime via CASCADE)
-    // - preferences
-    // - participation (défis) (et action_defi via CASCADE)
-    
     $sql = "DELETE FROM utilisateurs WHERE id_utilisateur = :id";
     $stmt = $db->prepare($sql);
     $stmt->execute([':id' => $id]);

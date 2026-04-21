@@ -1,7 +1,3 @@
-/**
- * Admin Dashboard Main Script - GaiaLumen
- * Version modularisée et harmonisée
- */
 
 console.log('🛡️ GaiaLumen Admin Dashboard chargé');
 
@@ -401,7 +397,6 @@ window.submitEditUser = async function() {
   const errDiv = document.getElementById('modal-edit-user-errors');
   const errors = [];
 
-  // Validation champ par champ (sans HTML5)
   if (!nom) {
     errors.push('Le nom est requis');
   } else if (/\d/.test(nom)) {
@@ -428,7 +423,6 @@ window.submitEditUser = async function() {
 
   errDiv.style.display = 'none';
 
-  // URL absolue cohérente avec le reste du projet
   const BASE_URL = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php';
 
   try {
@@ -461,7 +455,6 @@ window.submitEditUser = async function() {
       errDiv.innerHTML = `• ${result.message || 'Erreur lors de la mise à jour'}`;
     }
   } catch (err) {
-    // Vraie erreur réseau (XAMPP éteint, CORS, etc.)
     console.error('Erreur réseau :', err);
     errDiv.style.display = 'block';
     errDiv.innerHTML = '• Erreur réseau — Vérifiez que XAMPP est démarré';

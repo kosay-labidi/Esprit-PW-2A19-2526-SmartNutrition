@@ -1,4 +1,3 @@
-// Admin Module Loader - Charge les modules admin dynamiquement
 console.log('🛡️ Admin Module Loader initialisé');
 
 // Configuration des modules admin
@@ -404,7 +403,6 @@ window.closeEditModal = function() {
     document.getElementById('editUserModal').style.display = 'none';
 };
 
-// Intercepter la soumission du formulaire
 // Intercepter la soumission du formulaire
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('editUserForm');

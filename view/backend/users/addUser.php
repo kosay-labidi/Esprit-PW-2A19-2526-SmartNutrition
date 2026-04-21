@@ -5,9 +5,6 @@ require_once __DIR__ . '/../../../config.php';
 
 $userController = new UserController();
 
-/* ════════════════════════════════════════════════
-   Mode API JSON (appelé depuis register.html via fetch)
-════════════════════════════════════════════════ */
 $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'application/json')) {
 
@@ -68,9 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'applica
     exit();
 }
 
-/* ════════════════════════════════════════════════
-   Mode formulaire HTML (BackOffice)
-════════════════════════════════════════════════ */
 $errors  = [];
 $success = isset($_GET['success']) && $_GET['success'] === '1';
 

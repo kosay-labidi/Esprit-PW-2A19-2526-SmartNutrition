@@ -9,11 +9,14 @@ class Regime {
     private ?string $aliments_interdits;
     private ?string $aliments_recommandes;
     private ?float $apport_calorique_moyen;
+    private ?string $date_creation;
+    private ?string $date_mise_a_jour;
 
     public function __construct(?int $id_regime = null, ?string $nom_regime = null, ?string $slug = null, 
                                 ?string $description = null, ?string $type_regime = null, 
                                 ?string $niveau_difficulte = null, ?string $aliments_interdits = null, 
-                                ?string $aliments_recommandes = null, ?float $apport_calorique_moyen = null) {
+                                ?string $aliments_recommandes = null, ?float $apport_calorique_moyen = null,
+                                ?string $date_creation = null, ?string $date_mise_a_jour = null) {
         $this->id_regime = $id_regime;
         $this->nom_regime = $nom_regime;
         $this->slug = $slug;
@@ -23,6 +26,8 @@ class Regime {
         $this->aliments_interdits = $aliments_interdits;
         $this->aliments_recommandes = $aliments_recommandes;
         $this->apport_calorique_moyen = $apport_calorique_moyen;
+        $this->date_creation = $date_creation;
+        $this->date_mise_a_jour = $date_mise_a_jour;
     }
 
     // Getters
@@ -35,6 +40,8 @@ class Regime {
     public function getAlimentsInterdits() { return $this->aliments_interdits; }
     public function getAlimentsRecommandes() { return $this->aliments_recommandes; }
     public function getApportCalorique() { return $this->apport_calorique_moyen; }
+    public function getDateCreation() { return $this->date_creation; }
+    public function getDateMiseAJour() { return $this->date_mise_a_jour; }
 
     // Setters
     public function setIdRegime(?int $id_regime) { $this->id_regime = $id_regime; }
@@ -46,6 +53,8 @@ class Regime {
     public function setAlimentsInterdits(?string $aliments_interdits) { $this->aliments_interdits = $aliments_interdits; }
     public function setAlimentsRecommandes(?string $aliments_recommandes) { $this->aliments_recommandes = $aliments_recommandes; }
     public function setApportCalorique(?float $apport_calorique_moyen) { $this->apport_calorique_moyen = $apport_calorique_moyen; }
+    public function setDateCreation(?string $date_creation) { $this->date_creation = $date_creation; }
+    public function setDateMiseAJour(?string $date_mise_a_jour) { $this->date_mise_a_jour = $date_mise_a_jour; }
 
     // Helper methods
     public function getAlimentsInterditsArray() {
@@ -104,7 +113,9 @@ class Regime {
             'niveau_difficulte' => $this->niveau_difficulte,
             'aliments_interdits' => $this->aliments_interdits,
             'aliments_recommandes' => $this->aliments_recommandes,
-            'apport_calorique_moyen' => $this->apport_calorique_moyen
+            'apport_calorique_moyen' => $this->apport_calorique_moyen,
+            'date_creation' => $this->date_creation,
+            'date_mise_a_jour' => $this->date_mise_a_jour
         ];
     }
 

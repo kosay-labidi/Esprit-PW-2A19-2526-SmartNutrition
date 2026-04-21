@@ -1,434 +1,493 @@
+<?php
+require_once '../../../config.php';
+require_once '../../../controller/dossierMedical.controller.php';
+require_once '../../../controller/regime.controller.php';
+require_once '../../../Model/DossierMedical.php';
+
+$ctrl       = new DossierMedicalController();
+$regimeCtrl = new RegimeController();
+$id         = isset($_GET['id']) ? intval($_GET['id']) : null;
+$dossier    = $id ? $ctrl->show($id) : null;
+$error      = '';
+$success    = '';
+$allRegimes = [];
+
+try {
+    $allRegimes = $regimeCtrl->list();
+} catch (Exception $e) {
+    $allRegimes = [];
+}
+
+if (!$dossier) {
+    $error = "Dossier non trouvé.";
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dossier) {
+    /* ── Server-side validation (mirrors JS – never rely on HTML5) ── */
+    $groupe_sanguin = trim($_POST['groupe_sanguin'] ?? '');
+    $poids          = $_POST['poids']  ?? '';
+    $taille         = $_POST['taille'] ?? '';
+    $contact        = trim($_POST['contact_en_cas_durgence'] ?? '');
+    $id_regime_raw  = $_POST['id_regime'] ?? '';
+
+    $validGS = ['O+','O-','A+','A-','B+','B-','AB+','AB-'];
+
+    if (empty($groupe_sanguin)) {
+        $error = "Le groupe sanguin est obligatoire.";
+    } elseif (!in_array($groupe_sanguin, $validGS)) {
+        $error = "Groupe sanguin invalide.";
+    } elseif ($poids === '' || floatval($poids) <= 0) {
+        $error = "Le poids doit être supérieur à 0.";
+    } elseif (floatval($poids) < 20 || floatval($poids) > 500) {
+        $error = "Le poids doit être compris entre 20 et 500 kg.";
+    } elseif ($taille === '' || floatval($taille) <= 0) {
+        $error = "La taille doit être supérieure à 0.";
+    } elseif (floatval($taille) < 50 || floatval($taille) > 250) {
+        $error = "La taille doit être comprise entre 50 et 250 cm.";
+    } elseif (empty($contact)) {
+        $error = "Le contact d'urgence est obligatoire.";
+    } elseif (!preg_match('/^\+\d{1,3}\s\d{4,6}\s\d{4,6}$/', $contact)) {
+        $error = "Format du contact : +XX XXXX XXXX";
+    } elseif (!empty($id_regime_raw) && (!is_numeric($id_regime_raw) || intval($id_regime_raw) <= 0)) {
+        $error = "L'ID du régime doit être un entier positif.";
+    } else {
+        try {
+            $id_regime_val = (!empty($id_regime_raw) && is_numeric($id_regime_raw))
+                ? intval($id_regime_raw) : null;
+
+            $d = new DossierMedical(
+                $id,
+                $dossier['id_utilisateur'],
+                $id_regime_val,
+                $dossier['date_creation'],
+                null,
+                $groupe_sanguin,
+                floatval($poids),
+                floatval($taille),
+                null,
+                $_POST['regime_special']          ?? null,
+                $_POST['notes_medecin']           ?? null,
+                $_POST['allergie']                ?? null,
+                $_POST['gravite_allergie']        ?? null,
+                $_POST['maladies']                ?? null,
+                $_POST['traitement']              ?? null,
+                $_POST['medecin']                 ?? null,
+                $contact
+            );
+
+            $ctrl->update($d, $id);
+            $success = "Dossier médical mis à jour avec succès !";
+            $_POST   = [];
+            $dossier = $ctrl->show($id); // refresh
+        } catch (Exception $e) {
+            $error = "Erreur lors de la mise à jour : " . $e->getMessage();
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifier Dossier Médical</title>
+    <title>Modifier Dossier Médical – Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../css/admin.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --vert: #013220;
-            --sable: #CBBD93;
-            --violet: #BA5BED;
-            --bleu: #77B5FE;
+        body { display:block; padding:40px 20px; min-height:100vh; }
+        .ud-container { max-width:880px; margin:0 auto; }
+
+        .ud-header { text-align:center; margin-bottom:36px; }
+        .ud-header h1 { font-size:clamp(1.8rem,3.5vw,2.4rem); color:var(--text); letter-spacing:.05em; }
+        .ud-header p  { color:var(--muted); margin-top:8px; font-size:1rem; }
+
+        .ud-card { background:var(--card-bg); backdrop-filter:blur(16px); border:1px solid rgba(91,62,150,.2); border-radius:var(--radius); padding:36px; margin-bottom:28px; }
+
+        .ud-section-title { font-size:1.05rem; font-weight:700; color:var(--text); margin-bottom:18px; padding-bottom:10px; border-bottom:1px solid rgba(91,62,150,.25); display:flex; align-items:center; gap:10px; letter-spacing:.04em; }
+
+        .ud-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+        .ud-grid.full { grid-template-columns:1fr; }
+        .ud-group { display:flex; flex-direction:column; }
+
+        .ud-label { font-weight:600; margin-bottom:7px; color:var(--text); font-size:.9rem; }
+        .ud-label .req { color:var(--danger); }
+
+        .ud-input, .ud-select, .ud-textarea {
+            padding:11px 15px;
+            background:rgba(31,61,43,.3);
+            border:1.5px solid rgba(91,62,150,.3);
+            border-radius:10px;
+            font-size:.96rem;
+            color:var(--text);
+            font-family:'Lato',sans-serif;
+            transition:all var(--tr);
+            width:100%;
+            box-sizing:border-box;
         }
-        html { scroll-behavior: smooth; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--sable) 0%, #b8a478 100%);
-            color: var(--vert);
-            min-height: 100vh;
-            padding: 40px 20px;
+        .ud-input::placeholder { color:rgba(242,232,207,.4); }
+        .ud-input:focus, .ud-select:focus, .ud-textarea:focus {
+            outline:none; border-color:var(--violet);
+            background:rgba(31,61,43,.5); box-shadow:0 0 0 3px rgba(91,62,150,.15);
         }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            color: var(--vert);
-        }
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .header p {
-            font-size: 1.1rem;
-            color: #555;
-            font-weight: 500;
-        }
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            border-top: 5px solid var(--vert);
-        }
-        .alert {
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        .form-section {
-            margin-bottom: 35px;
-        }
-        .section-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--vert);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--bleu);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .form-grid.full { grid-template-columns: 1fr; }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--vert);
-            font-size: 0.95rem;
-        }
-        label .required {
-            color: #dc3545;
-        }
-        input, select, textarea {
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--bleu);
-            box-shadow: 0 0 0 3px rgba(119, 181, 254, 0.1);
-        }
-        input.error {
-            border-color: #dc3545;
-            background: #ffe0e0;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 40px;
-        }
-        .btn {
-            flex: 1;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--violet) 0%, #9d4dd4 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(186, 91, 237, 0.3);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(186, 91, 237, 0.4);
-        }
-        .btn-secondary {
-            background: var(--bleu);
-            color: white;
-            flex: 0.5;
-        }
-        .btn-secondary:hover {
-            background: #4a9ee8;
-            transform: translateY(-2px);
-        }
-        .imc-result {
-            background: #e8f4f8;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 600;
-            color: var(--vert);
-            margin-top: 10px;
-            display: none;
-        }
-        .imc-result.show { display: block; }
-        .error-msg {
-            color: #dc3545;
-            font-size: 0.85rem;
-            margin-top: 5px;
-            display: none;
+        .ud-input.error, .ud-select.error { border-color:var(--danger); background:rgba(231,76,60,.07); }
+        .ud-textarea { resize:vertical; min-height:90px; }
+        .ud-field-err { color:var(--danger); font-size:.82rem; margin-top:4px; display:none; }
+
+        .ud-imc-box { background:rgba(91,62,150,.1); border:1px solid rgba(91,62,150,.25); border-radius:10px; padding:12px; text-align:center; font-weight:700; color:var(--text); margin-top:8px; display:none; }
+        .ud-imc-box.show { display:block; }
+
+        .ud-alert { padding:14px 18px; border-radius:12px; margin-bottom:22px; font-weight:500; display:flex; align-items:center; gap:10px; }
+        .ud-alert-success { background:rgba(46,204,113,.12); color:var(--success); border:1px solid rgba(46,204,113,.3); }
+        .ud-alert-error   { background:rgba(231,76,60,.12);  color:var(--danger);  border:1px solid rgba(231,76,60,.3); }
+
+        .ud-regime-block { background:rgba(91,62,150,.07); border:1px solid rgba(91,62,150,.2); border-radius:12px; padding:18px; }
+        .ud-regime-current { font-size:.9rem; color:var(--muted); margin-top:10px; }
+        .ud-regime-current strong { color:var(--text); }
+
+        .ud-btn-group { display:flex; gap:14px; margin-top:36px; flex-wrap:wrap; }
+        .ud-btn { padding:13px 28px; border:none; border-radius:50px; font-size:.96rem; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all var(--tr); letter-spacing:.03em; }
+        .ud-btn-primary   { background:linear-gradient(135deg,var(--violet),var(--blue)); color:white; box-shadow:0 4px 16px rgba(91,62,150,.3); }
+        .ud-btn-primary:hover   { transform:translateY(-2px); box-shadow:0 6px 24px rgba(91,62,150,.4); }
+        .ud-btn-secondary { background:var(--glass); color:var(--text); border:1.5px solid rgba(91,62,150,.4); backdrop-filter:blur(10px); }
+        .ud-btn-secondary:hover { background:rgba(91,62,150,.15); border-color:var(--violet); transform:translateY(-2px); }
+
+        @media(max-width:640px) {
+            body { padding:20px 12px; }
+            .ud-grid { grid-template-columns:1fr; }
+            .ud-card { padding:22px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>✏️ Modifier Dossier Médical</h1>
-            <p>Mettez à jour les informations médicales du patient</p>
-        </div>
+<div class="ud-container">
 
-        <div class="card">
-            <?php
-            require_once '../../../config.php';
-            require_once '../../../controller/dossierMedical.controller.php';
-            require_once '../../../Model/DossierMedical.php';
-
-            $ctrl = new DossierMedicalController();
-            $id = $_GET['id'] ?? null;
-            $dossier = $id ? $ctrl->show($id) : null;
-            $error = '';
-            $success = '';
-
-            if (!$dossier) {
-                $error = "Dossier non trouvé.";
-            }
-
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dossier) {
-                // Get required fields
-                $groupe_sanguin = $_POST['groupe_sanguin'] ?? '';
-                $poids = $_POST['poids'] ?? '';
-                $taille = $_POST['taille'] ?? '';
-                $contact = $_POST['contact_en_cas_durgence'] ?? '';
-
-                // Validate required fields
-                if (empty($groupe_sanguin) || empty($poids) || empty($taille) || empty($contact)) {
-                    $error = "❌ Tous les champs marqués d'une * sont obligatoires";
-                } elseif (floatval($poids) <= 0 || floatval($taille) <= 0) {
-                    $error = "❌ Le poids et la taille doivent être supérieurs à 0";
-                } elseif (!preg_match('/^\+\d{1,3}\s\d{4,6}\s\d{4,6}$/', $contact)) {
-                    $error = "❌ Format de téléphone requis: +XX XXXX XXXX";
-                } else {
-                    try {
-                        $d = new DossierMedical(
-                            $id, $dossier['id_utilisateur'], $dossier['date_creation'], null,
-                            $groupe_sanguin, 
-                            floatval($poids), 
-                            floatval($taille), 
-                            null,
-                            $_POST['regime_special'] ?? null, 
-                            $_POST['notes_medecin'] ?? null, 
-                            $_POST['allergie'] ?? null,
-                            $_POST['gravite_allergie'] ?? null, 
-                            $_POST['maladies'] ?? null, 
-                            $_POST['traitement'] ?? null,
-                            $_POST['medecin'] ?? null, 
-                            $contact
-                        );
-                        $ctrl->update($d, $id);
-                        $success = "✅ Dossier médical mis à jour avec succès!";
-                        $_POST = [];
-                        $dossier = $ctrl->show($id);
-                    } catch (Exception $e) {
-                        $error = "❌ Erreur lors de la mise à jour : " . $e->getMessage();
-                    }
-                }
-            }
-            ?>
-
-            <?php if ($error): ?><div class="alert alert-error"><?= $error ?></div><?php endif; ?>
-            <?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
-
-            <?php if ($dossier): ?>
-            <form method="POST" onsubmit="return validateForm()">
-                <!-- SECTION: Informations Biométriques -->
-                <div class="form-section">
-                    <div class="section-title">⚖️ Informations Biométriques</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="groupe">Groupe Sanguin <span class="required">*</span></label>
-                            <select name="groupe_sanguin" id="groupe" required>
-                                <option value="">Sélectionner...</option>
-                                <option value="O+" <?php echo ($dossier['groupe_sanguin'] === 'O+') ? 'selected' : ''; ?>>O+</option>
-                                <option value="O-" <?php echo ($dossier['groupe_sanguin'] === 'O-') ? 'selected' : ''; ?>>O-</option>
-                                <option value="A+" <?php echo ($dossier['groupe_sanguin'] === 'A+') ? 'selected' : ''; ?>>A+</option>
-                                <option value="A-" <?php echo ($dossier['groupe_sanguin'] === 'A-') ? 'selected' : ''; ?>>A-</option>
-                                <option value="B+" <?php echo ($dossier['groupe_sanguin'] === 'B+') ? 'selected' : ''; ?>>B+</option>
-                                <option value="B-" <?php echo ($dossier['groupe_sanguin'] === 'B-') ? 'selected' : ''; ?>>B-</option>
-                                <option value="AB+" <?php echo ($dossier['groupe_sanguin'] === 'AB+') ? 'selected' : ''; ?>>AB+</option>
-                                <option value="AB-" <?php echo ($dossier['groupe_sanguin'] === 'AB-') ? 'selected' : ''; ?>>AB-</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="poids">Poids (kg) <span class="required">*</span></label>
-                            <input type="number" id="poids" name="poids" step="0.1" min="0" value="<?php echo $dossier['poids']; ?>" required onchange="calculateIMC()">
-                        </div>
-                        <div class="form-group">
-                            <label for="taille">Taille (cm) <span class="required">*</span></label>
-                            <input type="number" id="taille" name="taille" step="0.1" min="0" value="<?php echo $dossier['taille']; ?>" required onchange="calculateIMC()">
-                        </div>
-                        <div class="imc-result" id="imcResult"></div>
-                    </div>
-                </div>
-
-                <!-- SECTION: Régime -->
-                <div class="form-section">
-                    <div class="section-title">🍽️ Régime Alimentaire</div>
-                    <div class="form-grid full">
-                        <div class="form-group">
-                            <label for="regime">Régime Spécial</label>
-                            <input type="text" id="regime" name="regime_special" placeholder="ex. Végétarien, Sans gluten..." value="<?php echo htmlspecialchars($dossier['regime_special'] ?? ''); ?>">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SECTION: Allergies -->
-                <div class="form-section">
-                    <div class="section-title">⚠️ Allergies</div>
-                    <div class="form-grid full">
-                        <div class="form-group">
-                            <label for="allergie">Description des Allergies</label>
-                            <textarea id="allergie" name="allergie" placeholder="Décrivez les allergies (ex: Arachides, lactose, pollen...)"><?php echo htmlspecialchars($dossier['allergie'] ?? ''); ?></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="gravite">Gravité</label>
-                            <select name="gravite_allergie" id="gravite">
-                                <option value="">Non spécifiée</option>
-                                <option value="légère" <?php echo ($dossier['gravite_allergie'] === 'légère') ? 'selected' : ''; ?>>Légère</option>
-                                <option value="modérée" <?php echo ($dossier['gravite_allergie'] === 'modérée') ? 'selected' : ''; ?>>Modérée</option>
-                                <option value="sévère" <?php echo ($dossier['gravite_allergie'] === 'sévère') ? 'selected' : ''; ?>>Sévère</option>
-                                <option value="anaphylactique" <?php echo ($dossier['gravite_allergie'] === 'anaphylactique') ? 'selected' : ''; ?>>Anaphylactique</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SECTION: Conditions Médicales -->
-                <div class="form-section">
-                    <div class="section-title">🏥 Conditions Médicales</div>
-                    <div class="form-grid full">
-                        <div class="form-group">
-                            <label for="maladies">Maladies Chroniques</label>
-                            <textarea id="maladies" name="maladies" placeholder="ex. Diabète type 2, Hypertension, Asthme..."><?php echo htmlspecialchars($dossier['maladies'] ?? ''); ?></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="traitement">Traitement Actuel</label>
-                            <textarea id="traitement" name="traitement" placeholder="Médicaments et dosages actuels" style="min-height: 100px;"><?php echo htmlspecialchars($dossier['traitement'] ?? ''); ?></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SECTION: Contacts -->
-                <div class="form-section">
-                    <div class="section-title">📞 Informations de Contact</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="medecin">Médecin Référent</label>
-                            <input type="text" id="medecin" name="medecin" placeholder="Dr. Nom Prénom" value="<?php echo htmlspecialchars($dossier['medecin'] ?? ''); ?>">
-                        </div>
-                        <div class="form-group">
-                            <label for="contact">Contact Urgence <span class="required">*</span></label>
-                            <input type="tel" id="contact" name="contact_en_cas_durgence" placeholder="+33 6 12 34 56 78" value="<?php echo htmlspecialchars($dossier['contact_en_cas_durgence'] ?? ''); ?>" required>
-                            <div class="error-msg" id="contactError">Format requis: +XX XXXX XXXX</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SECTION: Notes -->
-                <div class="form-section">
-                    <div class="section-title">📝 Notes Supplémentaires</div>
-                    <div class="form-grid full">
-                        <div class="form-group">
-                            <label for="notes">Notes du Médecin</label>
-                            <textarea id="notes" name="notes_medecin" placeholder="Observations et recommandations supplémentaires..."><?php echo htmlspecialchars($dossier['notes_medecin'] ?? ''); ?></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="button-group">
-                    <button type="submit" class="btn btn-primary">💾 Enregistrer les modifications</button>
-                    <a href="../modules/health-admin.html" class="btn btn-secondary">← Retour</a>
-                </div>
-            </form>
-            <?php else: ?>
-                <div class="alert alert-error">❌ Dossier non trouvé</div>
-                <a href="../modules/health-admin.html" class="btn btn-secondary" style="margin-top: 20px;">← Retour au tableau de bord</a>
-            <?php endif; ?>
-        </div>
+    <div class="ud-header">
+        <h1>✏️ Modifier Dossier Médical</h1>
+        <p>Dossier #<?= htmlspecialchars((string)($id ?? '?')) ?> – mettez à jour les informations médicales</p>
     </div>
 
-    <script>
-        function calculateIMC() {
-            const poids = parseFloat(document.getElementById('poids').value);
-            const taille = parseFloat(document.getElementById('taille').value);
-            
-            if (poids > 0 && taille > 0) {
-                const imcResult = document.getElementById('imcResult');
-                const imc = (poids / ((taille / 100) ** 2)).toFixed(1);
-                let category = '';
-                
-                if (imc < 18.5) category = 'Insuffisance pondérale';
-                else if (imc < 25) category = 'Poids normal';
-                else if (imc < 30) category = 'Surpoids';
-                else category = 'Obésité';
-                
-                imcResult.innerHTML = `<strong>IMC: ${imc}</strong> - ${category}`;
-                imcResult.classList.add('show');
+    <div class="ud-card">
+
+        <?php if ($error):   ?><div class="ud-alert ud-alert-error">❌ <?= htmlspecialchars($error) ?></div><?php endif; ?>
+        <?php if ($success): ?><div class="ud-alert ud-alert-success">✅ <?= htmlspecialchars($success) ?></div><?php endif; ?>
+
+        <?php if ($dossier): ?>
+        <!-- ── All HTML5 validation attributes intentionally removed; JS handles everything ── -->
+        <form id="updateDossierForm" method="POST" novalidate>
+
+            <!-- Biométrie -->
+            <div style="margin-bottom:30px;">
+                <div class="ud-section-title">⚖️ Informations Biométriques</div>
+                <div class="ud-grid">
+                    <div class="ud-group">
+                        <label class="ud-label">Groupe Sanguin <span class="req">*</span></label>
+                        <div class="ud-field-err" id="err-groupe"></div>
+                        <select name="groupe_sanguin" id="ud-groupe" class="ud-select">
+                            <option value="">Sélectionner…</option>
+                            <?php foreach (['O+','O-','A+','A-','B+','B-','AB+','AB-'] as $gs): ?>
+                            <option value="<?= $gs ?>" <?= ($dossier['groupe_sanguin'] === $gs) ? 'selected' : '' ?>><?= $gs ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="ud-group">
+                        <label class="ud-label">Poids (kg) <span class="req">*</span></label>
+                        <div class="ud-field-err" id="err-poids"></div>
+                        <input type="number" id="ud-poids" name="poids" step="0.1"
+                               class="ud-input"
+                               value="<?= htmlspecialchars((string)($dossier['poids'] ?? '')) ?>">
+                    </div>
+                    <div class="ud-group">
+                        <label class="ud-label">Taille (cm) <span class="req">*</span></label>
+                        <div class="ud-field-err" id="err-taille"></div>
+                        <input type="number" id="ud-taille" name="taille" step="0.1"
+                               class="ud-input"
+                               value="<?= htmlspecialchars((string)($dossier['taille'] ?? '')) ?>">
+                    </div>
+                    <div>
+                        <div class="ud-imc-box" id="ud-imc-box"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Régime associé -->
+            <div style="margin-bottom:30px;">
+                <div class="ud-section-title">🥗 Régime Alimentaire Associé</div>
+                <div class="ud-regime-block">
+
+                    <!-- Dropdown from existing regimes -->
+                    <div class="ud-group" style="margin-bottom:14px;">
+                        <label class="ud-label">Sélectionner un régime existant</label>
+                        <select name="id_regime" id="ud-regime-select" class="ud-select">
+                            <option value="">— Aucun régime associé —</option>
+                            <?php foreach ($allRegimes as $r): ?>
+                            <option value="<?= (int)$r['id_regime'] ?>"
+                                <?= (!empty($dossier['id_regime']) && $dossier['id_regime'] == $r['id_regime']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($r['nom_regime']) ?> (<?= htmlspecialchars($r['type_regime']) ?>) — ID <?= (int)$r['id_regime'] ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- Direct ID input (has priority over dropdown) -->
+                    <div class="ud-group">
+                        <label class="ud-label">Ou saisir l'ID du régime directement</label>
+                        <div class="ud-field-err" id="err-regime-id"></div>
+                        <input type="number" id="ud-regime-id-input" class="ud-input"
+                               placeholder="ex. 3  (prioritaire sur la liste ci-dessus)"
+                               value="<?= (!empty($dossier['id_regime'])) ? htmlspecialchars((string)$dossier['id_regime']) : '' ?>">
+                        <small style="color:var(--muted);font-size:.8rem;margin-top:5px;">
+                            Si ce champ est rempli, il a priorité sur la liste déroulante.
+                        </small>
+                    </div>
+
+                    <?php if (!empty($dossier['id_regime'])): ?>
+                    <div class="ud-regime-current" style="margin-top:12px;">
+                        Régime actuellement associé : <strong>ID <?= (int)$dossier['id_regime'] ?></strong>
+                        <?php foreach ($allRegimes as $r): if ($r['id_regime'] == $dossier['id_regime']): ?>
+                        – <?= htmlspecialchars($r['nom_regime']) ?> (<?= htmlspecialchars($r['type_regime']) ?>)
+                        <?php endif; endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Régime spécial texte -->
+            <div style="margin-bottom:30px;">
+                <div class="ud-section-title">📝 Régime Spécial (texte libre)</div>
+                <div class="ud-group">
+                    <label class="ud-label">Régime Spécial</label>
+                    <input type="text" name="regime_special" class="ud-input"
+                           placeholder="ex. Végétarien, Sans gluten…"
+                           value="<?= htmlspecialchars($dossier['regime_special'] ?? '') ?>">
+                </div>
+            </div>
+
+            <!-- Allergies -->
+            <div style="margin-bottom:30px;">
+                <div class="ud-section-title">⚠️ Allergies</div>
+                <div class="ud-grid full">
+                    <div class="ud-group" style="margin-bottom:14px;">
+                        <label class="ud-label">Description des Allergies</label>
+                        <textarea name="allergie" class="ud-textarea"
+                                  placeholder="ex. Arachides, lactose, pollen…"><?= htmlspecialchars($dossier['allergie'] ?? '') ?></textarea>
+                    </div>
+                    <div class="ud-group">
+                        <label class="ud-label">Gravité</label>
+                        <select name="gravite_allergie" class="ud-select">
+                            <option value="">Non spécifiée</option>
+                            <?php foreach (['légère','modérée','sévère','anaphylactique'] as $gv): ?>
+                            <option value="<?= $gv ?>" <?= ($dossier['gravite_allergie'] === $gv) ? 'selected' : '' ?>><?= ucfirst($gv) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conditions médicales -->
+            <div style="margin-bottom:30px;">
+                <div class="ud-section-title">🏥 Conditions Médicales</div>
+                <div class="ud-grid full">
+                    <div class="ud-group" style="margin-bottom:14px;">
+                        <label class="ud-label">Maladies Chroniques</label>
+                        <textarea name="maladies" class="ud-textarea"
+                                  placeholder="ex. Diabète type 2, Hypertension, Asthme…"><?= htmlspecialchars($dossier['maladies'] ?? '') ?></textarea>
+                    </div>
+                    <div class="ud-group">
+                        <label class="ud-label">Traitement Actuel</label>
+                        <textarea name="traitement" class="ud-textarea"
+                                  placeholder="Médicaments et dosages actuels…"><?= htmlspecialchars($dossier['traitement'] ?? '') ?></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contacts -->
+            <div style="margin-bottom:30px;">
+                <div class="ud-section-title">📞 Informations de Contact</div>
+                <div class="ud-grid">
+                    <div class="ud-group">
+                        <label class="ud-label">Médecin Référent</label>
+                        <input type="text" name="medecin" class="ud-input"
+                               placeholder="Dr. Nom Prénom"
+                               value="<?= htmlspecialchars($dossier['medecin'] ?? '') ?>">
+                    </div>
+                    <div class="ud-group">
+                        <label class="ud-label">Contact Urgence <span class="req">*</span></label>
+                        <div class="ud-field-err" id="err-contact"></div>
+                        <input type="tel" id="ud-contact" name="contact_en_cas_durgence" class="ud-input"
+                               placeholder="+216 7000 0000"
+                               value="<?= htmlspecialchars($dossier['contact_en_cas_durgence'] ?? '') ?>">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div style="margin-bottom:10px;">
+                <div class="ud-section-title">📝 Notes Supplémentaires</div>
+                <div class="ud-group">
+                    <label class="ud-label">Notes du Médecin</label>
+                    <textarea name="notes_medecin" class="ud-textarea"
+                              placeholder="Observations et recommandations…"><?= htmlspecialchars($dossier['notes_medecin'] ?? '') ?></textarea>
+                </div>
+            </div>
+
+            <div class="ud-btn-group">
+                <button type="button" class="ud-btn ud-btn-primary" onclick="udValidateAndSubmit()">💾 Enregistrer les modifications</button>
+                <a href="../modules/health-admin.html" class="ud-btn ud-btn-secondary">← Retour</a>
+            </div>
+        </form>
+
+        <?php else: ?>
+            <div class="ud-alert ud-alert-error">❌ Dossier non trouvé (ID invalide).</div>
+            <a href="../modules/health-admin.html" class="ud-btn ud-btn-secondary" style="margin-top:16px;display:inline-flex;">← Retour</a>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- ── JavaScript Validation — NO HTML5 required/pattern attributes ── -->
+<script>
+(function () {
+    'use strict';
+
+    var VALID_GS = ['O+','O-','A+','A-','B+','B-','AB+','AB-'];
+
+    /* Helpers */
+    function showErr(id, msg) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent    = msg;
+        el.style.display  = msg ? 'block' : 'none';
+    }
+    function clearAll() {
+        ['err-groupe','err-poids','err-taille','err-contact','err-regime-id']
+            .forEach(function (id) { showErr(id, ''); });
+        ['ud-groupe','ud-poids','ud-taille','ud-contact']
+            .forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.classList.remove('error');
+            });
+    }
+    function markErr(fieldId, errId, msg) {
+        showErr(errId, msg);
+        var el = document.getElementById(fieldId);
+        if (el) el.classList.add('error');
+    }
+
+    /* IMC auto-calc */
+    function calcIMC() {
+        var p   = parseFloat(document.getElementById('ud-poids').value);
+        var t   = parseFloat(document.getElementById('ud-taille').value);
+        var box = document.getElementById('ud-imc-box');
+        if (!box) return;
+        if (p > 0 && t > 0) {
+            var imc = (p / Math.pow(t / 100, 2)).toFixed(1);
+            var cat = imc < 18.5 ? 'Insuffisance pondérale' : imc < 25 ? 'Poids normal' : imc < 30 ? 'Surpoids' : 'Obésité';
+            box.textContent = 'IMC calculé : ' + imc + ' – ' + cat;
+            box.classList.add('show');
+        } else {
+            box.classList.remove('show');
+        }
+    }
+
+    var poidsEl  = document.getElementById('ud-poids');
+    var tailleEl = document.getElementById('ud-taille');
+    if (poidsEl)  poidsEl.addEventListener('input', calcIMC);
+    if (tailleEl) tailleEl.addEventListener('input', calcIMC);
+    window.addEventListener('load', calcIMC);
+
+    /* Sync ID input ↔ select */
+    var idInput  = document.getElementById('ud-regime-id-input');
+    var idSelect = document.getElementById('ud-regime-select');
+    if (idInput && idSelect) {
+        idInput.addEventListener('input', function () {
+            var val = this.value.trim();
+            for (var i = 0; i < idSelect.options.length; i++) {
+                if (idSelect.options[i].value === val) {
+                    idSelect.selectedIndex = i;
+                    return;
+                }
             }
+            if (!val) idSelect.value = '';
+        });
+        idSelect.addEventListener('change', function () {
+            if (idInput) idInput.value = this.value || '';
+        });
+    }
+
+    /* Validate & submit */
+    function udValidateAndSubmit() {
+        clearAll();
+        var valid = true;
+
+        var groupe  = document.getElementById('ud-groupe');
+        var poids   = document.getElementById('ud-poids');
+        var taille  = document.getElementById('ud-taille');
+        var contact = document.getElementById('ud-contact');
+        var regimeIdRaw = idInput ? idInput.value.trim() : '';
+
+        // Groupe sanguin
+        if (!groupe || !groupe.value) {
+            markErr('ud-groupe', 'err-groupe', 'Groupe sanguin requis.');
+            valid = false;
+        } else if (VALID_GS.indexOf(groupe.value) === -1) {
+            markErr('ud-groupe', 'err-groupe', 'Groupe sanguin invalide.');
+            valid = false;
         }
 
-        function validatePhoneNumber(phone) {
-            const phoneRegex = /^\+\d{1,3}\s\d{4,6}\s\d{4,6}$/;
-            return phoneRegex.test(phone);
+        // Poids
+        var poidsVal = parseFloat(poids ? poids.value : '');
+        if (!poids || !poids.value || isNaN(poidsVal) || poidsVal <= 0) {
+            markErr('ud-poids', 'err-poids', 'Poids invalide (doit être > 0).');
+            valid = false;
+        } else if (poidsVal < 20 || poidsVal > 500) {
+            markErr('ud-poids', 'err-poids', 'Poids entre 20 et 500 kg.');
+            valid = false;
         }
 
-        function validateForm() {
-            const poids = parseFloat(document.getElementById('poids').value);
-            const taille = parseFloat(document.getElementById('taille').value);
-            const contact = document.getElementById('contact').value;
-            const contactError = document.getElementById('contactError');
-            const contactInput = document.getElementById('contact');
-
-            // Clear previous errors
-            contactInput.classList.remove('error');
-            contactError.style.display = 'none';
-
-            // Validate poids
-            if (poids <= 0) {
-                alert('⚠️ Veuillez entrer un poids valide (> 0)');
-                return false;
-            }
-
-            // Validate taille
-            if (taille <= 0) {
-                alert('⚠️ Veuillez entrer une taille valide (> 0)');
-                return false;
-            }
-
-            // Check for required contact
-            if (!contact.trim()) {
-                alert('⚠️ Le contact d\'urgence est obligatoire');
-                return false;
-            }
-
-            // Validate phone format
-            if (!validatePhoneNumber(contact)) {
-                contactInput.classList.add('error');
-                contactError.style.display = 'block';
-                return false;
-            }
-
-            return true;
+        // Taille
+        var tailleVal = parseFloat(taille ? taille.value : '');
+        if (!taille || !taille.value || isNaN(tailleVal) || tailleVal <= 0) {
+            markErr('ud-taille', 'err-taille', 'Taille invalide (doit être > 0).');
+            valid = false;
+        } else if (tailleVal < 50 || tailleVal > 250) {
+            markErr('ud-taille', 'err-taille', 'Taille entre 50 et 250 cm.');
+            valid = false;
         }
 
-        // Auto-calculate IMC on page load
-        window.addEventListener('load', calculateIMC);
-    </script>
+        // Contact urgence
+        var ctv = contact ? contact.value.trim() : '';
+        if (!ctv) {
+            markErr('ud-contact', 'err-contact', 'Contact urgence requis.');
+            valid = false;
+        } else if (!/^\+\d{1,3}\s\d{4,6}\s\d{4,6}$/.test(ctv)) {
+            markErr('ud-contact', 'err-contact', 'Format : +XX XXXX XXXX');
+            valid = false;
+        }
+
+        // Regime ID (optional but must be integer > 0 if provided)
+        if (regimeIdRaw !== '' && (isNaN(parseInt(regimeIdRaw)) || parseInt(regimeIdRaw) <= 0)) {
+            showErr('err-regime-id', 'ID régime invalide (entier positif attendu).');
+            valid = false;
+        }
+
+        if (!valid) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        /* Resolve final id_regime: direct input has priority over select */
+        if (idInput && idSelect) {
+            var resolved = regimeIdRaw !== '' ? regimeIdRaw : (idSelect.value || '');
+            idSelect.value = resolved;
+            idSelect.name  = 'id_regime';
+            if (idInput) idInput.name = '';  // exclude from form submission
+        }
+
+        document.getElementById('updateDossierForm').submit();
+    }
+
+    window.udValidateAndSubmit = udValidateAndSubmit;
+})();
+</script>
 </body>
 </html>

@@ -33,9 +33,9 @@ async function loadModule(moduleName, forceReload = false) {
   }
   
   try {
-    // Ajouter un timestamp pour éviter le cache du navigateur
-    const timestamp = new Date().getTime();
-    const response = await fetch(`${modulePath}?t=${timestamp}`);
+    // Ajouter un timestamp aléatoire pour éviter le cache du navigateur
+    const timestamp = new Date().getTime() + Math.random() * 100000;
+    const response = await fetch(`${modulePath}?t=${timestamp}&v=20260418`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -218,10 +218,15 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (targetItem) {
     targetItem.click();
+    targetItem.classList.add('active');
   } else {
     const firstMenuItem = document.querySelector('.menu-item[data-module="welcome"]');
     if (firstMenuItem) {
       firstMenuItem.classList.add('active');
+      showModule('welcome');
+    } else {
+      // Fallback: charger le module welcome directement
+      console.log('⚠️ Chargement direct du module welcome');
       showModule('welcome');
     }
   }

@@ -360,17 +360,8 @@ class HealthController {
                 if (dossierData.success && dossierData.data && dossierData.data.length > 0) {
                     const dossier = dossierData.data[0];
                     this.updateUserStats(dossier);
+                    document.getElementById('user-regimes-count').textContent = dossier.id_regime ? '1' : '0';
                 }
-            }
-
-            // Load user's authorized regimes
-            const regimesResponse = await fetch('controller/regime.controller.php?action=list');
-            if (regimesResponse.ok) {
-                const regimesData = await regimesResponse.json();
-                if (regimesData.success && regimesData.data) {
-                    document.getElementById('user-regimes-count').textContent = regimesData.data.length;
-                }
-            }
             }
 
             // Load user's dossier count
@@ -441,6 +432,175 @@ class HealthController {
         }, 100);
     }
 }
+
+// ==============================
+// Validation Functions
+// ==============================
+
+// Validate Dossier Data (replaces HTML5 validation)
+function validateDossierData(data) {
+    const errors = [];
+    
+    if (!data.poids || data.poids === '') {
+        errors.push('Le poids est obligatoire');
+    } else {
+        const poids = parseFloat(data.poids);
+        if (isNaN(poids)) {
+            errors.push('Le poids doit être un nombre');
+        } else if (poids <= 0) {
+            errors.push('Le poids doit être supérieur à 0');
+        } else if (poids < 20 || poids > 300) {
+            errors.push('Le poids doit être entre 20 et 300 kg');
+        }
+    }
+    
+    if (!data.taille || data.taille === '') {
+        errors.push('La taille est obligatoire');
+    } else {
+        const taille = parseFloat(data.taille);
+        if (isNaN(taille)) {
+            errors.push('La taille doit être un nombre');
+        } else if (taille <= 0) {
+            errors.push('La taille doit être supérieure à 0');
+        } else if (taille < 50 || taille > 250) {
+            errors.push('La taille doit être entre 50 et 250 cm');
+        }
+    }
+    
+    if (data.groupe_sanguin && !/^(A|B|AB|O)[+-]$/.test(data.groupe_sanguin)) {
+        errors.push('Le groupe sanguin doit être au format A+, B-, AB+, O-');
+    }
+    
+    if (data.gravite_allergie && !data.allergie) {
+        errors.push('Ajoutez une description d\'allergie avant de choisir sa gravité');
+    }
+    
+    const validGravites = ['légère', 'modérée', 'sévère', 'anaphylactique'];
+    if (data.gravite_allergie && !validGravites.includes(data.gravite_allergie)) {
+        errors.push('La gravité doit être: légère, modérée, sévère ou anaphylactique');
+    }
+    
+    return errors;
+}
+
+// Validate Regime Data
+function validateRegimeData(data) {
+    const errors = [];
+    
+    if (!data.nom_regime || data.nom_regime.trim().length < 2) {
+        errors.push('Le nom du régime doit contenir au moins 2 caractères');
+    }
+    
+    if (!data.type_regime) {
+        errors.push('Le type de régime est obligatoire');
+    }
+    
+    const validTypes = ['alimentaire', 'medical', 'sportif', 'perte_de_poids', 'prise_de_masse', 'autre'];
+    if (data.type_regime && !validTypes.includes(data.type_regime)) {
+        errors.push('Type de régime invalide');
+    }
+    
+    if (!data.niveau_difficulte) {
+        errors.push('Le niveau de difficulté est obligatoire');
+    }
+    
+    const validNiveaux = ['facile', 'modere', 'avance'];
+    if (data.niveau_difficulte && !validNiveaux.includes(data.niveau_difficulte)) {
+        errors.push('Niveau de difficulté invalide');
+    }
+    
+    if (data.apport_calorique_moyen) {
+        const cal = parseFloat(data.apport_calorique_moyen);
+        if (isNaN(cal) || cal < 500 || cal > 10000) {
+            errors.push('L\'apport calorique doit être entre 500 et 10000 kcal');
+        }
+    }
+    
+    return errors;
+}
+
+// ==============================
+// Ecological Score Calculation
+// ==============================
+
+function calculateEcologicalScore(regime) {
+    let score = 50;
+    
+    if (!regime) return score;
+    
+    const type = regime.type_regime || regime.type;
+    if (type === 'alimentaire') score += 20;
+    else if (type === 'perte_de_poids') score += 10;
+    else if (type === 'sportif') score += 15;
+    
+    const calories = parseFloat(regime.apport_calorique_moyen) || 0;
+    if (calories < 1500) score += 10;
+    else if (calories > 3000) score -= 10;
+    
+    const niveau = regime.niveau_difficulte || regime.niveau;
+    if (niveau === 'facile') score += 10;
+    else if (niveau === 'avance') score -= 5;
+    
+    return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+// ==============================
+// Nutritional Score Calculation
+// ==============================
+
+function calculateNutritionalScore(dossier, regime) {
+    let score = 50;
+    
+    if (!dossier) return score;
+    
+    if (dossier.imc) {
+        const imc = parseFloat(dossier.imc);
+        if (imc >= 18.5 && imc <= 24.9) score += 20;
+        else if (imc >= 25 && imc <= 29.9) score += 10;
+        else if (imc >= 30) score -= 10;
+        else if (imc < 18.5) score -= 5;
+    }
+    
+    if (dossier.groupe_sanguin) score += 5;
+    if (!dossier.allergie) score += 10;
+    else score -= 5;
+    
+    if (!dossier.maladies) score += 5;
+    
+    if (regime) {
+        const type = regime.type_regime || regime.type;
+        if (type === 'medical') score += 15;
+        else if (type === 'sportif') score += 10;
+        else if (type === 'perte_de_poids') score += 5;
+    }
+    
+    return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+// ==============================
+// Date Formatting
+// ==============================
+
+function formatDateFR(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Export functions to global scope
+window.healthControllerValidation = {
+    validateDossierData,
+    validateRegimeData,
+    calculateEcologicalScore,
+    calculateNutritionalScore,
+    formatDateFR
+};
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,185 +1,307 @@
-<section class="content-section" id="meals">
-  <div class="section-header">
-    <h2 class="module-title">🍽️ Gestion des Repas</h2>
-    <p>Gérez les repas enregistrés par les utilisateurs</p>
-  </div>
-
-  <div class="section">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>GS Santé - Admin</title>
+    <!-- Le CSS global admin.css est déjà chargé par le dashboard parent -->
+</head>
+<body>
+<div class="content-section active" id="health">
     <div class="section-header">
-      <h2 class="section-title">Repas Enregistrés</h2>
-      <div class="section-actions">
-        <button class="btn btn-secondary" onclick="refreshMeals()">🔄 Actualiser</button>
-        <button class="btn btn-primary" onclick="exportData('meals')">📥 Exporter</button>
-      </div>
+        <h2>❤️ Gestion de la Santé</h2>
+        <p>Gérez les dossiers médicaux et les régimes alimentaires</p>
     </div>
 
-    <div class="quick-stats">
-      <div class="quick-stat">
-        <div class="quick-stat-value">8,542</div>
-        <div class="quick-stat-label">Repas totaux</div>
-      </div>
-      <div class="quick-stat">
-        <div class="quick-stat-value">423</div>
-        <div class="quick-stat-label">Cette semaine</div>
-      </div>
-      <div class="quick-stat">
-        <div class="quick-stat-value">1,847</div>
-        <div class="quick-stat-label">Calories moy.</div>
-      </div>
-      <div class="quick-stat">
-        <div class="quick-stat-value">4.2/5</div>
-        <div class="quick-stat-label">Note moyenne</div>
-      </div>
+    <div id="alertContainer" style="position:fixed; top:20px; right:20px; z-index:2000;"></div>
+
+    <!-- Boutons d'action -->
+    <div class="btn-group" style="display:flex; gap:16px; margin-bottom:40px; flex-wrap:wrap;">
+        <a href="../health/addDossier.php" class="btn btn-primary">➕ Nouveau Dossier</a>
+        <a href="../health/addRegime.php" class="btn btn-primary">➕ Nouveau Régime</a>
+        <a href="../health/exportDossiers.php" target="_blank" class="btn btn-secondary">📥 Export Dossiers</a>
+        <a href="../health/exportRegimes.php" target="_blank" class="btn btn-secondary">📥 Export Régimes</a>
     </div>
 
-    <div class="filter-chips">
-      <div class="chip active" onclick="filterMealsByChip(this,'all')">Tous</div>
-      <div class="chip" onclick="filterMealsByChip(this,'breakfast')">🌅 Petit-déjeuner</div>
-      <div class="chip" onclick="filterMealsByChip(this,'lunch')">☀️ Déjeuner</div>
-      <div class="chip" onclick="filterMealsByChip(this,'dinner')">🌙 Dîner</div>
-      <div class="chip" onclick="filterMealsByChip(this,'snack')">🍎 Collation</div>
+    <!-- Statistiques -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value" id="stat-dossiers">0</div>
+            <div class="stat-label">Dossiers totaux</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🥗</div>
+            <div class="stat-value" id="stat-regimes">0</div>
+            <div class="stat-label">Régimes totaux</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⚖️</div>
+            <div class="stat-value" id="stat-imc">0</div>
+            <div class="stat-label">IMC moyen</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-value" id="stat-allergies">0</div>
+            <div class="stat-label">Allergies déclarées</div>
+        </div>
     </div>
 
-    <div class="search-bar">
-      <input type="text" class="search-input" id="mealSearchInput" placeholder="Rechercher un repas..." onkeyup="searchMeals()">
-      <select class="form-select" id="mealTypeFilter" onchange="filterMeals()">
-        <option value="">Tous les types</option>
-        <option value="breakfast">Petit-déjeuner</option>
-        <option value="lunch">Déjeuner</option>
-        <option value="dinner">Dîner</option>
-        <option value="snack">Collation</option>
-      </select>
-      <select class="form-select" id="mealDateFilter" onchange="filterMeals()">
-        <option value="">Toutes les dates</option>
-        <option value="today">Aujourd'hui</option>
-        <option value="week">Cette semaine</option>
-        <option value="month">Ce mois</option>
-      </select>
+    <!-- Section Dossiers -->
+    <div class="section">
+        <div class="section-header">
+            <h3 class="section-title">📋 Dossiers Médicaux</h3>
+            <div class="section-actions">
+                <button class="btn btn-secondary btn-small" onclick="loadDossiers()">🔄 Actualiser</button>
+            </div>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchDossier" class="search-input" placeholder="🔎 Rechercher dossiers...">
+            <select id="filterBloodType" class="form-select">
+                <option value="">Tous groupes sanguins</option>
+                <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
+                <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+            </select>
+            <select id="sortDossier" class="form-select">
+                <option value="date_mise_a_jour-DESC">Plus récent</option>
+                <option value="date_mise_a_jour-ASC">Plus ancien</option>
+                <option value="imc-DESC">IMC (haut→bas)</option>
+                <option value="imc-ASC">IMC (bas→haut)</option>
+            </select>
+            <button class="btn btn-secondary" onclick="searchDossiers()">🔍 Chercher</button>
+        </div>
+        <div class="table-container">
+            <table id="dossiersTable">
+                <thead>
+                    <tr><th>ID</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Groupe</th><th>Régime (ID)</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="dossiersContainer">
+                    <tr><td colspan="7" class="loading">Chargement...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="data-grid">
-      <div class="data-card">
-        <div class="data-card-icon">🌅</div>
-        <div class="data-card-title">Petit-déjeuner</div>
-        <div class="data-card-value">2,134</div>
-      </div>
-      <div class="data-card">
-        <div class="data-card-icon">☀️</div>
-        <div class="data-card-title">Déjeuner</div>
-        <div class="data-card-value">2,847</div>
-      </div>
-      <div class="data-card">
-        <div class="data-card-icon">🌙</div>
-        <div class="data-card-title">Dîner</div>
-        <div class="data-card-value">2,654</div>
-      </div>
-      <div class="data-card">
-        <div class="data-card-icon">🍎</div>
-        <div class="data-card-title">Collation</div>
-        <div class="data-card-value">907</div>
-      </div>
+    <!-- Section Régimes -->
+    <div class="section">
+        <div class="section-header">
+            <h3 class="section-title">🥗 Régimes Alimentaires</h3>
+            <div class="section-actions">
+                <button class="btn btn-secondary btn-small" onclick="loadRegimes()">🔄 Actualiser</button>
+            </div>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchRegime" class="search-input" placeholder="🔎 Rechercher régimes...">
+            <select id="filterType" class="form-select">
+                <option value="">Tous types</option>
+                <option value="alimentaire">Alimentaire</option>
+                <option value="medical">Médical</option>
+                <option value="sportif">Sportif</option>
+                <option value="perte_de_poids">Perte de poids</option>
+                <option value="prise_de_masse">Prise de masse</option>
+            </select>
+            <button class="btn btn-secondary" onclick="searchRegimes()">🔍 Chercher</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Nom</th><th>Type</th><th>Niveau</th><th>Calories</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="regimesContainer">
+                    <tr><td colspan="5" class="loading">Chargement...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-
-    <div class="table-container" style="margin-top:30px;">
-      <table>
-        <thead>
-          <tr>
-            <th>Utilisateur</th>
-            <th>Repas</th>
-            <th>Type</th>
-            <th>Calories</th>
-            <th>Eco-score</th>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Sophie Martin</td>
-            <td>Salade César</td>
-            <td><span class="badge badge-user">Déjeuner</span></td>
-            <td>450 kcal</td>
-            <td><span class="badge badge-active">A (85/100)</span></td>
-            <td>Aujourd'hui 12:30</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="viewMeal('1')">👁️ Voir</button>
-                <button class="action-btn action-btn-delete" onclick="deleteMeal('1')">🗑️ Supprimer</button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>Karim Benali</td>
-            <td>Poulet rôti + légumes</td>
-            <td><span class="badge badge-user">Dîner</span></td>
-            <td>680 kcal</td>
-            <td><span class="badge badge-active">B (72/100)</span></td>
-            <td>Hier 19:45</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="viewMeal('2')">👁️ Voir</button>
-                <button class="action-btn action-btn-delete" onclick="deleteMeal('2')">🗑️ Supprimer</button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>Léa Dubois</td>
-            <td>Smoothie bowl</td>
-            <td><span class="badge badge-user">Petit-déj</span></td>
-            <td>320 kcal</td>
-            <td><span class="badge badge-active">A (92/100)</span></td>
-            <td>Aujourd'hui 08:15</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="viewMeal('3')">👁️ Voir</button>
-                <button class="action-btn action-btn-delete" onclick="deleteMeal('3')">🗑️ Supprimer</button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
+</div>
 
 <script>
-function refreshMeals() {
-  showToast('Actualisation', 'Repas actualisés', 'success');
-}
+    const API_BASE = '../../../controller';
 
-function filterMealsByChip(chip, type) {
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  console.log('Filtre repas:', type);
-}
+    // Initialisation au chargement du module
+    (function() {
+        loadStats();
+        loadDossiers();
+        loadRegimes();
+    })();
 
-function searchMeals() {
-  const search = document.getElementById('mealSearchInput').value;
-  console.log('Recherche repas:', search);
-}
+    async function loadStats() {
+        try {
+            const dosRes = await fetch(`${API_BASE}/dossierMedical.controller.php?action=stats`);
+            const dosStat = await dosRes.json();
+            const regRes = await fetch(`${API_BASE}/regime.controller.php?action=stats`);
+            const regStat = await regRes.json();
+            document.getElementById('stat-dossiers').textContent = dosStat.total_dossiers || 0;
+            document.getElementById('stat-regimes').textContent = regStat.total_regimes || 0;
+            document.getElementById('stat-imc').textContent = (dosStat.avg_imc || 0).toFixed(1);
+            document.getElementById('stat-allergies').textContent = dosStat.allergies_count || 0;
+        } catch (e) {
+            console.error('Stats error', e);
+        }
+    }
 
-function filterMeals() {
-  const type = document.getElementById('mealTypeFilter').value;
-  const date = document.getElementById('mealDateFilter').value;
-  console.log('Filtre repas:', type, date);
-}
+    async function loadDossiers() {
+        const tbody = document.getElementById('dossiersContainer');
+        tbody.innerHTML = '<tr><td colspan="7" class="loading">Chargement...</td></tr>';
+        try {
+            const resp = await fetch(`${API_BASE}/dossierMedical.controller.php?action=list`);
+            const data = await resp.json();
+            if (!data.success || !data.data.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Aucun dossier trouvé</td></tr>';
+                return;
+            }
+            let html = '';
+            data.data.forEach(d => {
+                html += `<tr>
+                    <td>${d.id_dossier}</td>
+                    <td>${d.poids} kg</td>
+                    <td>${d.taille} cm</td>
+                    <td>${parseFloat(d.imc).toFixed(1)}</td>
+                    <td>${d.groupe_sanguin || '-'}</td>
+                    <td>${d.id_regime ? d.id_regime + (d.nom_regime ? ' - ' + d.nom_regime : '') : 'Aucun'}</td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="../health/updateDossier.php?id=${d.id_dossier}" class="action-btn action-btn-edit">✏️</a>
+                            <button class="action-btn action-btn-delete" onclick="deleteDossier(${d.id_dossier})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Erreur de chargement</td></tr>';
+        }
+    }
 
-function viewMeal(id) {
-  showToast('Repas', `Affichage du repas ${id}`, 'info');
-}
+    async function loadRegimes() {
+        const tbody = document.getElementById('regimesContainer');
+        tbody.innerHTML = '<tr><td colspan="5" class="loading">Chargement...</td></tr>';
+        try {
+            const resp = await fetch(`${API_BASE}/regime.controller.php?action=list`);
+            const data = await resp.json();
+            if (!data.success || !data.data.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Aucun régime trouvé</td></tr>';
+                return;
+            }
+            let html = '';
+            data.data.forEach(r => {
+                html += `<tr>
+                    <td>${r.nom_regime}</td>
+                    <td>${r.type_regime}</td>
+                    <td>${r.niveau_difficulte}</td>
+                    <td>${r.apport_calorique_moyen || '-'} kcal</td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="../health/updateRegime.php?id=${r.id_regime}" class="action-btn action-btn-edit">✏️</a>
+                            <button class="action-btn action-btn-delete" onclick="deleteRegime(${r.id_regime})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Erreur de chargement</td></tr>';
+        }
+    }
 
-function deleteMeal(id) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer ce repas?')) {
-    showToast('Suppression', `Repas ${id} supprimé`, 'success');
-  }
-}
+    async function deleteDossier(id) {
+        if (!confirm('Supprimer ce dossier ?')) return;
+        try {
+            const resp = await fetch(`${API_BASE}/dossierMedical.controller.php?action=delete&id=${id}`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.success) {
+                showAlert('✅ Dossier supprimé', 'success');
+                loadDossiers();
+                loadStats();
+            } else {
+                showAlert('❌ Erreur', 'error');
+            }
+        } catch { showAlert('❌ Erreur', 'error'); }
+    }
+
+    async function deleteRegime(id) {
+        if (!confirm('Supprimer ce régime ?')) return;
+        try {
+            const resp = await fetch(`${API_BASE}/regime.controller.php?action=delete&id=${id}`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.success) {
+                showAlert('✅ Régime supprimé', 'success');
+                loadRegimes();
+                loadStats();
+            } else {
+                showAlert('❌ Erreur', 'error');
+            }
+        } catch { showAlert('❌ Erreur', 'error'); }
+    }
+
+    async function searchDossiers() {
+        const query = document.getElementById('searchDossier').value;
+        const blood = document.getElementById('filterBloodType').value;
+        let url = `${API_BASE}/dossierMedical.controller.php?action=search&q=${encodeURIComponent(query)}`;
+        if (blood) url += `&groupe_sanguin=${blood}`;
+        const tbody = document.getElementById('dossiersContainer');
+        tbody.innerHTML = '<tr><td colspan="7" class="loading">Recherche...</td></tr>';
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            if (!data.success || !data.data.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Aucun résultat</td></tr>';
+                return;
+            }
+            let html = '';
+            data.data.forEach(d => {
+                html += `<tr>
+                    <td>${d.id_dossier}</td><td>${d.poids} kg</td><td>${d.taille} cm</td><td>${parseFloat(d.imc).toFixed(1)}</td>
+                    <td>${d.groupe_sanguin || '-'}</td><td>${d.id_regime || 'Aucun'}</td>
+                    <td><div class="action-btns">
+                        <a href="../health/updateDossier.php?id=${d.id_dossier}" class="action-btn action-btn-edit">✏️</a>
+                        <button class="action-btn action-btn-delete" onclick="deleteDossier(${d.id_dossier})">🗑️</button>
+                    </div></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        } catch { showAlert('Erreur recherche', 'error'); }
+    }
+
+    async function searchRegimes() {
+        const query = document.getElementById('searchRegime').value;
+        const type = document.getElementById('filterType').value;
+        let url = `${API_BASE}/regime.controller.php?action=search&q=${encodeURIComponent(query)}`;
+        if (type) url += `&type_regime=${type}`;
+        const tbody = document.getElementById('regimesContainer');
+        tbody.innerHTML = '<tr><td colspan="5" class="loading">Recherche...</td></tr>';
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            if (!data.success || !data.data.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Aucun résultat</td></tr>';
+                return;
+            }
+            let html = '';
+            data.data.forEach(r => {
+                html += `<tr><td>${r.nom_regime}</td><td>${r.type_regime}</td><td>${r.niveau_difficulte}</td>
+                    <td>${r.apport_calorique_moyen || '-'} kcal</td>
+                    <td><div class="action-btns">
+                        <a href="../health/updateRegime.php?id=${r.id_regime}" class="action-btn action-btn-edit">✏️</a>
+                        <button class="action-btn action-btn-delete" onclick="deleteRegime(${r.id_regime})">🗑️</button>
+                    </div></td></tr>`;
+            });
+            tbody.innerHTML = html;
+        } catch { showAlert('Erreur recherche', 'error'); }
+    }
+
+    function showAlert(message, type) {
+        const container = document.getElementById('alertContainer');
+        const div = document.createElement('div');
+        div.style.padding = '12px 20px';
+        div.style.marginBottom = '10px';
+        div.style.borderRadius = '12px';
+        div.style.background = type === 'success' ? 'rgba(46,204,113,0.2)' : 'rgba(231,76,60,0.2)';
+        div.style.color = type === 'success' ? '#2ecc71' : '#e74c3c';
+        div.style.border = '1px solid ' + (type === 'success' ? '#2ecc71' : '#e74c3c');
+        div.textContent = message;
+        container.appendChild(div);
+        setTimeout(() => div.remove(), 4000);
+    }
 </script>
-
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>
+</body>
+</html>

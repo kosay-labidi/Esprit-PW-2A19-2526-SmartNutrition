@@ -1,24 +1,156 @@
 <section class="content-section" id="welcome">
-  <div class="welcome-section">
-    <div class="welcome-icon">🌿</div>
-    <h2 class="module-title">Bienvenue sur GaiaLumen</h2>
-    <p>Sélectionnez un module dans le menu à gauche pour commencer à gérer votre nutrition et votre impact écologique.</p>
-    <div class="welcome-cta">
-      <a href="#" class="welcome-btn welcome-btn-primary" data-module="users">
-        <span>🚀</span> Commencer
-      </a>
-      <a href="#" class="welcome-btn welcome-btn-secondary" data-module="planning">
-        <span>📅</span> Voir Planning
-      </a>
+  <div class="welcome-hero">
+    <div class="welcome-content">
+      <svg class="welcome-leaf" viewBox="0 0 120 120" fill="none">
+        <g transform="translate(60, 60)">
+          <ellipse cx="0" cy="-8" rx="12" ry="24" fill="#2ecc71" opacity="0.8" transform="rotate(-30)"/>
+          <ellipse cx="8" cy="-4" rx="12" ry="24" fill="#27ae60" opacity="0.85" transform="rotate(0)"/>
+          <ellipse cx="6" cy="8" rx="12" ry="24" fill="#2ecc71" opacity="0.9" transform="rotate(30)"/>
+          <ellipse cx="-6" cy="8" rx="12" ry="24" fill="#27ae60" opacity="0.9" transform="rotate(-30)"/>
+          <ellipse cx="-8" cy="-4" rx="12" ry="24" fill="#2ecc71" opacity="0.85" transform="rotate(0)"/>
+          <path d="M0,-8 Q5,-20 0,-35" stroke="#555" stroke-width="1.5" fill="none"/>
+        </g>
+      </svg>
+      
+      <h1 class="welcome-title">Bienvenue sur SmartNutrition</h1>
+      <p class="welcome-subtitle">Sélectionnez un module dans le menu à gauche pour commencer à gérer votre nutrition et votre impact écologique.</p>
+      
+      <div class="welcome-cta">
+        <a href="#" class="welcome-btn primary-btn" data-module="users">
+          <span class="btn-icon">🚀</span> Commencer
+        </a>
+        <a href="#" class="welcome-btn secondary-btn" data-module="planning">
+          <span class="btn-icon">📅</span> Voir Planning
+        </a>
+      </div>
     </div>
   </div>
 </section>
 
 <style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
+.welcome-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+  text-align: center;
+  padding: 40px 20px;
+  background: radial-gradient(circle at center, rgba(58, 134, 196, 0.05), transparent);
+}
+
+.welcome-content {
+  max-width: 700px;
+  animation: fadeInUp 0.8s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-leaf {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 40px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+.welcome-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #1F3D2B;
+  background: linear-gradient(135deg, #1F3D2B, #3A86C4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+[data-theme="dark"] .welcome-title {
+  background: linear-gradient(135deg, #F2E8CF, #3A86C4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-subtitle {
+  font-size: 1.1rem;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 40px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.welcome-cta {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 40px;
+}
+
+.welcome-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #5B3E96, #3A86C4);
+  color: white;
+  box-shadow: 0 8px 24px rgba(91, 62, 150, 0.3);
+}
+
+.primary-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(91, 62, 150, 0.5);
+}
+
+.secondary-btn {
+  background: transparent;
+  color: #1F3D2B;
+  border: 2px solid #1F3D2B;
+}
+
+[data-theme="dark"] .secondary-btn {
+  color: #F2E8CF;
+  border-color: #F2E8CF;
+}
+
+.secondary-btn:hover {
+  background: #1F3D2B;
+  color: white;
+  transform: translateY(-3px);
+}
+
+[data-theme="dark"] .secondary-btn:hover {
+  background: #F2E8CF;
+  color: #1F3D2B;
+}
+
+.btn-icon {
+  font-size: 1.2rem;
 }
 </style>

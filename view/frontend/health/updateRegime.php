@@ -395,7 +395,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Actions -->
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">💾 Mettre à Jour</button>
-                    <a href="../modules/health.html" class="btn btn-secondary">❌ Annuler</a>
+                   
                 </div>
             </form>
         </div>

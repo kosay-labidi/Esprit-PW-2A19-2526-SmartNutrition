@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../../controller/user.controller.php';
 require_once __DIR__ . '/../../../Model/User.php';
 require_once __DIR__ . '/../../../config.php';
+require_once __DIR__ . '/../../../auth.php';
 
 $userController = new UserController();
 
@@ -9,11 +10,9 @@ $userController = new UserController();
 $isAjax = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest' || 
           (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
 
-/* ════════════════════════════════════════════════
-   Mode API JSON (appelé depuis fetch)
-════════════════════════════════════════════════ */
 $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'application/json')) {
+    requireAdmin();
 
     header('Content-Type: application/json');
     header('Access-Control-Allow-Origin: *');
@@ -81,9 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'applica
     exit();
 }
 
-/* ════════════════════════════════════════════════
-   Mode formulaire HTML (BackOffice)
-════════════════════════════════════════════════ */
 
 // Récupération des informations de l'utilisateur à modifier (GET)
 if (isset($_GET['id'])) {

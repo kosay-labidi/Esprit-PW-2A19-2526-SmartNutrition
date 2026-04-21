@@ -1,6 +1,11 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost:3000');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -25,6 +30,8 @@ $result = $userC->login($email, $mdp);
 
 switch ($result['status']) {
     case 'ok':
+        // ✅ Stocker l'utilisateur en session PHP (côté serveur)
+        $_SESSION['user'] = $result['data'];
         echo json_encode(['success' => true, 'data' => $result['data']]);
         break;
     case 'wrong_password':
@@ -33,7 +40,6 @@ switch ($result['status']) {
     case 'account_not_found':
         echo json_encode(['success' => false, 'message' => 'Aucun compte trouvé']);
         break;
-    
     default:
         echo json_encode(['success' => false, 'message' => 'Erreur serveur']);
 }

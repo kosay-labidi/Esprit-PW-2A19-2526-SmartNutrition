@@ -162,10 +162,12 @@ function initStatsProgression() {
 }
 
 // Fonctions globales pour l'interface admin
-window.logout = function() {
+window.logout = async function() {
   if (confirm('Êtes-vous sûr de vouloir vous déconnecter?')) {
-    localStorage.removeItem('gaialumen-token');
-    localStorage.removeItem('gaialumen-user');
+    await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/logout.php', {
+      method: 'POST',
+      credentials: 'include'
+    });
     window.location.href = '../frontend/index.html';
   }
 };
@@ -300,7 +302,8 @@ window.showEditUserModal = async function(id) {
         'Accept': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
       },
-      cache: 'no-cache'
+      cache: 'no-cache',
+      credentials: 'include' 
     });
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -429,7 +432,8 @@ window.submitEditUser = async function() {
     const response = await fetch(BASE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: parseInt(id), nom, prenom, email, role })
+      body: JSON.stringify({ id: parseInt(id), nom, prenom, email, role }),
+      credentials: 'include'
     });
 
     // Lire la réponse brute d'abord pour diagnostiquer les erreurs PHP
@@ -513,7 +517,7 @@ if (errors.length === 0) {
   formData.append('role', role);
 
   try {
-    const response = await fetch('users/addUser.php', { method: 'POST', body: formData });
+    const response = await fetch('users/addUser.php', { method: 'POST', body: formData,credentials: 'include'});
 
     const text = await response.text();
 

@@ -17,9 +17,10 @@ async function handleLogin(event) {
   errorDiv.style.display = 'none';
 
   try {
-    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/Controller/user.controller.php?action=login', {
+    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/login.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ email: email, mdp: password })
     });
 
@@ -28,8 +29,6 @@ async function handleLogin(event) {
 
     if (result.success) {
       localStorage.setItem('gaialumen-user', JSON.stringify(result.data));
-      localStorage.setItem('gaialumen-token', 'session-' + Date.now());
-
       btn.textContent = '✓ Connexion réussie!';
 
       setTimeout(() => {

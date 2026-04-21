@@ -1,12 +1,16 @@
 <?php
+require_once __DIR__ . '/../../../auth.php';
+requireAdmin();    
 require_once __DIR__ . '/../../../controller/user.controller.php';
 require_once __DIR__ . '/../../../Model/User.php';
 require_once __DIR__ . '/../../../config.php';
+
 
 $userController = new UserController();
 
 $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'application/json')) {
+    requireAdmin();
 
     header('Content-Type: application/json');
     header('Access-Control-Allow-Origin: *');

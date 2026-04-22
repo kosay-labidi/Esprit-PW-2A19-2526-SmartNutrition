@@ -165,7 +165,7 @@
            ═══════════════════════════════════════════════════════════ */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 24px;
             margin-bottom: 40px;
         }
@@ -398,7 +398,7 @@
             }
             
             .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(2, 1fr);
             }
             
             .section {
@@ -425,7 +425,7 @@
         }
     </style>
 </head>
-<body>
+<section class="content-section" id="health">
     <div class="container">
         <h1>❤️ Gestion de la Santé</h1>
         
@@ -433,16 +433,16 @@
         
         <!-- Action Buttons -->
         <div class="btn-group">
-            <a href="../health/addDossier.php" class="btn btn-primary">
+            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/addDossier.php" class="btn btn-primary">
                 <span>➕</span> Nouveau Dossier
             </a>
-            <a href="../health/addRegime.php" class="btn btn-primary">
+            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/addRegime.php" class="btn btn-primary">
                 <span>➕</span> Nouveau Régime
             </a>
-            <a href="../health/exportDossiers.php" target="_blank" class="btn btn-secondary">
+            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/exportDossiers.php" target="_blank" class="btn btn-secondary">
                 <span>📥</span> Export Dossiers
             </a>
-            <a href="../health/exportRegimes.php" target="_blank" class="btn btn-secondary">
+            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/exportRegimes.php" target="_blank" class="btn btn-secondary">
                 <span>📥</span> Export Régimes
             </a>
         </div>
@@ -519,14 +519,13 @@
     </div>
     
     <script>
-        const API_BASE = '../../../controller';
-        
-        // Load all data on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        const API_BASE = '/crud/Esprit-PW-2A19-2526-SmartNutrition/controller';
+
+        function healthAdminInit() {
             loadStats();
             loadDossiers();
             loadRegimes();
-        });
+        }
         
         // Load statistics
         async function loadStats() {
@@ -552,29 +551,33 @@
             try {
                 const response = await fetch(`${API_BASE}/dossierMedical.controller.php?action=list`);
                 const data = await response.json();
-                
-                if (!data.data || data.data.length === 0) {
+
+                if (!data.success || !data.data || data.data.length === 0) {
                     document.getElementById('dossiersContainer').innerHTML = '<div class="empty-state">Aucun dossier trouvé</div>';
                     return;
                 }
-                
-                let html = '<table><thead><tr><th>ID</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Groupe</th><th>Allergie</th><th>Actions</th></tr></thead><tbody>';
-                
+
+                let html = '<table><thead><tr><th>ID</th><th>Utilisateur</th><th>Groupe</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Régime</th><th>Allergie</th><th>Actions</th></tr></thead><tbody>';
+
                 data.data.forEach(d => {
+                    const imc = d.imc ? parseFloat(d.imc).toFixed(1) : '—';
+                    const regime = d.nom_regime ? `<span style="background:rgba(91,62,150,.2);padding:2px 8px;border-radius:8px;font-size:.85rem;">${d.nom_regime}</span>` : '—';
                     html += `<tr>
                         <td>${d.id_dossier}</td>
-                        <td>${d.poids} kg</td>
-                        <td>${d.taille} cm</td>
-                        <td>${parseFloat(d.imc).toFixed(1)}</td>
-                        <td>${d.groupe_sanguin || '-'}</td>
-                        <td>${d.allergie ? d.allergie.substring(0, 25) + '...' : '-'}</td>
+                        <td>${d.id_utilisateur || 1}</td>
+                        <td>${d.groupe_sanguin || '—'}</td>
+                        <td>${d.poids ? d.poids + ' kg' : '—'}</td>
+                        <td>${d.taille ? d.taille + ' cm' : '—'}</td>
+                        <td>${imc}</td>
+                        <td>${regime}</td>
+                        <td>${d.allergie ? d.allergie.substring(0, 20) + '…' : '—'}</td>
                         <td>
-                            <a href="../health/updateDossier.php?id=${d.id_dossier}" class="btn-small">✏️ Éditer</a>
-                            <button class="btn btn-danger btn-small" onclick="deleteDossier(${d.id_dossier})">🗑️ Supprimer</button>
+                            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/updateDossier.php?id=${d.id_dossier}" class="btn btn-small btn-secondary">✏️ Éditer</a>
+                            <button class="btn btn-danger btn-small" onclick="deleteDossier(${d.id_dossier})">🗑️</button>
                         </td>
                     </tr>`;
                 });
-                
+
                 html += '</tbody></table>';
                 document.getElementById('dossiersContainer').innerHTML = html;
             } catch (error) {
@@ -588,27 +591,27 @@
             try {
                 const response = await fetch(`${API_BASE}/regime.controller.php?action=list`);
                 const data = await response.json();
-                
-                if (!data.data || data.data.length === 0) {
+
+                if (!data.success || !data.data || data.data.length === 0) {
                     document.getElementById('regimesContainer').innerHTML = '<div class="empty-state">Aucun régime trouvé</div>';
                     return;
                 }
-                
-                let html = '<table><thead><tr><th>Nom</th><th>Type</th><th>Niveau</th><th>Calories</th><th>Actions</th></tr></thead><tbody>';
-                
+
+                let html = '<table><thead><tr><th>Nom</th><th>Type</th><th>Niveau</th><th>Calories/j</th><th>Actions</th></tr></thead><tbody>';
+
                 data.data.forEach(r => {
                     html += `<tr>
-                        <td>${r.nom_regime}</td>
-                        <td>${r.type_regime}</td>
-                        <td>${r.niveau_difficulte}</td>
-                        <td>${r.apport_calorique_moyen || '-'} kcal</td>
+                        <td><strong>${r.nom_regime}</strong></td>
+                        <td>${r.type_regime || '—'}</td>
+                        <td>${r.niveau_difficulte || '—'}</td>
+                        <td>${r.apport_calorique_moyen ? r.apport_calorique_moyen + ' kcal' : '—'}</td>
                         <td>
-                            <a href="../health/updateRegime.php?id=${r.id_regime}" class="btn-small">✏️ Éditer</a>
-                            <button class="btn btn-danger btn-small" onclick="deleteRegime(${r.id_regime})">🗑️ Supprimer</button>
+                            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/updateRegime.php?id=${r.id_regime}" class="btn btn-small btn-secondary">✏️ Éditer</a>
+                            <button class="btn btn-danger btn-small" onclick="deleteRegime(${r.id_regime})">🗑️</button>
                         </td>
                     </tr>`;
                 });
-                
+
                 html += '</tbody></table>';
                 document.getElementById('regimesContainer').innerHTML = html;
             } catch (error) {
@@ -671,12 +674,12 @@
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                if (!data.data || data.data.length === 0) {
+                if (!data.success || !data.data || data.data.length === 0) {
                     document.getElementById('dossiersContainer').innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
                     return;
                 }
                 
-                let html = '<table><thead><tr><th>ID</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Groupe</th><th>Allergie</th><th>Actions</th></tr></thead><tbody>';
+                let html = '<table><thead><tr><th>ID</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Groupe</th><th>Régime ID</th><th>Allergie</th><th>Actions</th></tr></thead><tbody>';
                 
                 data.data.forEach(d => {
                     html += `<tr>
@@ -685,9 +688,10 @@
                         <td>${d.taille} cm</td>
                         <td>${parseFloat(d.imc).toFixed(1)}</td>
                         <td>${d.groupe_sanguin || '-'}</td>
+                        <td>${d.id_regime || '-'}</td>
                         <td>${d.allergie ? d.allergie.substring(0, 25) : '-'}</td>
                         <td>
-                            <a href="../health/updateDossier.php?id=${d.id_dossier}">✏️ Éditer</a>
+                            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/updateDossier.php?id=${d.id_dossier}">✏️ Éditer</a>
                             <button class="btn btn-danger btn-small" onclick="deleteDossier(${d.id_dossier})">🗑️</button>
                         </td>
                     </tr>`;
@@ -713,7 +717,7 @@
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                if (!data.data || data.data.length === 0) {
+                if (!data.success || !data.data || data.data.length === 0) {
                     document.getElementById('regimesContainer').innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
                     return;
                 }
@@ -727,7 +731,7 @@
                         <td>${r.niveau_difficulte}</td>
                         <td>${r.apport_calorique_moyen || '-'} kcal</td>
                         <td>
-                            <a href="../health/updateRegime.php?id=${r.id_regime}">✏️ Éditer</a>
+                            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/updateRegime.php?id=${r.id_regime}">✏️ Éditer</a>
                             <button class="btn btn-danger btn-small" onclick="deleteRegime(${r.id_regime})">🗑️</button>
                         </td>
                     </tr>`;
@@ -750,6 +754,10 @@
             
             setTimeout(() => alertDiv.remove(), 4000);
         }
+
+        // Call init after all functions are defined
+        healthAdminInit();
     </script>
+</section>
 </body>
 </html>

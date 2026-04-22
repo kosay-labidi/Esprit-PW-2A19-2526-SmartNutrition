@@ -6,15 +6,15 @@ $ctrl = new DossierMedicalController();
 $id = $_GET['id'] ?? null;
 
 if (!$id) {
-    header('Location: ../modules/health-admin.html?error=id_required');
+    header('Location: /crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/admin.html?error=id_required');
     exit;
 }
 
 try {
     $ctrl->delete($id);
-    header('Location: ../modules/health-admin.html?success=dossier_deleted');
+    header('Location: /crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/admin.html?success=dossier_deleted');
 } catch (Exception $e) {
-    header('Location: ../modules/health-admin.html?error=' . urlencode($e->getMessage()));
+    header('Location: /crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/admin.html?error=' . urlencode($e->getMessage()));
 }
 exit;
 ?>

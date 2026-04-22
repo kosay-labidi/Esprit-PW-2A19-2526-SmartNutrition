@@ -201,35 +201,36 @@
             }
 
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dossier) {
-                // Get required fields
                 $groupe_sanguin = $_POST['groupe_sanguin'] ?? '';
                 $poids = $_POST['poids'] ?? '';
                 $taille = $_POST['taille'] ?? '';
                 $contact = $_POST['contact_en_cas_durgence'] ?? '';
 
-                // Validate required fields
-                if (empty($groupe_sanguin) || empty($poids) || empty($taille) || empty($contact)) {
-                    $error = "❌ Tous les champs marqués d'une * sont obligatoires";
+                // Only groupe_sanguin, poids, taille are required — JS handles the rest
+                if (empty($groupe_sanguin) || empty($poids) || empty($taille)) {
+                    $error = "❌ Le groupe sanguin, le poids et la taille sont obligatoires";
                 } elseif (floatval($poids) <= 0 || floatval($taille) <= 0) {
                     $error = "❌ Le poids et la taille doivent être supérieurs à 0";
-                } elseif (!preg_match('/^\+\d{1,3}\s\d{4,6}\s\d{4,6}$/', $contact)) {
-                    $error = "❌ Format de téléphone requis: +XX XXXX XXXX";
                 } else {
                     try {
                         $d = new DossierMedical(
-                            $id, $dossier['id_utilisateur'], $dossier['date_creation'], null,
-                            $groupe_sanguin, 
-                            floatval($poids), 
-                            floatval($taille), 
-                            null,
-                            $_POST['regime_special'] ?? null, 
-                            $_POST['notes_medecin'] ?? null, 
-                            $_POST['allergie'] ?? null,
-                            $_POST['gravite_allergie'] ?? null, 
-                            $_POST['maladies'] ?? null, 
-                            $_POST['traitement'] ?? null,
-                            $_POST['medecin'] ?? null, 
-                            $contact
+                            $id,                                        // id_dossier
+                            $dossier['id_utilisateur'],                 // id_utilisateur
+                            $dossier['id_regime'] ?? null,              // id_regime
+                            $dossier['date_creation'] ?? null,          // date_creation
+                            null,                                       // date_mise_a_jour
+                            $groupe_sanguin,                            // groupe_sanguin
+                            floatval($poids),                           // poids
+                            floatval($taille),                          // taille
+                            null,                                       // imc
+                            $_POST['regime_special'] ?? null,           // regime_special
+                            $_POST['notes_medecin'] ?? null,            // notes_medecin
+                            $_POST['allergie'] ?? null,                 // allergie
+                            $_POST['gravite_allergie'] ?? null,         // gravite_allergie
+                            $_POST['maladies'] ?? null,                 // maladies
+                            $_POST['traitement'] ?? null,               // traitement
+                            $_POST['medecin'] ?? null,                  // medecin
+                            $contact                                    // contact_en_cas_durgence
                         );
                         $ctrl->update($d, $id);
                         $success = "✅ Dossier médical mis à jour avec succès!";
@@ -253,7 +254,7 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="groupe">Groupe Sanguin <span class="required">*</span></label>
-                            <select name="groupe_sanguin" id="groupe" required>
+                            <select name="groupe_sanguin" id="groupe">
                                 <option value="">Sélectionner...</option>
                                 <option value="O+" <?php echo ($dossier['groupe_sanguin'] === 'O+') ? 'selected' : ''; ?>>O+</option>
                                 <option value="O-" <?php echo ($dossier['groupe_sanguin'] === 'O-') ? 'selected' : ''; ?>>O-</option>
@@ -267,11 +268,11 @@
                         </div>
                         <div class="form-group">
                             <label for="poids">Poids (kg) <span class="required">*</span></label>
-                            <input type="number" id="poids" name="poids" step="0.1" min="0" value="<?php echo $dossier['poids']; ?>" required onchange="calculateIMC()">
+                            <input type="number" id="poids" name="poids" step="0.1" min="0" value="<?php echo $dossier['poids']; ?>" onchange="calculateIMC()">
                         </div>
                         <div class="form-group">
                             <label for="taille">Taille (cm) <span class="required">*</span></label>
-                            <input type="number" id="taille" name="taille" step="0.1" min="0" value="<?php echo $dossier['taille']; ?>" required onchange="calculateIMC()">
+                            <input type="number" id="taille" name="taille" step="0.1" min="0" value="<?php echo $dossier['taille']; ?>" onchange="calculateIMC()">
                         </div>
                         <div class="imc-result" id="imcResult"></div>
                     </div>
@@ -334,7 +335,7 @@
                         </div>
                         <div class="form-group">
                             <label for="contact">Contact Urgence <span class="required">*</span></label>
-                            <input type="tel" id="contact" name="contact_en_cas_durgence" placeholder="+33 6 12 34 56 78" value="<?php echo htmlspecialchars($dossier['contact_en_cas_durgence'] ?? ''); ?>" required>
+                            <input type="tel" id="contact" name="contact_en_cas_durgence" placeholder="+33 6 12 34 56 78" value="<?php echo htmlspecialchars($dossier['contact_en_cas_durgence'] ?? ''); ?>">
                             <div class="error-msg" id="contactError">Format requis: +XX XXXX XXXX</div>
                         </div>
                     </div>
@@ -353,12 +354,12 @@
 
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">💾 Enregistrer les modifications</button>
-                    <a href="../modules/health-admin.html" class="btn btn-secondary">← Retour</a>
+                    <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/admin.html" class="btn btn-secondary">← Retour</a>
                 </div>
             </form>
             <?php else: ?>
                 <div class="alert alert-error">❌ Dossier non trouvé</div>
-                <a href="../modules/health-admin.html" class="btn btn-secondary" style="margin-top: 20px;">← Retour au tableau de bord</a>
+                <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/admin.html" class="btn btn-secondary" style="margin-top: 20px;">← Retour au tableau de bord</a>
             <?php endif; ?>
         </div>
     </div>
@@ -367,67 +368,43 @@
         function calculateIMC() {
             const poids = parseFloat(document.getElementById('poids').value);
             const taille = parseFloat(document.getElementById('taille').value);
-            
             if (poids > 0 && taille > 0) {
                 const imcResult = document.getElementById('imcResult');
                 const imc = (poids / ((taille / 100) ** 2)).toFixed(1);
-                let category = '';
-                
-                if (imc < 18.5) category = 'Insuffisance pondérale';
-                else if (imc < 25) category = 'Poids normal';
-                else if (imc < 30) category = 'Surpoids';
-                else category = 'Obésité';
-                
-                imcResult.innerHTML = `<strong>IMC: ${imc}</strong> - ${category}`;
+                let category = imc < 18.5 ? 'Insuffisance pondérale' : imc < 25 ? 'Poids normal' : imc < 30 ? 'Surpoids' : 'Obésité';
+                imcResult.innerHTML = `<strong>IMC: ${imc}</strong> — ${category}`;
                 imcResult.classList.add('show');
             }
         }
 
-        function validatePhoneNumber(phone) {
-            const phoneRegex = /^\+\d{1,3}\s\d{4,6}\s\d{4,6}$/;
-            return phoneRegex.test(phone);
-        }
-
         function validateForm() {
-            const poids = parseFloat(document.getElementById('poids').value);
-            const taille = parseFloat(document.getElementById('taille').value);
-            const contact = document.getElementById('contact').value;
-            const contactError = document.getElementById('contactError');
-            const contactInput = document.getElementById('contact');
+            const groupe  = document.getElementById('groupe').value;
+            const poids   = parseFloat(document.getElementById('poids').value);
+            const taille  = parseFloat(document.getElementById('taille').value);
+            const contact = document.getElementById('contact').value.trim();
+            const contactInput  = document.getElementById('contact');
+            const contactError  = document.getElementById('contactError');
 
-            // Clear previous errors
             contactInput.classList.remove('error');
             contactError.style.display = 'none';
 
-            // Validate poids
-            if (poids <= 0) {
-                alert('⚠️ Veuillez entrer un poids valide (> 0)');
+            if (!groupe) { alert('⚠️ Le groupe sanguin est obligatoire.'); return false; }
+            if (!poids || poids < 10 || poids > 500) {
+                alert('⚠️ Le poids doit être compris entre 10 et 500 kg.');
                 return false;
             }
-
-            // Validate taille
-            if (taille <= 0) {
-                alert('⚠️ Veuillez entrer une taille valide (> 0)');
+            if (!taille || taille < 50 || taille > 250) {
+                alert('⚠️ La taille doit être comprise entre 50 et 250 cm.');
                 return false;
             }
-
-            // Check for required contact
-            if (!contact.trim()) {
-                alert('⚠️ Le contact d\'urgence est obligatoire');
-                return false;
-            }
-
-            // Validate phone format
-            if (!validatePhoneNumber(contact)) {
+            if (contact && !/^\+\d{1,3}\s\d{4,6}\s\d{4,6}$/.test(contact)) {
                 contactInput.classList.add('error');
                 contactError.style.display = 'block';
                 return false;
             }
-
             return true;
         }
 
-        // Auto-calculate IMC on page load
         window.addEventListener('load', calculateIMC);
     </script>
 </body>

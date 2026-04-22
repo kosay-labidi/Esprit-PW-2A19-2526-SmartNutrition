@@ -174,7 +174,7 @@ class RegimeController {
     public function handleRequest() {
         header('Content-Type: application/json');
 
-        $action = $_GET['action'] ?? '';
+        $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
         try {
             switch ($action) {
@@ -231,6 +231,41 @@ class RegimeController {
                     echo json_encode(['success' => true, 'message' => 'Régime supprimé avec succès']);
                     break;
 
+                case 'add':
+                    $nom = $_POST['nom_regime'] ?? null;
+                    if (!$nom) {
+                        echo json_encode(['success' => false, 'message' => 'Nom du régime requis']);
+                        break;
+                    }
+                    
+                    // Generate slug from name
+                    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $nom), '-'));
+                    
+                    $regime = new Regime(
+                        null,
+                        $nom,
+                        $slug,
+                        $_POST['description'] ?? null,
+                        $_POST['type_regime'] ?? null,
+                        $_POST['niveau_difficulte'] ?? null,
+                        null,
+                        null,
+                        $_POST['apport_calorique_moyen'] ?? null
+                    );
+                    $result = $this->add($regime);
+                    echo json_encode(['success' => true, 'message' => 'Régime créé', 'data' => $result]);
+                    break;
+
+                case 'get':
+                    $id = $_GET['id'] ?? null;
+                    if (!$id) {
+                        echo json_encode(['success' => false, 'message' => 'ID requis']);
+                        break;
+                    }
+                    $result = $this->show($id);
+                    echo json_encode(['success' => true, 'message' => 'Régime récupéré', 'data' => $result]);
+                    break;
+
                 default:
                     echo json_encode(['success' => false, 'message' => 'Action not found']);
                     break;
@@ -247,6 +282,77 @@ class RegimeController {
         $stmt = $db->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Display regimes by dossier using junction table (many-to-many pattern)
+    public function afficherRegimes($idDossier) {
+        try {
+            $pdo = config::getConnexion();
+            $query = $pdo->prepare("SELECT r.* FROM regimes r 
+                                   INNER JOIN dossier_regime dr ON r.id_regime = dr.id_regime 
+                                   WHERE dr.id_dossier = :id_dossier");
+            $query->execute([':id_dossier' => $idDossier]);
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            return [];
+        }
+    }
+
+    // Display all regimes for dropdown selection
+    public function afficherTousRegimes() {
+        try {
+            $pdo = config::getConnexion();
+            $query = $pdo->prepare("SELECT * FROM regimes ORDER BY nom_regime");
+            $query->execute();
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            return [];
+        }
+    }
+
+    // Add regime to dossier (many-to-many)
+    public function associerRegimeToDossier($idDossier, $idRegime) {
+        try {
+            $pdo = config::getConnexion();
+            $query = $pdo->prepare("INSERT INTO dossier_regime (id_dossier, id_regime) 
+                                   VALUES (:id_dossier, :id_regime)");
+            $query->execute([':id_dossier' => $idDossier, ':id_regime' => $idRegime]);
+            return true;
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            return false;
+        }
+    }
+
+    // Remove regime from dossier
+    public function dissocierRegimeFromDossier($idDossier, $idRegime) {
+        try {
+            $pdo = config::getConnexion();
+            $query = $pdo->prepare("DELETE FROM dossier_regime 
+                                   WHERE id_dossier = :id_dossier AND id_regime = :id_regime");
+            $query->execute([':id_dossier' => $idDossier, ':id_regime' => $idRegime]);
+            return true;
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            return false;
+        }
+    }
+
+    // Get associated regimes count for a dossier
+    public function countRegimesForDossier($idDossier) {
+        try {
+            $pdo = config::getConnexion();
+            $query = $pdo->prepare("SELECT COUNT(*) as total FROM dossier_regime 
+                                   WHERE id_dossier = :id_dossier");
+            $query->execute([':id_dossier' => $idDossier]);
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            return $result['total'] ?? 0;
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            return 0;
+        }
     }
 
     public function add(Regime $r) {
@@ -326,7 +432,7 @@ class RegimeController {
 }
 
 // Handle API requests
-if (isset($_GET['action'])) {
+if (isset($_GET['action']) || isset($_POST['action'])) {
     $controller = new RegimeController();
     $controller->handleRequest();
 }

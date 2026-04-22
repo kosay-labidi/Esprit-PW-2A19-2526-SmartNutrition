@@ -10,23 +10,27 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $d = new DossierMedical(
-            null, 1, null, null,
-            $_POST['groupe_sanguin'] ?? null,
-            floatval($_POST['poids'] ?? 0),
-            floatval($_POST['taille'] ?? 0),
-            null,
-            $_POST['regime_special'] ?? null,
-            $_POST['notes_medecin'] ?? null,
-            $_POST['allergie'] ?? null,
-            $_POST['gravite_allergie'] ?? null,
-            $_POST['maladies'] ?? null,
-            $_POST['traitement'] ?? null,
-            $_POST['medecin'] ?? null,
-            $_POST['contact_en_cas_durgence'] ?? null
+            null,                                       // id_dossier
+            1,                                          // id_utilisateur
+            null,                                       // id_regime
+            null,                                       // date_creation
+            null,                                       // date_mise_a_jour
+            $_POST['groupe_sanguin'] ?? null,           // groupe_sanguin
+            floatval($_POST['poids'] ?? 0),             // poids
+            floatval($_POST['taille'] ?? 0),            // taille
+            null,                                       // imc (calculated by DB trigger or later)
+            $_POST['regime_special'] ?? null,           // regime_special
+            $_POST['notes_medecin'] ?? null,            // notes_medecin
+            $_POST['allergie'] ?? null,                 // allergie
+            $_POST['gravite_allergie'] ?? null,         // gravite_allergie
+            $_POST['maladies'] ?? null,                 // maladies
+            $_POST['traitement'] ?? null,               // traitement
+            $_POST['medecin'] ?? null,                  // medecin
+            $_POST['contact_en_cas_durgence'] ?? null   // contact_en_cas_durgence
         );
         $ctrl->add($d);
         $success = "Dossier médical ajouté avec succès!";
-        header('Refresh: 2; url=../modules/health-admin.html');
+        header('Refresh: 2; url=/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/admin.html');
     } catch (Exception $e) {
         $error = "Erreur : " . $e->getMessage();
     }
@@ -215,67 +219,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="card">
-            <?php
-            require_once '../../../config.php';
-            require_once '../../../controller/dossierMedical.controller.php';
-            require_once '../../../Model/DossierMedical.php';
-
-            $ctrl = new DossierMedicalController();
-            $error = '';
-            $success = '';
-
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                // Get required fields
-                $groupe_sanguin = $_POST['groupe_sanguin'] ?? '';
-                $poids = $_POST['poids'] ?? '';
-                $taille = $_POST['taille'] ?? '';
-                $contact = $_POST['contact_en_cas_durgence'] ?? '';
-
-                // Validate required fields
-                if (empty($groupe_sanguin) || empty($poids) || empty($taille) || empty($contact)) {
-                    $error = "❌ Tous les champs marqués d'une * sont obligatoires";
-                } elseif (floatval($poids) <= 0 || floatval($taille) <= 0) {
-                    $error = "❌ Le poids et la taille doivent être supérieurs à 0";
-                } elseif (!preg_match('/^\+\d{1,3}\s\d{4,6}\s\d{4,6}$/', $contact)) {
-                    $error = "❌ Format de téléphone requis: +XX XXXX XXXX";
-                } else {
-                    try {
-                        $d = new DossierMedical(
-                            null, 1, null, null,
-                            $groupe_sanguin,
-                            floatval($poids),
-                            floatval($taille),
-                            null,
-                            $_POST['regime_special'] ?? null,
-                            $_POST['notes_medecin'] ?? null,
-                            $_POST['allergie'] ?? null,
-                            $_POST['gravite_allergie'] ?? null,
-                            $_POST['maladies'] ?? null,
-                            $_POST['traitement'] ?? null,
-                            $_POST['medecin'] ?? null,
-                            $contact
-                        );
-                        $ctrl->add($d);
-                        $success = "✅ Dossier médical enregistré avec succès!";
-                        echo "<meta http-equiv='refresh' content='2; url=../modules/health-admin.html'>";
-                    } catch (Exception $e) {
-                        $error = "❌ " . htmlspecialchars($e->getMessage());
-                    }
-                }
-            }
-            ?>
-
             <?php if ($error): ?><div class="alert alert-error">❌ <?= $error ?></div><?php endif; ?>
             <?php if ($success): ?><div class="alert alert-success">✅ <?= $success ?></div><?php endif; ?>
 
-            <form method="POST" onsubmit="return validateForm()">
+            <form method="POST" id="dossierForm">
                 <!-- SECTION: Informations Biométriques -->
                 <div class="form-section">
                     <div class="section-title">⚖️ Informations Biométriques</div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="groupe">Groupe Sanguin *</label>
-                            <select name="groupe_sanguin" id="groupe" required>
+                            <select name="groupe_sanguin" id="groupe">
                                 <option value="">Sélectionner...</option>
                                 <option value="O+">O+</option>
                                 <option value="O-">O-</option>
@@ -289,11 +243,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div class="form-group">
                             <label for="poids">Poids (kg) *</label>
-                            <input type="number" id="poids" name="poids" step="0.1" min="0" required onchange="calculateIMC()">
+                            <input type="number" id="poids" name="poids" step="0.1" min="0" onchange="calculateIMC()">
                         </div>
                         <div class="form-group">
                             <label for="taille">Taille (cm) *</label>
-                            <input type="number" id="taille" name="taille" step="0.1" min="0" required onchange="calculateIMC()">
+                            <input type="number" id="taille" name="taille" step="0.1" min="0" onchange="calculateIMC()">
                         </div>
                         <div class="imc-result" id="imcResult"></div>
                     </div>
@@ -374,7 +328,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">💾 Enregistrer le dossier</button>
-                    <a href="../modules/health-admin.html" class="btn btn-secondary">← Retour</a>
+                    <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/admin.html" class="btn btn-secondary">← Retour</a>
                 </div>
             </form>
         </div>
@@ -384,40 +338,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function calculateIMC() {
             const poids = parseFloat(document.getElementById('poids').value);
             const taille = parseFloat(document.getElementById('taille').value);
-            
             if (poids > 0 && taille > 0) {
                 const imcResult = document.getElementById('imcResult');
                 const imc = (poids / ((taille / 100) ** 2)).toFixed(1);
-                let category = '';
-                
-                if (imc < 18.5) category = 'Insuffisance pondérale';
-                else if (imc < 25) category = 'Poids normal';
-                else if (imc < 30) category = 'Surpoids';
-                else category = 'Obésité';
-                
-                imcResult.innerHTML = `<strong>IMC: ${imc}</strong> - ${category}`;
+                let category = imc < 18.5 ? 'Insuffisance pondérale' : imc < 25 ? 'Poids normal' : imc < 30 ? 'Surpoids' : 'Obésité';
+                imcResult.innerHTML = `<strong>IMC: ${imc}</strong> — ${category}`;
                 imcResult.classList.add('show');
             }
         }
 
-        function validateForm() {
-            const poids = parseFloat(document.getElementById('poids').value);
-            const taille = parseFloat(document.getElementById('taille').value);
-            
-            if (poids <= 0) {
-                alert('⚠️ Veuillez entrer un poids valide (> 0)');
-                return false;
-            }
-            if (taille <= 0) {
-                alert('⚠️ Veuillez entrer une taille valide (> 0)');
-                return false;
-            }
-            return true;
-        }
-    </script>
-</body>
-</html>
-        }
+        // Intercept form submit to allow async uniqueness check
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const groupe  = document.getElementById('groupe').value;
+                const poids   = parseFloat(document.getElementById('poids').value);
+                const taille  = parseFloat(document.getElementById('taille').value);
+                const contact = document.getElementById('contact').value.trim();
+
+                if (!groupe) {
+                    alert('⚠️ Le groupe sanguin est obligatoire.');
+                    return;
+                }
+                if (!poids || poids < 10 || poids > 500) {
+                    alert('⚠️ Le poids doit être compris entre 10 et 500 kg.');
+                    return;
+                }
+                if (!taille || taille < 50 || taille > 250) {
+                    alert('⚠️ La taille doit être comprise entre 50 et 250 cm.');
+                    return;
+                }
+                if (contact && !/^\+\d{1,3}\s\d{4,6}\s\d{4,6}$/.test(contact)) {
+                    alert('⚠️ Format contact urgence invalide. Exemple : +216 2525 2525');
+                    return;
+                }
+
+                // Unicité id_utilisateur — désactivé (pas de système d'auth, user_id = 1 par défaut)
+
+                // All checks passed — submit
+                this.submit();
+            });
+        });
     </script>
 </body>
 </html>

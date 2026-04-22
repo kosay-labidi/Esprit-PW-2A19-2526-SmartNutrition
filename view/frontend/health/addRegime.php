@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $ctrl->add($r);
             $success = "Régime ajouté avec succès!";
-            header('Location: ../modules/health.html');
+            header('Location: /crud/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/dashboard.html');
             exit;
         } catch (Exception $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') !== false || strpos($e->getMessage(), 'existe déjà') !== false) {
@@ -307,19 +307,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
 
-            <form method="POST">
+            <form method="POST" onsubmit="return validateForm()">
                 <!-- Informations Générales -->
                 <div class="form-section">
                     <h3 class="section-title">📋 Informations Générales</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="nom_regime">Nom du Régime <span class="required">*</span></label>
-                            <input type="text" id="nom_regime" name="nom_regime" placeholder="ex: Régime Méditerranéen" required>
+                            <input type="text" id="nom_regime" name="nom_regime" placeholder="ex: Régime Méditerranéen">
                         </div>
                         
                         <div class="form-group">
                             <label for="type_regime">Type <span class="required">*</span></label>
-                            <select id="type_regime" name="type_regime" required>
+                            <select id="type_regime" name="type_regime">
                                 <option value="">-- Sélectionner un type --</option>
                                 <option value="alimentaire">Alimentaire</option>
                                 <option value="medical">Médical</option>
@@ -334,7 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="niveau_difficulte">Niveau de Difficulté <span class="required">*</span></label>
-                            <select id="niveau_difficulte" name="niveau_difficulte" required>
+                            <select id="niveau_difficulte" name="niveau_difficulte">
                                 <option value="">-- Sélectionner un niveau --</option>
                                 <option value="facile">Facile</option>
                                 <option value="modere">Modéré</option>
@@ -343,7 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         
                         <div class="form-group">
-                            <label for="apport_calorique_moyen">Apport Calorique Moyen (kcal/jour)</label>
+                            <label for="apport_calorique_moyen">Apport Calorique Moyen (kcal/jour) <span class="required">*</span></label>
                             <input type="number" id="apport_calorique_moyen" name="apport_calorique_moyen" placeholder="ex: 2000" min="0" step="50">
                         </div>
                     </div>
@@ -377,10 +377,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Actions -->
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">💾 Ajouter le Régime</button>
-                    <a href="../modules/health.html" class="btn btn-secondary">❌ Annuler</a>
+                    <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/dashboard.html" class="btn btn-secondary">❌ Annuler</a>
                 </div>
             </form>
         </div>
     </div>
+    <script>
+        function validateForm() {
+            const nom    = document.getElementById('nom_regime').value.trim();
+            const type   = document.getElementById('type_regime').value;
+            const niveau = document.getElementById('niveau_difficulte').value;
+            const calEl  = document.getElementById('apport_calorique_moyen');
+            const cal    = calEl.value !== '' ? parseFloat(calEl.value) : null;
+
+            if (!nom || nom.length < 3) {
+                alert('⚠️ Le nom du régime doit contenir au moins 3 caractères.');
+                return false;
+            }
+            if (!type) {
+                alert('⚠️ Veuillez sélectionner un type de régime.');
+                return false;
+            }
+            if (!niveau) {
+                alert('⚠️ Veuillez sélectionner un niveau de difficulté.');
+                return false;
+            }
+            if (cal === null || calEl.value === '') {
+                alert('⚠️ L\'apport calorique est obligatoire.');
+                calEl.focus();
+                return false;
+            }
+            if (cal < 1000) {
+                alert('⚠️ L\'apport calorique minimum est de 1000 kcal/jour.');
+                calEl.focus();
+                return false;
+            }
+            if (cal > 10000) {
+                alert('⚠️ L\'apport calorique ne peut pas dépasser 10 000 kcal/jour.');
+                calEl.focus();
+                return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>

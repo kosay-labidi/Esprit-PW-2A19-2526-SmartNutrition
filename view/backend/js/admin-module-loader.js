@@ -90,6 +90,25 @@ function injectAdminModuleStyles(moduleName, container) {
   });
 }
 
+// Fonction pour exécuter les scripts d'un module admin
+function executeAdminModuleScripts(container) {
+  const scripts = container.querySelectorAll('script');
+  scripts.forEach(oldScript => {
+    const newScript = document.createElement('script');
+    Array.from(oldScript.attributes).forEach(attr => {
+      newScript.setAttribute(attr.name, attr.value);
+    });
+    if (oldScript.src) {
+      const url = new URL(oldScript.src, window.location.href);
+      url.searchParams.set('v', Date.now());
+      newScript.src = url.href;
+    } else {
+      newScript.textContent = oldScript.textContent;
+    }
+    document.body.appendChild(newScript);
+  });
+}
+
 // Fonction pour afficher un module admin
 async function showAdminModule(moduleName) {
   // Détection du protocole file:// (CORS bloqué par les navigateurs)
@@ -161,6 +180,9 @@ async function showAdminModule(moduleName) {
         if (mainContent) {
           mainContent.appendChild(newSection);
           targetSection = newSection;
+
+          // Exécuter les scripts du module (APRÈS l'ajout au DOM)
+          executeAdminModuleScripts(newSection);
         }
       }
     } else {
@@ -287,6 +309,9 @@ function startAutoReload() {
             mainContent.appendChild(newSection);
             newSection.style.display = 'block';
             newSection.classList.add('active');
+
+            // Exécuter les scripts du module
+            executeAdminModuleScripts(newSection);
             
             // Déclencher l'événement de chargement du module
             const event = new CustomEvent('adminModuleLoaded', { detail: { moduleName } });

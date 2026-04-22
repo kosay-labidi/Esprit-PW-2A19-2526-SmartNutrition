@@ -146,6 +146,148 @@
             display: none;
         }
 
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9998;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(1, 50, 32, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--vert);
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--vert);
+        }
+
+        .modal-form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--vert);
+            font-size: 0.95rem;
+        }
+
+        .modal-input,
+        .modal-select,
+        .modal-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border 0.3s;
+            box-sizing: border-box;
+        }
+
+        .modal-input:focus,
+        .modal-select:focus,
+        .modal-textarea:focus {
+            border-color: var(--bleu);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(119, 181, 254, 0.1);
+        }
+
+        .modal-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .modal-btn-cancel {
+            background: #f0f0f0;
+            color: var(--vert);
+        }
+
+        .modal-btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .modal-btn-submit {
+            background: linear-gradient(135deg, var(--bleu), #4a9ee8);
+            color: white;
+        }
+
+        .modal-btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(119, 181, 254, 0.4);
+        }
+
+        .modal-btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .statistics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -371,8 +513,28 @@
                     </div>
                 </div>
 
-                <!-- Allergies & Maladies -->
+                <!-- Régime Associé -->
                 <div>
+                    <h4 style="color: var(--vert); font-weight: 600; margin-bottom: 15px;">🍽️ Régime Associé</h4>
+                    <div class="health-form-grid">
+                        <div class="col-span-2">
+                            <label class="health-label">Sélectionner un régime existant</label>
+                            <select class="health-input" id="healthDossierRegimeSelect" onchange="healthAttachRegime()">
+                                <option value="">— Choisir un régime —</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2" id="healthRegimeDisplay" style="background: rgba(1,50,32,0.05); padding: 12px; border-radius: 8px; display: none;">
+                            <strong style="color: var(--vert);">Régime actuel:</strong>
+                            <p id="healthRegimeInfo" style="margin: 8px 0 0 0; font-size: 0.9rem;"></p>
+                        </div>
+                        <div class="col-span-2">
+                            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/addRegime.php" class="health-btn health-btn-bleu" style="width:100%;display:flex;align-items:center;justify-content:center;text-decoration:none;">
+                                ➕ Créer un nouveau régime
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
                     <h4 style="color: var(--vert); font-weight: 600; margin-bottom: 15px;">Allergies & Maladies</h4>
                     <div class="health-form-grid">
                         <div class="col-span-2">
@@ -395,6 +557,24 @@
                             <textarea class="health-input" id="healthDossierMaladies" rows="3" 
                                       placeholder="ex. Diabète type 2, hypertension, asthme..."></textarea>
                         </div>
+                        <div class="col-span-2">
+                            <label class="health-label">Traitement actuel</label>
+                            <textarea class="health-input" id="healthDossierTraitement" rows="2"
+                                      placeholder="Médicaments et dosages actuels..."></textarea>
+                        </div>
+                        <div>
+                            <label class="health-label">Médecin référent</label>
+                            <input type="text" class="health-input" id="healthDossierMedecin" placeholder="Dr. Nom Prénom" />
+                        </div>
+                        <div>
+                            <label class="health-label">Contact urgence</label>
+                            <input type="tel" class="health-input" id="healthDossierContact" placeholder="+216 XX XXX XXX" />
+                        </div>
+                        <div class="col-span-2">
+                            <label class="health-label">Notes du médecin</label>
+                            <textarea class="health-input" id="healthDossierNotes" rows="2"
+                                      placeholder="Observations et recommandations..."></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -406,10 +586,8 @@
                 <button type="button" class="health-btn health-btn-bleu" onclick="healthCalculateIMC()">
                     📐 Calculer IMC
                 </button>
-                <a href="/project_v0/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/addDossier.php" class="health-btn" style="background:#013220;color:white;">
-                     ➕ Nouveau dossier
-                 </a>
-                 <a id="modifierDossierLink" href="#" class="health-btn" style="background:#77B5FE;color:white;">
+        
+                 <a id="modifierDossierLink" href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/updateDossier.php" class="health-btn" style="background:#77B5FE;color:white;">
                      ✏️ Modifier dossier
                  </a>
             </div>
@@ -428,7 +606,7 @@
             </div>
 
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="/project_v0/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/addRegime.php" class="health-btn health-btn-bleu">
+                <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/addRegime.php" class="health-btn health-btn-bleu">
                      ➕ Ajouter un régime
                  </a>
                  <p class="health-muted" style="padding: 15px 0; font-size: 0.9rem;">Cliquez sur "Modifier" dans un régime pour l'éditer.</p>
@@ -485,6 +663,55 @@
             </div>
         </div>
     </div>
+
+<!-- Create Regime Modal (inside section so module loader can find it) -->
+<div class="modal-overlay" id="createRegimeModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">🍽️ Créer un régime</h2>
+            <button type="button" class="modal-close" onclick="healthCloseCreateRegimeModal()">✕</button>
+        </div>
+        <form id="createRegimeForm" onsubmit="healthSubmitCreateRegime(event)">
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeName">Nom du régime *</label>
+                <input type="text" id="createRegimeName" class="modal-input" placeholder="ex. Régime Méditerranéen">
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeDescription">Description</label>
+                <textarea id="createRegimeDescription" class="modal-textarea" placeholder="Décrivez les principes et bénéfices du régime..."></textarea>
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeType">Type de régime *</label>
+                <select id="createRegimeType" class="modal-select">
+                    <option value="">— Sélectionner un type —</option>
+                    <option value="alimentaire">Alimentaire</option>
+                    <option value="perte_de_poids">Perte de poids</option>
+                    <option value="prise_de_masse">Prise de masse</option>
+                    <option value="sportif">Sportif</option>
+                    <option value="medical">Médical</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeDifficulty">Niveau de difficulté *</label>
+                <select id="createRegimeDifficulty" class="modal-select">
+                    <option value="">— Sélectionner un niveau —</option>
+                    <option value="facile">Facile</option>
+                    <option value="modere">Modéré</option>
+                    <option value="avance">Avancé</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeCalories">Apport calorique moyen (kcal)</label>
+                <input type="number" id="createRegimeCalories" class="modal-input" placeholder="ex. 2000" min="0">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="healthCloseCreateRegimeModal()">Annuler</button>
+                <button type="submit" class="modal-btn modal-btn-submit">✓ Créer le régime</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 </section>
 
 <script>
@@ -495,6 +722,11 @@
         
         btn.classList.add('active');
         document.getElementById('health-tab-' + tab).classList.add('active');
+        
+        // Load regimes when switching to dossier tab
+        if (tab === 'dossier') {
+            healthLoadAvailableRegimes();
+        }
     }
 
     // IMC Calculation
@@ -524,39 +756,44 @@
     // Save Dossier
     async function healthSaveDossier() {
         const dossierData = {
-            id_utilisateur: 1, // Static user ID for now
+            id_utilisateur: 1,
             groupe_sanguin: document.getElementById('healthDossierGroupe').value,
-            poids: parseFloat(document.getElementById('healthDossierPoids').value),
-            taille: parseFloat(document.getElementById('healthDossierTaille').value),
+            poids: parseFloat(document.getElementById('healthDossierPoids').value) || 0,
+            taille: parseFloat(document.getElementById('healthDossierTaille').value) || 0,
             regime_special: '',
-            notes_medecin: '',
+            notes_medecin: document.getElementById('healthDossierNotes')?.value || '',
             allergie: document.getElementById('healthDossierAllergie').value,
             gravite_allergie: document.getElementById('healthDossierGravite').value,
             maladies: document.getElementById('healthDossierMaladies').value,
-            traitement: '',
-            medecin: '',
-            contact_en_cas_durgence: ''
+            traitement: document.getElementById('healthDossierTraitement')?.value || '',
+            medecin: document.getElementById('healthDossierMedecin')?.value || '',
+            contact_en_cas_durgence: document.getElementById('healthDossierContact')?.value || ''
         };
 
         try {
-            const response = await fetch('../health/addDossier.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(dossierData)
+            const formData = new FormData();
+            formData.append('action', 'add');
+            Object.keys(dossierData).forEach(key => {
+                formData.append(key, dossierData[key]);
             });
 
-            if (response.ok) {
+            const response = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/dossierMedical.controller.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
                 showToast('Succès', 'Dossier médical enregistré avec succès !', 'success');
                 // Reload the page or refresh data
                 setTimeout(() => window.location.reload(), 2000);
             } else {
-                showToast('Erreur', 'Erreur lors de l\'enregistrement du dossier.', 'error');
+                showToast('Erreur', data.message || 'Erreur lors de l\'enregistrement du dossier.', 'error');
             }
         } catch (error) {
             console.error('Error saving dossier:', error);
-            showToast('Erreur', 'Erreur de connexion.', 'error');
+            showToast('Erreur', 'Erreur de connexion: ' + error.message, 'error');
         }
     }
 
@@ -575,13 +812,152 @@
         }, 4000);
     }
 
+    // Load available regimes for selection
+    async function healthLoadAvailableRegimes() {
+        try {
+            const response = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/regime.controller.php?action=list');
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+                const select = document.getElementById('healthDossierRegimeSelect');
+                select.innerHTML = '<option value="">— Choisir un régime —</option>';
+                
+                data.data.forEach(regime => {
+                    const option = document.createElement('option');
+                    option.value = regime.id_regime;
+                    option.textContent = `${regime.nom_regime} (${regime.type_regime})`;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading regimes:', error);
+        }
+    }
+
+    // Attach selected regime to dossier
+    async function healthAttachRegime() {
+        const id_regime = document.getElementById('healthDossierRegimeSelect').value;
+        const id_dossier = window.currentDossierId || 1;
+        
+        if (!id_regime) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('action', 'attachRegime');
+            formData.append('id_dossier', id_dossier);
+            formData.append('id_regime', id_regime);
+
+            const response = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/dossierMedical.controller.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Succès', 'Régime attaché avec succès !', 'success');
+                loadExistingDossier(); // Refresh dossier info
+            } else {
+                showToast('Erreur', data.message || 'Erreur lors de l\'attachement du régime', 'error');
+            }
+        } catch (error) {
+            console.error('Error attaching regime:', error);
+            showToast('Erreur', 'Erreur de connexion: ' + error.message, 'error');
+        }
+    }
+
+    // Display current regime information
+    function healthDisplayCurrentRegime(dossier) {
+        const display = document.getElementById('healthRegimeDisplay');
+        const info = document.getElementById('healthRegimeInfo');
+        
+        if (dossier.nom_regime) {
+            display.style.display = 'block';
+            info.innerHTML = `
+                <strong>${dossier.nom_regime}</strong><br>
+                <span style="font-size: 0.85rem; color: #666;">
+                    ${dossier.type_regime} • ${dossier.niveau_difficulte} • ${dossier.apport_calorique_moyen || 'N/A'} kcal/jour
+                </span>
+            `;
+        } else {
+            display.style.display = 'none';
+        }
+    }
+
+    // Open regime creation modal
+    function healthOpenCreateRegime() {
+        const modal = document.getElementById('createRegimeModal');
+        if (modal) {
+            modal.classList.add('active');
+            document.getElementById('createRegimeForm').reset();
+        }
+    }
+
+    // Close regime creation modal
+    function healthCloseCreateRegimeModal() {
+        const modal = document.getElementById('createRegimeModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    // Submit regime creation form
+    async function healthSubmitCreateRegime(e) {
+        e.preventDefault();
+        
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        
+        const formData = new FormData();
+        formData.append('action', 'add');
+        formData.append('nom_regime', document.getElementById('createRegimeName').value);
+        formData.append('description', document.getElementById('createRegimeDescription').value);
+        formData.append('type_regime', document.getElementById('createRegimeType').value);
+        formData.append('niveau_difficulte', document.getElementById('createRegimeDifficulty').value);
+        formData.append('apport_calorique_moyen', document.getElementById('createRegimeCalories').value);
+        
+        try {
+            const response = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/regime.controller.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Succès', '✅ Régime créé avec succès!', 'success');
+                healthCloseCreateRegimeModal();
+                // Reload available regimes and dossier
+                setTimeout(() => {
+                    healthLoadAvailableRegimes();
+                    loadExistingDossier();
+                }, 300);
+            } else {
+                showToast('Erreur', '❌ ' + (data.message || 'Erreur'), 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Erreur', '❌ Erreur de connexion', 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('createRegimeModal');
+        if (modal && e.target === modal) {
+            healthCloseCreateRegimeModal();
+        }
+    });
+
+
     // Load regimes when tab is opened
     async function loadRegimes() {
         const container = document.getElementById('healthRegimeListContainer');
         container.innerHTML = '<div style="text-align:center; padding:40px;"><div class="section-loader-spinner"></div><p class="health-muted">Chargement des régimes...</p></div>';
 
         try {
-            const response = await fetch('../../controller/regime.controller.php?action=list');
+            const response = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/regime.controller.php?action=list');
             if (!response.ok) throw new Error('Network response was not ok');
 
             const data = await response.json();
@@ -631,23 +1007,38 @@
     function openUpdateRegime(id) {
         // send a relative path (pathname + search) so server can validate easily
         const returnPath = encodeURIComponent(window.location.pathname + window.location.search);
-        const url = `/project_v0/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/updateRegime.php?id=${id}&return=${returnPath}`;
+        const url = `/crud/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/updateRegime.php?id=${id}&return=${returnPath}`;
         window.location.href = url;
     }
+
+    // Load data when dossier tab is clicked
+    document.querySelector('[data-tab="dossier"]').addEventListener('click', function() {
+        setTimeout(() => {
+            loadExistingDossier();
+            healthLoadAvailableRegimes();
+        }, 300);
+    });
 
     // Auto-calculate IMC when weight or height changes
     document.getElementById('healthDossierPoids').addEventListener('input', healthCalculateIMC);
     document.getElementById('healthDossierTaille').addEventListener('input', healthCalculateIMC);
 
+    // Load on initial page render
+    loadExistingDossier();
+    healthLoadAvailableRegimes();
+
     // Load existing dossier data on page load
     async function loadExistingDossier() {
         try {
-            const response = await fetch('../../controller/dossierMedical.controller.php?action=read');
+            const response = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/dossierMedical.controller.php?action=list');
             if (!response.ok) return;
 
             const data = await response.json();
             if (data.success && data.data && data.data.length > 0) {
-                const dossier = data.data[0]; // Get first dossier (assuming user has only one)
+                const dossier = data.data[0];
+                
+                // Store dossier ID for later use
+                window.currentDossierId = dossier.id_dossier;
 
                 // Fill form fields
                 if (dossier.groupe_sanguin) document.getElementById('healthDossierGroupe').value = dossier.groupe_sanguin;
@@ -656,17 +1047,33 @@
                 if (dossier.allergie) document.getElementById('healthDossierAllergie').value = dossier.allergie;
                 if (dossier.gravite_allergie) document.getElementById('healthDossierGravite').value = dossier.gravite_allergie;
                 if (dossier.maladies) document.getElementById('healthDossierMaladies').value = dossier.maladies;
+                const traitement = document.getElementById('healthDossierTraitement');
+                if (traitement && dossier.traitement) traitement.value = dossier.traitement;
+                const medecin = document.getElementById('healthDossierMedecin');
+                if (medecin && dossier.medecin) medecin.value = dossier.medecin;
+                const contact = document.getElementById('healthDossierContact');
+                if (contact && dossier.contact_en_cas_durgence) contact.value = dossier.contact_en_cas_durgence;
+                const notes = document.getElementById('healthDossierNotes');
+                if (notes && dossier.notes_medecin) notes.value = dossier.notes_medecin;
 
                 // Calculate IMC if both weight and height are present
                 if (dossier.poids && dossier.taille) {
                     healthCalculateIMC();
                 }
 
+                // Display current regime if attached
+                healthDisplayCurrentRegime(dossier);
+
+                // Set regime select value if dossier has one
+                if (dossier.id_regime) {
+                    document.getElementById('healthDossierRegimeSelect').value = dossier.id_regime;
+                }
+
                 // Set the modifier link to include dossier id and return URL
                 const modifierLink = document.getElementById('modifierDossierLink');
                 if (modifierLink) {
                     const ret = encodeURIComponent(window.location.pathname + window.location.search);
-                    modifierLink.href = `/project_v0/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/updateDossier.php?id=${dossier.id_dossier}&return=${ret}`;
+                    modifierLink.href = `/crud/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/health/updateDossier.php?id=${dossier.id_dossier}&return=${ret}`;
                 }
             }
         } catch (error) {
@@ -674,24 +1081,23 @@
         }
     }
 
-    // Load data when dossier tab is clicked
-    document.querySelector('[data-tab="dossier"]').addEventListener('click', function() {
-        setTimeout(() => loadExistingDossier(), 300);
-    });
-
     // Delete regime
     async function deleteRegime(id) {
         if (!confirm('Êtes-vous sûr de vouloir supprimer ce régime ?')) return;
         
         try {
-            const response = await fetch(`../../controller/regime.controller.php?action=delete&id=${id}`, { method: 'POST' });
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('id', id);
+            const response = await fetch(`/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/regime.controller.php?action=delete&id=${id}`, { method: 'POST' });
             const data = await response.json();
             
             if (data.success) {
-                showToast('Succès', '✅ Régime supprimé avec succès!', 'success');
+                showToast('Succès', '✅ Régime supprimé!', 'success');
+                healthLoadAvailableRegimes();
                 loadRegimes();
             } else {
-                showToast('Erreur', '❌ Erreur lors de la suppression', 'error');
+                showToast('Erreur', '❌ Erreur suppression', 'error');
             }
         } catch (error) {
             console.error('Error deleting:', error);
@@ -699,7 +1105,7 @@
         }
     }
 </script>
-<script src="js/health.controller.js"></script>
+<script src="../js/health.controller.js"></script>
 
 </body>
 </html>

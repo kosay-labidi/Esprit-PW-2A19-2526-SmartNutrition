@@ -2,6 +2,7 @@
 class DossierMedical {
     private ?int $id_dossier;
     private ?int $id_utilisateur;
+    private ?int $id_regime;
     private ?string $date_creation;
     private ?string $date_mise_a_jour;
     private ?string $groupe_sanguin;
@@ -17,7 +18,7 @@ class DossierMedical {
     private ?string $medecin;
     private ?string $contact_en_cas_durgence;
 
-    public function __construct(?int $id_dossier = null, ?int $id_utilisateur = null, ?string $date_creation = null, 
+    public function __construct(?int $id_dossier = null, ?int $id_utilisateur = null, ?int $id_regime = null, ?string $date_creation = null, 
                                 ?string $date_mise_a_jour = null, ?string $groupe_sanguin = null, ?float $poids = null, 
                                 ?float $taille = null, ?float $imc = null, ?string $regime_special = null, 
                                 ?string $notes_medecin = null, ?string $allergie = null, ?string $gravite_allergie = null, 
@@ -25,6 +26,7 @@ class DossierMedical {
                                 ?string $contact_en_cas_durgence = null) {
         $this->id_dossier = $id_dossier;
         $this->id_utilisateur = $id_utilisateur;
+        $this->id_regime = $id_regime;
         $this->date_creation = $date_creation;
         $this->date_mise_a_jour = $date_mise_a_jour;
         $this->groupe_sanguin = $groupe_sanguin;
@@ -44,6 +46,7 @@ class DossierMedical {
     // Getters
     public function getIdDossier() { return $this->id_dossier; }
     public function getIdUtilisateur() { return $this->id_utilisateur; }
+    public function getIdRegime() { return $this->id_regime; }
     public function getDateCreation() { return $this->date_creation; }
     public function getDateMiseAJour() { return $this->date_mise_a_jour; }
     public function getGroupeSanguin() { return $this->groupe_sanguin; }
@@ -62,6 +65,7 @@ class DossierMedical {
     // Setters
     public function setIdDossier(?int $id_dossier) { $this->id_dossier = $id_dossier; }
     public function setIdUtilisateur(?int $id_utilisateur) { $this->id_utilisateur = $id_utilisateur; }
+    public function setIdRegime(?int $id_regime) { $this->id_regime = $id_regime; }
     public function setDateCreation(?string $date_creation) { $this->date_creation = $date_creation; }
     public function setDateMiseAJour(?string $date_mise_a_jour) { $this->date_mise_a_jour = $date_mise_a_jour; }
     public function setGroupeSanguin(?string $groupe_sanguin) { $this->groupe_sanguin = $groupe_sanguin; }

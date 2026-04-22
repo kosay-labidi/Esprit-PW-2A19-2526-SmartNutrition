@@ -1,3 +1,44 @@
+<?php
+require_once '../../../config.php';
+require_once '../../../controller/regime.controller.php';
+require_once '../../../Model/Regime.php';
+
+$ctrl = new RegimeController();
+$error = '';
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nom_regime = $_POST['nom_regime'] ?? '';
+    $type_regime = $_POST['type_regime'] ?? '';
+    $niveau_difficulte = $_POST['niveau_difficulte'] ?? '';
+
+    if (empty($nom_regime) || empty($type_regime) || empty($niveau_difficulte)) {
+        $error = "❌ Tous les champs marqués d'une * sont obligatoires";
+    } else {
+        try {
+            $alimentsInterdits = !empty($_POST['aliments_interdits']) ? array_filter(array_map('trim', explode(',', $_POST['aliments_interdits']))) : [];
+            $alimentsRecommandes = !empty($_POST['aliments_recommandes']) ? array_filter(array_map('trim', explode(',', $_POST['aliments_recommandes']))) : [];
+
+            $r = new Regime(
+                null,
+                $nom_regime,
+                Regime::generateSlug($nom_regime),
+                $_POST['description'] ?? '',
+                $type_regime,
+                $niveau_difficulte,
+                json_encode($alimentsInterdits),
+                json_encode($alimentsRecommandes),
+                floatval($_POST['apport_calorique_moyen'] ?? 0)
+            );
+            $ctrl->add($r);
+            $success = "✅ Régime ajouté avec succès!";
+            header('Refresh: 2; url=/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/admin.html');
+        } catch (Exception $e) {
+            $error = "❌ Erreur : " . $e->getMessage();
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -161,48 +202,6 @@
         </div>
 
         <div class="card">
-            <?php
-            require_once '../../../config.php';
-            require_once '../../../controller/regime.controller.php';
-            require_once '../../../Model/Regime.php';
-
-            $ctrl = new RegimeController();
-            $error = '';
-            $success = '';
-
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $nom_regime = $_POST['nom_regime'] ?? '';
-                $type_regime = $_POST['type_regime'] ?? '';
-                $niveau_difficulte = $_POST['niveau_difficulte'] ?? '';
-
-                if (empty($nom_regime) || empty($type_regime) || empty($niveau_difficulte)) {
-                    $error = "❌ Tous les champs marqués d'une * sont obligatoires";
-                } else {
-                    try {
-                        $alimentsInterdits = !empty($_POST['aliments_interdits']) ? array_filter(array_map('trim', explode(',', $_POST['aliments_interdits']))) : [];
-                        $alimentsRecommandes = !empty($_POST['aliments_recommandes']) ? array_filter(array_map('trim', explode(',', $_POST['aliments_recommandes']))) : [];
-                        
-                        $r = new Regime(
-                            null,
-                            $nom_regime,
-                            Regime::generateSlug($nom_regime),
-                            $_POST['description'] ?? '',
-                            $type_regime,
-                            $niveau_difficulte,
-                            json_encode($alimentsInterdits),
-                            json_encode($alimentsRecommandes),
-                            floatval($_POST['apport_calorique_moyen'] ?? 0)
-                        );
-                        $ctrl->add($r);
-                        $success = "✅ Régime ajouté avec succès!";
-                        echo "<meta http-equiv='refresh' content='2; url=../modules/health-admin.html'>";
-                    } catch (Exception $e) {
-                        $error = "❌ Erreur : " . $e->getMessage();
-                    }
-                }
-            }
-            ?>
-
             <?php if ($error): ?><div class="alert alert-error"><?= $error ?></div><?php endif; ?>
             <?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
 
@@ -213,7 +212,7 @@
                     <div class="form-grid full">
                         <div class="form-group">
                             <label for="nom">Nom du Régime <span class="required">*</span></label>
-                            <input type="text" id="nom" name="nom_regime" placeholder="ex. Régime sans gluten" required>
+                            <input type="text" id="nom" name="nom_regime" placeholder="ex. Régime sans gluten">
                         </div>
                     </div>
                 </div>
@@ -224,7 +223,7 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="type">Type de Régime <span class="required">*</span></label>
-                            <select name="type_regime" id="type" required>
+                            <select name="type_regime" id="type">
                                 <option value="">Sélectionner...</option>
                                 <option value="alimentaire">Alimentaire</option>
                                 <option value="medical">Médical</option>
@@ -236,7 +235,7 @@
                         </div>
                         <div class="form-group">
                             <label for="niveau">Niveau de Difficulté <span class="required">*</span></label>
-                            <select name="niveau_difficulte" id="niveau" required>
+                            <select name="niveau_difficulte" id="niveau">
                                 <option value="">Sélectionner...</option>
                                 <option value="facile">Facile</option>
                                 <option value="modere">Modéré</option>
@@ -277,7 +276,7 @@
                     <div class="section-title">⚡ Nutrition</div>
                     <div class="form-grid full">
                         <div class="form-group">
-                            <label for="calories">Apport Calorique Moyen (kcal)</label>
+                            <label for="calories">Apport Calorique Moyen (kcal/jour) <span class="required">*</span></label>
                             <input type="number" id="calories" name="apport_calorique_moyen" step="0.1" min="0" placeholder="ex. 2000">
                         </div>
                     </div>
@@ -285,7 +284,7 @@
 
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">💾 Ajouter le régime</button>
-                    <a href="../modules/health-admin.html" class="btn btn-secondary">← Retour</a>
+                    <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/admin.html" class="btn btn-secondary">← Retour</a>
                 </div>
             </form>
         </div>
@@ -293,15 +292,39 @@
 
     <script>
         function validateForm() {
-            const nom = document.getElementById('nom').value.trim();
-            const type = document.getElementById('type').value;
-            const niveau = document.getElementById('niveau').value;
+            const nom     = document.getElementById('nom').value.trim();
+            const type    = document.getElementById('type').value;
+            const niveau  = document.getElementById('niveau').value;
+            const calEl   = document.getElementById('calories');
+            const cal     = calEl.value;
 
-            if (!nom || !type || !niveau) {
-                alert('⚠️ Veuillez remplir tous les champs obligatoires');
+            if (!nom || nom.length < 3) {
+                alert('⚠️ Le nom du régime doit contenir au moins 3 caractères.');
                 return false;
             }
-
+            if (!type) {
+                alert('⚠️ Veuillez sélectionner un type de régime.');
+                return false;
+            }
+            if (!niveau) {
+                alert('⚠️ Veuillez sélectionner un niveau de difficulté.');
+                return false;
+            }
+            if (cal === '' || isNaN(parseFloat(cal))) {
+                alert('⚠️ L\'apport calorique est obligatoire.');
+                calEl.focus();
+                return false;
+            }
+            if (parseFloat(cal) < 1000) {
+                alert('⚠️ L\'apport calorique minimum est de 1000 kcal/jour.');
+                calEl.focus();
+                return false;
+            }
+            if (parseFloat(cal) > 10000) {
+                alert('⚠️ L\'apport calorique ne peut pas dépasser 10 000 kcal/jour.');
+                calEl.focus();
+                return false;
+            }
             return true;
         }
     </script>

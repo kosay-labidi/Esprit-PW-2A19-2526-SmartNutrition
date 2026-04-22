@@ -6,7 +6,10 @@ require_once __DIR__ . '/../Model/Regime.php';
 class DossierMedicalController {
 
     public function list() {
-        $sql = "SELECT * FROM dossier_medical ORDER BY date_creation DESC";
+        $sql = "SELECT d.*, r.nom_regime, r.type_regime as regime_type, r.niveau_difficulte as regime_niveau
+                FROM dossier_medical d
+                LEFT JOIN regimes r ON d.id_regime = r.id_regime
+                ORDER BY d.date_creation DESC";
         $db = config::getConnexion();
         return $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -42,11 +45,12 @@ class DossierMedicalController {
     }
 
     public function update(DossierMedical $d, $id) {
-        $sql = "UPDATE dossier_medical SET groupe_sanguin=:groupe, poids=:poids, taille=:taille, regime_special=:regime, notes_medecin=:notes, allergie=:allergie, gravite_allergie=:gravite, maladies=:maladies, traitement=:traitement, medecin=:medecin, contact_en_cas_durgence=:contact WHERE id_dossier = :id";
+        $sql = "UPDATE dossier_medical SET id_regime=:id_regime, groupe_sanguin=:groupe, poids=:poids, taille=:taille, regime_special=:regime, notes_medecin=:notes, allergie=:allergie, gravite_allergie=:gravite, maladies=:maladies, traitement=:traitement, medecin=:medecin, contact_en_cas_durgence=:contact WHERE id_dossier = :id";
         $db = config::getConnexion();
         $stmt = $db->prepare($sql);
         $stmt->execute([
             ':id' => $id,
+            ':id_regime' => $d->getIdRegime() ?? null,
             ':groupe' => $d->getGroupeSanguin(),
             ':poids' => $d->getPoids(),
             ':taille' => $d->getTaille(),
@@ -263,11 +267,38 @@ class DossierMedicalController {
         return $regimes;
     }
 
+    // Attach a regime to a dossier
+    public function attachRegime($id_dossier, $id_regime) {
+        $sql = "UPDATE dossier_medical SET id_regime = :id_regime WHERE id_dossier = :id_dossier";
+        $db = config::getConnexion();
+        $stmt = $db->prepare($sql);
+        return $stmt->execute([':id_regime' => $id_regime, ':id_dossier' => $id_dossier]);
+    }
+
+    // Get regimes for selection (all available regimes)
+    public function getAvailableRegimes() {
+        $sql = "SELECT id_regime, nom_regime, description, type_regime, niveau_difficulte, apport_calorique_moyen FROM regimes ORDER BY nom_regime ASC";
+        $db = config::getConnexion();
+        return $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Get dossier with its associated regime details
+    public function getDossierWithRegime($id_dossier) {
+        $sql = "SELECT d.*, r.id_regime, r.nom_regime, r.description, r.type_regime, r.niveau_difficulte, r.aliments_interdits, r.aliments_recommandes, r.apport_calorique_moyen
+                FROM dossier_medical d
+                LEFT JOIN regimes r ON d.id_regime = r.id_regime
+                WHERE d.id_dossier = :id";
+        $db = config::getConnexion();
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':id' => $id_dossier]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     // Handle API requests
     public function handleRequest() {
         header('Content-Type: application/json');
 
-        $action = $_GET['action'] ?? '';
+        $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
         try {
             switch ($action) {
@@ -322,6 +353,55 @@ class DossierMedicalController {
                     echo json_encode(['success' => true, 'message' => 'Dossier supprimé avec succès']);
                     break;
 
+                case 'add':
+                    $id_utilisateur = 1; // default user
+                    $dossier = new DossierMedical(
+                        null,                                           // id_dossier
+                        $id_utilisateur,                                // id_utilisateur
+                        null,                                           // id_regime
+                        null,                                           // date_creation
+                        null,                                           // date_mise_a_jour
+                        $_POST['groupe_sanguin'] ?? null,               // groupe_sanguin
+                        floatval($_POST['poids'] ?? 0),                 // poids
+                        floatval($_POST['taille'] ?? 0),                // taille
+                        null,                                           // imc
+                        $_POST['regime_special'] ?? null,               // regime_special
+                        $_POST['notes_medecin'] ?? null,                // notes_medecin
+                        $_POST['allergie'] ?? null,                     // allergie
+                        $_POST['gravite_allergie'] ?? null,             // gravite_allergie
+                        $_POST['maladies'] ?? null,                     // maladies
+                        $_POST['traitement'] ?? null,                   // traitement
+                        $_POST['medecin'] ?? null,                      // medecin
+                        $_POST['contact_en_cas_durgence'] ?? null       // contact_en_cas_durgence
+                    );
+                    if (!empty($_POST['id_regime'])) {
+                        $dossier->setIdRegime((int)$_POST['id_regime']);
+                    }
+                    $this->add($dossier);
+                    echo json_encode(['success' => true, 'message' => 'Dossier enregistré']);
+                    break;
+
+                case 'attachRegime':
+                    $id_dossier = $_POST['id_dossier'] ?? null;
+                    $id_regime = $_POST['id_regime'] ?? null;
+                    if (!$id_dossier || !$id_regime) {
+                        echo json_encode(['success' => false, 'message' => 'IDs manquants']);
+                        break;
+                    }
+                    $this->attachRegime($id_dossier, $id_regime);
+                    echo json_encode(['success' => true, 'message' => 'Régime attaché']);
+                    break;
+
+                case 'get':
+                    $id = $_GET['id'] ?? null;
+                    if (!$id) {
+                        echo json_encode(['success' => false, 'message' => 'ID requis']);
+                        break;
+                    }
+                    $result = $this->getDossierWithRegime($id);
+                    echo json_encode(['success' => true, 'message' => 'Dossier récupéré', 'data' => $result]);
+                    break;
+
                 default:
                     echo json_encode(['success' => false, 'message' => 'Action not found']);
                     break;
@@ -334,7 +414,7 @@ class DossierMedicalController {
 }
 
 // Handle API requests
-if (isset($_GET['action'])) {
+if (isset($_GET['action']) || isset($_POST['action'])) {
     $controller = new DossierMedicalController();
     $controller->handleRequest();
 }

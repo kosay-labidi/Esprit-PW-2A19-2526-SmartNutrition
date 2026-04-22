@@ -12,22 +12,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $dossier = new DossierMedical(
-            null,
-            $id_utilisateur,
-            null,
-            null,
-            $_POST['groupe_sanguin'] ?? null,
-            floatval($_POST['poids'] ?? 0),
-            floatval($_POST['taille'] ?? 0),
-            null,
-            $_POST['regime_special'] ?? null,
-            $_POST['notes_medecin'] ?? null,
-            $_POST['allergie'] ?? null,
-            $_POST['gravite_allergie'] ?? null,
-            $_POST['maladies'] ?? null,
-            $_POST['traitement'] ?? null,
-            $_POST['medecin'] ?? null,
-            $_POST['contact_en_cas_durgence'] ?? null
+            null,                                       // id_dossier
+            $id_utilisateur,                            // id_utilisateur
+            null,                                       // id_regime
+            null,                                       // date_creation
+            null,                                       // date_mise_a_jour
+            $_POST['groupe_sanguin'] ?? null,           // groupe_sanguin
+            floatval($_POST['poids'] ?? 0),             // poids
+            floatval($_POST['taille'] ?? 0),            // taille
+            null,                                       // imc
+            $_POST['regime_special'] ?? null,           // regime_special
+            $_POST['notes_medecin'] ?? null,            // notes_medecin
+            $_POST['allergie'] ?? null,                 // allergie
+            $_POST['gravite_allergie'] ?? null,         // gravite_allergie
+            $_POST['maladies'] ?? null,                 // maladies
+            $_POST['traitement'] ?? null,               // traitement
+            $_POST['medecin'] ?? null,                  // medecin
+            $_POST['contact_en_cas_durgence'] ?? null   // contact_en_cas_durgence
         );
 
         $result = $ctrl->add($dossier);
@@ -73,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <option value="AB+">AB+</option><option value="AB-">AB-</option>
                 </select>
             </div>
-            <div><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Poids (kg)</label><input type="number" step="0.1" name="poids" required></div>
-            <div><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Taille (cm)</label><input type="number" step="0.1" name="taille" required></div>
+            <div><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Poids (kg)</label><input type="number" step="0.1" name="poids"></div>
+            <div><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Taille (cm)</label><input type="number" step="0.1" name="taille"></div>
             <div><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Régime spécial</label><input type="text" name="regime_special" placeholder="ex. Végétarien"></div>
 
             <div style="grid-column: 1 / -1;"><label style="font-weight: 600; color: var(--vert); display: block; margin-bottom: 6px;">Allergies</label><textarea name="allergie" rows="3"></textarea></div>

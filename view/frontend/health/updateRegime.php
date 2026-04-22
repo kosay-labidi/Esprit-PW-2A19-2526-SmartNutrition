@@ -52,15 +52,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Respect return URL if provided (safe redirect)
             if (!empty($_GET['return'])) {
                 $return = rawurldecode($_GET['return']);
-                // Only accept internal relative paths starting with /project_v0/
+                // Only accept internal relative paths starting with /crud/
                 // and refuse returning to form pages to avoid loops or wrong pages
                 $blocked = preg_match('/updateRegime\.php|addRegime\.php|updateDossier\.php|addDossier\.php/i', $return);
-                if (strpos($return, '/project_v0/') === 0 && !$blocked) {
+                if (strpos($return, '/crud/') === 0 && !$blocked) {
                     header('Location: ' . $return);
                     exit;
                 }
             }
-            header('Location: ../modules/health.html?msg=regime_updated');
+            header('Location: /crud/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/dashboard.html?msg=regime_updated');
             exit;
         } else {
             $error = "Erreur lors de la mise à jour.";
@@ -326,20 +326,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
 
-            <form method="POST">
+            <form method="POST" onsubmit="return validateForm()">
                 <!-- Informations Générales -->
                 <div class="form-section">
                     <h3 class="section-title">📋 Informations Générales</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="nom_regime">Nom du Régime <span class="required">*</span></label>
-                            <input type="text" id="nom_regime" name="nom_regime" required
+                            <input type="text" id="nom_regime" name="nom_regime"
                                    value="<?php echo htmlspecialchars($regime['nom_regime'] ?? $_POST['nom_regime'] ?? ''); ?>">
                         </div>
                         
                         <div class="form-group">
                             <label for="type_regime">Type <span class="required">*</span></label>
-                            <select id="type_regime" name="type_regime" required>
+                            <select id="type_regime" name="type_regime">
                                 <option value="alimentaire" <?php echo ($regime['type_regime'] ?? '') === 'alimentaire' ? 'selected' : ''; ?>>Alimentaire</option>
                                 <option value="medical" <?php echo ($regime['type_regime'] ?? '') === 'medical' ? 'selected' : ''; ?>>Médical</option>
                                 <option value="sportif" <?php echo ($regime['type_regime'] ?? '') === 'sportif' ? 'selected' : ''; ?>>Sportif</option>
@@ -352,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="niveau_difficulte">Niveau de Difficulté <span class="required">*</span></label>
-                            <select id="niveau_difficulte" name="niveau_difficulte" required>
+                            <select id="niveau_difficulte" name="niveau_difficulte">
                                 <option value="facile" <?php echo ($regime['niveau_difficulte'] ?? '') === 'facile' ? 'selected' : ''; ?>>Facile</option>
                                 <option value="modere" <?php echo ($regime['niveau_difficulte'] ?? '') === 'modere' ? 'selected' : ''; ?>>Modéré</option>
                                 <option value="difficile" <?php echo ($regime['niveau_difficulte'] ?? '') === 'difficile' ? 'selected' : ''; ?>>Difficile</option>
@@ -360,7 +360,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         
                         <div class="form-group">
-                            <label for="apport_calorique">Apport Calorique Moyen (kcal/jour)</label>
+                            <label for="apport_calorique">Apport Calorique Moyen (kcal/jour) <span class="required">*</span></label>
                             <input type="number" id="apport_calorique" name="apport_calorique" min="0" step="50"
                                    value="<?php echo htmlspecialchars($regime['apport_calorique_moyen'] ?? $_POST['apport_calorique'] ?? ''); ?>">
                         </div>
@@ -395,10 +395,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Actions -->
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">💾 Mettre à Jour</button>
-                    <a href="../modules/health.html" class="btn btn-secondary">❌ Annuler</a>
+                   
                 </div>
             </form>
         </div>
     </div>
+    <script>
+        function validateForm() {
+            const nom    = document.getElementById('nom_regime').value.trim();
+            const type   = document.getElementById('type_regime').value;
+            const niveau = document.getElementById('niveau_difficulte').value;
+            const calEl  = document.getElementById('apport_calorique');
+            const cal    = calEl.value !== '' ? parseFloat(calEl.value) : null;
+
+            if (!nom || nom.length < 3) {
+                alert('⚠️ Le nom du régime doit contenir au moins 3 caractères.');
+                return false;
+            }
+            if (!type) { alert('⚠️ Veuillez sélectionner un type de régime.'); return false; }
+            if (!niveau) { alert('⚠️ Veuillez sélectionner un niveau de difficulté.'); return false; }
+            if (cal === null || calEl.value === '') {
+                alert('⚠️ L\'apport calorique est obligatoire.');
+                calEl.focus(); return false;
+            }
+            if (cal < 1000) {
+                alert('⚠️ L\'apport calorique minimum est de 1000 kcal/jour.');
+                calEl.focus(); return false;
+            }
+            if (cal > 10000) {
+                alert('⚠️ L\'apport calorique ne peut pas dépasser 10 000 kcal/jour.');
+                calEl.focus(); return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>

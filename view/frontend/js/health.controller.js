@@ -37,14 +37,14 @@ class HealthController {
     async loadStatistics() {
         try {
             // Load dossier stats
-            const dossierResponse = await fetch('controller/dossierMedical.controller.php?action=stats');
+            const dossierResponse = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/dossierMedical.controller.php?action=stats');
             if (dossierResponse.ok) {
                 const dossierStats = await dossierResponse.json();
                 this.updateDossierStats(dossierStats);
             }
 
             // Load regime stats
-            const regimeResponse = await fetch('controller/regime.controller.php?action=stats');
+            const regimeResponse = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/regime.controller.php?action=stats');
             if (regimeResponse.ok) {
                 const regimeStats = await regimeResponse.json();
                 this.updateRegimeStats(regimeStats);
@@ -118,7 +118,7 @@ class HealthController {
         }
 
         try {
-            const response = await fetch(`controller/dossierMedical.controller.php?action=validate_aliment&aliment=${encodeURIComponent(aliment)}&user_id=${this.currentUserId}`);
+            const response = await fetch(`/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/dossierMedical.controller.php?action=validate_aliment&aliment=${encodeURIComponent(aliment)}&user_id=${this.currentUserId}`);
             if (!response.ok) throw new Error('Network response was not ok');
 
             const result = await response.json();
@@ -169,7 +169,7 @@ class HealthController {
         const restrictions = restrictionsInput ? restrictionsInput.value : '';
 
         try {
-            const response = await fetch(`controller/regime.controller.php?action=suggest&goal=${goal}&restrictions=${encodeURIComponent(restrictions)}`);
+            const response = await fetch(`/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/regime.controller.php?action=suggest&goal=${goal}&restrictions=${encodeURIComponent(restrictions)}`);
             if (!response.ok) throw new Error('Network response was not ok');
 
             const result = await response.json();
@@ -218,7 +218,7 @@ class HealthController {
         const difficulty = difficultyFilter ? difficultyFilter.value : '';
 
         try {
-            let url = `controller/regime.controller.php?action=search&q=${encodeURIComponent(query)}`;
+            let url = `/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/regime.controller.php?action=search&q=${encodeURIComponent(query)}`;
             if (type) url += `&type_regime=${type}`;
             if (difficulty) url += `&niveau_difficulte=${difficulty}`;
 
@@ -269,7 +269,7 @@ class HealthController {
         const [field, direction] = value.split('-');
 
         try {
-            const response = await fetch(`controller/regime.controller.php?action=sort&field=${field}&direction=${direction}`);
+            const response = await fetch(`/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/regime.controller.php?action=sort&field=${field}&direction=${direction}`);
             if (!response.ok) throw new Error('Network response was not ok');
 
             const result = await response.json();
@@ -290,7 +290,7 @@ class HealthController {
 
     async exportData() {
         try {
-            const response = await fetch('controller/dossierMedical.controller.php?action=export_pdf');
+            const response = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/dossierMedical.controller.php?action=export_pdf');
             if (!response.ok) throw new Error('Network response was not ok');
 
             const result = await response.json();
@@ -354,7 +354,7 @@ class HealthController {
     async loadUserStatistics() {
         try {
             // Load user's dossier
-            const dossierResponse = await fetch('controller/dossierMedical.controller.php?action=read');
+            const dossierResponse = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/dossierMedical.controller.php?action=read');
             if (dossierResponse.ok) {
                 const dossierData = await dossierResponse.json();
                 if (dossierData.success && dossierData.data && dossierData.data.length > 0) {
@@ -364,13 +364,12 @@ class HealthController {
             }
 
             // Load user's authorized regimes
-            const regimesResponse = await fetch('controller/regime.controller.php?action=list');
+            const regimesResponse = await fetch('/crud/Esprit-PW-2A19-2526-SmartNutrition/controller/regime.controller.php?action=list');
             if (regimesResponse.ok) {
                 const regimesData = await regimesResponse.json();
                 if (regimesData.success && regimesData.data) {
                     document.getElementById('user-regimes-count').textContent = regimesData.data.length;
                 }
-            }
             }
 
             // Load user's dossier count

@@ -29,42 +29,18 @@ $aliments     = $alimentModel->getAll();
 
         * { font-family:'Lato',sans-serif; box-sizing:border-box; margin:0; padding:0; }
         .hf { font-family:'Cormorant Garamond',serif; }
-        body { background:var(--sable); color:var(--vert); display:flex; min-height:100vh; }
+        body { background:var(--sable); color:var(--vert); }
 
-        /*  Curseur personnalisé */
+        /* Curseur personnalisé */
         #cur  { position:fixed;top:0;left:0;z-index:9999;pointer-events:none;width:14px;height:14px;border-radius:50%;background:var(--violet);box-shadow:0 0 12px var(--violet),0 0 24px var(--bleu);transform:translate(-50%,-50%);transition:width .2s,height .2s;mix-blend-mode:screen; }
         #cur.h{ width:28px;height:28px;background:var(--bleu); }
         #curt { position:fixed;top:0;left:0;z-index:9998;pointer-events:none;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(167,139,250,.4);transform:translate(-50%,-50%); }
 
-        
-        
-        .sidebar {
-            width: 220px;
-            min-height: 100vh;
-            background: linear-gradient(180deg, var(--vert) 0%, #11241f 100%);
-            position: fixed;
-            left: 0; top: 0;
-            display: flex;
-            flex-direction: column;
-            z-index: 100;
-            box-shadow: 4px 0 20px rgba(0,0,0,.12);
-        }
-        .sidebar-logo {
-            padding: 22px 18px 18px;
-            border-bottom: 1px solid rgba(255,255,255,.1);
-            display: flex; align-items: center; gap: 10px;
-            text-decoration: none;
-        }
-        .sidebar-logo span { font-family:'Cormorant Garamond',serif;font-size:20px;color:white;letter-spacing:-.03em; }
-        .sidebar-section { font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:14px 18px 6px; }
-        .nav-item { display:flex;align-items:center;gap:10px;padding:11px 18px;color:rgba(255,255,255,.65);text-decoration:none;font-size:13px;font-weight:500;transition:all .18s;border-left:3px solid transparent; }
-        .nav-item:hover { background:rgba(255,255,255,.07);color:white; }
-        .nav-item.active { background:rgba(167,139,250,.18);color:var(--violet);border-left-color:var(--violet); }
-        .nav-item i { width:16px;text-align:center;font-size:13px; }
-        .sidebar-footer { margin-top:auto;padding:14px 18px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.3); }
+        /* Navbar horizontale */
+        .navbar { background:linear-gradient(90deg,var(--vert) 0%,#11241f 100%); position:sticky; top:0; z-index:50; }
 
-
-        .main-content { margin-left:220px; flex:1; display:flex; flex-direction:column; min-width:0; }
+        /* Contenu pleine largeur */
+        .main-content { width:100%; }
 
         
         .hero {
@@ -73,7 +49,7 @@ $aliments     = $alimentModel->getAll();
                 url('../BackOffice/assets/images/1000051721.jpg');
             background-size: cover;
             background-position: center;
-            padding: 52px 28px 40px;
+            padding: 52px 0 40px;
         }
 
         
@@ -125,36 +101,38 @@ $aliments     = $alimentModel->getAll();
 
 
 
-<aside class="sidebar">
-    <!-- Logo -->
-    <a href="../../index.html" class="sidebar-logo">
-        <svg width="28" height="28" viewBox="0 0 60 60" fill="none">
-            <circle cx="30" cy="30" r="28" stroke="url(#gn)" stroke-width="1.5" opacity=".6"/>
-            <defs><radialGradient id="gn" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#a78bfa"/></radialGradient></defs>
-            <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="#1F3D2B"/>
-        </svg>
-        <span>GaiaLumen</span>
-    </a>
-
-    <div class="sidebar-section">Navigation</div>
-    <a href="../../index.html" class="nav-item"><i class="fas fa-home"></i> Accueil</a>
-    <a href="alimentlist.php"  class="nav-item active"><i class="fas fa-carrot"></i> Aliments</a>
-    <a href="#"                class="nav-item"><i class="fas fa-utensils"></i> Mes repas</a>
-    <a href="#"                class="nav-item"><i class="fas fa-trophy"></i> Défis</a>
-    <a href="#"                class="nav-item"><i class="fas fa-calendar"></i> Planning</a>
-
-    <div class="sidebar-section">Mon compte</div>
-    <a href="#" class="nav-item"><i class="fas fa-user-circle"></i> Profil</a>
-    <a href="#" class="nav-item"><i class="fas fa-cog"></i> Paramètres</a>
-
-    <div class="sidebar-footer">GaiaLumen © <?= date('Y') ?></div>
-</aside>
-
+<!-- NAVBAR HORIZONTALE -->
+<nav class="navbar text-white shadow-xl">
+    <div class="max-w-screen-xl mx-auto px-8 py-4 flex items-center justify-between">
+        <a href="../../index.html" class="flex items-center gap-3">
+            <svg width="32" height="32" viewBox="0 0 60 60" fill="none">
+                <circle cx="30" cy="30" r="28" stroke="url(#gn)" stroke-width="1.5" opacity=".6"/>
+                <defs><radialGradient id="gn" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#60a5fa"/>
+                    <stop offset="100%" stop-color="#a78bfa"/>
+                </radialGradient></defs>
+                <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="#1F3D2B"/>
+            </svg>
+            <span class="hf text-3xl tracking-tighter">GaiaLumen</span>
+        </a>
+        <ul class="flex items-center gap-7 text-sm font-medium">
+            <li><a href="../../index.html"    class="hover:text-[#a78bfa] transition-colors">Accueil</a></li>
+            <li><a href="fo_alimentlist.php"  class="text-[#a78bfa] font-semibold">Aliments</a></li>
+            <li><a href="fo_repaslist.php"    class="hover:text-[#a78bfa] transition-colors">Mes repas</a></li>
+            <li><a href="#"                   class="hover:text-[#a78bfa] transition-colors">Défis</a></li>
+            <li><a href="#"                   class="hover:text-[#a78bfa] transition-colors">Planning</a></li>
+        </ul>
+        <a href="#" class="flex items-center gap-2 text-sm bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full transition-colors">
+            <i class="fas fa-user-circle"></i> Mon compte
+        </a>
+    </div>
+</nav>
 
 <div class="main-content">
 
 
     <section class="hero">
+      <div class="max-w-screen-xl mx-auto px-8">
         <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);padding:4px 14px;border-radius:99px;font-size:11px;color:rgba(255,255,255,.85);margin-bottom:14px;">
             <i class="fas fa-leaf" style="color:var(--violet);"></i> BIBLIOTHÈQUE NUTRITIONNELLE
         </span>
@@ -204,12 +182,13 @@ $aliments     = $alimentModel->getAll();
                 <button id="bl" class="vbtn"    onclick="setView('list')"><i class="fas fa-list"></i></button>
             </div>
         </div>
+      </div><!-- fin max-w-screen-xl hero -->
     </section>
 
 
 
 
-    <div style="padding:20px 28px 40px;">
+    <div class="max-w-screen-xl mx-auto px-8" style="padding-top:20px;padding-bottom:40px;">
 
         <!-- VUE GRILLE  -->
         <div id="vg" class="gview">

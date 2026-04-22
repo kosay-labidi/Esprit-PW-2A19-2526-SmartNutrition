@@ -3,88 +3,80 @@
     <h2 class="module-title">👥 Gestion des Utilisateurs</h2>
     <p>Gérez les profils utilisateurs, leurs préférences alimentaires et objectifs santé.</p>
   </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-icon">👥</span>
+      <div class="stat-info">
+        <span class="stat-value" id="total-users">24</span>
+        <span class="stat-label">Utilisateurs actifs</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">🎯</span>
+      <div class="stat-info">
+        <span class="stat-value" id="active-goals">18</span>
+        <span class="stat-label">Objectifs en cours</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">⭐</span>
+      <div class="stat-info">
+        <span class="stat-value" id="avg-rating">4.8</span>
+        <span class="stat-label">Note moyenne</span>
+      </div>
+    </div>
+  </div>
+
   <div class="cards-grid">
     <div class="info-card">
-      <h3>Profils Utilisateurs</h3>
+      <h3>📋 Profils Utilisateurs</h3>
       <p>Créez et gérez les profils avec informations personnelles, préférences alimentaires et restrictions.</p>
       <div class="progress-indicator">
         <div class="progress-fill" style="width:75%"></div>
       </div>
-      <span class="feature-badge">✨ Populaire</span>
+      <div class="card-footer">
+        <span class="feature-badge">✨ Populaire</span>
+        <button class="card-btn" onclick="window.location.href='../frontend/users/profile.html'">Gérer</button>
+      </div>
     </div>
+
     <div class="info-card">
-      <h3>Objectifs Santé</h3>
+      <h3>🏆 Objectifs Santé</h3>
       <p>Définissez des objectifs personnalisés: perte de poids, gain musculaire, équilibre nutritionnel.</p>
       <div class="progress-indicator">
         <div class="progress-fill" style="width:60%"></div>
       </div>
-      <span class="feature-badge">🎯 Recommandé</span>
+      <div class="card-footer">
+        <span class="feature-badge">🎯 Recommandé</span>
+        <button class="card-btn" onclick="window.location.href='../frontend/users/profile.html'">Définir</button>
+      </div>
     </div>
+
     <div class="info-card">
-      <h3>Préférences</h3>
+      <h3>⚙️ Préférences</h3>
       <p>Configurez les préférences alimentaires, allergies, régimes spéciaux (végétarien, vegan, etc.).</p>
       <div class="progress-indicator">
         <div class="progress-fill" style="width:90%"></div>
       </div>
-      <span class="feature-badge">🔥 Nouveau</span>
+      <div class="card-footer">
+        <span class="feature-badge">🔥 Nouveau</span>
+        <button class="card-btn" onclick="window.location.href='../frontend/users/preference.html'">Configurer</button>
+      </div>
     </div>
-    <div style="display: flex; justify-content: center; margin-top: 32px;">
-    <button class="btn-profile-access" onclick="window.location.href='../frontend/users/profile.html'">
-       Voir mon profil personnel
-    </button>
   </div>
-  <div style="display: flex; justify-content: center; margin-top: 32px;">
-    <button class="btn-profile-access" onclick="window.location.href='../frontend/users/preference.html'">
-       Gérer mes préférence
+
+  <div class="action-buttons">
+    <button class="action-btn primary" onclick="window.location.href='../frontend/users/profile.html'">
+      <span class="btn-icon">👤</span>
+      Voir mon profil personnel
     </button>
-  </div>
+    <button class="action-btn secondary" onclick="window.location.href='../frontend/users/preference.html'">
+      <span class="btn-icon">⚙️</span>
+      Gérer mes préférences
+    </button>
   </div>
 </section>
 
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.btn-profile-access {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  padding: 14px 28px;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Hover effet */
-.btn-profile-access:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-  background: linear-gradient(135deg, #43e97b, #38f9d7);
-}
-
-/* Click effet */
-.btn-profile-access:active {
-  transform: scale(0.97);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* Icône animation */
-.btn-profile-access::before {
-  content: "👤";
-  font-size: 18px;
-  transition: transform 0.3s ease;
-}
-
-.btn-profile-access:hover::before {
-  transform: rotate(10deg) scale(1.2);
-}
-</style>
+<link rel="stylesheet" href="css/users.css">
+<script src="js/users.js"></script>

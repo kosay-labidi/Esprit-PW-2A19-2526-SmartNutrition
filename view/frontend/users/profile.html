@@ -8,6 +8,35 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
 <style>
+  /* ==================== VARIABLES DASHBOARD ==================== */
+  :root {
+    --green: #1F3D2B;
+    --sand: #F2E8CF;
+    --violet: #5B3E96;
+    --blue: #3A86C4;
+    --bg: #0a1a10;
+    --surface: #0f2318;
+    --text: #F2E8CF;
+    --muted: #a8b8a0;
+    --card-bg: rgba(15, 35, 24, 0.72);
+    --glass: rgba(31, 61, 43, 0.45);
+    --glass-strong: rgba(31, 61, 43, 0.85);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --radius: 18px;
+    --tr: 0.4s cubic-bezier(.4, 0, .2, 1);
+  }
+
+  [data-theme="light"] {
+    --bg: #f5f0e8;
+    --surface: #ede5d0;
+    --text: #1F3D2B;
+    --muted: #5a6e5a;
+    --card-bg: rgba(242, 232, 207, 0.75);
+    --glass: rgba(242, 232, 207, 0.6);
+    --glass-strong: rgba(242, 232, 207, 0.9);
+    --shadow: 0 8px 32px rgba(31, 61, 43, 0.15);
+  }
+
   * {
     margin: 0;
     padding: 0;
@@ -15,47 +44,149 @@
   }
 
   body {
-    background: radial-gradient(circle at 20% 30%, #0a0f1a, #05080f);
+    background: var(--bg);
     font-family: 'Lato', sans-serif;
     min-height: 100vh;
-    padding: 2rem;
-    position: relative;
+    transition: background var(--tr), color var(--tr);
     overflow-x: hidden;
   }
 
-  /* Curseur personnalisé */
+  /* ==================== NAVBAR DASHBOARD ==================== */
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 2rem;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(91, 62, 150, .2);
+    transition: all 0.3s ease;
+  }
+
+  .navbar.scrolled {
+    padding: 0.5rem 2rem;
+    background: var(--glass-strong);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .nav-logo svg {
+    width: 38px;
+    height: 38px;
+  }
+
+  .nav-logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #theme-toggle {
+    background: var(--glass);
+    border: 1.5px solid rgba(91, 62, 150, .5);
+    border-radius: 50px;
+    padding: 6px 14px;
+    color: var(--text);
+    cursor: none;
+    font-size: .82rem;
+    transition: all .3s;
+    backdrop-filter: blur(10px);
+  }
+
+  #theme-toggle:hover {
+    background: rgba(91, 62, 150, .2);
+    transform: scale(1.05);
+    border-color: var(--violet);
+  }
+
+  .btn-back {
+    background: var(--glass);
+    border: 1.5px solid rgba(91, 62, 150, .5);
+    border-radius: 50px;
+    padding: 6px 16px;
+    color: var(--text);
+    cursor: none;
+    text-decoration: none;
+    font-size: .85rem;
+    transition: all .3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-back:hover {
+    background: rgba(91, 62, 150, .2);
+    transform: translateY(-2px);
+  }
+
+  /* ==================== CURSEUR PERSONNALISÉ ==================== */
   #cursor {
     position: fixed;
-    width: 12px;
-    height: 12px;
-    background: #3A86C4;
-    border-radius: 50%;
-    pointer-events: none;
+    top: 0;
+    left: 0;
     z-index: 9999;
-    transition: transform 0.1s ease;
-    box-shadow: 0 0 12px rgba(58,134,196,0.8);
+    pointer-events: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--violet);
+    box-shadow: 0 0 12px var(--violet), 0 0 24px var(--blue);
+    transform: translate(-50%, -50%);
+    transition: width .2s, height .2s, background .3s;
+    mix-blend-mode: screen;
   }
 
   #cursor.hover {
-    transform: scale(2.5);
-    background: #5B3E96;
-    box-shadow: 0 0 20px rgba(91,62,150,0.8);
+    width: 28px;
+    height: 28px;
+    background: var(--blue);
   }
 
   #cursor-trail {
     position: fixed;
-    width: 28px;
-    height: 28px;
-    border: 1.5px solid rgba(58,134,196,0.4);
-    border-radius: 50%;
-    pointer-events: none;
+    top: 0;
+    left: 0;
     z-index: 9998;
-    transition: all 0.05s ease;
+    pointer-events: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(91, 62, 150, .5);
+    transform: translate(-50%, -50%);
   }
 
-  /* Container principal */
+  /* ==================== CONTAINER PRINCIPAL ==================== */
+  .profile-container {
+    padding-top: 90px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 60px;
+  }
+
   .profile-wrapper {
     max-width: 900px;
+    width: 90%;
     margin: 0 auto;
     animation: fadeInUp 0.6s ease-out;
   }
@@ -71,58 +202,41 @@
     }
   }
 
-  /* Glassmorphism card */
+  /* ==================== GLASS CARD ==================== */
   .profile-card {
-    background: rgba(15, 25, 35, 0.6);
-    backdrop-filter: blur(12px);
-    border-radius: 2rem;
-    border: 1px solid rgba(58, 134, 196, 0.2);
-    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    border-radius: var(--radius);
+    border: 1px solid rgba(91, 62, 150, 0.2);
+    box-shadow: var(--shadow);
     overflow: hidden;
-  }
-
-  /* Header avec flèche */
-  .profile-header {
-    padding: 1.5rem 2rem;
-    border-bottom: 1px solid rgba(58, 134, 196, 0.2);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    background: linear-gradient(135deg, rgba(31,61,43,0.3), rgba(58,134,196,0.1));
-  }
-
-  .back-btn {
-    background: rgba(58, 134, 196, 0.15);
-    border: 1px solid rgba(58, 134, 196, 0.3);
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 1.8rem;
-    color: #3A86C4;
     transition: all 0.3s ease;
   }
 
-  .back-btn:hover {
-    background: rgba(58, 134, 196, 0.3);
-    transform: translateX(-5px);
-    border-color: #3A86C4;
+  .profile-card:hover {
+    border-color: rgba(91, 62, 150, 0.5);
+    box-shadow: 0 12px 40px rgba(91, 62, 150, 0.3);
+  }
+
+  /* ==================== HEADER ==================== */
+  .profile-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+    background: linear-gradient(135deg, rgba(31, 61, 43, 0.3), rgba(58, 134, 196, 0.1));
   }
 
   .profile-header h1 {
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.8rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #E8DCC8, #3A86C4);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--text), var(--blue));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    text-align: center;
   }
 
-  /* Formulaire */
+  /* ==================== FORMULAIRE ==================== */
   .profile-form {
     padding: 2rem;
   }
@@ -134,30 +248,29 @@
   label {
     display: block;
     font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
     font-weight: 600;
-    color: #9CA3AF;
+    letter-spacing: 0.5px;
+    color: var(--muted);
     margin-bottom: 0.5rem;
   }
 
   input {
     width: 100%;
     padding: 0.9rem 1.2rem;
-    background: rgba(10, 20, 30, 0.6);
-    border: 1px solid rgba(58, 134, 196, 0.3);
-    border-radius: 1rem;
+    background: rgba(91, 62, 150, 0.1);
+    border: 1px solid rgba(91, 62, 150, 0.3);
+    border-radius: 12px;
     font-size: 1rem;
-    color: #E8DCC8;
+    color: var(--text);
     transition: all 0.3s ease;
     font-family: 'Lato', sans-serif;
   }
 
   input:focus {
     outline: none;
-    border-color: #3A86C4;
+    border-color: var(--blue);
     box-shadow: 0 0 0 3px rgba(58, 134, 196, 0.2);
-    background: rgba(10, 20, 30, 0.8);
+    background: rgba(91, 62, 150, 0.15);
   }
 
   input::placeholder {
@@ -173,11 +286,28 @@
   small {
     display: block;
     margin-top: 0.4rem;
-    font-size: 0.75rem;
-    color: #6B7280;
+    font-size: 0.7rem;
+    color: var(--muted);
   }
 
-  /* Boutons */
+  /* ==================== PROGRESS INDICATOR ==================== */
+  .progress-indicator {
+    width: 100%;
+    height: 4px;
+    background: rgba(91, 62, 150, .1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--violet), var(--blue));
+    transition: width .3s ease;
+    width: 0%;
+  }
+
+  /* ==================== BOUTONS ==================== */
   .btn-group {
     display: flex;
     gap: 1rem;
@@ -187,16 +317,16 @@
   .btn {
     padding: 0.9rem 1.8rem;
     border: none;
-    border-radius: 2rem;
+    border-radius: 50px;
     font-weight: 600;
-    cursor: pointer;
+    cursor: none;
     transition: all 0.3s ease;
     font-size: 0.9rem;
     letter-spacing: 0.5px;
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #1F3D2B, #3A86C4);
+    background: linear-gradient(135deg, var(--violet), var(--blue));
     color: white;
     flex: 1;
     position: relative;
@@ -220,7 +350,7 @@
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(58, 134, 196, 0.3);
+    box-shadow: 0 6px 20px rgba(91, 62, 150, 0.5);
   }
 
   .btn-danger {
@@ -230,24 +360,24 @@
 
   .btn-danger:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(153, 27, 27, 0.3);
+    box-shadow: 0 6px 20px rgba(153, 27, 27, 0.4);
   }
 
   .btn-outline {
-    background: transparent;
-    border: 1px solid rgba(58, 134, 196, 0.4);
-    color: #3A86C4;
+    background: var(--glass);
+    border: 1.5px solid rgba(91, 62, 150, 0.5);
+    color: var(--text);
   }
 
   .btn-outline:hover {
-    background: rgba(58, 134, 196, 0.1);
-    border-color: #3A86C4;
+    background: rgba(91, 62, 150, 0.2);
+    border-color: var(--violet);
   }
 
-  /* Messages */
+  /* ==================== MESSAGES ==================== */
   .message {
     padding: 1rem 1.2rem;
-    border-radius: 1rem;
+    border-radius: 12px;
     margin-bottom: 1.5rem;
     display: none;
     animation: slideDown 0.3s ease;
@@ -266,49 +396,37 @@
   }
 
   .message.success {
-    background: rgba(16, 185, 129, 0.15);
-    border-left: 3px solid #10B981;
-    color: #6EE7B7;
+    background: rgba(39, 174, 96, 0.15);
+    border-left: 3px solid #27ae60;
+    color: #27ae60;
   }
 
   .message.error {
-    background: rgba(239, 68, 68, 0.15);
-    border-left: 3px solid #EF4444;
-    color: #FCA5A5;
+    background: rgba(231, 76, 60, 0.15);
+    border-left: 3px solid #e74c3c;
+    color: #e74c3c;
   }
 
+  /* ==================== SÉPARATEUR ==================== */
   .divider {
     margin: 2rem 0 1.5rem;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(58,134,196,0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(91, 62, 150, 0.4), transparent);
   }
 
-  /* Badge */
-  .feature-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #3A86C4, #5B3E96);
-    color: white;
-    padding: 0.3rem 1rem;
-    border-radius: 2rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    margin-bottom: 1rem;
-  }
-
-  /* Zone dangereuse */
+  /* ==================== ZONE DANGEREUSE ==================== */
   .danger-zone {
     text-align: center;
     padding: 1rem 0;
   }
 
   .danger-zone p {
-    color: #9CA3AF;
+    color: var(--muted);
     font-size: 0.85rem;
     margin: 0.8rem 0;
   }
 
-  /* Modal */
+  /* ==================== MODALE DASHBOARD STYLE ==================== */
   .modal {
     display: none;
     position: fixed;
@@ -317,7 +435,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(12px);
     align-items: center;
     justify-content: center;
     z-index: 10000;
@@ -334,15 +452,16 @@
   }
 
   .modal-content {
-    background: rgba(15, 25, 35, 0.95);
-    backdrop-filter: blur(12px);
-    border-radius: 1.5rem;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius);
     padding: 2rem;
     max-width: 400px;
     width: 90%;
     text-align: center;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(231, 76, 60, 0.3);
     animation: scaleIn 0.2s ease;
+    box-shadow: var(--shadow);
   }
 
   @keyframes scaleIn {
@@ -357,14 +476,14 @@
   }
 
   .modal-content h3 {
-    color: #EF4444;
+    color: #e74c3c;
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.5rem;
     margin-bottom: 1rem;
   }
 
   .modal-content p {
-    color: #D1D5DB;
+    color: var(--text);
     margin-bottom: 1.5rem;
   }
 
@@ -374,21 +493,63 @@
     justify-content: center;
   }
 
-  /* Responsive */
+  /* ==================== FEATURE BADGE ==================== */
+  .feature-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(91, 62, 150, .2), rgba(58, 134, 196, .2));
+    border: 1px solid rgba(91, 62, 150, .3);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  /* ==================== RESPONSIVE ==================== */
   @media (max-width: 640px) {
-    body {
-      padding: 1rem;
+    .navbar {
+      padding: 0.5rem 1rem;
     }
+    
+    .nav-logo-text {
+      font-size: 1rem;
+    }
+    
+    .nav-actions {
+      gap: 8px;
+    }
+    
+    #theme-toggle, .btn-back {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+    }
+    
+    .profile-container {
+      padding-top: 80px;
+    }
+    
+    .profile-wrapper {
+      width: 95%;
+    }
+    
     .form-row {
       grid-template-columns: 1fr;
       gap: 1rem;
     }
+    
     .btn-group {
       flex-direction: column;
     }
+    
     .profile-header {
       padding: 1rem 1.5rem;
     }
+    
+    .profile-header h1 {
+      font-size: 1.3rem;
+    }
+    
     .profile-form {
       padding: 1.5rem;
     }
@@ -400,65 +561,95 @@
 <div id="cursor"></div>
 <div id="cursor-trail"></div>
 
-<div class="profile-wrapper">
-  <div class="profile-card">
-    <div class="profile-header">
-      <button class="back-btn" onclick="goBackToUsers()" aria-label="Retour">←</button>
-      <h1>👤 Mon Profil GaiaLumen</h1>
-    </div>
+<!-- ==================== NAVBAR DASHBOARD ==================== -->
+<nav class="navbar" id="navbar">
+  <a href="http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/dashboard.html" class="nav-logo">
+    <svg viewBox="0 0 60 60" fill="none">
+      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <defs>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#5B3E96"/>
+        </radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1F3D2B"/>
+          <stop offset="100%" stop-color="#3A86C4"/>
+        </linearGradient>
+      </defs>
+      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-logo-text">GaiaLumen</span>
+  </a>
+  <div class="nav-actions">
+    <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
+    <button class="btn-back" onclick="goBackToUsers()">← Retour au Dashboard</button>
+  </div>
+</nav>
 
-    <div class="profile-form">
-      <div id="messageArea" class="message"></div>
+<!-- ==================== CONTENU PRINCIPAL ==================== -->
+<div class="profile-container">
+  <div class="profile-wrapper">
+    <div class="profile-card">
+      <div class="profile-header">
+        <h1>👤 Mon Profil GaiaLumen</h1>
+      </div>
 
-      <form id="profileForm" onsubmit="return updateProfile(event)">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="nom">Nom</label>
-            <input type="text" id="nom" name="nom" required placeholder="Votre nom">
+      <div class="profile-form">
+        <div id="messageArea" class="message"></div>
+
+        <form id="profileForm" onsubmit="return updateProfile(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nom">Nom</label>
+              <input type="text" id="nom" name="nom" required placeholder="Votre nom">
+            </div>
+            <div class="form-group">
+              <label for="prenom">Prénom</label>
+              <input type="text" id="prenom" name="prenom" required placeholder="Votre prénom">
+            </div>
           </div>
+
           <div class="form-group">
-            <label for="prenom">Prénom</label>
-            <input type="text" id="prenom" name="prenom" required placeholder="Votre prénom">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required placeholder="exemple@gaialumen.com">
           </div>
+
+          <div class="form-group">
+            <label for="old_password">🔐 Ancien mot de passe</label>
+            <input type="password" id="old_password" name="old_password" placeholder="Requis pour modifier le mot de passe">
+            <small>L'ancien mot de passe est obligatoire pour toute modification du mot de passe</small>
+          </div>
+
+          <div class="form-group">
+            <label for="new_password">✨ Nouveau mot de passe <span style="font-weight: normal;">(optionnel)</span></label>
+            <input type="password" id="new_password" name="new_password" placeholder="Laissez vide pour ne pas changer">
+          </div>
+
+          <div class="form-group">
+            <label for="confirm_password">✓ Confirmer le nouveau mot de passe</label>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Retapez le nouveau mot de passe">
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn btn-primary">💾 Mettre à jour mon profil</button>
+          </div>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="danger-zone">
+          <span class="feature-badge">⚠️ Zone sensible</span>
+          <p>La suppression de votre compte est définitive et irréversible. Toutes vos données personnelles, vos repas, défis et objectifs seront supprimés.</p>
+          <button onclick="openDeleteModal()" class="btn btn-danger">🗑️ Supprimer définitivement mon compte</button>
         </div>
-
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required placeholder="exemple@gaialumen.com">
-        </div>
-
-        <div class="form-group">
-          <label for="old_password">🔐 Ancien mot de passe</label>
-          <input type="password" id="old_password" name="old_password" placeholder="Requis pour modifier le mot de passe">
-          <small>L'ancien mot de passe est obligatoire pour toute modification du mot de passe</small>
-        </div>
-
-        <div class="form-group">
-          <label for="new_password">✨ Nouveau mot de passe <span style="font-weight: normal;">(optionnel)</span></label>
-          <input type="password" id="new_password" name="new_password" placeholder="Laissez vide pour ne pas changer">
-        </div>
-
-        <div class="form-group">
-          <label for="confirm_password">✓ Confirmer le nouveau mot de passe</label>
-          <input type="password" id="confirm_password" name="confirm_password" placeholder="Retapez le nouveau mot de passe">
-        </div>
-
-        <div class="btn-group">
-          <button type="submit" class="btn btn-primary">💾 Mettre à jour mon profil</button>
-        </div>
-      </form>
-
-      <div class="divider"></div>
-
-      <div class="danger-zone">
-        <p>La suppression de votre compte est définitive et irréversible. Toutes vos données personnelles, vos repas, défis et objectifs seront supprimés.</p>
-        <button onclick="openDeleteModal()" class="btn btn-danger">🗑️ Supprimer définitivement mon compte</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal confirmation suppression -->
+<!-- ==================== MODALE CONFIRMATION SUPPRESSION ==================== -->
 <div id="deleteModal" class="modal">
   <div class="modal-content">
     <h3>⚠️ Suppression définitive</h3>
@@ -471,7 +662,13 @@
 </div>
 
 <script>
-  // Curseur personnalisé
+  // ==================== SCROLL NAVBAR ====================
+  window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar');
+    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // ==================== CURSEUR PERSONNALISÉ ====================
   (function(){
     const cur = document.getElementById('cursor');
     const trail = document.getElementById('cursor-trail');
@@ -490,85 +687,103 @@
       trail.style.top = ty + 'px';
       requestAnimationFrame(loop);
     })();
-    document.querySelectorAll('button, .back-btn, .btn').forEach(el => {
+    
+    const interactiveElements = 'button, .btn-back, .btn, input, select';
+    document.querySelectorAll(interactiveElements).forEach(el => {
       el.addEventListener('mouseenter', () => cur.classList.add('hover'));
       el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
     });
   })();
 
-// Gestion utilisateur - CORRIGÉE
-let currentUserId = null;
+  // ==================== GESTION DU THÈME ====================
+  function initTheme() {
+    const btn = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('gaialumen-theme') || 'dark';
+    
+    html.setAttribute('data-theme', saved);
+    if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+    
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', n);
+        localStorage.setItem('gaialumen-theme', n);
+        btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+      });
+    }
+  }
+  initTheme();
 
-function getCurrentUserId() {
-    // Récupérer l'ID depuis sessionStorage ou localStorage
+  // ==================== GESTION UTILISATEUR ====================
+  let currentUserId = null;
+
+  function getCurrentUserId() {
     let userId = sessionStorage.getItem('user_id');
     if (!userId) {
-        userId = localStorage.getItem('user_id');
+      userId = localStorage.getItem('user_id');
     }
-    
-    // Ne plus mettre d'ID par défaut - si pas d'ID, utilisateur non connecté
     if (!userId) {
-        return null;
+      return null;
     }
     return parseInt(userId);
-}
-function getBaseUrl() {
-    // Retourne la racine de votre projet
-    return 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition';
-}
+  }
 
-async function loadUserProfile() {
+  function getBaseUrl() {
+    return 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition';
+  }
+
+  async function loadUserProfile() {
     const userId = getCurrentUserId();
     if (!userId) {
-        showMessage("Vous n'êtes pas connecté. Redirection vers la page de connexion...", "error");
-        setTimeout(() => {
-            window.location.href = getBaseUrl() + '/view/frontend/login.html';
-        }, 2000);
-        return;
+      showMessage("Vous n'êtes pas connecté. Redirection vers la page de connexion...", "error");
+      setTimeout(() => {
+        window.location.href = getBaseUrl() + '/view/frontend/login.html';
+      }, 2000);
+      return;
     }
     
     try {
-        // Chemin ABSOLU vers updateprofil.php
-        const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php?action=get&id=' + userId, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (!response.ok) {
-            throw new Error('HTTP error ' + response.status);
-        }
-        
-        const data = await response.json();
-        if (data.success) {
-            document.getElementById('nom').value = data.user.nom || '';
-            document.getElementById('prenom').value = data.user.prenom || '';
-            document.getElementById('email').value = data.user.email || '';
-            currentUserId = data.user.id;
+      const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php?action=get&id=' + userId, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        throw new Error('HTTP error ' + response.status);
+      }
+      
+      const data = await response.json();
+      if (data.success) {
+        document.getElementById('nom').value = data.user.nom || '';
+        document.getElementById('prenom').value = data.user.prenom || '';
+        document.getElementById('email').value = data.user.email || '';
+        currentUserId = data.user.id;
+      } else {
+        if (data.message === "Utilisateur non trouvé") {
+          sessionStorage.removeItem('user_id');
+          localStorage.removeItem('user_id');
+          showMessage("Session expirée. Veuillez vous reconnecter.", "error");
+          setTimeout(() => {
+            window.location.href = getBaseUrl() + '/view/frontend/login.html';
+          }, 2000);
         } else {
-            if (data.message === "Utilisateur non trouvé") {
-                sessionStorage.removeItem('user_id');
-                localStorage.removeItem('user_id');
-                showMessage("Session expirée. Veuillez vous reconnecter.", "error");
-                setTimeout(() => {
-                    window.location.href = getBaseUrl() + '/view/frontend/login.html';
-                }, 2000);
-            } else {
-                showMessage(data.message || "Erreur de chargement", "error");
-            }
+          showMessage(data.message || "Erreur de chargement", "error");
         }
+      }
     } catch (error) {
-        console.error("Erreur chargement profil:", error);
-        showMessage("Impossible de charger le profil. Vérifiez que le serveur est accessible.", "error");
+      console.error("Erreur chargement profil:", error);
+      showMessage("Impossible de charger le profil. Vérifiez que le serveur est accessible.", "error");
     }
-}
+  }
 
-async function updateProfile(event) {
+  async function updateProfile(event) {
     event.preventDefault();
 
     const userId = getCurrentUserId();
     if (!userId) {
-        showMessage("Vous n'êtes pas connecté", "error");
-        return false;
+      showMessage("Vous n'êtes pas connecté", "error");
+      return false;
     }
 
     const nom = document.getElementById('nom').value.trim();
@@ -579,117 +794,115 @@ async function updateProfile(event) {
     const confirm_password = document.getElementById('confirm_password').value;
 
     if (!nom || !prenom || !email) {
-        showMessage("Tous les champs sont obligatoires", "error");
-        return false;
+      showMessage("Tous les champs sont obligatoires", "error");
+      return false;
     }
 
     if (!email.includes('@')) {
-        showMessage("Email invalide", "error");
-        return false;
+      showMessage("Email invalide", "error");
+      return false;
     }
 
     if (new_password && !old_password) {
-        showMessage("L'ancien mot de passe est requis pour modifier le mot de passe", "error");
-        return false;
+      showMessage("L'ancien mot de passe est requis pour modifier le mot de passe", "error");
+      return false;
     }
 
     if (new_password && new_password !== confirm_password) {
-        showMessage("Les nouveaux mots de passe ne correspondent pas", "error");
-        return false;
+      showMessage("Les nouveaux mots de passe ne correspondent pas", "error");
+      return false;
     }
 
     if (new_password && new_password.length < 6) {
-        showMessage("Le nouveau mot de passe doit contenir au moins 6 caractères", "error");
-        return false;
+      showMessage("Le nouveau mot de passe doit contenir au moins 6 caractères", "error");
+      return false;
     }
 
     const formData = { 
-        id: userId, 
-        nom: nom, 
-        prenom: prenom, 
-        email: email, 
-        old_password: old_password, 
-        new_password: new_password 
+      id: userId, 
+      nom: nom, 
+      prenom: prenom, 
+      email: email, 
+      old_password: old_password, 
+      new_password: new_password 
     };
 
     try {
-        // Chemin ABSOLU vers updateprofil.php
-        const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
+      const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('HTTP error ' + response.status);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        showMessage("✅ " + result.message, "success");
+        document.getElementById('old_password').value = '';
+        document.getElementById('new_password').value = '';
+        document.getElementById('confirm_password').value = '';
         
-        if (!response.ok) {
-            throw new Error('HTTP error ' + response.status);
+        if (email) {
+          sessionStorage.setItem('user_email', email);
+          localStorage.setItem('user_email', email);
         }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage("✅ " + result.message, "success");
-            document.getElementById('old_password').value = '';
-            document.getElementById('new_password').value = '';
-            document.getElementById('confirm_password').value = '';
-            
-            if (email) {
-                sessionStorage.setItem('user_email', email);
-                localStorage.setItem('user_email', email);
-            }
-        } else {
-            showMessage(result.message || "Erreur lors de la mise à jour", "error");
-        }
+      } else {
+        showMessage(result.message || "Erreur lors de la mise à jour", "error");
+      }
     } catch (error) {
-        console.error("Erreur update:", error);
-        showMessage("Erreur de connexion au serveur: " + error.message, "error");
+      console.error("Erreur update:", error);
+      showMessage("Erreur de connexion au serveur: " + error.message, "error");
     }
     return false;
-}
+  }
 
-async function deleteAccount() {
+  async function deleteAccount() {
     const userId = getCurrentUserId();
     if (!userId) {
-        showMessage("Vous n'êtes pas connecté", "error");
-        closeDeleteModal();
-        return;
+      showMessage("Vous n'êtes pas connecté", "error");
+      closeDeleteModal();
+      return;
     }
     
     try {
-        // Chemin ABSOLU vers deleteprofil.php
-        const response = await fetch(getBaseUrl() + '/view/backend/users/deleteprofil.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: userId })
-        });
-        
-        if (!response.ok) {
-            throw new Error('HTTP error ' + response.status);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage("Votre compte a été supprimé. Redirection...", "success");
-            sessionStorage.clear();
-            localStorage.removeItem('user_id');
-            localStorage.removeItem('user_email');
-            setTimeout(() => {
-                window.location.href = getBaseUrl() + '/view/frontend/register.html';
-            }, 2000);
-        } else {
-            showMessage(result.message || "Erreur lors de la suppression", "error");
-            closeDeleteModal();
-        }
-    } catch (error) {
-        console.error("Erreur delete:", error);
-        showMessage("Erreur de connexion au serveur: " + error.message, "error");
+      const response = await fetch(getBaseUrl() + '/view/backend/users/deleteprofil.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId })
+      });
+      
+      if (!response.ok) {
+        throw new Error('HTTP error ' + response.status);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        showMessage("Votre compte a été supprimé. Redirection...", "success");
+        sessionStorage.clear();
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('user_email');
+        setTimeout(() => {
+          window.location.href = getBaseUrl() + '/view/frontend/register.html';
+        }, 2000);
+      } else {
+        showMessage(result.message || "Erreur lors de la suppression", "error");
         closeDeleteModal();
+      }
+    } catch (error) {
+      console.error("Erreur delete:", error);
+      showMessage("Erreur de connexion au serveur: " + error.message, "error");
+      closeDeleteModal();
     }
-}
+  }
 
-function goBackToUsers() {
+  function goBackToUsers() {
     window.location.href = getBaseUrl() + '/view/frontend/dashboard.html';
-}
+  }
 
   function showMessage(msg, type) {
     const msgDiv = document.getElementById('messageArea');
@@ -714,10 +927,7 @@ function goBackToUsers() {
     document.getElementById('deleteModal').classList.remove('active');
   }
 
-  function goBackToUsers() {
-    window.location.href = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/dashboard.html';
-  }
-
+  // ==================== INITIALISATION ====================
   document.addEventListener('DOMContentLoaded', () => {
     loadUserProfile();
     window.onclick = function(event) {

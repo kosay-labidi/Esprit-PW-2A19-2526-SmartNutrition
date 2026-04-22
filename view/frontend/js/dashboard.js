@@ -71,7 +71,7 @@ async function logout() {
     }
 }
 
-// Gestion du thème (garder pour l'UI uniquement)
+// Gestion du thème
 function initTheme() {
     const btn = document.getElementById('theme-toggle');
     const html = document.documentElement;
@@ -100,30 +100,69 @@ function initNavbar() {
 
 // Gestion du menu mobile
 function initMobileMenu() {
-    const menuToggle = document.getElementById('menu-toggle');
-    const sidebar = document.querySelector('.sidebar-menu');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileOverlay = document.getElementById('mobile-overlay');
+    const mobileClose = document.getElementById('mobile-menu-close');
     
-    if (menuToggle) {
-        menuToggle.addEventListener('click', () => {
-            menuToggle.classList.toggle('active');
-            sidebar?.classList.toggle('mobile-open');
-        });
+    function openMobileMenu() {
+        mobileMenu?.classList.add('open');
+        mobileOverlay?.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
+    
+    function closeMobileMenu() {
+        mobileMenu?.classList.remove('open');
+        mobileOverlay?.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', openMobileMenu);
+    }
+    
+    if (mobileClose) {
+        mobileClose.addEventListener('click', closeMobileMenu);
+    }
+    
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', closeMobileMenu);
+    }
+    
+    // Fermer le menu mobile quand un module est sélectionné
+    document.querySelectorAll('.mobile-menu-item').forEach(item => {
+        item.addEventListener('click', () => {
+            closeMobileMenu();
+        });
+    });
+    
+    // Fermer avec la touche Echap
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileMenu?.classList.contains('open')) {
+            closeMobileMenu();
+        }
+    });
 }
 
-// Gestion du toggle sidebar
-function initSidebarToggle() {
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebar = document.querySelector('.sidebar-menu');
-    const mainContent = document.querySelector('.main-content');
+// Gestion de l'indicateur actif dans la navbar horizontale
+function updateActiveNavItem(moduleName) {
+    // Mettre à jour les items de la navbar horizontale
+    document.querySelectorAll('.nav-module-item').forEach(item => {
+        if (item.dataset.module === moduleName) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
     
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', () => {
-            sidebarToggle.classList.toggle('collapsed');
-            sidebar?.classList.toggle('mobile-hidden');
-            mainContent?.classList.toggle('full-width');
-        });
-    }
+    // Mettre à jour les items du menu mobile
+    document.querySelectorAll('.mobile-menu-item').forEach(item => {
+        if (item.dataset.module === moduleName) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
 }
 
 // Gestion de l'assistant AI
@@ -158,11 +197,11 @@ function initAIAssistant() {
             const lowerText = text.toLowerCase();
             
             if (lowerText.includes('planning') || lowerText.includes('repas')) {
-                response = '📅 Le module Planning vous permet d\'organiser vos repas de la semaine. Cliquez sur "GS Planning" dans le menu pour commencer!';
+                response = '📅 Le module Planning vous permet d\'organiser vos repas de la semaine. Cliquez sur "Planning" dans le menu pour commencer!';
             } else if (lowerText.includes('santé') || lowerText.includes('health')) {
-                response = '❤️ Le module Santé vous aide à suivre vos indicateurs corporels, glycémie et hydratation. Consultez "GS Santé" pour plus de détails.';
+                response = '❤️ Le module Santé vous aide à suivre vos indicateurs corporels, glycémie et hydratation. Consultez "Santé" pour plus de détails.';
             } else if (lowerText.includes('défi') || lowerText.includes('challenge')) {
-                response = '🏆 Relevez des défis écologiques dans le module "GS Défis" et gagnez des badges en réduisant votre empreinte carbone!';
+                response = '🏆 Relevez des défis écologiques dans le module "Défis" et gagnez des badges en réduisant votre empreinte carbone!';
             } else if (lowerText.includes('aide') || lowerText.includes('help')) {
                 response = 'Je peux vous aider avec tous les modules GaiaLumen: Utilisateurs, Planning, Events, Repas, Santé et Défis. Que souhaitez-vous savoir?';
             } else if (lowerText.includes('merci') || lowerText.includes('thanks')) {
@@ -186,6 +225,23 @@ function initAIAssistant() {
     });
 }
 
+// Fonction pour afficher un toast (notification)
+function showToast(message, type = 'info') {
+    let toast = document.querySelector('.toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        document.body.appendChild(toast);
+    }
+    
+    toast.textContent = message;
+    toast.className = `toast-notification ${type} show`;
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
 // Initialisation principale
 document.addEventListener('DOMContentLoaded', async () => {
     // Vérifier l'authentification
@@ -205,6 +261,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     initNavbar();
     initMobileMenu();
-    initSidebarToggle();
     initAIAssistant();
+    
+    // Exposer la fonction updateActiveNavItem globalement
+    window.updateActiveNavItem = updateActiveNavItem;
 });

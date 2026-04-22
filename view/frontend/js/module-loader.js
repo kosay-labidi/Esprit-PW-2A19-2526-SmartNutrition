@@ -108,8 +108,6 @@ function executeModuleScripts(container) {
     }
     
     document.body.appendChild(newScript);
-    // Supprimer le script après exécution pour éviter de polluer le DOM (facultatif)
-    // if (!oldScript.src) newScript.remove();
   });
 }
 
@@ -117,6 +115,11 @@ function executeModuleScripts(container) {
 async function showModule(moduleName) {
   // Sauvegarder le module actif
   localStorage.setItem('activeModule', moduleName);
+  
+  // Mettre à jour l'indicateur actif dans la navbar horizontale
+  if (typeof updateActiveNavItem === 'function') {
+    updateActiveNavItem(moduleName);
+  }
   
   // Cacher toutes les sections existantes
   const allSections = document.querySelectorAll('.content-section');
@@ -175,27 +178,37 @@ async function showModule(moduleName) {
   }
 }
 
-// Gestion des clics sur les items du menu
+// Gestion des clics sur les items de la navbar horizontale
 document.addEventListener('DOMContentLoaded', () => {
-  const menuItems = document.querySelectorAll('.menu-item');
+  // Items de la navbar horizontale
+  const navModuleItems = document.querySelectorAll('.nav-module-item');
   
-  menuItems.forEach(item => {
+  navModuleItems.forEach(item => {
     item.addEventListener('click', async (e) => {
       e.preventDefault();
       const moduleName = item.dataset.module;
       
-      // Mettre à jour l'état actif du menu
-      menuItems.forEach(mi => mi.classList.remove('active'));
-      item.classList.add('active');
+      // Charger et afficher le module
+      await showModule(moduleName);
+      
+      // Scroll en haut de la page pour une meilleure UX
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  
+  // Items du menu mobile
+  const mobileMenuItems = document.querySelectorAll('.mobile-menu-item');
+  
+  mobileMenuItems.forEach(item => {
+    item.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const moduleName = item.dataset.module;
       
       // Charger et afficher le module
       await showModule(moduleName);
       
-      // Fermer le menu mobile si ouvert
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar-menu')?.classList.remove('mobile-open');
-        document.getElementById('menu-toggle')?.classList.remove('active');
-      }
+      // Scroll en haut de la page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
   
@@ -205,7 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) {
       e.preventDefault();
       const moduleName = btn.dataset.module;
-      const targetItem = document.querySelector(`.menu-item[data-module="${moduleName}"]`);
+      // Simuler un clic sur l'item de navigation correspondant
+      const targetItem = document.querySelector(`.nav-module-item[data-module="${moduleName}"]`);
       if (targetItem) {
         targetItem.click();
       }
@@ -214,14 +228,13 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Charger le module d'accueil par défaut
   const activeModule = localStorage.getItem('activeModule') || 'welcome';
-  const targetItem = document.querySelector(`.menu-item[data-module="${activeModule}"]`);
+  const targetItem = document.querySelector(`.nav-module-item[data-module="${activeModule}"]`);
   
   if (targetItem) {
     targetItem.click();
   } else {
-    const firstMenuItem = document.querySelector('.menu-item[data-module="welcome"]');
-    if (firstMenuItem) {
-      firstMenuItem.classList.add('active');
+    const firstModuleItem = document.querySelector('.nav-module-item[data-module="welcome"]');
+    if (firstModuleItem) {
       showModule('welcome');
     }
   }
@@ -240,15 +253,13 @@ function startAutoReload() {
   if (autoReloadInterval) return;
   
   autoReloadInterval = setInterval(async () => {
-    const activeMenuItem = document.querySelector('.menu-item.active');
-    if (!activeMenuItem) return;
-    
-    const moduleName = activeMenuItem.dataset.module;
-    if (!moduleName) return;
+    // Récupérer le module actif depuis localStorage
+    const activeModuleName = localStorage.getItem('activeModule');
+    if (!activeModuleName) return;
     
     // Charger le module avec un timestamp pour éviter le cache
     const timestamp = new Date().getTime();
-    const modulePath = modules[moduleName];
+    const modulePath = modules[activeModuleName];
     if (!modulePath) return;
     
     try {
@@ -258,11 +269,11 @@ function startAutoReload() {
       const newContent = await response.text();
       
       // Vérifier si le contenu a changé
-      if (lastModuleContent[moduleName] && lastModuleContent[moduleName] !== newContent) {
-        console.log(`🔄 Module ${moduleName} mis à jour automatiquement`);
+      if (lastModuleContent[activeModuleName] && lastModuleContent[activeModuleName] !== newContent) {
+        console.log(`🔄 Module ${activeModuleName} mis à jour automatiquement`);
         
         // Supprimer l'ancienne section
-        const existingSection = document.getElementById(moduleName);
+        const existingSection = document.getElementById(activeModuleName);
         if (existingSection) {
           existingSection.remove();
         }
@@ -272,7 +283,7 @@ function startAutoReload() {
         tempDiv.innerHTML = newContent;
         
         // Injecter les nouveaux styles
-        injectModuleStyles(moduleName, tempDiv);
+        injectModuleStyles(activeModuleName, tempDiv);
         
         // Extraire la nouvelle section
         const newSection = tempDiv.querySelector('.content-section');
@@ -285,18 +296,18 @@ function startAutoReload() {
             newSection.style.display = 'block';
             newSection.classList.add('active');
             
-            // Exécuter les scripts du module (APRÈS l'ajout au DOM)
+            // Exécuter les scripts du module
             executeModuleScripts(tempDiv);
             
             // Déclencher l'événement de chargement du module
-            const event = new CustomEvent('moduleLoaded', { detail: { moduleName } });
+            const event = new CustomEvent('moduleLoaded', { detail: { moduleName: activeModuleName } });
             document.dispatchEvent(event);
           }
         }
       }
       
       // Sauvegarder le contenu actuel
-      lastModuleContent[moduleName] = newContent;
+      lastModuleContent[activeModuleName] = newContent;
     } catch (error) {
       // Ignorer les erreurs silencieusement
     }
@@ -320,9 +331,8 @@ window.addEventListener('load', () => {
 window.startAutoReload = startAutoReload;
 window.stopAutoReload = stopAutoReload;
 
-// Ajouter un bouton de rechargement dans la navbar (optionnel)
+// Ajouter un bouton de rechargement dans la navbar
 document.addEventListener('DOMContentLoaded', () => {
-  // Ajouter un bouton de rechargement rapide
   const navActions = document.querySelector('.nav-actions');
   if (navActions) {
     const reloadBtn = document.createElement('button');
@@ -331,11 +341,12 @@ document.addEventListener('DOMContentLoaded', () => {
     reloadBtn.style.cssText = 'background:var(--glass);border:1.5px solid rgba(91,62,150,.5);border-radius:50px;padding:6px 14px;color:var(--text);cursor:pointer;font-size:.82rem;transition:all .3s;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:4px;margin-right:8px;';
     reloadBtn.innerHTML = '🔄 Recharger';
     reloadBtn.addEventListener('click', () => {
-      const activeMenuItem = document.querySelector('.menu-item.active');
-      if (activeMenuItem) {
-        const moduleName = activeMenuItem.dataset.module;
-        reloadModule(moduleName);
-        showToast('Module rechargé!', 'success');
+      const activeModule = localStorage.getItem('activeModule');
+      if (activeModule) {
+        reloadModule(activeModule);
+        if (typeof showToast === 'function') {
+          showToast('Module rechargé!', 'success');
+        }
       }
     });
     reloadBtn.addEventListener('mouseenter', () => {
@@ -360,13 +371,11 @@ document.addEventListener('moduleLoaded', (e) => {
   // Initialiser les fonctionnalités spécifiques au module
   switch (moduleName) {
     case 'events':
-      // Charger les événements si la fonction existe
       if (typeof loadEvents === 'function') {
         setTimeout(() => loadEvents(), 100);
       }
       break;
     case 'challenges':
-      // Charger les défis si la fonction existe
       if (typeof initChallenges === 'function') {
         setTimeout(() => initChallenges(), 100);
       } else if (typeof loadChallenges === 'function') {

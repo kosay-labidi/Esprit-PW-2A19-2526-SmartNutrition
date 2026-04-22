@@ -472,7 +472,7 @@
             <h2>📋 Dossiers Médicaux</h2>
             
             <div class="filter-group">
-                <input type="text" id="searchDossier" placeholder="🔎 Rechercher dossiers...">
+                <input type="text" id="searchDossier" placeholder="🔎 Rechercher dossiers..." onkeydown="if(event.key==='Enter') searchDossiers()">
                 <select id="filterBloodType">
                     <option value="">Tous groupes sanguins</option>
                     <option value="O+">O+</option>
@@ -484,7 +484,7 @@
                     <option value="AB+">AB+</option>
                     <option value="AB-">AB-</option>
                 </select>
-                <select id="sortDossier">
+                <select id="sortDossier" onchange="searchDossiers()">
                     <option value="date_mise_a_jour-DESC">Plus récent</option>
                     <option value="date_mise_a_jour-ASC">Plus ancien</option>
                     <option value="imc-DESC">IMC (haut→bas)</option>
@@ -551,35 +551,7 @@
             try {
                 const response = await fetch(`${API_BASE}/dossierMedical.controller.php?action=list`);
                 const data = await response.json();
-
-                if (!data.success || !data.data || data.data.length === 0) {
-                    document.getElementById('dossiersContainer').innerHTML = '<div class="empty-state">Aucun dossier trouvé</div>';
-                    return;
-                }
-
-                let html = '<table><thead><tr><th>ID</th><th>Utilisateur</th><th>Groupe</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Régime</th><th>Allergie</th><th>Actions</th></tr></thead><tbody>';
-
-                data.data.forEach(d => {
-                    const imc = d.imc ? parseFloat(d.imc).toFixed(1) : '—';
-                    const regime = d.nom_regime ? `<span style="background:rgba(91,62,150,.2);padding:2px 8px;border-radius:8px;font-size:.85rem;">${d.nom_regime}</span>` : '—';
-                    html += `<tr>
-                        <td>${d.id_dossier}</td>
-                        <td>${d.id_utilisateur || 1}</td>
-                        <td>${d.groupe_sanguin || '—'}</td>
-                        <td>${d.poids ? d.poids + ' kg' : '—'}</td>
-                        <td>${d.taille ? d.taille + ' cm' : '—'}</td>
-                        <td>${imc}</td>
-                        <td>${regime}</td>
-                        <td>${d.allergie ? d.allergie.substring(0, 20) + '…' : '—'}</td>
-                        <td>
-                            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/updateDossier.php?id=${d.id_dossier}" class="btn btn-small btn-secondary">✏️ Éditer</a>
-                            <button class="btn btn-danger btn-small" onclick="deleteDossier(${d.id_dossier})">🗑️</button>
-                        </td>
-                    </tr>`;
-                });
-
-                html += '</tbody></table>';
-                document.getElementById('dossiersContainer').innerHTML = html;
+                renderDossierTable(data.success ? data.data : []);
             } catch (error) {
                 console.error('Error loading dossiers:', error);
                 document.getElementById('dossiersContainer').innerHTML = '<div class="empty-state">Erreur lors du chargement</div>';
@@ -662,45 +634,68 @@
             }
         }
         
-        // Search dossiers
+        // Shared helper to render dossier rows
+        function renderDossierTable(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('dossiersContainer').innerHTML = '<div class="empty-state">Aucun dossier trouvé</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>ID</th><th>Utilisateur</th><th>Groupe</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Régime</th><th>Allergie</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(d => {
+                const imc = d.imc ? parseFloat(d.imc).toFixed(1) : '—';
+                const regime = d.nom_regime ? `<span style="background:rgba(91,62,150,.2);padding:2px 8px;border-radius:8px;font-size:.85rem;">${d.nom_regime}</span>` : '—';
+                html += `<tr>
+                    <td>${d.id_dossier}</td>
+                    <td>${d.id_utilisateur || 1}</td>
+                    <td>${d.groupe_sanguin || '—'}</td>
+                    <td>${d.poids ? d.poids + ' kg' : '—'}</td>
+                    <td>${d.taille ? d.taille + ' cm' : '—'}</td>
+                    <td>${imc}</td>
+                    <td>${regime}</td>
+                    <td>${d.allergie ? d.allergie.substring(0, 20) + '…' : '—'}</td>
+                    <td>
+                        <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/updateDossier.php?id=${d.id_dossier}" class="btn btn-small btn-secondary">✏️ Éditer</a>
+                        <button class="btn btn-danger btn-small" onclick="deleteDossier(${d.id_dossier})">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('dossiersContainer').innerHTML = html;
+        }
+
+        // Search + filter + sort dossiers (all in one)
         async function searchDossiers() {
-            const query = document.getElementById('searchDossier').value;
+            const query     = document.getElementById('searchDossier').value.trim();
             const bloodType = document.getElementById('filterBloodType').value;
-            
+            const sortVal   = document.getElementById('sortDossier').value;
+            const [sortField, sortDir] = sortVal ? sortVal.split('-') : ['date_mise_a_jour', 'DESC'];
+
             try {
-                let url = `${API_BASE}/dossierMedical.controller.php?action=search&q=${encodeURIComponent(query)}`;
-                if (bloodType) url += `&groupe_sanguin=${bloodType}`;
-                
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (!data.success || !data.data || data.data.length === 0) {
-                    document.getElementById('dossiersContainer').innerHTML = '<div class="empty-state">Aucun résultat trouvé</div>';
-                    return;
+                // If there's a search query or blood type filter, use search action
+                if (query || bloodType) {
+                    let url = `${API_BASE}/dossierMedical.controller.php?action=search&q=${encodeURIComponent(query)}`;
+                    if (bloodType) url += `&groupe_sanguin=${encodeURIComponent(bloodType)}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    // Client-side sort the search results
+                    if (data.success && data.data) {
+                        data.data.sort((a, b) => {
+                            const va = a[sortField] ?? '';
+                            const vb = b[sortField] ?? '';
+                            if (sortDir === 'ASC') return va > vb ? 1 : -1;
+                            return va < vb ? 1 : -1;
+                        });
+                    }
+                    renderDossierTable(data.success ? data.data : []);
+                } else {
+                    // No search — use sort action for clean server-side ordering
+                    const url = `${API_BASE}/dossierMedical.controller.php?action=sort&field=${sortField}&direction=${sortDir}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    renderDossierTable(data.success ? data.data : []);
                 }
-                
-                let html = '<table><thead><tr><th>ID</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Groupe</th><th>Régime ID</th><th>Allergie</th><th>Actions</th></tr></thead><tbody>';
-                
-                data.data.forEach(d => {
-                    html += `<tr>
-                        <td>${d.id_dossier}</td>
-                        <td>${d.poids} kg</td>
-                        <td>${d.taille} cm</td>
-                        <td>${parseFloat(d.imc).toFixed(1)}</td>
-                        <td>${d.groupe_sanguin || '-'}</td>
-                        <td>${d.id_regime || '-'}</td>
-                        <td>${d.allergie ? d.allergie.substring(0, 25) : '-'}</td>
-                        <td>
-                            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/updateDossier.php?id=${d.id_dossier}">✏️ Éditer</a>
-                            <button class="btn btn-danger btn-small" onclick="deleteDossier(${d.id_dossier})">🗑️</button>
-                        </td>
-                    </tr>`;
-                });
-                
-                html += '</tbody></table>';
-                document.getElementById('dossiersContainer').innerHTML = html;
             } catch (error) {
-                console.error('Search error:', error);
+                console.error('Search/sort error:', error);
                 showAlert('Erreur lors de la recherche', 'error');
             }
         }

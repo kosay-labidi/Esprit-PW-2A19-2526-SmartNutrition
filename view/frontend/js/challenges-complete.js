@@ -29,6 +29,10 @@ let allChallenges = [];
 let allParticipants = [];
 const currentUser = window.__USER__ || { id: 1, nom: 'Utilisateur', pseudo: 'user1' };
 
+// Vue active (grid | swipe)
+let activeChallengesView = 'grid';
+let filteredChallenges = [];
+
 // Données classement
 const sampleParticipants = [
   { id: 1, nom: 'Marie Dupont', pseudo: 'marie_eco', avatar: '👩', progression: 95, points: 1250, steaker_niveau: 'double' },
@@ -134,7 +138,8 @@ function mapChallengesData(data) {
     statut: normalizeChallengeStatus(c.statut),
     steaker: c.streak_icon || c.steaker || '🏆',
     steaker_nom: c.steaker_nom || c.objectif || 'Défi',
-    image: c.image || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800'
+    // Utiliser une résolution plus élevée pour la vue Swipe (image pleine largeur)
+    image: c.image || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1400&auto=format&fit=crop&q=85'
   }));
 }
 
@@ -170,6 +175,9 @@ async function loadChallenges() {
     } else {
       allChallenges = mapChallengesData(data);
     }
+
+    // Exposer l'état à la page (certaines features patchées y accèdent)
+    window.allChallenges = allChallenges;
     
     filterChallenges();
     populateRankingSelect();
@@ -177,6 +185,7 @@ async function loadChallenges() {
   } catch (err) {
     console.error('Erreur lors du chargement des défis:', err);
     allChallenges = [];
+    window.allChallenges = allChallenges;
     filterChallenges();
     populateRankingSelect();
     await loadParticipantsForRanking();
@@ -216,14 +225,283 @@ function filterChallenges() {
     return matchSearch && matchStatus;
   });
 
+  filteredChallenges = filtered;
+  window.filteredChallenges = filteredChallenges;
+
+  const swipeViewEl = document.getElementById('swipe-view');
+  const isSwipe = activeChallengesView === 'swipe' && !!swipeViewEl;
+
   if (filtered.length === 0) {
     grid.style.display = 'none';
-    empty.style.display = 'block';
+    if (isSwipe) {
+      empty.style.display = 'none';
+      renderSwipeDeck([]);
+    } else {
+      empty.style.display = 'block';
+    }
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  if (isSwipe) {
+    grid.style.display = 'none';
+    renderSwipeDeck(filtered);
   } else {
-    empty.style.display = 'none';
     grid.style.display = 'grid';
     renderChallenges(filtered);
   }
+}
+
+function setChallengesView(view) {
+  const grid = document.getElementById('challenges-grid');
+  const swipeView = document.getElementById('swipe-view');
+  const btnGrid = document.getElementById('view-grid');
+  const btnList = document.getElementById('view-list');
+  const btnSwipe = document.getElementById('view-swipe');
+
+  if (!grid) return;
+  activeChallengesView = view === 'swipe' ? 'swipe' : 'grid';
+
+  if (activeChallengesView === 'swipe' && swipeView) {
+    grid.style.display = 'none';
+    swipeView.style.display = 'flex';
+    btnSwipe?.classList.add('active');
+    btnGrid?.classList.remove('active');
+    btnList?.classList.remove('active');
+    renderSwipeDeck(filteredChallenges.length ? filteredChallenges : allChallenges);
+    return;
+  }
+
+  // Grille/Liste
+  if (swipeView) swipeView.style.display = 'none';
+  grid.style.display = 'grid';
+  btnSwipe?.classList.remove('active');
+}
+
+function escapeHtml(str) {
+  return (str ?? '').toString().replace(/[&<>"']/g, (m) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
+
+function buildSwipeCard(challenge) {
+  const statut = normalizeChallengeStatus(challenge.statut);
+  const dateFin = new Date(challenge.date_fin);
+  const hasValidDate = !Number.isNaN(dateFin.getTime());
+  const days = hasValidDate ? Math.ceil((dateFin - new Date()) / 86400000) : null;
+  const daysLabel = days === null ? '' : (days < 0 ? 'Terminé' : `${Math.max(days, 0)}j`);
+  const rewardName = escapeHtml(challenge.steaker_nom || challenge.objectif || 'Récompense');
+
+  return `
+    <article class="gl-swipe-card" data-challenge-id="${challenge.id}">
+      <div class="gl-swipe-card__like-label">LIKE</div>
+      <div class="gl-swipe-card__nope-label">NOPE</div>
+
+      ${challenge.image
+        ? `<img class="gl-swipe-card__img" src="${escapeHtml(challenge.image)}" alt="${escapeHtml(challenge.titre)}" loading="lazy" decoding="async">`
+        : `<div class="gl-swipe-card__img-placeholder">🏞️</div>`
+      }
+
+      <span class="gl-swipe-card__status-badge ${statut}">
+        ${statut === 'actif' ? '✅ Actif' : statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}
+      </span>
+      ${daysLabel ? `<span class="gl-swipe-card__days-badge">${daysLabel}</span>` : ''}
+
+      <div class="gl-swipe-card__body">
+        <div>
+          <div class="gl-swipe-card__title">${escapeHtml(challenge.titre)}</div>
+          <div class="gl-swipe-card__desc">${escapeHtml(challenge.description)}</div>
+
+          <div class="gl-swipe-card__reward">
+            <span class="gl-swipe-card__reward-icon">🏆</span>
+            <div>
+              <div class="gl-swipe-card__reward-label">Récompense</div>
+              <div class="gl-swipe-card__reward-name">${rewardName}</div>
+            </div>
+          </div>
+
+          <div class="gl-swipe-card__meta">
+            <div class="gl-swipe-card__meta-item">👥 <span>${parseInt(challenge.participants_count || 0, 10)}</span></div>
+            <div class="gl-swipe-card__meta-item">📈 <span>${parseInt(challenge.progression || 0, 10)}%</span></div>
+          </div>
+        </div>
+
+        <div class="gl-swipe-card__progress">
+          <div class="gl-swipe-card__progress-row">
+            <span style="font-size:.72rem;color:var(--muted,#a8b8a0)">Progression</span>
+            <span style="font-weight:800">${parseInt(challenge.progression || 0, 10)}%</span>
+          </div>
+          <div class="gl-swipe-card__progress-bar">
+            <div class="gl-swipe-card__progress-fill" style="width:${Math.max(0, Math.min(100, parseInt(challenge.progression || 0, 10)))}%"></div>
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function updateSwipeCounter(currentIndex, total) {
+  const curEl = document.getElementById('swipe-current');
+  const totEl = document.getElementById('swipe-total');
+  if (totEl) totEl.textContent = String(total || 0);
+  if (curEl) curEl.textContent = String(Math.min(total || 0, Math.max(1, currentIndex)));
+}
+
+function getTopSwipeCard() {
+  const deck = document.getElementById('swipe-deck');
+  if (!deck) return null;
+  const cards = deck.querySelectorAll('.gl-swipe-card');
+  return cards.length ? cards[0] : null;
+}
+
+function attachSwipeDrag(card) {
+  if (!card || card.dataset.dragBound === 'true') return;
+  card.dataset.dragBound = 'true';
+
+  let startX = 0;
+  let startY = 0;
+  let dx = 0;
+  let dy = 0;
+  let dragging = false;
+
+  const onMove = (e) => {
+    if (!dragging) return;
+    dx = (e.clientX - startX);
+    dy = (e.clientY - startY);
+    const rot = Math.max(-18, Math.min(18, dx / 18));
+    card.style.transform = `translate(${dx}px, ${dy * 0.25}px) rotate(${rot}deg)`;
+    const like = card.querySelector('.gl-swipe-card__like-label');
+    const nope = card.querySelector('.gl-swipe-card__nope-label');
+    if (like) like.style.opacity = dx > 30 ? String(Math.min(1, dx / 120)) : '0';
+    if (nope) nope.style.opacity = dx < -30 ? String(Math.min(1, Math.abs(dx) / 120)) : '0';
+  };
+
+  const endDrag = () => {
+    if (!dragging) return;
+    dragging = false;
+    card.classList.remove('is-dragging');
+    card.releasePointerCapture?.(pointerId);
+
+    const threshold = 120;
+    if (dx > threshold) {
+      swipeExit('right');
+      return;
+    }
+    if (dx < -threshold) {
+      swipeExit('left');
+      return;
+    }
+    card.style.transition = 'transform 180ms ease';
+    card.style.transform = '';
+    const like = card.querySelector('.gl-swipe-card__like-label');
+    const nope = card.querySelector('.gl-swipe-card__nope-label');
+    if (like) like.style.opacity = '0';
+    if (nope) nope.style.opacity = '0';
+    setTimeout(() => { card.style.transition = ''; }, 220);
+  };
+
+  let pointerId = null;
+  card.addEventListener('pointerdown', (e) => {
+    // Ne permettre le drag que sur la carte du dessus
+    if (card !== getTopSwipeCard()) return;
+    pointerId = e.pointerId;
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    dx = 0;
+    dy = 0;
+    card.classList.add('is-dragging');
+    card.setPointerCapture?.(e.pointerId);
+  });
+  card.addEventListener('pointermove', onMove);
+  card.addEventListener('pointerup', endDrag);
+  card.addEventListener('pointercancel', endDrag);
+}
+
+function swipeExit(direction) {
+  const deck = document.getElementById('swipe-deck');
+  if (!deck) return;
+  const card = getTopSwipeCard();
+  if (!card) return;
+
+  const id = parseInt(card.getAttribute('data-challenge-id') || '0', 10);
+  const challenge = (filteredChallenges.length ? filteredChallenges : allChallenges).find(c => c.id === id);
+
+  card.classList.remove('is-dragging');
+  card.style.transition = '';
+  card.classList.add(direction === 'right' ? 'leaving-right' : 'leaving-left');
+
+  // Like: ouvrir détails (et participation depuis le drawer). Skip: juste passer.
+  if (direction === 'right' && typeof window.showChallengeDetail === 'function' && id) {
+    try { window.showChallengeDetail(id); } catch (_) {}
+    if (challenge) showToast?.(`Défi "${challenge.titre}"`, 'success');
+  }
+
+  setTimeout(() => {
+    card.remove();
+    const remaining = deck.querySelectorAll('.gl-swipe-card').length;
+    const total = parseInt(document.getElementById('swipe-total')?.textContent || '0', 10) || 0;
+    const currentShown = total - remaining;
+    updateSwipeCounter(currentShown + 1, total);
+
+    const done = document.getElementById('swipe-done');
+    if (done) done.style.display = remaining === 0 ? 'flex' : 'none';
+
+    const next = getTopSwipeCard();
+    if (next) attachSwipeDrag(next);
+  }, 420);
+}
+
+function renderSwipeDeck(challenges) {
+  const swipeView = document.getElementById('swipe-view');
+  const deck = document.getElementById('swipe-deck');
+  const done = document.getElementById('swipe-done');
+  if (!swipeView || !deck || !done) return;
+
+  const list = Array.isArray(challenges) ? challenges : [];
+  deck.innerHTML = '';
+
+  const maxCards = Math.min(20, list.length);
+  for (let i = 0; i < maxCards; i++) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = buildSwipeCard(list[i]);
+    const el = wrapper.firstElementChild;
+    if (el) deck.appendChild(el);
+  }
+
+  updateSwipeCounter(1, maxCards);
+  done.style.display = maxCards === 0 ? 'flex' : 'none';
+
+  // Bind buttons once
+  const btnSkip = document.getElementById('swipe-btn-skip');
+  const btnLike = document.getElementById('swipe-btn-like');
+  const btnInfo = document.getElementById('swipe-btn-info');
+  const btnReset = document.getElementById('swipe-reset');
+
+  if (btnSkip && btnSkip.dataset.bound !== 'true') {
+    btnSkip.addEventListener('click', () => swipeExit('left'));
+    btnSkip.dataset.bound = 'true';
+  }
+  if (btnLike && btnLike.dataset.bound !== 'true') {
+    btnLike.addEventListener('click', () => swipeExit('right'));
+    btnLike.dataset.bound = 'true';
+  }
+  if (btnInfo && btnInfo.dataset.bound !== 'true') {
+    btnInfo.addEventListener('click', () => {
+      const top = getTopSwipeCard();
+      const id = parseInt(top?.getAttribute('data-challenge-id') || '0', 10);
+      if (id && typeof window.showChallengeDetail === 'function') window.showChallengeDetail(id);
+    });
+    btnInfo.dataset.bound = 'true';
+  }
+  if (btnReset && btnReset.dataset.bound !== 'true') {
+    btnReset.addEventListener('click', () => renderSwipeDeck(list));
+    btnReset.dataset.bound = 'true';
+  }
+
+  const top = getTopSwipeCard();
+  if (top) attachSwipeDrag(top);
 }
 
 function renderChallenges(challenges) {
@@ -514,64 +792,74 @@ function showChallengeDetail(challengeId) {
   const joursRestants = Math.ceil((dateFin - new Date()) / (1000 * 60 * 60 * 24));
 
   modalBody.innerHTML = `
-    ${challenge.image ? `<img src="${challenge.image}" alt="${challenge.titre}" style="width:100%;height:300px;object-fit:cover;border-radius:24px 24px 0 0;">` : ''}
-    
-    <div style="padding:32px;">
-      <div style="display:flex;align-items:center;gap:24px;margin-bottom:24px;">
-        ${createSteakerHTML(challenge.steaker, niveau, 'large')}
-        
-        <div style="flex:1;">
-          <h2 style="font-size:2rem;margin-bottom:8px;">${challenge.titre}</h2>
-          <div class="challenge-badge ${statut}" style="position:static;display:inline-block;">
-            ${statut === 'actif' ? '✅ Actif' : statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}
+    <div class="gl-ch-detail">
+      ${challenge.image ? `
+        <div class="gl-ch-detail__media">
+          <img class="gl-ch-detail__img" src="${challenge.image}" alt="${challenge.titre}" loading="lazy" decoding="async">
+          <div class="gl-ch-detail__mediaShade" aria-hidden="true"></div>
+        </div>
+      ` : ''}
+
+      <div class="gl-ch-detail__content">
+        <div class="gl-ch-detail__header">
+          <div class="gl-ch-detail__steaker">
+            ${createSteakerHTML(challenge.steaker, niveau, 'large')}
+          </div>
+          <div class="gl-ch-detail__titleWrap">
+            <h2 class="gl-ch-detail__title">${challenge.titre}</h2>
+            <div class="challenge-badge ${statut} gl-ch-detail__badge">
+              ${statut === 'actif' ? '✅ Actif' : statut === 'termine' ? '📦 Terminé' : '🔜 À venir'}
+            </div>
           </div>
         </div>
-      </div>
-      
-      <p style="color:var(--muted);font-size:1.05rem;line-height:1.8;margin-bottom:24px;">${challenge.description}</p>
-      
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;padding:20px;background:rgba(91,62,150,.1);border-radius:16px;">
-        <div style="text-align:center;">
-          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">👥 Participants</div>
-          <div style="font-weight:700;font-size:1.5rem;">${challenge.participants_count}</div>
-        </div>
-        <div style="text-align:center;">
-          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">🎯 Objectif</div>
-          <div style="font-weight:700;font-size:1.5rem;">${challenge.valeur_cible}%</div>
-        </div>
-        <div style="text-align:center;">
-          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">📊 Progression</div>
-          <div style="font-weight:700;font-size:1.5rem;color:var(--progress-${progressColor})">${challenge.progression}%</div>
-        </div>
-        <div style="text-align:center;">
-          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">📅 ${isActif ? 'Jours restants' : 'Durée'}</div>
-          <div style="font-weight:700;font-size:1.5rem;">${isActif ? joursRestants : Math.ceil((dateFin - dateDebut) / (1000 * 60 * 60 * 24))}j</div>
-        </div>
-      </div>
 
-      <div class="progress-wrapper" style="margin-bottom:24px;">
-        <div class="progress-header">
-          <span class="progress-label">Progression globale</span>
-          <span class="progress-value" style="color:var(--progress-${progressColor})">${challenge.progression}%</span>
+        <p class="gl-ch-detail__desc">${challenge.description}</p>
+
+        <div class="gl-ch-detail__stats">
+          <div class="gl-ch-stat">
+            <div class="gl-ch-stat__label">👥 Participants</div>
+            <div class="gl-ch-stat__val">${challenge.participants_count}</div>
+          </div>
+          <div class="gl-ch-stat">
+            <div class="gl-ch-stat__label">🎯 Objectif</div>
+            <div class="gl-ch-stat__val">${challenge.valeur_cible}%</div>
+          </div>
+          <div class="gl-ch-stat">
+            <div class="gl-ch-stat__label">📊 Progression</div>
+            <div class="gl-ch-stat__val gl-ch-stat__val--${progressColor}">${challenge.progression}%</div>
+          </div>
+          <div class="gl-ch-stat">
+            <div class="gl-ch-stat__label">📅 ${isActif ? 'Jours restants' : 'Durée'}</div>
+            <div class="gl-ch-stat__val">${isActif ? joursRestants : Math.ceil((dateFin - dateDebut) / (1000 * 60 * 60 * 24))}j</div>
+          </div>
         </div>
-        <div class="progress-bar-container" data-progress="${challenge.progression}" style="height:16px;">
-          <div class="progress-bar-fill ${progressColor}" style="width:${challenge.progression}%"></div>
+
+        <div class="progress-wrapper gl-ch-detail__progress">
+          <div class="progress-header">
+            <span class="progress-label">Progression globale</span>
+            <span class="progress-value" style="color:var(--progress-${progressColor})">${challenge.progression}%</span>
+          </div>
+          <div class="progress-bar-container" data-progress="${challenge.progression}" style="height:14px;">
+            <div class="progress-bar-fill ${progressColor}" style="width:${challenge.progression}%"></div>
+          </div>
+        </div>
+
+        <div class="gl-ch-detail__cta">
+          ${isActif ? `
+            <button onclick="openDrawer(${challenge.id}); closeChallengeModal();" class="btn-primary gl-ch-detail__btn">
+              ✅ Participer à ce défi
+            </button>
+          ` : isTermine ? `
+            <div class="gl-ch-detail__notice gl-ch-detail__notice--muted">
+              📦 Ce défi est terminé
+            </div>
+          ` : `
+            <div class="gl-ch-detail__notice gl-ch-detail__notice--info">
+              🔜 Ce défi commence le ${dateDebut.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'})}
+            </div>
+          `}
         </div>
       </div>
-
-      ${isActif ? `
-        <button onclick="openDrawer(${challenge.id}); closeChallengeModal();" class="btn-primary" style="width:100%;padding:16px;font-size:1.1rem;">
-          ✅ Participer à ce défi
-        </button>
-      ` : isTermine ? `
-        <div style="padding:16px;background:rgba(149,165,166,.1);border:2px solid rgba(149,165,166,.3);border-radius:12px;text-align:center;color:var(--muted);">
-          📦 Ce défi est terminé
-        </div>
-      ` : `
-        <div style="padding:16px;background:rgba(52,152,219,.1);border:2px solid rgba(52,152,219,.3);border-radius:12px;text-align:center;color:#3498db;">
-          🔜 Ce défi commence le ${dateDebut.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'})}
-        </div>
-      `}
     </div>
   `;
 
@@ -1122,9 +1410,26 @@ function initChallenges() {
     });
     grid.dataset.bound = 'true';
   }
+
+  // Quand on repasse en grille/liste, masquer la vue swipe
+  const btnGrid = document.getElementById('view-grid');
+  if (btnGrid && btnGrid.dataset.boundSwipe !== 'true') {
+    btnGrid.addEventListener('click', () => setChallengesView('grid'));
+    btnGrid.dataset.boundSwipe = 'true';
+  }
+
+  // Vue swipe (Tinder) + fallback
+  const btnSwipe = document.getElementById('view-swipe');
+  if (btnSwipe && btnSwipe.dataset.bound !== 'true') {
+    btnSwipe.addEventListener('click', () => {
+      setChallengesView('swipe');
+      filterChallenges();
+    });
+    btnSwipe.dataset.bound = 'true';
+  }
   
   // Fermer modals en cliquant sur overlay
-  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  document.querySelectorAll('.modal-overlay, .gl-modal-overlay').forEach(overlay => {
     if (overlay.dataset.bound === 'true') return;
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) {
@@ -1179,6 +1484,7 @@ setTimeout(() => {
 // Exposer les fonctions globalement
 window.initChallenges = initChallenges;
 window.loadChallenges = loadChallenges;
+window.setChallengesView = setChallengesView;
 window.showChallengeDetail = showChallengeDetail;
 window.closeChallengeModal = closeChallengeModal;
 window.openDrawer = openDrawer;

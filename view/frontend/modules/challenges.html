@@ -2,6 +2,7 @@
      MODULE DÉFIS — GaiaLumen v4.0 · 3D Frames · Ranking Premium
      ═══════════════════════════════════════════════════ -->
 <link rel="stylesheet" href="css/challenges-steakers.css" />
+<link rel="stylesheet" href="css/chat-defis.css" />
 
 <section id="challenges" class="content-section module-section">
   <!-- ╔════════════════════════════════════╗
@@ -151,21 +152,11 @@
               <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
           </button>
-          <button class="gl-view-btn" id="view-list" title="Vue liste">
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <line x1="8" y1="6" x2="21" y2="6" />
-              <line x1="8" y1="12" x2="21" y2="12" />
-              <line x1="8" y1="18" x2="21" y2="18" />
-              <circle cx="3" cy="6" r="1" fill="currentColor" />
-              <circle cx="3" cy="12" r="1" fill="currentColor" />
-              <circle cx="3" cy="18" r="1" fill="currentColor" />
+          <button class="gl-view-btn gl-view-btn--swipe" id="view-swipe" title="Vue Swipe (Tinder)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <rect x="4" y="4" width="13" height="17" rx="3"/>
+              <rect x="7" y="2" width="13" height="17" rx="3" fill="rgba(91,62,150,0.3)" stroke="currentColor"/>
+              <path d="M10 10 l2 2 l4 -4" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
         </div>
@@ -245,6 +236,50 @@
         class="gl-challenges-grid"
         style="display: none"
       ></div>
+
+      <!-- ╔════════════════════════════════════╗
+           ║       VUE SWIPE (TINDER)           ║
+           ╚════════════════════════════════════╝ -->
+      <div id="swipe-view" class="gl-swipe-view" style="display:none;">
+        <div class="gl-swipe-header">
+          <div class="gl-swipe-counter">
+            <span id="swipe-current">1</span> / <span id="swipe-total">0</span>
+          </div>
+          <div class="gl-swipe-hints">
+            <span class="gl-swipe-hint gl-swipe-hint--left">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 5 5 12 12 19"/></svg>
+              Passer
+            </span>
+            <span class="gl-swipe-hint gl-swipe-hint--right">
+              Participer
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="gl-swipe-deck" id="swipe-deck">
+          <!-- Cards injected by JS -->
+        </div>
+
+        <div class="gl-swipe-actions">
+          <button class="gl-swipe-action-btn gl-swipe-action-btn--skip" id="swipe-btn-skip" title="Passer">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <button class="gl-swipe-action-btn gl-swipe-action-btn--info" id="swipe-btn-info" title="Voir détails">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </button>
+          <button class="gl-swipe-action-btn gl-swipe-action-btn--like" id="swipe-btn-like" title="Participer">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+        </div>
+
+        <div class="gl-swipe-done" id="swipe-done" style="display:none;">
+          <div class="gl-swipe-done__icon">🎉</div>
+          <h4>Tous les défis vus !</h4>
+          <p>Vous avez parcouru tous les défis disponibles.</p>
+          <button class="gl-btn gl-btn--primary" id="swipe-reset">Recommencer</button>
+        </div>
+      </div>
     </div>
 
     <!-- ╔══════════════════════════════════════════════════╗
@@ -383,6 +418,8 @@
     </aside>
   </div>
 
+  <script src="js/chat-defis.js"></script>
+
   <!-- MODALS -->
   <div
     id="challenge-modal"
@@ -471,6 +508,150 @@
     class="gl-toast-container"
     aria-live="polite"
   ></div>
+
+  <!-- ═══ FAB CHAT UNIQUE ═══════════════════════════════════════════════════ -->
+  <button
+    class="gl-chat-fab"
+    onclick="openChatModal(null, 'Chat Défis', '💬')"
+    title="Chat des Défis"
+  >
+    <span style="line-height: 1">💬</span>
+    <div class="gl-chat-fab-dot"></div>
+    <div class="gl-chat-fab-tooltip">Chat des Défis</div>
+  </button>
+
+  <!-- ═══ MODAL CHAT DÉFI ═══════════════════════════════════════════════════ -->
+  <div id="chat-defi-modal" class="gl-chat-modal-overlay" aria-hidden="true">
+    <div class="gl-chat-modal-backdrop" onclick="closeChatModal()"></div>
+    <div class="gl-chat-modal-panel" role="dialog" aria-modal="true">
+      <div class="gl-chat-modal-handle"></div>
+
+      <!-- Header modal -->
+      <div class="gl-chat-modal-header">
+        <div class="gl-chat-modal-header-left">
+          <span class="gl-chat-modal-icon" id="modal-defi-icon-inner">🌍</span>
+          <div>
+            <div class="gl-chat-modal-title" id="modal-defi-name">
+              Chat du Défi
+            </div>
+            <div class="gl-chat-modal-sub" id="modal-defi-sub">
+              Discussion du challenge
+            </div>
+          </div>
+        </div>
+        <div class="gl-chat-modal-header-right">
+          <div class="gl-chat-online-pill" style="margin-right: 8px">
+            <div class="gl-chat-online-dot"></div>
+            <span id="modal-online-count">— en ligne</span>
+          </div>
+          <button
+            class="gl-chat-modal-close"
+            onclick="closeChatModal()"
+            title="Fermer"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs canaux -->
+      <div class="gl-chat-modal-tabs" id="modal-channel-tabs"></div>
+
+      <!-- Zone messages -->
+      <div class="gl-chat-modal-messages" id="modal-messages-area"></div>
+
+      <!-- Typing indicator -->
+      <div
+        class="gl-chat-typing"
+        id="modal-typing-indicator"
+        style="display: none; padding: 0 20px 6px"
+      >
+        <div class="gl-typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span id="modal-typing-text">quelqu'un est en train d'écrire…</span>
+      </div>
+
+      <!-- Barre d'envoi -->
+      <div class="gl-chat-modal-inputbar">
+        <!-- Emojis rapides -->
+        <div class="gl-emoji-quick gl-emoji-quick--modal">
+          <button>🌱</button><button>💪</button><button>🏆</button>
+          <button>♻️</button><button>🔥</button><button>✅</button>
+          <button>👏</button><button>🌍</button>
+        </div>
+        <div class="gl-chat-input-wrap">
+          <textarea
+            id="modal-msg-input"
+            class="gl-chat-input"
+            placeholder="Message dans ce canal…"
+            rows="1"
+            autocomplete="off"
+          ></textarea>
+          <div class="gl-chat-input-actions">
+            <button
+              id="modal-ai-btn"
+              class="gl-chat-ai-btn"
+              title="Demander un conseil à l'IA"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                />
+              </svg>
+              IA
+            </button>
+            <button
+              id="modal-send-btn"
+              class="gl-chat-send-btn"
+              title="Envoyer (Entrée)"
+              disabled
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div
+          style="
+            margin-top: 6px;
+            font-size: 0.62rem;
+            color: rgba(168, 184, 160, 0.45);
+            text-align: right;
+          "
+        >
+          Entrée pour envoyer · Shift+Entrée pour nouvelle ligne · ✨ IA pour un
+          conseil
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ═══════════════════════════════════════════════════
@@ -1196,6 +1377,411 @@
     color: var(--text);
   }
 
+  .gl-view-btn--swipe.active {
+    background: linear-gradient(135deg, rgba(91,62,150,0.3), rgba(58,134,196,0.2));
+    color: #a88fff;
+    border-radius: 8px;
+  }
+
+  /* ═══════════════════════════════════════════════════
+   SWIPE VIEW — TINDER STYLE
+   ═══════════════════════════════════════════════════ */
+  .gl-swipe-view {
+    padding: 10px 18px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    min-height: 560px;
+  }
+
+  .gl-swipe-header {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .gl-swipe-counter {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: rgba(255,255,255,0.04);
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .gl-swipe-hints {
+    display: flex;
+    gap: 16px;
+  }
+
+  .gl-swipe-hint {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.55;
+  }
+
+  .gl-swipe-hint--left { color: #e74c3c; }
+  .gl-swipe-hint--right { color: #2ecc71; }
+
+  /* ── Deck ── */
+  .gl-swipe-deck {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    height: 500px;
+    perspective: 1000px;
+  }
+
+  /* ── Individual swipe card ── */
+  .gl-swipe-card {
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    overflow: hidden;
+    cursor: grab;
+    user-select: none;
+    transform-origin: center bottom;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    will-change: transform;
+    box-shadow:
+      0 4px 8px rgba(0,0,0,0.2),
+      0 16px 40px rgba(0,0,0,0.3),
+      0 0 0 1px rgba(255,255,255,0.07);
+    background: linear-gradient(160deg, rgba(18,40,28,0.98), rgba(12,28,20,0.99));
+    border: 1px solid rgba(255,255,255,0.09);
+  }
+
+  .gl-swipe-card:active { cursor: grabbing; }
+
+  .gl-swipe-card:nth-child(2) {
+    transform: translateY(14px) scale(0.96);
+    z-index: 1;
+    filter: brightness(0.82);
+    pointer-events: none;
+  }
+  .gl-swipe-card:nth-child(3) {
+    transform: translateY(26px) scale(0.92);
+    z-index: 0;
+    filter: brightness(0.65);
+    pointer-events: none;
+  }
+  .gl-swipe-card:first-child { z-index: 10; }
+
+  .gl-swipe-card.is-dragging {
+    transition: none;
+    cursor: grabbing;
+    box-shadow:
+      0 20px 50px rgba(0,0,0,0.45),
+      0 0 0 1px rgba(255,255,255,0.1);
+  }
+
+  /* Overlay indicators */
+  .gl-swipe-card__like-label,
+  .gl-swipe-card__nope-label {
+    position: absolute;
+    top: 28px;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    z-index: 20;
+    opacity: 0;
+    transform: rotate(-15deg);
+    pointer-events: none;
+    border: 3px solid;
+    transition: opacity 0.12s;
+  }
+
+  .gl-swipe-card__like-label {
+    left: 22px;
+    color: #2ecc71;
+    border-color: #2ecc71;
+    background: rgba(46,204,113,0.12);
+    transform: rotate(-12deg);
+  }
+
+  .gl-swipe-card__nope-label {
+    right: 22px;
+    color: #e74c3c;
+    border-color: #e74c3c;
+    background: rgba(231,76,60,0.12);
+    transform: rotate(12deg);
+  }
+
+  /* Swipe card image banner */
+  .gl-swipe-card__img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .gl-swipe-card__img-placeholder {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, rgba(58,134,196,0.2), rgba(91,62,150,0.25));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    flex-shrink: 0;
+  }
+
+  .gl-swipe-card__status-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    z-index: 5;
+  }
+
+  .gl-swipe-card__status-badge.actif {
+    background: rgba(46,204,113,0.22);
+    border: 1px solid rgba(46,204,113,0.5);
+    color: #2ecc71;
+  }
+
+  .gl-swipe-card__days-badge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(8px);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #f2e8cf;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .gl-swipe-card__body {
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .gl-swipe-card__title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text, #F2E8CF);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .gl-swipe-card__desc {
+    font-size: 0.83rem;
+    color: var(--muted, #a8b8a0);
+    line-height: 1.6;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .gl-swipe-card__reward {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(58,134,196,0.09);
+    border: 1px solid rgba(58,134,196,0.2);
+    border-radius: 12px;
+  }
+
+  .gl-swipe-card__reward-icon { font-size: 1.4rem; }
+
+  .gl-swipe-card__reward-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted, #a8b8a0);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .gl-swipe-card__reward-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #3A86C4;
+    line-height: 1.3;
+  }
+
+  .gl-swipe-card__meta {
+    display: flex;
+    gap: 14px;
+    font-size: 0.75rem;
+    color: var(--muted, #a8b8a0);
+  }
+
+  .gl-swipe-card__meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .gl-swipe-card__progress {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .gl-swipe-card__progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--muted, #a8b8a0);
+  }
+
+  .gl-swipe-card__progress-bar {
+    height: 5px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .gl-swipe-card__progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3A86C4, #5B3E96);
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  /* Swipe action buttons */
+  .gl-swipe-actions {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+  }
+
+  .gl-swipe-action-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+
+  .gl-swipe-action-btn--skip {
+    background: rgba(231,76,60,0.12);
+    border: 2px solid rgba(231,76,60,0.4);
+    color: #e74c3c;
+  }
+  .gl-swipe-action-btn--skip:hover {
+    background: rgba(231,76,60,0.25);
+    transform: scale(1.12) rotate(-5deg);
+    box-shadow: 0 6px 20px rgba(231,76,60,0.3);
+  }
+
+  .gl-swipe-action-btn--like {
+    width: 68px;
+    height: 68px;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    box-shadow: 0 6px 20px rgba(46,204,113,0.35);
+  }
+  .gl-swipe-action-btn--like:hover {
+    transform: scale(1.15);
+    box-shadow: 0 10px 28px rgba(46,204,113,0.5);
+  }
+
+  .gl-swipe-action-btn--info {
+    background: rgba(58,134,196,0.12);
+    border: 2px solid rgba(58,134,196,0.3);
+    color: #3A86C4;
+  }
+  .gl-swipe-action-btn--info:hover {
+    background: rgba(58,134,196,0.25);
+    transform: scale(1.1);
+  }
+
+  /* Done screen */
+  .gl-swipe-done {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  .gl-swipe-done__icon {
+    font-size: 4rem;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .gl-swipe-done h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text, #F2E8CF);
+    margin: 0;
+  }
+
+  .gl-swipe-done p {
+    color: var(--muted, #a8b8a0);
+    font-size: 0.88rem;
+    margin: 0;
+  }
+
+  /* Swipe exit animations */
+  @keyframes swipeLeft {
+    to { transform: translateX(-160%) rotate(-28deg); opacity: 0; }
+  }
+  @keyframes swipeRight {
+    to { transform: translateX(160%) rotate(28deg); opacity: 0; }
+  }
+  @keyframes swipeCardIn {
+    from { transform: translateY(26px) scale(0.92); }
+    to { transform: translateY(0) scale(1); }
+  }
+
+  .gl-swipe-card.leaving-left {
+    animation: swipeLeft 0.38s cubic-bezier(.55,.08,.68,.53) forwards;
+    pointer-events: none;
+    z-index: 20 !important;
+  }
+  .gl-swipe-card.leaving-right {
+    animation: swipeRight 0.38s cubic-bezier(.55,.08,.68,.53) forwards;
+    pointer-events: none;
+    z-index: 20 !important;
+  }
+
   /* ═══════════════════════════════════════════════════
    SKELETON LOADING
    ═══════════════════════════════════════════════════ */
@@ -1541,6 +2127,7 @@
     font-size: 0.83rem;
     line-height: 1.65;
     display: -webkit-box;
+    line-clamp: 3;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -2776,6 +3363,165 @@
   }
 
   /* ═══════════════════════════════════════════════════
+   MODAL DÉTAIL DÉFI — UI CLEAN
+   ═══════════════════════════════════════════════════ */
+  .gl-ch-detail {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 22px;
+  }
+
+  .gl-ch-detail__media {
+    position: relative;
+    width: 100%;
+    height: min(38vh, 340px);
+    overflow: hidden;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .gl-ch-detail__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+    transform: translateZ(0);
+  }
+
+  .gl-ch-detail__mediaShade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.00) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0.55) 100%);
+    pointer-events: none;
+  }
+
+  .gl-ch-detail__content {
+    padding: 22px 22px 20px;
+  }
+
+  .gl-ch-detail__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .gl-ch-detail__steaker {
+    flex-shrink: 0;
+  }
+
+  .gl-ch-detail__titleWrap {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .gl-ch-detail__title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    margin: 0 0 8px 0;
+    line-height: 1.05;
+    letter-spacing: 0.2px;
+  }
+
+  .gl-ch-detail__badge {
+    position: static !important;
+    display: inline-flex;
+    transform: none !important;
+  }
+
+  .gl-ch-detail__desc {
+    color: var(--muted, #a8b8a0);
+    font-size: 0.98rem;
+    line-height: 1.7;
+    margin: 0 0 16px 0;
+  }
+
+  .gl-ch-detail__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    background: rgba(91,62,150,0.10);
+    border: 1px solid rgba(91,62,150,0.16);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .gl-ch-stat {
+    text-align: center;
+    padding: 8px 6px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.10);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .gl-ch-stat__label {
+    font-size: 0.68rem;
+    color: rgba(168,184,160,0.85);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gl-ch-stat__val {
+    font-weight: 900;
+    font-size: 1.25rem;
+    color: #fff;
+  }
+
+  .gl-ch-stat__val--red { color: var(--progress-red, #e74c3c); }
+  .gl-ch-stat__val--orange { color: var(--progress-orange, #f39c12); }
+  .gl-ch-stat__val--green { color: var(--progress-green, #2ecc71); }
+
+  .gl-ch-detail__progress {
+    margin-bottom: 14px;
+  }
+
+  .gl-ch-detail__cta {
+    margin-top: 4px;
+  }
+
+  .gl-ch-detail__btn {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1.02rem;
+  }
+
+  .gl-ch-detail__notice {
+    padding: 14px 14px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 800;
+  }
+
+  .gl-ch-detail__notice--muted {
+    background: rgba(149,165,166,.10);
+    border: 2px solid rgba(149,165,166,.26);
+    color: var(--muted, #a8b8a0);
+  }
+
+  .gl-ch-detail__notice--info {
+    background: rgba(52,152,219,.10);
+    border: 2px solid rgba(52,152,219,.26);
+    color: #7bc5ff;
+  }
+
+  @media (max-width: 720px) {
+    .gl-ch-detail__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .gl-ch-detail__content {
+      padding: 18px 16px 16px;
+    }
+    .gl-ch-detail__title {
+      font-size: 1.55rem;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════
    DRAWER
    ═══════════════════════════════════════════════════ */
   .gl-drawer {
@@ -3557,6 +4303,341 @@
       transition-duration: 0.01ms !important;
     }
   }
+
+  /* ═══ FAB CHAT — bouton unique flottant ═══════════════ */
+  .gl-chat-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 1000;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2, #00d4ff);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow:
+      0 4px 20px rgba(102, 126, 234, 0.5),
+      0 0 0 0 rgba(102, 126, 234, 0.4);
+    transition:
+      transform 0.22s ease,
+      box-shadow 0.22s ease;
+    animation: fabGlow 3s ease-in-out infinite;
+  }
+  .gl-chat-fab:hover {
+    transform: scale(1.12);
+    box-shadow:
+      0 8px 32px rgba(102, 126, 234, 0.7),
+      0 0 0 8px rgba(102, 126, 234, 0.1);
+  }
+  .gl-chat-fab:active {
+    transform: scale(0.95);
+  }
+  .gl-chat-fab-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--neon-blue, #00f5ff);
+    border: 2.5px solid #0a1a10;
+    animation: fabDot 2s ease-in-out infinite;
+  }
+  .gl-chat-fab-tooltip {
+    position: absolute;
+    right: 66px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(10, 26, 16, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text, #f2e8cf);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 10px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+  .gl-chat-fab-tooltip::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-right: none;
+    border-left-color: rgba(255, 255, 255, 0.12);
+  }
+  .gl-chat-fab:hover .gl-chat-fab-tooltip {
+    opacity: 1;
+  }
+  @keyframes fabGlow {
+    0%,
+    100% {
+      box-shadow:
+        0 4px 20px rgba(102, 126, 234, 0.5),
+        0 0 0 0 rgba(102, 126, 234, 0.3);
+    }
+    50% {
+      box-shadow:
+        0 6px 28px rgba(102, 126, 234, 0.7),
+        0 0 0 10px rgba(102, 126, 234, 0);
+    }
+  }
+  @keyframes fabDot {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 245, 255, 0.6);
+    }
+    50% {
+      box-shadow: 0 0 0 5px rgba(0, 245, 255, 0);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════
+     MODAL CHAT DÉFI + BOUTON CHAT SUR CARTE
+     ═══════════════════════════════════════════════════ */
+
+  /* Modal overlay */
+  .gl-chat-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+  }
+  .gl-chat-modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .gl-chat-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .gl-chat-modal-panel {
+    position: relative;
+    z-index: 1;
+    width: min(700px, 100vw);
+    height: min(84vh, 740px);
+    background: linear-gradient(160deg, #0d2018 0%, #0a1812 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+    border-radius: 24px 24px 0 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow:
+      0 -8px 48px rgba(0, 0, 0, 0.55),
+      0 -2px 0 rgba(0, 245, 255, 0.15),
+      0 1px 0 rgba(255, 255, 255, 0.07) inset;
+    transform: translateY(102%);
+    transition: transform 0.4s cubic-bezier(0.22, 0.85, 0.44, 1);
+  }
+  .gl-chat-modal-overlay.active .gl-chat-modal-panel {
+    transform: translateY(0);
+  }
+
+  /* Drag handle */
+  .gl-chat-modal-handle {
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 99px;
+    margin: 12px auto 0;
+    flex-shrink: 0;
+    cursor: grab;
+  }
+
+  /* Header */
+  .gl-chat-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(0, 0, 0, 0.18);
+    flex-shrink: 0;
+  }
+  .gl-chat-modal-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .gl-chat-modal-icon-wrap {
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 245, 255, 0.08);
+    border: 1px solid rgba(0, 245, 255, 0.2);
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    box-shadow: 0 0 18px rgba(0, 245, 255, 0.15);
+  }
+  .gl-chat-modal-title {
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--text, #f2e8cf);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+  }
+  .gl-chat-modal-sub {
+    font-size: 0.7rem;
+    color: var(--muted, #a8b8a0);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+  }
+  .gl-chat-modal-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .gl-chat-modal-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--muted, #a8b8a0);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .gl-chat-modal-close:hover {
+    background: rgba(231, 76, 60, 0.18);
+    border-color: rgba(231, 76, 60, 0.35);
+    color: #e74c3c;
+  }
+
+  /* Tabs canaux en haut du modal */
+  .gl-chat-modal-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px 20px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.1);
+  }
+  .gl-chat-modal-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .gl-chat-modal-tab {
+    padding: 6px 12px 10px;
+    border: none;
+    background: none;
+    color: var(--muted, #a8b8a0);
+    font-size: 0.73rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.18s;
+    border-radius: 0;
+  }
+  .gl-chat-modal-tab:hover {
+    color: var(--text, #f2e8cf);
+  }
+  .gl-chat-modal-tab.active {
+    color: var(--neon-blue, #00f5ff);
+    border-bottom-color: var(--neon-blue, #00f5ff);
+  }
+  .gl-chat-modal-tab .tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--neon-blue, #00f5ff);
+    color: #000;
+    font-size: 0.55rem;
+    font-weight: 800;
+    margin-left: 5px;
+    vertical-align: middle;
+  }
+
+  /* Messages zone */
+  .gl-chat-modal-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 20px;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  }
+  .gl-chat-modal-messages::-webkit-scrollbar {
+    width: 4px;
+  }
+  .gl-chat-modal-messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+  }
+
+  /* Input bar */
+  .gl-chat-modal-inputbar {
+    padding: 10px 20px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+  }
+  .gl-emoji-quick--modal {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .gl-emoji-quick--modal button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 7px;
+    padding: 3px 7px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    transition: all 0.15s;
+    color: inherit;
+  }
+  .gl-emoji-quick--modal button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.15);
+  }
+
+  @media (max-width: 600px) {
+    .gl-chat-modal-panel {
+      height: 90vh;
+      border-radius: 18px 18px 0 0;
+    }
+    .gl-chat-modal-title {
+      max-width: 150px;
+    }
+  }
 </style>
 
 <script src="js/challenges-complete.js"></script>
@@ -3688,18 +4769,11 @@
 
     /* ── Vue grille / liste ──────────────────────────── */
     var bg = document.getElementById("view-grid");
-    var bl = document.getElementById("view-list");
     var grid = document.getElementById("challenges-grid");
-    if (bg && bl && grid) {
+    if (bg && grid) {
       bg.addEventListener("click", function () {
         grid.classList.remove("view-list");
         bg.classList.add("active");
-        bl.classList.remove("active");
-      });
-      bl.addEventListener("click", function () {
-        grid.classList.add("view-list");
-        bl.classList.add("active");
-        bg.classList.remove("active");
       });
     }
 
@@ -3791,6 +4865,579 @@
       });
       obs2.observe(rankListEl, { childList: true, subtree: false });
     }
+
+    /* ═══════════════════════════════════════════════════
+     MODAL CHAT — LOGIC
+     ═══════════════════════════════════════════════════ */
+
+    // ── State ────────────────────────────────────────────
+    var _modalActiveChannel = "global";
+    var _modalDefiId = null;
+
+    // ── Open modal ───────────────────────────────────────
+    window.openChatModal = function (
+      challengeId,
+      challengeTitle,
+      challengeIcon,
+    ) {
+      var overlay = document.getElementById("chat-defi-modal");
+      if (!overlay) return;
+
+      // ✅ FIX: déplacer modal et FAB dans <body> pour échapper au
+      // contexte de positionnement créé par transform de .content-section
+      if (overlay.parentElement !== document.body) {
+        document.body.appendChild(overlay);
+      }
+      var fab = document.querySelector(".gl-chat-fab");
+      if (fab && fab.parentElement !== document.body) {
+        document.body.appendChild(fab);
+      }
+
+      _modalDefiId = challengeId;
+
+      // Update header info
+      var iconEl = document.getElementById("modal-defi-icon-inner");
+      var nameEl = document.getElementById("modal-defi-name");
+      var descEl = document.getElementById("modal-defi-sub");
+      if (iconEl) iconEl.textContent = challengeIcon || "💬";
+      if (nameEl) nameEl.textContent = challengeTitle || "Chat des Défis";
+      if (descEl)
+        descEl.textContent = challengeId
+          ? "Discussion du défi"
+          : "Discutez avec la communauté";
+
+      // Build channel tabs — default channels + defi channel if specified
+      if (challengeId)
+        buildModalTabs(challengeId, challengeTitle, challengeIcon);
+
+      // Set active channel
+      var defiChannelId = challengeId ? "defi_" + challengeId : null;
+      if (
+        defiChannelId &&
+        window.ChatState &&
+        window.ChatState.channels &&
+        window.ChatState.channels[defiChannelId]
+      ) {
+        _modalActiveChannel = defiChannelId;
+      } else {
+        _modalActiveChannel = "global";
+      }
+
+      renderModalChannelTabs();
+      renderModalMessages(_modalActiveChannel);
+
+      // Update online count
+      var onlineEl = document.getElementById("modal-online-count");
+      if (
+        onlineEl &&
+        window.ChatState &&
+        window.ChatState.channels[_modalActiveChannel]
+      ) {
+        onlineEl.textContent =
+          (window.ChatState.channels[_modalActiveChannel].onlineCount || "—") +
+          " en ligne";
+      }
+
+      overlay.classList.add("active");
+      overlay.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+
+      // Focus input
+      setTimeout(function () {
+        var inp = document.getElementById("modal-msg-input");
+        if (inp) inp.focus();
+      }, 400);
+    };
+
+    // ── Close modal ──────────────────────────────────────
+    window.closeChatModal = function () {
+      var overlay = document.getElementById("chat-defi-modal");
+      if (!overlay) return;
+      overlay.classList.remove("active");
+      overlay.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    };
+
+    // ESC to close
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") window.closeChatModal();
+    });
+
+    // ── Build tabs ───────────────────────────────────────
+    function buildModalTabs(challengeId, challengeTitle, challengeIcon) {
+      if (!window.ChatState) return;
+      // Ensure defi channel exists
+      var defiChannelId = "defi_" + challengeId;
+      if (!window.ChatState.channels[defiChannelId]) {
+        window.ChatState.channels[defiChannelId] = {
+          id: defiChannelId,
+          icon: challengeIcon || "🏆",
+          name: challengeTitle ? challengeTitle.substring(0, 22) : "Ce Défi",
+          desc: "Discussion du défi",
+          section: "MES DÉFIS",
+          messages: [],
+          unread: 0,
+          onlineCount: Math.floor(Math.random() * 15) + 3,
+        };
+      }
+    }
+
+    function renderModalChannelTabs() {
+      var tabsEl = document.getElementById("modal-channel-tabs");
+      if (!tabsEl || !window.ChatState) return;
+
+      var shown = ["global", "ecology", "sport", "nutrition"];
+      if (_modalDefiId) shown.unshift("defi_" + _modalDefiId);
+
+      var html = "";
+      shown.forEach(function (id) {
+        var ch = window.ChatState.channels[id];
+        if (!ch) return;
+        var isActive = id === _modalActiveChannel;
+        var badge =
+          ch.unread > 0
+            ? '<span class="tab-badge">' + ch.unread + "</span>"
+            : "";
+        html +=
+          '<button class="gl-chat-modal-tab' +
+          (isActive ? " active" : "") +
+          '" data-ch="' +
+          id +
+          '">' +
+          ch.icon +
+          " " +
+          ch.name +
+          badge +
+          "</button>";
+      });
+      tabsEl.innerHTML = html;
+
+      tabsEl.querySelectorAll(".gl-chat-modal-tab").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          _modalActiveChannel = btn.dataset.ch;
+          if (window.ChatState.channels[_modalActiveChannel]) {
+            window.ChatState.channels[_modalActiveChannel].unread = 0;
+          }
+          renderModalChannelTabs();
+          renderModalMessages(_modalActiveChannel);
+          var inp = document.getElementById("modal-msg-input");
+          var ch = window.ChatState.channels[_modalActiveChannel];
+          if (inp && ch) inp.placeholder = "Message dans " + ch.name + "…";
+          var onlineEl = document.getElementById("modal-online-count");
+          if (onlineEl && ch)
+            onlineEl.textContent = (ch.onlineCount || "—") + " en ligne";
+        });
+      });
+    }
+
+    // ── Render messages in modal ─────────────────────────
+    function renderModalMessages(channelId) {
+      var container = document.getElementById("modal-messages-area");
+      if (!container || !window.ChatState) return;
+
+      var ch = window.ChatState.channels[channelId];
+      if (!ch || ch.messages.length === 0) {
+        container.innerHTML =
+          '<div class="gl-chat-empty">' +
+          '<div class="gl-chat-empty__icon">' +
+          (ch ? ch.icon : "💬") +
+          "</div>" +
+          '<div class="gl-chat-empty__title">Démarrez la conversation !</div>' +
+          '<div class="gl-chat-empty__desc">Soyez le premier à écrire ou demandez un conseil à l\'IA ✨</div>' +
+          "</div>";
+        return;
+      }
+
+      var html =
+        '<div class="gl-chat-ai-welcome">' +
+        '<span style="font-size:1.1rem">🌿</span>' +
+        '<div class="gl-chat-ai-welcome__text"><strong>GaiaLumen IA</strong> est disponible — cliquez sur <strong>✨ IA</strong> pour un conseil.</div>' +
+        "</div>";
+
+      var lastAuthor = "";
+      var lastDateStr = "";
+      var groupOpen = false;
+
+      function esc(s) {
+        return (s || "")
+          .toString()
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;")
+          .replace(/\n/g, "<br>");
+      }
+
+      function renderCardsBlock(cards) {
+        if (!cards || !cards.length) return "";
+        return (
+          '<div class="gl-msg-cards">' +
+          cards
+            .map(function (c) {
+              var id = parseInt(c.id || 0, 10);
+              return (
+                '<div class="gl-chat-card" data-challenge-id="' +
+                id +
+                '">' +
+                '<div class="gl-chat-card__top">' +
+                '<div class="gl-chat-card__title">' +
+                esc(c.titre || "Défi") +
+                "</div>" +
+                '<div class="gl-chat-card__badge">' +
+                esc(c.badge || "✅ Actif") +
+                "</div>" +
+                "</div>" +
+                '<div class="gl-chat-card__desc">' +
+                esc(c.description || "") +
+                "</div>" +
+                '<div class="gl-chat-card__meta">' +
+                "<span>👥 " +
+                parseInt(c.participants_count || 0, 10) +
+                "</span>" +
+                "<span>📈 " +
+                parseInt(c.progression || 0, 10) +
+                "%</span>" +
+                (c.daysLeft ? "<span>⏳ " + esc(c.daysLeft) + "</span>" : "") +
+                "</div>" +
+                '<div class="gl-chat-card__actions">' +
+                '<button class="gl-chat-card__btn gl-chat-card__btn--ghost" type="button" onclick="openChallengeFromChat(' +
+                id +
+                ')">Détails</button>' +
+                '<button class="gl-chat-card__btn gl-chat-card__btn--primary" type="button" onclick="openChallengeFromChat(' +
+                id +
+                ')">Participer</button>' +
+                "</div>" +
+                "</div>"
+              );
+            })
+            .join("") +
+          "</div>"
+        );
+      }
+
+      ch.messages.forEach(function (msg, i) {
+        // Date separator
+        var d = new Date(msg.time);
+        var today = new Date();
+        var dateStr =
+          d.toDateString() === today.toDateString()
+            ? "Aujourd'hui"
+            : d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+
+        if (dateStr !== lastDateStr) {
+          if (groupOpen) {
+            html += "</div>";
+            groupOpen = false;
+          }
+          html +=
+            '<div class="gl-chat-date-sep"><span>' + dateStr + "</span></div>";
+          lastDateStr = dateStr;
+          lastAuthor = "";
+        }
+
+        var isNewGroup = msg.author !== lastAuthor;
+        if (isNewGroup) {
+          if (groupOpen) html += "</div>";
+          html += '<div class="gl-msg-group">';
+          groupOpen = true;
+        }
+
+        var ownClass = msg.own ? "gl-msg--own" : "";
+        var aiAvatarClass = msg.isAi ? "gl-msg-avatar--ai" : "";
+        var aiAuthorClass = msg.isAi ? "gl-msg-author--ai" : "";
+        var aiBubbleClass = msg.isAi ? "gl-msg-bubble--ai" : "";
+
+        var escapedText = esc(msg.text || "");
+
+        var reactions = "";
+        if (msg.reactions && msg.reactions.length > 0) {
+          reactions =
+            '<div class="gl-msg-reactions">' +
+            msg.reactions
+              .map(function (r) {
+                return (
+                  '<button class="gl-msg-reaction ' +
+                  (r.active ? "active" : "") +
+                  '" onclick="toggleModalReaction(\'' +
+                  msg.id +
+                  "','" +
+                  r.emoji +
+                  "')\">" +
+                  r.emoji +
+                  " <span>" +
+                  r.count +
+                  "</span></button>"
+                );
+              })
+              .join("") +
+            "</div>";
+        }
+
+        html +=
+          '<div class="gl-msg ' + ownClass + '" data-msg-id="' + msg.id + '">';
+        if (isNewGroup) {
+          html +=
+            '<div class="gl-msg-avatar ' +
+            aiAvatarClass +
+            '">' +
+            msg.avatar +
+            "</div>";
+        } else {
+          html += '<div style="width:34px;flex-shrink:0"></div>';
+        }
+        html += '<div class="gl-msg-content">';
+        if (isNewGroup) {
+          html +=
+            '<div class="gl-msg-meta">' +
+            '<span class="gl-msg-author ' +
+            aiAuthorClass +
+            '">' +
+            msg.author +
+            "</span>" +
+            '<span class="gl-msg-time">' +
+            new Date(msg.time).toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }) +
+            "</span>" +
+            "</div>";
+        }
+        var bubble = escapedText
+          ? '<div class="gl-msg-bubble ' + aiBubbleClass + '">' + escapedText + "</div>"
+          : "";
+        var cardsBlock =
+          msg.type === "cards" && msg.cards && msg.cards.length
+            ? renderCardsBlock(msg.cards)
+            : "";
+
+        html += bubble + cardsBlock;
+        html += reactions;
+        html += "</div></div>";
+
+        lastAuthor = msg.author;
+      });
+
+      if (groupOpen) html += "</div>";
+      container.innerHTML = html;
+
+      // Scroll to bottom
+      setTimeout(function () {
+        container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+      }, 50);
+    }
+
+    // ── Send message from modal ──────────────────────────
+    function sendModalMessage() {
+      var input = document.getElementById("modal-msg-input");
+      if (!input || !window.ChatState) return;
+      var text = input.value.trim();
+      if (!text) return;
+
+      var user = window.__USER__ || { nom: "Vous", avatar: "😊" };
+      var ch = window.ChatState.channels[_modalActiveChannel];
+      if (!ch) return;
+
+      ch.messages.push({
+        id: Math.random().toString(36).slice(2, 10),
+        author: user.nom || "Vous",
+        avatar: user.avatar || "😊",
+        text: text,
+        time: Date.now(),
+        own: true,
+        isAi: false,
+        reactions: [],
+      });
+
+      if (ch.messages.length > 120) ch.messages.shift();
+      input.value = "";
+      input.style.height = "";
+      var sendBtn = document.getElementById("modal-send-btn");
+      if (sendBtn) sendBtn.disabled = true;
+
+      renderModalMessages(_modalActiveChannel);
+
+      // Simulate peer response 25% chance
+      if (Math.random() < 0.25) {
+        var peerList = [
+          ["Marie D.", "👩", "Super initiative ! Je vais essayer ça aussi 🌿"],
+          ["Jean M.", "👨", "Bonne idée ! On peut faire équipe 💪"],
+          ["Sophie B.", "🧑", "J'en suis à 67%, courage à tous !"],
+          [
+            "Lucas M.",
+            "👨",
+            "Quelqu'un a une astuce pour gagner plus de points ?",
+          ],
+          [
+            "Thomas S.",
+            "🧑",
+            "Bravo ! C'est exactement la motivation dont on a besoin 🔥",
+          ],
+        ];
+        var peer = peerList[Math.floor(Math.random() * peerList.length)];
+        var typingEl = document.getElementById("modal-typing-indicator");
+        var typingTxt = document.getElementById("modal-typing-text");
+        if (typingEl) typingEl.style.display = "flex";
+        if (typingTxt)
+          typingTxt.textContent = peer[0] + " est en train d'écrire…";
+        setTimeout(
+          function () {
+            if (typingEl) typingEl.style.display = "none";
+            if (!window.ChatState.channels[_modalActiveChannel]) return;
+            window.ChatState.channels[_modalActiveChannel].messages.push({
+              id: Math.random().toString(36).slice(2, 10),
+              author: peer[0],
+              avatar: peer[1],
+              text: peer[2],
+              time: Date.now(),
+              own: false,
+              isAi: false,
+              reactions: [],
+            });
+            renderModalMessages(_modalActiveChannel);
+          },
+          1800 + Math.random() * 1200,
+        );
+      }
+    }
+
+    // ── AI from modal ────────────────────────────────────
+    async function askModalAI() {
+      if (!window.ChatState) return;
+      var input = document.getElementById("modal-msg-input");
+      var aiBtn = document.getElementById("modal-ai-btn");
+      var ch = window.ChatState.channels[_modalActiveChannel];
+      if (!ch) return;
+
+      var question = input ? input.value.trim() : "";
+      var prompt =
+        question ||
+        'Donne-moi un conseil motivant pour progresser dans le canal "' +
+          ch.name +
+          '" sur GaiaLumen.';
+
+      if (question && input) sendModalMessage();
+      if (aiBtn) aiBtn.classList.add("loading");
+
+      var typingEl = document.getElementById("modal-typing-indicator");
+      var typingTxt = document.getElementById("modal-typing-text");
+      if (typingEl) typingEl.style.display = "flex";
+      if (typingTxt) typingTxt.textContent = "GaiaLumen IA réfléchit…";
+
+      try {
+        var sys =
+          "Tu es GaiaLumen IA, l'assistant bienveillant de la plateforme de défis collaboratifs GaiaLumen.\nTu aides les participants à progresser dans leurs défis (écologie, sport, nutrition), trouver de la motivation et gagner des steakers 3D.\nCanal actif: \"" +
+          ch.name +
+          '" — ' +
+          ch.desc +
+          "\nRéponds en français, de façon chaleureuse et concise (3-4 phrases max), avec des emojis pertinents.";
+
+        var resp = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 1000,
+            system: sys,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        });
+        var data = await resp.json();
+        var aiText =
+          data.content && data.content[0] && data.content[0].text
+            ? data.content[0].text
+            : "Je suis là pour vous aider ! Posez-moi une question sur vos défis. 🌿";
+
+        if (typingEl) typingEl.style.display = "none";
+        ch.messages.push({
+          id: Math.random().toString(36).slice(2, 10),
+          author: "GaiaLumen IA",
+          avatar: "🌿",
+          text: aiText,
+          time: Date.now(),
+          own: false,
+          isAi: true,
+          reactions: [
+            { emoji: "👍", count: 0, active: false },
+            { emoji: "🌿", count: 0, active: false },
+          ],
+        });
+        renderModalMessages(_modalActiveChannel);
+      } catch (err) {
+        if (typingEl) typingEl.style.display = "none";
+        ch.messages.push({
+          id: Math.random().toString(36).slice(2, 10),
+          author: "GaiaLumen IA",
+          avatar: "🌿",
+          text: "Désolé, je suis temporairement indisponible. Continuez vos défis, vous êtes sur la bonne voie ! 💪🌿",
+          time: Date.now(),
+          own: false,
+          isAi: true,
+          reactions: [],
+        });
+        renderModalMessages(_modalActiveChannel);
+      } finally {
+        if (aiBtn) aiBtn.classList.remove("loading");
+      }
+    }
+
+    // Toggle reactions in modal
+    window.toggleModalReaction = function (msgId, emoji) {
+      if (!window.ChatState) return;
+      var ch = window.ChatState.channels[_modalActiveChannel];
+      if (!ch) return;
+      var msg = ch.messages.find(function (m) {
+        return m.id === msgId;
+      });
+      if (!msg) return;
+      var r = msg.reactions.find(function (x) {
+        return x.emoji === emoji;
+      });
+      if (r) {
+        r.active = !r.active;
+        r.count = Math.max(0, r.count + (r.active ? 1 : -1));
+      }
+      renderModalMessages(_modalActiveChannel);
+    };
+
+    // ── Bind modal inputs ────────────────────────────────
+    (function bindModalInputs() {
+      var sendBtn = document.getElementById("modal-send-btn");
+      var input = document.getElementById("modal-msg-input");
+      var aiBtn = document.getElementById("modal-ai-btn");
+
+      if (sendBtn) sendBtn.addEventListener("click", sendModalMessage);
+
+      if (input) {
+        input.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendModalMessage();
+          }
+        });
+        input.addEventListener("input", function () {
+          input.style.height = "";
+          input.style.height = Math.min(input.scrollHeight, 90) + "px";
+          if (sendBtn) sendBtn.disabled = input.value.trim() === "";
+        });
+      }
+
+      if (aiBtn) aiBtn.addEventListener("click", askModalAI);
+
+      document
+        .querySelectorAll(".gl-emoji-quick--modal button")
+        .forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            if (!input) return;
+            input.value += btn.textContent.trim();
+            input.focus();
+            input.dispatchEvent(new Event("input"));
+          });
+        });
+    })();
+
+    // FAB chat button — single global button, no per-card injection needed
+    // The FAB is already in the HTML; just ensure ChatState is ready on open
 
     /* ── Init module ─────────────────────────────────── */
     document.addEventListener("moduleLoaded", function (e) {

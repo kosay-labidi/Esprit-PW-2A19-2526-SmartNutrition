@@ -486,7 +486,7 @@
     <button class="notif-panel__clear" onclick="clearAllNotifs()">Tout lire</button>
   </div>
   <div class="notif-panel__list" id="notifList">
-    <div class="notif-item unread" onclick="markNotifRead(this)">
+    <div class="notif-item unread" onclick="markNotifRead(this, 'challenges')">
       <div class="notif-item__icon notif-item__icon--challenge">🏆</div>
       <div class="notif-item__body">
         <div class="notif-item__title">Nouveau défi disponible !</div>
@@ -494,7 +494,7 @@
       </div>
       <span class="notif-item__time">Il y a 5 min</span>
     </div>
-    <div class="notif-item unread" onclick="markNotifRead(this)">
+    <div class="notif-item unread" onclick="markNotifRead(this, 'challenges')">
       <div class="notif-item__icon notif-item__icon--success">✅</div>
       <div class="notif-item__body">
         <div class="notif-item__title">Objectif atteint !</div>
@@ -502,7 +502,7 @@
       </div>
       <span class="notif-item__time">Il y a 2 h</span>
     </div>
-    <div class="notif-item unread" onclick="markNotifRead(this)">
+    <div class="notif-item unread" onclick="markNotifRead(this, 'challenges')">
       <div class="notif-item__icon notif-item__icon--warning">⚡</div>
       <div class="notif-item__body">
         <div class="notif-item__title">Progression à mettre à jour</div>
@@ -606,9 +606,14 @@ function closeNotifPanel() {
   document.getElementById('notifPanel').style.display = 'none';
   document.getElementById('notifOverlay').classList.remove('open');
 }
-function markNotifRead(el) {
+function markNotifRead(el, moduleName) {
   el.classList.remove('unread');
   updateNotifCount();
+
+  if (moduleName && typeof window.showModule === 'function') {
+    closeNotifPanel();
+    window.showModule(moduleName);
+  }
 }
 function clearAllNotifs() {
   document.querySelectorAll('.notif-item.unread').forEach(n => n.classList.remove('unread'));

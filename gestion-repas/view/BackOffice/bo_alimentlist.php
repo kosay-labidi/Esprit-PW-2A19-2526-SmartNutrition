@@ -1,12 +1,5 @@
 <?php
-/* ============================================================
-   view/BackOffice/alimentlist.php
-   RÔLE : Vue Back Office — Gestion CRUD des aliments (admin)
-   ARCHITECTURE MVC :
-     - Model  : model/aliment.php      (requêtes BDD)
-     - View   : ce fichier             (affichage HTML)
-     - Controller : controller/alimentcontroller.php (logique)
-   ============================================================ */
+
 
 /* ----------------------------------------------------------
    SECTION 1 — CHARGEMENT DES DÉPENDANCES
@@ -39,22 +32,16 @@ $success = $_GET['success'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GaiaLumen · Back Office — Aliments</title>
 
-    <!-- Tailwind CSS (framework utilitaire) -->
+    <!-- Tailwind CSS  -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome (icônes) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
-        /* ── Importation des polices GaiaLumen ──────────────
-           Cormorant Garamond → titres élégants
-           Lato               → textes lisibles sur écran    */
+
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@400;500;700&display=swap');
 
-        /* ── Palette officielle GaiaLumen ───────────────────
-           Vert Profond    : #1a372f
-           Sable Sacré     : #f4ede4
-           Violet Mystique : #a78bfa
-           Bleu Céleste    : #60a5fa                         */
+
         :root {
             --vert   : #1a372f;
             --sable  : #f4ede4;
@@ -62,21 +49,16 @@ $success = $_GET['success'] ?? '';
             --bleu   : #60a5fa;
         }
 
-        /* ── Reset de base ──────────────────────────────── */
+        
         * { font-family:'Lato',sans-serif; box-sizing:border-box; margin:0; padding:0; }
         .hf { font-family:'Cormorant Garamond',serif; } /* classe pour les titres */
         body { background:var(--sable); color:var(--vert); display:flex; min-height:100vh; }
 
-        /* ── Curseur personnalisé GaiaLumen ─────────────────
-           Boule violette qui suit la souris                 */
+        /* Curseur personnalisé GaiaLumen    */
         #cur  { position:fixed;top:0;left:0;z-index:9999;pointer-events:none;width:14px;height:14px;border-radius:50%;background:var(--violet);box-shadow:0 0 12px var(--violet),0 0 24px var(--bleu);transform:translate(-50%,-50%);transition:width .2s,height .2s;mix-blend-mode:screen; }
         #cur.h{ width:28px;height:28px;background:var(--bleu); }
         #curt { position:fixed;top:0;left:0;z-index:9998;pointer-events:none;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(167,139,250,.4);transform:translate(-50%,-50%); }
 
-        /* ══════════════════════════════════════════════════
-           SIDEBAR — MENU VERTICAL GAUCHE
-           Structure : sidebar fixe à gauche + contenu à droite
-           ══════════════════════════════════════════════════ */
         .sidebar {
             width: 240px;
             min-height: 100vh;
@@ -88,7 +70,7 @@ $success = $_GET['success'] ?? '';
             z-index: 100;
             box-shadow: 4px 0 20px rgba(0,0,0,.15);
         }
-        /* Logo en haut de la sidebar */
+        
         .sidebar-logo {
             padding: 24px 20px 20px;
             border-bottom: 1px solid rgba(255,255,255,.1);
@@ -103,7 +85,7 @@ $success = $_GET['success'] ?? '';
             color: white;
             letter-spacing: -0.03em;
         }
-        /* Badge "Back Office" sous le logo */
+        /* Badge "Back Office"  */
         .sidebar-badge {
             margin: 0 20px 16px;
             font-size: 10px;
@@ -116,7 +98,7 @@ $success = $_GET['success'] ?? '';
             border-radius: 6px;
             text-align: center;
         }
-        /* Titre de groupe dans le menu */
+        
         .sidebar-section {
             font-size: 10px;
             font-weight: 700;
@@ -125,7 +107,7 @@ $success = $_GET['success'] ?? '';
             color: rgba(255,255,255,.35);
             padding: 14px 20px 6px;
         }
-        /* Item de navigation */
+        
         .nav-item {
             display: flex;
             align-items: center;
@@ -139,14 +121,14 @@ $success = $_GET['success'] ?? '';
             border-left: 3px solid transparent;
         }
         .nav-item:hover { background: rgba(255,255,255,.07); color: white; }
-        /* Item actif → surlignage violet */
+        
         .nav-item.active {
             background: rgba(167,139,250,.18);
             color: var(--violet);
             border-left-color: var(--violet);
         }
         .nav-item i { width: 16px; text-align: center; font-size: 13px; }
-        /* Pied de la sidebar */
+        
         .sidebar-footer {
             margin-top: auto;
             padding: 16px 20px;
@@ -155,7 +137,7 @@ $success = $_GET['success'] ?? '';
             color: rgba(255,255,255,.35);
         }
 
-        /* ── Zone de contenu principal (à droite de la sidebar) */
+        /*  Zone de contenu principal  */
         .main-content {
             margin-left: 240px; /* décalage = largeur sidebar */
             flex: 1;
@@ -164,7 +146,7 @@ $success = $_GET['success'] ?? '';
             min-width: 0;
         }
 
-        /* ── Topbar (barre du haut dans le contenu) ──────── */
+        /* Topbar  */
         .topbar {
             background: linear-gradient(135deg, var(--vert) 0%, #11241f 100%);
             position: sticky;
@@ -176,9 +158,7 @@ $success = $_GET['success'] ?? '';
             justify-content: space-between;
         }
 
-        /* ── Hero avec photo de fond ─────────────────────────
-           La photo 1000051721.jpg est dans assets/images/
-           Le chemin relatif est correct depuis BackOffice/    */
+        /*  Hero   */
         .hero {
             background-image:
                 linear-gradient(rgba(26,55,47,.72), rgba(26,55,47,.72)),
@@ -188,7 +168,7 @@ $success = $_GET['success'] ?? '';
             padding: 48px 28px 36px;
         }
 
-        /* ── Filtres (boutons de filtre par type) ─────────── */
+        /*  Filtres  */
         .fb {
             padding:6px 16px;border-radius:99px;
             border:1.5px solid rgba(255,255,255,.3);
@@ -198,8 +178,7 @@ $success = $_GET['success'] ?? '';
         }
         .fb.on,.fb:hover { background:var(--violet);color:white;border-color:var(--violet); }
 
-        /* ── Tableau des aliments ────────────────────────────
-           Grille CSS avec 13 colonnes pour toutes les données */
+        /* Tableau des aliments  */
         .tbl-wrap { background:white;border-radius:20px;overflow:hidden;border:1px solid rgba(26,55,47,.1); }
         .thead {
             display:grid;
@@ -218,42 +197,42 @@ $success = $_GET['success'] ?? '';
         .trow:hover { background:#faf7f3; }
         .trow:last-child { border-bottom:none; }
 
-        /* ── Badges de type et catégorie ─────────────────── */
+        /*  Badges de type et catégorie  */
         .badge  { display:inline-block;font-size:9.5px;padding:2px 8px;border-radius:99px;font-weight:600;white-space:nowrap; }
         .cbadge { font-size:9.5px;padding:1px 6px;border-radius:4px;background:#f4ede4;color:#5a5850; }
 
-        /* ── Barre CO₂ ───────────────────────────────────── */
+        /*  Barre CO₂  */
         .cobar { height:5px;border-radius:3px;background:#ede9e3;overflow:hidden;margin-top:3px; }
         .cofil { height:100%;border-radius:3px; }
 
-        /* ── Boutons action (Edit / Delete) ──────────────── */
+        /* Edit / Delete)  */
         .bedit { display:inline-flex;align-items:center;padding:5px 10px;border-radius:8px;font-size:11px;border:1px solid var(--bleu);color:#1a5fa8;background:transparent;cursor:pointer;transition:all .14s;text-decoration:none; }
         .bedit:hover { background:#e8f2fc; }
         .bdel  { display:inline-flex;align-items:center;padding:5px 10px;border-radius:8px;font-size:11px;border:1px solid #c09090;color:#8a2020;background:transparent;cursor:pointer;transition:all .14s;text-decoration:none; }
         .bdel:hover  { background:#faeaea; }
 
-        /* ── Recherche (input dans le hero) ──────────────── */
+        /* ─ Recherche  */
         .si { padding:8px 14px 8px 36px;border-radius:99px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);font-size:12px;color:white;outline:none;font-family:'Lato',sans-serif;width:210px; }
         .si::placeholder { color:rgba(255,255,255,.5); }
         .si:focus { border-color:var(--violet); }
         .sw { position:relative;display:inline-block; }
         .sw i { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.5);font-size:11px; }
 
-        /* ── Champs du formulaire modal ──────────────────── */
+        /* Champs du formulaire modal  */
         .mi { width:100%;padding:9px 14px;border-radius:12px;border:1.5px solid #e8e0d8;font-family:'Lato',sans-serif;font-size:13px;outline:none;background:white;color:var(--vert); }
         .mi:focus { border-color:var(--violet); }
         .mi.error { border-color:#c09090;background:#fdf5f5; } /* erreur de validation */
         label.lbl { display:block;font-size:11px;font-weight:600;color:var(--vert);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em; }
 
-        /* ── Message d'erreur de validation ─────────────── */
+        /*  Message d'erreur de validation */
         .err-msg { font-size:11px;color:#8a2020;margin-top:4px;display:none; }
         .err-msg.show { display:block; }
 
-        /* ── Stat pills dans le hero ─────────────────────── */
+        
         .sp { background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:5px 14px;font-size:12px;color:white;display:inline-flex;align-items:center;gap:4px; }
         .sp b { font-weight:700; }
 
-        /* ── Modal (popup de création) ───────────────────── */
+        
         .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center; }
         .modal-overlay.open { display:flex; }
         .modal-box { background:white;border-radius:24px;width:100%;max-width:680px;margin:0 16px;max-height:90vh;overflow-y:auto; }
@@ -263,10 +242,7 @@ $success = $_GET['success'] ?? '';
 <div id="cur"></div>
 <div id="curt"></div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SECTION 4 — SIDEBAR (menu vertical gauche)
-     Navigation de l'administration du module Gestion Repas
-     ══════════════════════════════════════════════════════════ -->
+
 <aside class="sidebar">
 
     <!-- Logo GaiaLumen -->
@@ -285,19 +261,18 @@ $success = $_GET['success'] ?? '';
     <!-- Badge administration -->
     <div class="sidebar-badge">⚙ Back Office</div>
 
-    <!-- Groupe : Module Repas (CRUD principaux) -->
+    <!-- Groupe : Module Repas -->
     <div class="sidebar-section">Module Repas</div>
 
-    <!-- Lien vers la liste des aliments (page actuelle) -->
+    <!-- Lien vers la liste des aliments -->
     <a href="alimentlist.php" class="nav-item active">
         <i class="fas fa-carrot"></i> Aliments
     </a>
-    <!-- Lien vers la liste des repas (à venir) -->
+    <!-- Lien vers la liste des repas-->
     <a href="#" class="nav-item">
         <i class="fas fa-utensils"></i> Repas
     </a>
 
-    <!-- Groupe : Navigation générale du site -->
     <div class="sidebar-section">Site</div>
 
     <a href="../../index.html" class="nav-item">
@@ -307,17 +282,13 @@ $success = $_GET['success'] ?? '';
         <i class="fas fa-eye"></i> Vue utilisateur
     </a>
 
-    <!-- Pied de sidebar -->
     <div class="sidebar-footer">GaiaLumen © <?= date('Y') ?></div>
 </aside>
 
-<!-- ══════════════════════════════════════════════════════════
-     SECTION 5 — ZONE DE CONTENU PRINCIPALE
-     Tout ce qui s'affiche à droite de la sidebar
-     ══════════════════════════════════════════════════════════ -->
+
 <div class="main-content">
 
-    <!-- ── Topbar (barre supérieure) ────────────────────── -->
+
     <div class="topbar">
         <div class="text-white text-sm font-medium flex items-center gap-2">
             <i class="fas fa-shield-alt text-[#a78bfa]"></i>
@@ -330,9 +301,7 @@ $success = $_GET['success'] ?? '';
         </button>
     </div>
 
-    <!-- ── Hero avec photo de fond ──────────────────────────
-         La photo 1000051721.jpg sert de fond avec un overlay
-         vert foncé pour rendre le texte lisible             -->
+
     <section class="hero">
         <h1 class="hf" style="font-size:48px;color:white;line-height:1;margin-bottom:10px;">
             Gestion des Aliments
@@ -341,7 +310,6 @@ $success = $_GET['success'] ?? '';
             Entre nature et lumière, votre nutrition prend sens.
         </p>
 
-        <!-- Statistiques rapides (calculées depuis la BDD) -->
         <?php
         $nb  = count($aliments);
         $nbt = count(array_unique(array_column($aliments,'type')));
@@ -351,22 +319,13 @@ $success = $_GET['success'] ?? '';
             <span class="sp"><b><?= $nbt ?></b> types</span>
         </div>
 
-        <!-- ══════════════════════════════════════════════════
-             SECTION 6 — CRUD : BOUTON CRÉER
-             Point d'entrée du Create (C du CRUD)
-             Ouvre la modale de création d'un aliment
-             ══════════════════════════════════════════════════ -->
+
         <button onclick="openModal()"
             style="background:white;color:var(--vert);padding:12px 28px;border-radius:99px;font-size:14px;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;margin-bottom:24px;font-family:'Lato',sans-serif;">
             <i class="fas fa-plus"></i> Créer un aliment
         </button>
 
-        <!-- ══════════════════════════════════════════════════
-             SECTION 7 — FONCTIONNALITÉS HORS CRUD
-             (Filtre par type + Recherche par nom)
-             Ces boutons ne modifient pas la BDD — ils filtrent
-             uniquement l'affichage côté client (JavaScript)
-             ══════════════════════════════════════════════════ -->
+        <!-- FONCTIONNALITÉS HORS CRUD -->
         <div style="margin-bottom:14px;">
             <p style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Filtrer l'affichage</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;" id="fbar">
@@ -380,7 +339,7 @@ $success = $_GET['success'] ?? '';
                 <button class="fb"    data-type="épice"              onclick="setFilter(this)">Épices</button>
                 <button class="fb"    data-type="huile"              onclick="setFilter(this)">Huiles</button>
 
-                <!-- Recherche par nom (filtre côté client, pas de requête BDD) -->
+                <!-- Recherche par nom-->
                 <div class="sw" style="margin-left:8px;">
                     <i class="fas fa-search"></i>
                     <input id="sq" type="text" class="si" placeholder="Rechercher un aliment…" oninput="applyFilters()">
@@ -389,13 +348,12 @@ $success = $_GET['success'] ?? '';
         </div>
     </section>
 
-    <!-- ── Message de succès après CRUD ─────────────────── -->
+
     <div style="padding:0 28px;">
     <?php if ($success): ?>
         <div style="background:#e8f0e9;border:1px solid #1a372f30;color:var(--vert);padding:12px 20px;border-radius:12px;margin:16px 0;display:flex;align-items:center;gap:8px;font-size:13px;">
             <i class="fas fa-check-circle"></i>
             <?php
-                /* Affiche le bon message selon l'action effectuée */
                 if ($success==='created') echo 'Aliment ajouté avec succès.';
                 if ($success==='updated') echo 'Aliment modifié avec succès.';
                 if ($success==='deleted') echo 'Aliment supprimé.';
@@ -404,14 +362,7 @@ $success = $_GET['success'] ?? '';
     <?php endif; ?>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════
-         SECTION 8 — CRUD : READ (tableau des aliments)
-         Affiche TOUS les attributs de chaque aliment :
-         icône, nom, type, catégorie, calories, protéines,
-         glucides, lipides, fibres, sucre, sodium, prix,
-         CO₂, vitamines, origine, label_eco, allergènes
-         + boutons Edit (Update) et Delete
-         ══════════════════════════════════════════════════════ -->
+  
     <div style="padding:16px 28px 40px;">
         <div class="tbl-wrap" style="overflow-x:auto;">
 
@@ -433,7 +384,6 @@ $success = $_GET['success'] ?? '';
                 <div style="text-align:center">Actions</div>
             </div>
 
-            <!-- Corps du tableau : une ligne par aliment -->
             <div id="tbody" style="min-width:1100px;">
             <?php if (empty($aliments)): ?>
                 <!-- État vide : aucun aliment dans la BDD -->
@@ -443,12 +393,11 @@ $success = $_GET['success'] ?? '';
                 </div>
             <?php else: ?>
                 <?php foreach ($aliments as $a):
-                    /* Calcul des couleurs et SVG pour chaque aliment */
+
                     $c   = typeConfig($a['type']);
                     $svg = alimentSVG($a['nom'], $a['type'], $c, 40);
                     $co2 = co2Config((float)$a['co2']);
                 ?>
-                <!-- Ligne aliment : data-type et data-nom servent au filtre JS -->
                 <div class="trow"
                      data-type="<?= htmlspecialchars($a['type']) ?>"
                      data-nom="<?= strtolower(htmlspecialchars($a['nom'])) ?>">
@@ -456,7 +405,7 @@ $success = $_GET['success'] ?? '';
                     <!-- Icône SVG générée dynamiquement selon le nom de l'aliment -->
                     <div style="display:flex;align-items:center;justify-content:center;"><?= $svg ?></div>
 
-                    <!-- Nom + badges type + catégorie -->
+
                     <div style="padding-left:10px;">
                         <p style="font-size:13px;font-weight:600;color:var(--vert);margin:0;"><?= htmlspecialchars($a['nom']) ?></p>
                         <div style="display:flex;gap:4px;margin-top:3px;flex-wrap:wrap;">
@@ -465,25 +414,25 @@ $success = $_GET['success'] ?? '';
                         </div>
                     </div>
 
-                    <!-- Valeur : Calories -->
+
                     <div style="text-align:center;">
                         <p style="font-size:13px;font-weight:700;color:var(--vert);margin:0;"><?= number_format($a['calories'],1) ?></p>
                         <p style="font-size:9px;color:#9ca3af;margin:0;">kcal/100g</p>
                     </div>
 
-                    <!-- Valeur : Protéines -->
+
                     <div style="text-align:center;">
                         <p style="font-size:13px;font-weight:600;color:#1a5fa8;margin:0;"><?= number_format($a['proteines'],1) ?></p>
                         <p style="font-size:9px;color:#9ca3af;margin:0;">g/100g</p>
                     </div>
 
-                    <!-- Valeur : Glucides -->
+
                     <div style="text-align:center;">
                         <p style="font-size:13px;font-weight:600;color:#8a6510;margin:0;"><?= number_format($a['glucides'],1) ?></p>
                         <p style="font-size:9px;color:#9ca3af;margin:0;">g/100g</p>
                     </div>
 
-                    <!-- Valeur : Lipides -->
+
                     <div style="text-align:center;">
                         <p style="font-size:13px;font-weight:600;color:#7c5cbf;margin:0;"><?= number_format($a['lipides'],1) ?></p>
                         <p style="font-size:9px;color:#9ca3af;margin:0;">g/100g</p>
@@ -495,25 +444,25 @@ $success = $_GET['success'] ?? '';
                         <p style="font-size:9px;color:#9ca3af;margin:0;">g/100g</p>
                     </div>
 
-                    <!-- Valeur : Sucre -->
+
                     <div style="text-align:center;">
                         <p style="font-size:13px;font-weight:600;color:var(--vert);margin:0;"><?= number_format($a['sucre'],1) ?></p>
                         <p style="font-size:9px;color:#9ca3af;margin:0;">g/100g</p>
                     </div>
 
-                    <!-- Valeur : Sodium -->
+                    
                     <div style="text-align:center;">
                         <p style="font-size:13px;font-weight:600;color:var(--vert);margin:0;"><?= number_format($a['sodium'],1) ?></p>
                         <p style="font-size:9px;color:#9ca3af;margin:0;">mg/100g</p>
                     </div>
 
-                    <!-- Valeur : Prix -->
+                    
                     <div style="text-align:center;">
                         <p style="font-size:13px;font-weight:700;color:var(--vert);margin:0;"><?= number_format($a['prix'],2) ?></p>
                         <p style="font-size:9px;color:#9ca3af;margin:0;">TND/kg</p>
                     </div>
 
-                    <!-- Barre CO₂ : couleur verte/orange/rouge selon l'impact -->
+                    
                     <div style="padding:0 6px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
                             <span style="font-size:10px;color:#6b7280;"><?= number_format($a['co2'],2) ?> kg</span>
@@ -522,7 +471,7 @@ $success = $_GET['success'] ?? '';
                         <div class="cobar"><div class="cofil" style="width:<?= $co2['pct'] ?>%;background:<?= $co2['color'] ?>;"></div></div>
                     </div>
 
-                    <!-- Infos complémentaires : vitamines, origine, label, allergènes -->
+                    
                     <div>
                         <?php if (!empty($a['vitamines'])): ?>
                         <p style="font-size:10px;color:#6b7280;margin:0 0 2px;"><span style="font-weight:600;">Vit:</span> <?= htmlspecialchars($a['vitamines']) ?></p>
@@ -541,9 +490,7 @@ $success = $_GET['success'] ?? '';
                         <?php endif; ?>
                     </div>
 
-                    <!-- ── Actions CRUD : Update + Delete ──
-                         Update → redirige vers updatealiment.php
-                         Delete → appelle le Controller via GET ?action=delete  -->
+
                     <div style="display:flex;gap:5px;justify-content:center;">
                         <!-- Bouton UPDATE (modifier) -->
                         <a href="updatealiment.php?id=<?= $a['id_aliment'] ?>" class="bedit" title="Modifier cet aliment">
@@ -559,14 +506,14 @@ $success = $_GET['success'] ?? '';
                 </div>
                 <?php endforeach; ?>
 
-                <!-- État vide après filtrage (caché par défaut) -->
+                
                 <div id="noResult" style="display:none;padding:40px;text-align:center;color:#9ca3af;font-size:14px;">
                     <i class="fas fa-filter" style="font-size:1.8rem;display:block;margin-bottom:10px;color:#d0c8be;"></i>Aucun résultat pour ce filtre.
                 </div>
             <?php endif; ?>
             </div>
 
-            <!-- Pied du tableau avec compteur -->
+            
             <div style="padding:10px 16px;background:#f9f6f2;border-top:1px solid #f4ede4;display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-size:11px;color:#9ca3af;" id="rowCount"><?= count($aliments) ?> aliment(s)</span>
                 <span style="font-size:11px;color:#9ca3af;">GaiaLumen Back Office © <?= date('Y') ?></span>
@@ -574,39 +521,37 @@ $success = $_GET['success'] ?? '';
         </div>
     </div>
 
-</div><!-- fin .main-content -->
+</div>
 
 
-<!-- ══════════════════════════════════════════════════════════
-     SECTION 9 — CRUD : CREATE (modal de création)
-     Formulaire envoyé en POST vers le Controller
-     Le Controller appelle Model->create() puis redirige ici
-     ══════════════════════════════════════════════════════════ -->
+
+
+
 <div id="modalOverlay" class="modal-overlay" onclick="if(event.target===this)closeModal()">
     <div class="modal-box">
         <div style="padding:28px 32px;">
 
-            <!-- Titre de la modal -->
+            
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
                 <h3 class="hf" style="font-size:28px;color:var(--vert);">Nouvel Aliment</h3>
                 <button onclick="closeModal()" style="font-size:22px;color:#9ca3af;background:none;border:none;cursor:pointer;line-height:1;">&times;</button>
             </div>
 
-            <!-- Formulaire CREATE → envoi POST au Controller -->
+
             <form id="createForm" action="../../controller/alimentcontroller.php" method="POST" novalidate>
                 <input type="hidden" name="action" value="create">
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
 
-                    <!-- Nom de l'aliment (obligatoire, min 2 caractères) -->
-                    <div style="grid-column:1/-1;">
+
+                <div style="grid-column:1/-1;">
                         <label class="lbl">Nom de l'aliment *</label>
                         <input type="text" name="nom" id="f_nom" class="mi" placeholder="ex: Carotte bio"
                                minlength="2" maxlength="200">
                         <p class="err-msg" id="e_nom">Le nom est obligatoire (min. 2 caractères).</p>
                     </div>
 
-                    <!-- Type (obligatoire, sélection parmi les valeurs ENUM de la BDD) -->
+
                     <div>
                         <label class="lbl">Type *</label>
                         <select name="type" id="f_type" class="mi">
@@ -624,7 +569,7 @@ $success = $_GET['success'] ?? '';
                         <p class="err-msg" id="e_type">Veuillez choisir un type.</p>
                     </div>
 
-                    <!-- Catégorie (obligatoire) -->
+
                     <div>
                         <label class="lbl">Catégorie *</label>
                         <select name="categorie" id="f_cat" class="mi">
@@ -637,9 +582,9 @@ $success = $_GET['success'] ?? '';
                         <p class="err-msg" id="e_cat">Veuillez choisir une catégorie.</p>
                     </div>
 
-                    <!-- Valeurs nutritionnelles (obligatoires, nombres >= 0) -->
+                    
                     <?php
-                    /* Tableau des champs numériques obligatoires */
+
                     $numFields = [
                         ['calories',  'Calories (kcal/100g)', true,  0, 9999],
                         ['proteines', 'Protéines (g/100g)',   true,  0, 100],
@@ -665,28 +610,28 @@ $success = $_GET['success'] ?? '';
                     </div>
                     <?php endforeach; ?>
 
-                    <!-- Vitamines (facultatif, texte libre) -->
+
                     <div style="grid-column:1/-1;">
                         <label class="lbl">Vitamines</label>
                         <input type="text" name="vitamines" class="mi"
                                placeholder="ex: A, B12, C" maxlength="200">
                     </div>
 
-                    <!-- Label écologique (facultatif) -->
+
                     <div style="grid-column:1/-1;">
                         <label class="lbl">Label écologique</label>
                         <input type="text" name="label_ecologique" class="mi"
                                placeholder="bio, AOP, conventionnel…" maxlength="100">
                     </div>
 
-                    <!-- Origine (facultatif) -->
+
                     <div>
                         <label class="lbl">Origine</label>
                         <input type="text" name="origine" class="mi"
                                placeholder="Tunisie, France…" maxlength="100">
                     </div>
 
-                    <!-- Allergènes (facultatif) -->
+
                     <div>
                         <label class="lbl">Allergènes</label>
                         <input type="text" name="allergenes" class="mi"
@@ -694,7 +639,7 @@ $success = $_GET['success'] ?? '';
                     </div>
                 </div>
 
-                <!-- Boutons Annuler / Enregistrer -->
+
                 <div style="display:flex;gap:10px;margin-top:22px;">
                     <button type="button" onclick="closeModal()"
                         style="flex:1;padding:13px;border-radius:99px;border:1.5px solid #e8e0d8;background:white;font-weight:600;font-size:13px;cursor:pointer;color:var(--vert);">
@@ -712,18 +657,10 @@ $success = $_GET['success'] ?? '';
 </div>
 
 
-<!-- ══════════════════════════════════════════════════════════
-     SECTION 10 — JAVASCRIPT
-     10a. Curseur personnalisé
-     10b. Modal (ouvrir/fermer)
-     10c. Validation du formulaire de création (CRUD : Create)
-     10d. Filtre par type (hors CRUD — affichage client)
-     10e. Recherche par nom (hors CRUD — affichage client)
-     ══════════════════════════════════════════════════════════ -->
+
 <script>
 
-/* ── 10a. Curseur personnalisé ──────────────────────────────
-   Boule violette qui suit la souris avec un léger délai      */
+/*  Curseur personnalisé */
 (function(){
     const c = document.getElementById('cur');
     const t = document.getElementById('curt');
@@ -744,9 +681,7 @@ $success = $_GET['success'] ?? '';
     });
 })();
 
-/* ── 10b. Gestion de la modal de création ──────────────────
-   openModal()  : affiche la modal
-   closeModal() : cache la modal + réinitialise les erreurs   */
+
 function openModal() {
     document.getElementById('modalOverlay').classList.add('open');
 }
@@ -757,14 +692,11 @@ function closeModal() {
     document.querySelectorAll('.err-msg.show').forEach(el => el.classList.remove('show'));
 }
 
-/* ── 10c. Validation du formulaire CREATE ───────────────────
-   Vérifie chaque champ avant soumission au Controller.
-   Affiche un message d'erreur sous le champ invalide.
-   Si tout est valide → soumet le formulaire POST.            */
+
 function validateAndSubmit() {
     let valid = true;
 
-    /* Fonction utilitaire : marque un champ en erreur */
+
     function setError(inputId, errId, show) {
         const input = document.getElementById(inputId);
         const err   = document.getElementById(errId);
@@ -779,19 +711,15 @@ function validateAndSubmit() {
         }
     }
 
-    /* Validation : Nom (obligatoire, ≥ 2 caractères) */
     const nom = document.getElementById('f_nom').value.trim();
     setError('f_nom', 'e_nom', nom.length < 2);
 
-    /* Validation : Type (obligatoire, doit être sélectionné) */
     const type = document.getElementById('f_type').value;
     setError('f_type', 'e_type', type === '');
 
-    /* Validation : Catégorie (obligatoire) */
     const cat = document.getElementById('f_cat').value;
     setError('f_cat', 'e_cat', cat === '');
 
-    /* Validation : Champs numériques obligatoires ≥ 0 */
     const numChecks = [
         { id:'f_calories',  errId:'e_calories',  min:0,    max:9999, req:true  },
         { id:'f_proteines', errId:'e_proteines', min:0,    max:100,  req:true  },
@@ -807,12 +735,11 @@ function validateAndSubmit() {
     numChecks.forEach(({ id, errId, min, max, req }) => {
         const el  = document.getElementById(id);
         const val = parseFloat(el.value);
-        /* Invalide si : champ requis vide, valeur hors bornes, ou pas un nombre */
+
         const invalid = isNaN(val) || val < min || val > max;
         setError(id, errId, req ? invalid : (!isNaN(val) && invalid));
     });
 
-    /* Si tout est valide → soumet le formulaire */
     if (valid) {
         document.getElementById('createForm').submit();
     } else {
@@ -823,26 +750,16 @@ function validateAndSubmit() {
 }
 
 
-/* ══════════════════════════════════════════════════════════
-   ── FONCTIONNALITÉS HORS CRUD (filtre + recherche) ──────
-   Ces fonctions ne touchent pas la BDD.
-   Elles filtrent uniquement l'affichage côté navigateur.
-   ══════════════════════════════════════════════════════════ */
+/* FONCTIONNALITÉS HORS CRUD (filtre + recherche) */
 
-/* ── 10d. Filtre par type d'aliment ────────────────────────
-   Clique sur un bouton de filtre → active ce bouton
-   → appelle applyFilters() pour masquer les lignes         */
+
 function setFilter(btn) {
     document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
     btn.classList.add('on');
     applyFilters();
 }
 
-/* ── 10e. Application combinée filtre + recherche ──────────
-   Parcourt toutes les lignes du tableau.
-   Une ligne est visible si :
-   - son data-type correspond au filtre actif (ou "tous")
-   - son data-nom contient la chaîne de recherche           */
+
 function applyFilters() {
     const type  = document.querySelector('.fb.on')?.dataset.type || 'tous';
     const query = document.getElementById('sq').value.toLowerCase().trim();
@@ -857,9 +774,8 @@ function applyFilters() {
         if (show) visible++;
     });
 
-    /* Affiche/cache le message "aucun résultat" */
+
     document.getElementById('noResult').style.display = visible === 0 ? 'block' : 'none';
-    /* Met à jour le compteur en pied de tableau */
     const rc = document.getElementById('rowCount');
     if (rc) rc.textContent = visible + ' aliment(s)';
 }
@@ -867,3 +783,5 @@ function applyFilters() {
 </script>
 </body>
 </html>
+
+

@@ -1,28 +1,12 @@
 <?php
-/* ============================================================
-   view/FrontOffice/alimentlist.php
-   RÔLE : Vue Front Office — Consultation publique des aliments
-   L'utilisateur peut CONSULTER uniquement (pas de CRUD).
-   La liste sert de base pour composer un repas plus tard.
-   ARCHITECTURE MVC :
-     - Model      : model/aliment.php (requêtes BDD)
-     - View       : ce fichier        (affichage HTML)
-     - Controller : alimentcontroller.php (non utilisé ici,
-                    car pas d'action CUD côté front)
-   ============================================================ */
 
-/* ----------------------------------------------------------
-   SECTION 1 — CHARGEMENT DES DÉPENDANCES
-   ---------------------------------------------------------- */
+
+
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../model/aliment.php';
 require_once __DIR__ . '/../../helpers/aliment_helpers.php';
 
-/* ----------------------------------------------------------
-   SECTION 2 — RÉCUPÉRATION DES DONNÉES (appel au Model)
-   Lecture seule : on récupère tous les aliments pour les
-   afficher à l'utilisateur final.
-   ---------------------------------------------------------- */
+
 $alimentModel = new Aliment();
 $aliments     = $alimentModel->getAll();
 ?>
@@ -37,24 +21,23 @@ $aliments     = $alimentModel->getAll();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
-        /* ── Polices : Cormorant Garamond (titres) + Lato (textes) */
+        
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@400;500;700&display=swap');
 
-        /* ── Palette GaiaLumen ──────────────────────────────── */
+        
         :root { --vert:#1a372f; --sable:#f4ede4; --violet:#a78bfa; --bleu:#60a5fa; }
 
         * { font-family:'Lato',sans-serif; box-sizing:border-box; margin:0; padding:0; }
         .hf { font-family:'Cormorant Garamond',serif; }
         body { background:var(--sable); color:var(--vert); display:flex; min-height:100vh; }
 
-        /* ── Curseur personnalisé ──────────────────────────── */
+        /*  Curseur personnalisé */
         #cur  { position:fixed;top:0;left:0;z-index:9999;pointer-events:none;width:14px;height:14px;border-radius:50%;background:var(--violet);box-shadow:0 0 12px var(--violet),0 0 24px var(--bleu);transform:translate(-50%,-50%);transition:width .2s,height .2s;mix-blend-mode:screen; }
         #cur.h{ width:28px;height:28px;background:var(--bleu); }
         #curt { position:fixed;top:0;left:0;z-index:9998;pointer-events:none;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(167,139,250,.4);transform:translate(-50%,-50%); }
 
-        /* ══════════════════════════════════════════════════
-           SIDEBAR — MENU VERTICAL GAUCHE (Front Office)
-           ══════════════════════════════════════════════════ */
+        
+        
         .sidebar {
             width: 220px;
             min-height: 100vh;
@@ -80,10 +63,10 @@ $aliments     = $alimentModel->getAll();
         .nav-item i { width:16px;text-align:center;font-size:13px; }
         .sidebar-footer { margin-top:auto;padding:14px 18px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.3); }
 
-        /* ── Zone de contenu (à droite de la sidebar) ──── */
+
         .main-content { margin-left:220px; flex:1; display:flex; flex-direction:column; min-width:0; }
 
-        /* ── Hero avec photo de fond ─────────────────────── */
+        
         .hero {
             background-image:
                 linear-gradient(rgba(26,55,47,.68), rgba(26,55,47,.68)),
@@ -93,41 +76,40 @@ $aliments     = $alimentModel->getAll();
             padding: 52px 28px 40px;
         }
 
-        /* ── Filtres ─────────────────────────────────────── */
+        
         .fb { padding:7px 16px;border-radius:99px;border:1.5px solid #d0c8be;background:white;font-size:12px;color:var(--vert);cursor:pointer;transition:all .18s;font-family:'Lato',sans-serif;font-weight:500; }
         .fb.on,.fb:hover { background:var(--vert);color:white;border-color:var(--vert); }
 
-        /* ── Cartes aliments ─────────────────────────────── */
+        /* ─ Cartes aliments  */
         .card { background:white;border-radius:20px;border:1px solid #ede8e0;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer;text-decoration:none;display:block;color:inherit; }
         .card:hover { transform:translateY(-5px);box-shadow:0 16px 40px rgba(26,55,47,.13); }
 
-        /* ── Badges ──────────────────────────────────────── */
         .badge  { display:inline-block;font-size:10px;padding:2px 9px;border-radius:99px;font-weight:600;white-space:nowrap; }
         .cbadge { font-size:10px;padding:1px 7px;border-radius:4px;background:#f4ede4;color:#5a5850; }
 
-        /* ── Barres de macronutriments ───────────────────── */
+        
         .mbar { height:5px;border-radius:3px;background:#ede8e0;overflow:hidden;margin:3px 0 7px; }
         .mfil { height:100%;border-radius:3px; }
 
-        /* ── Recherche ───────────────────────────────────── */
+        /*  Recherche  */
         .si { padding:10px 16px 10px 40px;border-radius:99px;border:1.5px solid #d0c8be;font-size:13px;width:220px;outline:none;font-family:'Lato',sans-serif;background:white; }
         .si:focus { border-color:var(--violet); }
         .sw { position:relative;display:inline-block; }
         .sw i { position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:12px; }
 
-        /* ── Stat pills dans le hero ─────────────────────── */
+        /* Stat*/
         .sp { background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:5px 14px;font-size:12px;color:white;display:inline-flex;align-items:center;gap:4px; }
         .sp b { font-weight:700; }
 
-        /* ── Toggle vue grille/liste ─────────────────────── */
+        /* Toggle vue grille/liste  */
         .vbtn { padding:8px 14px;border-radius:10px;border:1.5px solid #d0c8be;background:white;cursor:pointer;font-size:12px;color:#6b7280;transition:all .15s; }
         .vbtn.on { background:var(--vert);color:white;border-color:var(--vert); }
 
-        /* ── Grille de cartes ────────────────────────────── */
+        /*Grille de cartes */
         .gview { display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px; }
         .gview.hide { display:none; }
 
-        /* ── Vue liste ───────────────────────────────────── */
+        /* Vue liste*/
         .lview { display:none; }
         .lview.show { display:block; }
         .lhead { display:grid;grid-template-columns:48px 1.8fr .8fr .8fr .8fr .8fr .8fr 1.4fr;gap:0;padding:11px 16px;background:var(--vert);color:white;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:16px 16px 0 0; }
@@ -141,10 +123,8 @@ $aliments     = $alimentModel->getAll();
 <div id="cur"></div>
 <div id="curt"></div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SECTION 3 — SIDEBAR (menu vertical gauche)
-     Navigation Front Office pour l'utilisateur
-     ══════════════════════════════════════════════════════════ -->
+
+
 <aside class="sidebar">
     <!-- Logo -->
     <a href="../../index.html" class="sidebar-logo">
@@ -170,14 +150,10 @@ $aliments     = $alimentModel->getAll();
     <div class="sidebar-footer">GaiaLumen © <?= date('Y') ?></div>
 </aside>
 
-<!-- ══════════════════════════════════════════════════════════
-     SECTION 4 — CONTENU PRINCIPAL
-     ══════════════════════════════════════════════════════════ -->
+
 <div class="main-content">
 
-    <!-- ── Hero avec photo de fond ─────────────────────────
-         Photo : assets/images/1000051721.jpg
-         Overlay vert foncé pour lisibilité du texte         -->
+
     <section class="hero">
         <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);padding:4px 14px;border-radius:99px;font-size:11px;color:rgba(255,255,255,.85);margin-bottom:14px;">
             <i class="fas fa-leaf" style="color:var(--violet);"></i> BIBLIOTHÈQUE NUTRITIONNELLE
@@ -187,7 +163,7 @@ $aliments     = $alimentModel->getAll();
             Explorez notre sélection d'aliments sains, locaux et durables pour composer vos repas avec conscience.
         </p>
 
-        <!-- Statistiques issues de la BDD -->
+        <!-- Statistiques -->
         <?php
         $nb     = count($aliments);
         $nbt    = count(array_unique(array_column($aliments,'type')));
@@ -199,16 +175,11 @@ $aliments     = $alimentModel->getAll();
             <span class="sp"><b><?= $nb_bio ?></b> labellisés</span>
         </div>
 
-        <!-- ══════════════════════════════════════════════════
-             SECTION 5 — FONCTIONNALITÉS HORS CRUD
-             Filtre par type + Recherche + Toggle vue
-             Ces outils ne modifient pas la BDD.
-             Ils filtrent uniquement l'affichage (JavaScript).
-             ══════════════════════════════════════════════════ -->
+        <!-- FONCTIONNALITÉS HORS CRUD -->
         <div style="background:rgba(255,255,255,.08);border-radius:16px;padding:16px 20px;border:1px solid rgba(255,255,255,.12);">
             <p style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">Filtrer et rechercher</p>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;" id="fbar">
-                <!-- Boutons de filtre par type d'aliment -->
+               
                 <button class="fb on" data-type="tous"               onclick="setFilter(this)">Tous</button>
                 <button class="fb"    data-type="légume"             onclick="setFilter(this)">🌿 Légumes</button>
                 <button class="fb"    data-type="fruit"              onclick="setFilter(this)">🍊 Fruits</button>
@@ -235,14 +206,12 @@ $aliments     = $alimentModel->getAll();
         </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════
-         SECTION 6 — READ (affichage des aliments)
-         Vue grille + vue liste — lecture seule
-         Chaque carte est un lien vers la page détail
-         ══════════════════════════════════════════════════════ -->
+
+
+
     <div style="padding:20px 28px 40px;">
 
-        <!-- ── VUE GRILLE ─────────────────────────────────── -->
+        <!-- VUE GRILLE  -->
         <div id="vg" class="gview">
         <?php foreach ($aliments as $a):
             $c  = typeConfig($a['type']);
@@ -250,8 +219,8 @@ $aliments     = $alimentModel->getAll();
             $co = co2Config((float)$a['co2']);
             $ns = nutriScore($a);
         ?>
-        <!-- Carte cliquable → alimentdetail.php?id=X -->
-        <a href="alimentdetail.php?id=<?= $a['id_aliment'] ?>" class="card"
+        
+        <a href="fo_alimentdetail.php?id=<?= $a['id_aliment'] ?>" class="card"
            data-type="<?= htmlspecialchars($a['type']) ?>"
            data-nom="<?= strtolower(htmlspecialchars($a['nom'])) ?>">
 
@@ -269,10 +238,10 @@ $aliments     = $alimentModel->getAll();
                 <div style="width:30px;height:30px;border-radius:7px;background:<?= $ns['bg'] ?>;color:<?= $ns['color'] ?>;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;" title="Nutri-Score <?= $ns['grade'] ?>"><?= $ns['grade'] ?></div>
             </div>
 
-            <!-- Corps carte : barres de macronutriments -->
+            <!-- Corps carte -->
             <div style="padding:0 18px 14px;">
                 <?php
-                /* Affichage des 4 macros principaux avec barres visuelles */
+                
                 $mc = [
                     ['Protéines', $a['proteines'], 50,  '#60a5fa', 'g'],
                     ['Glucides',  $a['glucides'],  100, '#c9a44a', 'g'],
@@ -291,14 +260,14 @@ $aliments     = $alimentModel->getAll();
                 </div>
                 <?php endforeach; ?>
 
-                <!-- Sucre et sodium en compact -->
+
                 <div style="display:flex;gap:12px;margin-top:3px;">
                     <span style="font-size:10px;color:#6b7280;">Sucre: <b style="color:var(--vert);"><?= number_format($a['sucre'],1) ?>g</b></span>
                     <span style="font-size:10px;color:#6b7280;">Sodium: <b style="color:var(--vert);"><?= number_format($a['sodium'],1) ?>mg</b></span>
                 </div>
             </div>
 
-            <!-- Pied carte : calories, prix, CO₂, origine -->
+            
             <div style="padding:12px 18px;border-top:1px solid #f4ede4;display:flex;justify-content:space-between;align-items:center;">
                 <div>
                     <p style="font-size:18px;font-weight:700;color:var(--vert);font-family:'Cormorant Garamond',serif;margin:0;"><?= number_format($a['calories'],0) ?> <span style="font-size:10px;font-weight:400;color:#9ca3af;font-family:'Lato',sans-serif;">kcal/100g</span></p>
@@ -323,7 +292,7 @@ $aliments     = $alimentModel->getAll();
         </div>
         </div>
 
-        <!-- ── VUE LISTE ───────────────────────────────────── -->
+        <!--  VUE LISTE  -->
         <div id="vl" class="lview">
             <!-- En-tête de la vue liste -->
             <div class="lhead">
@@ -345,7 +314,7 @@ $aliments     = $alimentModel->getAll();
                 $ns = nutriScore($a);
             ?>
             <!-- Ligne cliquable vers le détail -->
-            <a href="alimentdetail.php?id=<?= $a['id_aliment'] ?>" class="lrow"
+            <a href="fo_alimentdetail.php?id=<?= $a['id_aliment'] ?>" class="lrow"
                data-type="<?= htmlspecialchars($a['type']) ?>"
                data-nom="<?= strtolower(htmlspecialchars($a['nom'])) ?>">
                 <div style="display:flex;align-items:center;justify-content:center;"><?= $sv ?></div>
@@ -389,16 +358,12 @@ $aliments     = $alimentModel->getAll();
         </div>
 
     </div>
-</div><!-- fin .main-content -->
+</div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SECTION 7 — JAVASCRIPT (hors CRUD)
-     Curseur, toggle vue, filtre par type, recherche par nom
-     Aucune de ces fonctions ne modifie la BDD.
-     ══════════════════════════════════════════════════════════ -->
+
 <script>
 
-/* ── Curseur personnalisé ─────────────────────────────────── */
+/* Curseur personnalisé  */
 (function(){
     const c=document.getElementById('cur'), t=document.getElementById('curt');
     let mx=0,my=0,tx=0,ty=0;
@@ -410,12 +375,7 @@ $aliments     = $alimentModel->getAll();
     });
 })();
 
-/* ── FONCTIONNALITÉS HORS CRUD ─────────────────────────────
-
-   setView() : bascule entre la vue grille et la vue liste
-   setFilter() : active un bouton de filtre par type
-   applyFilters() : masque/affiche les cartes/lignes selon
-                    le type sélectionné ET le texte recherché */
+/*  FONCTIONNALITÉS HORS CRUD */
 
 let cv = 'grid'; /* vue courante */
 
@@ -436,7 +396,7 @@ function setFilter(btn) {
     applyFilters();
 }
 
-/* Applique simultanément le filtre type + la recherche texte */
+
 function applyFilters() {
     const type  = document.querySelector('.fb.on')?.dataset.type || 'tous';
     const query = document.getElementById('sq').value.toLowerCase().trim();

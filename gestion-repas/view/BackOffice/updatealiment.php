@@ -1,5 +1,5 @@
 <?php
-// view/BackOffice/updatealiment.php
+
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../model/aliment.php';
 

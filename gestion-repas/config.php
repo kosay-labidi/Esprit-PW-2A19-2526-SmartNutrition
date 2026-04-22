@@ -1,5 +1,5 @@
 <?php
-// config.php
+
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'ds_gaialumen');     // ← ton nom de base
 define('DB_USER', 'root');

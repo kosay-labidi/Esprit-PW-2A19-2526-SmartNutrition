@@ -1,15 +1,7 @@
 <?php
-// helpers/aliment_helpers.php
-// Fonctions utilitaires partagées entre les vues Back et Front office
-// Ne contient aucune logique BDD (appartient au Model) ni redirection (Controller)
 
-// ── Palette officielle GaiaLumen ─────────────────────────────────
-// Vert Profond   : #1a372f
-// Sable Sacré    : #f4ede4
-// Violet Mystique: #a78bfa
-// Bleu Céleste   : #60a5fa
 
-// ── Couleur par type d'aliment ────────────────────────────────────
+//  Couleur par type d'aliment 
 function typeConfig(string $type): array {
     $map = [
         'légume'             => ['bg'=>'#e8f0e9','stroke'=>'#1a372f','fill'=>'#1a372f','tag_bg'=>'#d4e4d5','tag_color'=>'#1a372f'],
@@ -25,7 +17,7 @@ function typeConfig(string $type): array {
     return $map[$type] ?? $map['autre'];
 }
 
-// ── SVG par nom (fallback par type) ──────────────────────────────
+// SVG par nom
 function alimentSVG(string $nom, string $type, array $c, int $size = 44): string {
     $bg = $c['bg']; $s = $c['stroke']; $f = $c['fill'];
     $n  = strtolower(trim($nom));
@@ -123,7 +115,7 @@ function alimentSVG(string $nom, string $type, array $c, int $size = 44): string
     </svg>";
 }
 
-// ── Couleur barre CO₂ ─────────────────────────────────────────────
+// Couleur barre CO₂ 
 function co2Config(float $co2): array {
     $pct = min(100, ($co2 / 10) * 100);
     if ($co2 < 1)  return ['pct'=>$pct,'color'=>'#1a372f','bg'=>'#e8f0e9','label'=>'Faible',  'desc'=>'Excellent choix pour la planète'];
@@ -131,7 +123,7 @@ function co2Config(float $co2): array {
     return             ['pct'=>$pct,'color'=>'#8a2020','bg'=>'#faeaea','label'=>'Élevé',    'desc'=>'Impact important sur l\'environnement'];
 }
 
-// ── Nutri-Score simplifié ─────────────────────────────────────────
+//  Nutri-Score simplifié 
 function nutriScore(array $a): array {
     $score = 0;
     if ($a['calories']  < 100) $score += 2; elseif ($a['calories']  < 200) $score += 1; else $score -= 1;
@@ -147,7 +139,7 @@ function nutriScore(array $a): array {
     return                 ['grade'=>'E','color'=>'#fff','bg'=>'#8a2020'];
 }
 
-// ── Répartition macros en % calorique ────────────────────────────
+// Répartition macros en % calorique 
 function macroPercents(array $a): array {
     $total = ($a['proteines'] * 4) + ($a['glucides'] * 4) + ($a['lipides'] * 9);
     if ($total <= 0) return ['prot'=>0,'gluc'=>0,'lip'=>0];

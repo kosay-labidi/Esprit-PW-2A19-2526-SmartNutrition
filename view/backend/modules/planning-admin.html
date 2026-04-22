@@ -1,78 +1,124 @@
-<!-- planning-admin.html - Module Backend -->
+<!-- planning-admin.html — Vue SPA liste ↔ détail -->
 <section class="content-section" id="planning">
-  <div class="section-header">
-    <h2>📅 Gestion du Planning</h2>
-    <p>Gérez les demandes de planning nutritionnel des utilisateurs</p>
-  </div>
 
-  <div class="section">
+  <!-- ══ VUE LISTE ══════════════════════════════════════════════════════ -->
+  <div id="planningVueListe">
     <div class="section-header">
-      <h2 class="section-title">Demandes de Planning</h2>
-      <div class="section-actions">
-        <button class="btn btn-secondary" onclick="loadPlanningData()">🔄 Actualiser</button>
-      </div>
+      <h2>📅 Gestion du Planning</h2>
+      <p>Gérez les demandes · approuvez · générez les plannings</p>
     </div>
-
-    <div class="quick-stats">
-      <div class="quick-stat">
-        <div class="quick-stat-value" id="stat-total">—</div>
-        <div class="quick-stat-label">Total demandes</div>
+    <div class="section">
+      <div class="quick-stats">
+        <div class="quick-stat"><div class="quick-stat-value" id="stat-total">—</div><div class="quick-stat-label">Total demandes</div></div>
+        <div class="quick-stat"><div class="quick-stat-value" id="stat-quotidien">—</div><div class="quick-stat-label">Budget quotidien</div></div>
+        <div class="quick-stat"><div class="quick-stat-value" id="stat-hebdo">—</div><div class="quick-stat-label">Budget hebdomadaire</div></div>
+        <div class="quick-stat"><div class="quick-stat-value" id="stat-jours">—</div><div class="quick-stat-label">Durée totale (jours)</div></div>
       </div>
-      <div class="quick-stat">
-        <div class="quick-stat-value" id="stat-quotidien">—</div>
-        <div class="quick-stat-label">Budget quotidien</div>
-      </div>
-      <div class="quick-stat">
-        <div class="quick-stat-value" id="stat-hebdo">—</div>
-        <div class="quick-stat-label">Budget hebdomadaire</div>
-      </div>
-      <div class="quick-stat">
-        <div class="quick-stat-value" id="stat-jours">—</div>
-        <div class="quick-stat-label">Durée en jours</div>
-      </div>
-    </div>
-
-    <!-- Zone de détail (cachée par défaut) -->
-    <div id="detailPanel" style="display:none; margin-bottom:24px;">
-      <div class="table-panel">
-        <div class="form-panel-header">
-          <h3>👁️ Détail Demande #<span id="detail-id">—</span></h3>
-          <button class="btn-reset" onclick="hideDetailPanel()">✕ Fermer</button>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0">
+        <div class="search-bar" style="flex:1;min-width:200px">
+          <input type="text" class="search-input" id="planningSearchInput" placeholder="🔍 Rechercher..." oninput="filterPlanningTable()"/>
         </div>
-        <div class="table-container-admin" style="margin-top:16px;">
-          <table class="data-table">
-            <tbody id="detailTableBody">
-              <tr><td colspan="2" style="text-align:center;padding:20px;">Chargement...</td></tr>
-            </tbody>
-          </table>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="planning-chip active" onclick="setPlanningFilter('all',this)">Tous</button>
+          <button class="planning-chip" onclick="setPlanningFilter('en_attente',this)">⏳ En attente</button>
+          <button class="planning-chip" onclick="setPlanningFilter('approuve',this)">✅ Approuvés</button>
+          <button class="planning-chip" onclick="setPlanningFilter('rejete',this)">❌ Rejetés</button>
         </div>
+        <button onclick="loadPlanningData()" style="padding:8px 16px;border:1.5px solid rgba(91,62,150,.3);border-radius:8px;background:transparent;color:var(--text);cursor:pointer;font-size:.85rem">🔄 Actualiser</button>
       </div>
-    </div>
-
-    <div class="search-bar">
-      <input type="text" class="search-input" id="planningSearchInput"
-             placeholder="🔍 Rechercher..." oninput="filterPlanningTable()"/>
-    </div>
-
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>#ID</th>
-            <th>Utilisateur</th>
-            <th>Calories</th>
-            <th>Budget</th>
-            <th>Durée</th>
-            <th>Date demande</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="planningTableBody">
-          <tr>
-            <td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">⏳ Chargement...</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-container" style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr><th>#ID</th><th>Utilisateur</th><th>Calories</th><th>Budget</th><th>Durée</th><th>Statut</th><th>Planning</th><th>Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="planningTableBody">
+            <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">⏳ Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
+
+  <!-- ══ VUE DÉTAIL ════════════════════════════════════════════════════ -->
+  <div id="planningVueDetail" style="display:none">
+    <div class="detail-topbar">
+      <button class="btn-retour" onclick="planningRetourListe()">← Retour à la liste</button>
+      <div class="detail-breadcrumb">
+        <span style="color:var(--muted)">Planning</span>
+        <span style="color:var(--muted);margin:0 6px">›</span>
+        <span id="detailBreadcrumb">Demande #—</span>
+      </div>
+      <div id="detailTopActions" style="display:flex;gap:10px;margin-left:auto;flex-wrap:wrap"></div>
+    </div>
+    <div id="detailContenu">
+      <div class="detail-loading"><div class="detail-spinner"></div><p>Chargement...</p></div>
+    </div>
+  </div>
+
+  <style>
+    .badge-statut{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:700;white-space:nowrap}
+    .badge-en_attente{background:rgba(243,156,18,.15);border:1px solid rgba(243,156,18,.3);color:#f39c12}
+    .badge-approuve{background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.3);color:#2ecc71}
+    .badge-rejete{background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.3);color:#e74c3c}
+    .planning-chip{padding:7px 14px;border:1.5px solid rgba(91,62,150,.2);border-radius:20px;background:transparent;color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s}
+    .planning-chip.active,.planning-chip:hover{border-color:var(--violet,#5B3E96);background:rgba(91,62,150,.12);color:var(--text)}
+    .btn-statut-sm{padding:4px 9px;border:none;border-radius:7px;font-size:.76rem;font-weight:700;cursor:pointer;transition:all .2s}
+    .btn-approuver{background:rgba(46,204,113,.2);color:#2ecc71;border:1px solid rgba(46,204,113,.3)!important}
+    .btn-approuver:hover{background:rgba(46,204,113,.4)}
+    .btn-rejeter{background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3)!important}
+    .btn-rejeter:hover{background:rgba(231,76,60,.3)}
+    .btn-regen{background:rgba(52,152,219,.15);color:#3498db;border:1px solid rgba(52,152,219,.3)!important}
+    .btn-regen:hover{background:rgba(52,152,219,.3)}
+    .btn-remettre{background:rgba(243,156,18,.15);color:#f39c12;border:1px solid rgba(243,156,18,.3)!important}
+    .btn-remettre:hover{background:rgba(243,156,18,.3)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .detail-topbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 0 20px;border-bottom:1px solid rgba(91,62,150,.2);margin-bottom:24px}
+    .btn-retour{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:10px;border:1.5px solid rgba(91,62,150,.35);background:rgba(91,62,150,.1);color:var(--text);font-size:.87rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+    .btn-retour:hover{background:rgba(91,62,150,.25);border-color:rgba(91,62,150,.6)}
+    .detail-breadcrumb{font-size:.83rem;color:var(--text)}
+
+    .detail-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:16px;color:var(--muted)}
+    .detail-spinner{width:42px;height:42px;border:3px solid rgba(91,62,150,.2);border-top-color:#5B3E96;border-radius:50%;animation:spin .8s linear infinite}
+
+    .detail-bloc{background:rgba(91,62,150,.06);border:1px solid rgba(91,62,150,.15);border-radius:14px;overflow:hidden;margin-bottom:16px}
+    .detail-bloc-hd{padding:12px 20px;background:rgba(91,62,150,.12);border-bottom:1px solid rgba(91,62,150,.15);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--violet,#a78bfa)}
+    .detail-bloc-bd{padding:18px 20px}
+    .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .info-item{display:flex;flex-direction:column;gap:4px}
+    .info-lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .info-val{font-size:.92rem;font-weight:600;color:var(--text)}
+
+    .detail-pills{display:flex;gap:12px;flex-wrap:wrap;padding:16px 20px}
+    .detail-pill{display:flex;align-items:center;gap:8px;background:rgba(91,62,150,.12);border:1px solid rgba(91,62,150,.25);border-radius:20px;padding:8px 16px;font-size:.83rem}
+    .detail-pill strong{color:var(--violet,#a78bfa);font-size:1rem}
+    .detail-pill span{color:var(--muted)}
+
+    .planning-table-scroll{overflow-x:auto}
+    .planning-cal{width:100%;border-collapse:collapse;font-size:.82rem}
+    .planning-cal th{padding:11px 14px;text-align:center;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid rgba(91,62,150,.25);white-space:nowrap;background:rgba(91,62,150,.08)}
+    .planning-cal .th-act{color:var(--violet,#a78bfa);width:110px}
+    .planning-cal .th-jour{color:var(--muted);min-width:140px}
+    .planning-cal td{padding:12px 14px;vertical-align:top;border-bottom:1px solid rgba(91,62,150,.07);line-height:1.6;word-break:break-word}
+    .planning-cal tr:last-child td{border-bottom:none}
+    .td-act{font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;text-align:center;vertical-align:middle;white-space:nowrap;width:110px}
+    .cal-repas .td-act{color:#2ecc71;background:rgba(46,204,113,.07);border-left:3px solid #2ecc71}
+    .cal-sport .td-act{color:#f39c12;background:rgba(241,196,15,.07);border-left:3px solid #f39c12}
+    .cal-sommeil .td-act{color:#3498db;background:rgba(52,152,219,.07);border-left:3px solid #3498db}
+    .cal-repas td{background:rgba(46,204,113,.02)}
+    .cal-sport td{background:rgba(241,196,15,.02);border-top:2px solid rgba(241,196,15,.1)}
+    .cal-sommeil td{background:rgba(52,152,219,.02);border-top:2px solid rgba(52,152,219,.1)}
+    .cal-repas-first td{border-top:2px solid rgba(46,204,113,.1)}
+
+    .btn-detail{padding:10px 22px;border-radius:10px;font-size:.86rem;font-weight:700;cursor:pointer;transition:all .2s;border:1.5px solid transparent}
+    .btn-detail-ok  {background:rgba(46,204,113,.15);color:#2ecc71;border-color:rgba(46,204,113,.35)}
+    .btn-detail-ok:hover{background:rgba(46,204,113,.35)}
+    .btn-detail-err {background:rgba(231,76,60,.12);color:#e74c3c;border-color:rgba(231,76,60,.35)}
+    .btn-detail-err:hover{background:rgba(231,76,60,.3)}
+    .btn-detail-blue{background:rgba(52,152,219,.12);color:#3498db;border-color:rgba(52,152,219,.35)}
+    .btn-detail-blue:hover{background:rgba(52,152,219,.3)}
+    .btn-detail-warn{background:rgba(243,156,18,.12);color:#f39c12;border-color:rgba(243,156,18,.35)}
+    .btn-detail-warn:hover{background:rgba(243,156,18,.3)}
+  </style>
+
 </section>

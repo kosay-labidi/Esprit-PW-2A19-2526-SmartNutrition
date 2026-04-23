@@ -8,6 +8,7 @@ console.log('🏆 Admin Challenges (Mode Ajout/Affichage) chargé');
 let adminChallenges = [];
 let adminParticipants = [];
 let filteredParticipants = [];
+let selectedChallengeParticipants = [];
 let participantsPage = 1;
 const PARTICIPANTS_PER_PAGE = 8;
 
@@ -672,6 +673,7 @@ function renderChallengesTable() {
         <td>${getDaysLeft(c.date_fin)}</td>
         <td>
           <div class="table-actions">
+            <button class="btn-icon" onclick="showChallengeParticipants(${c.id})" title="Voir les participants">👥</button>
             <button class="btn-icon edit" onclick="editChallenge(${c.id})" title="Modifier">✏️</button>
             <button class="btn-icon delete" onclick="deleteChallenge(${c.id})" title="Supprimer">🗑️</button>
           </div>
@@ -697,6 +699,135 @@ function filterChallengesAdmin() {
 
 function refreshTableAdmin() {
   loadAdminChallenges();
+}
+
+function showChallengeParticipants(challengeId) {
+  const panel = document.getElementById('challenge-participants-panel');
+  const tbody = document.getElementById('challenge-participants-tbody');
+  const titleEl = document.getElementById('challenge-participants-title');
+  const countEl = document.getElementById('challenge-participants-count');
+  const challenge = adminChallenges.find(c => String(c.id) === String(challengeId));
+  const challengeTitle = challenge?.titre || `Défi #${challengeId}`;
+
+  if (titleEl) titleEl.textContent = challengeTitle;
+  if (countEl) countEl.textContent = '…';
+  if (panel) panel.style.display = '';
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="7" class="adm-table-loading"><div class="adm-table-empty-icon">⏳</div>Chargement des participants…</td></tr>`;
+  }
+
+  fetch(`challenges/showParticipant.php?ajax=1&id_challenge=${encodeURIComponent(challengeId)}&t=${Date.now()}`, {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+    .then(response => {
+      const contentType = response.headers.get("content-type");
+      if (!response.ok) throw new Error('Erreur HTTP: ' + response.status);
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error('Réponse serveur invalide (pas du JSON)');
+      }
+      return response.json();
+    })
+    .then(result => {
+      selectedChallengeParticipants = (result && Array.isArray(result.participants)) ? result.participants : [];
+      if (countEl) countEl.textContent = String(selectedChallengeParticipants.length);
+      renderSelectedChallengeParticipants();
+    })
+    .catch(err => {
+      console.error('❌ Erreur chargement participants du défi:', err);
+      if (countEl) countEl.textContent = '0';
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#f44336;">
+          <div style="font-size:2rem;margin-bottom:10px;">⚠️</div>
+          <div>Erreur de chargement: ${escapeHtml(err.message)}</div>
+        </td></tr>`;
+      }
+    })
+    .finally(() => {
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+}
+
+function renderSelectedChallengeParticipants() {
+  const tbody = document.getElementById('challenge-participants-tbody');
+  if (!tbody) return;
+
+  if (!selectedChallengeParticipants.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">
+          <div style="font-size:3rem;margin-bottom:12px;">👤</div>
+          <div>Aucun participant pour ce défi</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = selectedChallengeParticipants.map(p => {
+    const nom = String(p.nom || '');
+    const email = String(p.email || '');
+    const prog = clampInt(p.objectif, 0, 100);
+    const challengeTarget = clampInt(p.challenge_target, 0, 100);
+    const joinedDate = formatParticipantDate(p.date_inscription);
+    const engBadge = p.engagement == 1
+      ? `<span class="adm-engage-badge adm-engage-badge--on">🔥 Engagé</span>`
+      : `<span class="adm-engage-badge adm-engage-badge--off">😴 Inactif</span>`;
+
+    return `
+      <tr class="participant-row-admin">
+        <td>
+          <div class="adm-participant-cell">
+            <div class="adm-avatar" style="background:${getAvatarColor(nom)}">
+              ${getInitials(nom)}
+            </div>
+            <div class="adm-participant-info">
+              <span class="adm-participant-name">${escapeHtml(nom)}</span>
+              <span class="adm-participant-email">${escapeHtml(email)}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="challenge-tag">
+            <span class="tag-icon">${p.challenge_icon || '🏆'}</span>
+            <span class="tag-text">${escapeHtml(p.challenge_titre || 'Défi')}</span>
+          </div>
+        </td>
+        <td>
+          <div class="progress-wrapper-large">
+            <div class="progress-header-flex">
+              <span class="progress-value-text">${prog}%</span>
+            </div>
+            <div class="progress-bar-large">
+              <div class="progress-fill-large" style="width: ${prog}%; background: linear-gradient(90deg, #f44336, #FFC107, #4CAF50); background-size: 100px 100%;"></div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="challenge-tag">
+            <span class="tag-icon">🎯</span>
+            <span class="tag-text">${challengeTarget}%</span>
+          </div>
+        </td>
+        <td><span class="participant-email">${escapeHtml(joinedDate)}</span></td>
+        <td>${engBadge}</td>
+        <td>
+          <div class="table-actions">
+            <button class="btn-icon" onclick="viewParticipant(${p.id})" title="Voir">👁️</button>
+            <button class="btn-icon delete" onclick="deleteParticipant(${p.id}, ${p.id_challenge})" title="Supprimer">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function closeChallengeParticipantsPanel() {
+  const panel = document.getElementById('challenge-participants-panel');
+  if (!panel) return;
+  panel.style.display = 'none';
+  selectedChallengeParticipants = [];
 }
 
 function updateDashboardStats() {
@@ -1144,3 +1275,5 @@ function csvEscape(value) {
 
 window.renderParticipantsPage = renderParticipantsPage;
 window.closeAdmModal = closeAdmModal;
+window.showChallengeParticipants = showChallengeParticipants;
+window.closeChallengeParticipantsPanel = closeChallengeParticipantsPanel;

@@ -423,6 +423,54 @@
     </div>
     <!-- /TABLEAU DÉFIS -->
 
+    <!-- ╔═══════════════════════════════════════════════════════╗
+         ║   SECTION 3B : PARTICIPANTS DU DÉFI (AU CLIC)         ║
+         ╚═══════════════════════════════════════════════════════╝ -->
+    <div class="adm-frame adm-frame--section" id="challenge-participants-panel" style="display:none">
+      <div class="adm-corner adm-corner--tl"></div>
+      <div class="adm-corner adm-corner--tr"></div>
+      <div class="adm-corner adm-corner--br"></div>
+      <div class="adm-top-edge adm-top-edge--accent"></div>
+
+      <div class="adm-section-header">
+        <div class="adm-section-header__left">
+          <span class="adm-section-icon">👥</span>
+          <h3 class="adm-section-title">Participants du défi : <span id="challenge-participants-title">—</span></h3>
+          <span class="adm-section-badge" id="challenge-participants-count">0</span>
+        </div>
+        <div class="adm-section-header__actions">
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="closeChallengeParticipantsPanel()">Fermer</button>
+        </div>
+      </div>
+
+      <div class="adm-table-3d-wrap">
+        <div class="adm-table-3d-inner">
+          <table class="participants-table">
+            <thead>
+              <tr>
+                <th>Participant</th>
+                <th>Défi</th>
+                <th>Progression</th>
+                <th>Objectif</th>
+                <th>Date inscription</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="challenge-participants-tbody">
+              <tr>
+                <td colspan="7" class="adm-table-loading">
+                  <div class="adm-table-empty-icon">👆</div>
+                  Cliquez sur l'icône participants d'un défi pour afficher la liste.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- /PARTICIPANTS DU DÉFI -->
+
 
     <!-- ╔═══════════════════════════════════════════════════════╗
          ║   SECTION 4 : PARTICIPANTS — CADRE 3D                 ║

@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>GaiaLumen – Nutrition Écologique & Intelligente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   VARIABLES & RESET
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --green:#1F3D2B;--sand:#F2E8CF;--violet:#5B3E96;--blue:#3A86C4;
+  --bg:#0a1a10;--surface:#0f2318;--text:#F2E8CF;--muted:#a8b8a0;
+  --card-bg:rgba(15,35,24,0.72);--glass:rgba(31,61,43,0.45);
+  --shadow:0 8px 32px rgba(0,0,0,0.4);--radius:18px;
+  --tr:0.4s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"]{
+  --bg:#f5f0e8;--surface:#ede5d0;--text:#1F3D2B;--muted:#5a6e5a;
+  --card-bg:rgba(242,232,207,0.75);--glass:rgba(242,232,207,0.6);
+  --shadow:0 8px 32px rgba(31,61,43,0.15);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Lato',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+  cursor:none;
+  transition:background var(--tr),color var(--tr);
+}
+h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;}
+
+/* ═══════════════════════════════════════════════════════════
+   CURSEUR PERSONNALISÉ
+   ═══════════════════════════════════════════════════════════ */
+#cursor{
+  position:fixed;top:0;left:0;z-index:9999;pointer-events:none;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--violet);
+  box-shadow:0 0 12px var(--violet),0 0 24px var(--blue);
+  transform:translate(-50%,-50%);
+  transition:width .2s,height .2s,background .3s;
+  mix-blend-mode:screen;
+}
+#cursor.hover{width:28px;height:28px;background:var(--blue);}
+#cursor-trail{
+  position:fixed;top:0;left:0;z-index:9998;pointer-events:none;
+  width:36px;height:36px;border-radius:50%;
+  border:1.5px solid rgba(91,62,150,.5);
+  transform:translate(-50%,-50%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRELOADER
+   ═══════════════════════════════════════════════════════════ */
+#preloader{
+  position:fixed;inset:0;z-index:10000;
+  background:#050e08;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .8s,visibility .8s;
+}
+#preloader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+#pl-canvas{width:140px;height:140px;}
+#pl-text{
+  margin-top:20px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.5rem;letter-spacing:.3em;color:var(--sand);
+  animation:pulse 1.5s ease-in-out infinite;
+}
+#pl-bar{
+  margin-top:16px;width:180px;height:2px;
+  background:rgba(242,232,207,.1);border-radius:2px;overflow:hidden;
+}
+#pl-fill{
+  height:100%;background:linear-gradient(90deg,var(--violet),var(--blue));
+  width:0%;transition:width .05s;
+}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ═══════════════════════════════════════════════════════════
+   NAVBAR
+   ═══════════════════════════════════════════════════════════ */
+#navbar{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  height:70px;padding:0 5%;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--glass);
+  backdrop-filter:blur(18px) saturate(1.4);
+  -webkit-backdrop-filter:blur(18px) saturate(1.4);
+  border-bottom:1px solid rgba(91,62,150,.2);
+  transition:box-shadow var(--tr);
+}
+#navbar.scrolled{box-shadow:0 4px 30px rgba(0,0,0,.3);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);}
+.nav-logo svg{width:38px;height:38px;}
+.nav-logo-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.5rem;font-weight:700;letter-spacing:.05em;
+}
+.nav-links{display:flex;gap:28px;list-style:none;}
+.nav-links a{
+  text-decoration:none;color:var(--text);
+  font-size:.88rem;letter-spacing:.08em;
+  position:relative;padding-bottom:4px;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:0;left:0;
+  width:0;height:1.5px;
+  background:linear-gradient(90deg,var(--violet),var(--blue));
+  transition:width .35s ease;
+}
+.nav-links a:hover::after{width:100%;}
+.nav-actions{display:flex;align-items:center;gap:12px;}
+#theme-toggle{
+  background:var(--glass);
+  border:1.5px solid rgba(91,62,150,.5);
+  border-radius:50px;padding:6px 14px;
+  color:var(--text);cursor:none;font-size:.82rem;
+  transition:all .3s;
+  backdrop-filter:blur(10px);
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+#theme-toggle:hover{
+  background:rgba(91,62,150,.2);
+  transform:scale(1.05);
+  border-color:var(--violet);
+}
+.btn-login{
+  background:linear-gradient(135deg,var(--violet),var(--blue));
+  border:none;border-radius:50px;padding:8px 22px;
+  color:#fff;font-size:.88rem;cursor:none;
+  text-decoration:none;display:inline-flex;align-items:center;
+  transition:transform .2s,box-shadow .3s;
+}
+.btn-login:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(91,62,150,.5);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HERO SECTION
+   ═══════════════════════════════════════════════════════════ */
+#hero{
+  position:relative;height:100vh;min-height:600px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;}
+.hero-content{
+  position:relative;z-index:2;text-align:center;
+  padding:0 20px;max-width:800px;
+}
+.hero-badge{
+  display:inline-block;
+  background:rgba(91,62,150,.25);
+  border:1px solid rgba(91,62,150,.5);
+  border-radius:50px;padding:6px 18px;
+  font-size:.78rem;letter-spacing:.15em;
+  color:var(--blue);margin-bottom:20px;
+  backdrop-filter:blur(8px);
+}
+.hero-title{
+  font-size:clamp(2.8rem,7vw,5.5rem);
+  font-weight:700;line-height:1.1;margin-bottom:20px;
+  background:linear-gradient(135deg,var(--sand) 0%,var(--blue) 50%,var(--violet) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-slogan{
+  font-size:clamp(1rem,2.5vw,1.3rem);
+  color:var(--muted);min-height:2em;
+  margin-bottom:36px;letter-spacing:.03em;
+}
+.cursor-blink{
+  display:inline-block;width:2px;height:1.1em;
+  background:var(--violet);margin-left:2px;
+  animation:blink .8s step-end infinite;
+  vertical-align:text-bottom;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+.btn-primary{
+  background:linear-gradient(135deg,var(--violet),var(--blue));
+  border:none;border-radius:50px;padding:14px 36px;
+  color:#fff;font-size:1rem;cursor:none;
+  position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .3s;
+  letter-spacing:.05em;
+}
+.btn-primary:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 30px rgba(91,62,150,.5);
+}
+.btn-secondary{
+  background:transparent;
+  border:1.5px solid rgba(242,232,207,.4);
+  border-radius:50px;padding:14px 36px;
+  color:var(--text);font-size:1rem;cursor:none;
+  transition:all .3s;letter-spacing:.05em;
+  text-decoration:none;display:inline-flex;align-items:center;
+}
+.btn-secondary:hover{
+  border-color:var(--violet);
+  background:rgba(91,62,150,.15);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODULES SECTION
+   ═══════════════════════════════════════════════════════════ */
+#modules{padding:100px 5%;background:var(--surface);}
+.section-label{
+  font-size:.75rem;letter-spacing:.2em;
+  color:var(--violet);text-transform:uppercase;
+  margin-bottom:12px;text-align:center;
+}
+.section-title{
+  font-size:clamp(2rem,4vw,3rem);
+  font-weight:600;margin-bottom:16px;
+  line-height:1.2;text-align:center;
+}
+.section-subtitle{
+  color:var(--muted);font-size:1rem;
+  max-width:560px;line-height:1.7;
+  margin:0 auto 60px;text-align:center;
+}
+.modules-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:28px;max-width:1200px;margin:0 auto;
+}
+.module-card{
+  background:var(--card-bg);
+  backdrop-filter:blur(16px) saturate(1.3);
+  border:1px solid rgba(91,62,150,.2);
+  border-radius:var(--radius);overflow:hidden;
+  cursor:none;position:relative;
+  transform-style:preserve-3d;
+  transition:box-shadow .3s,border-color .3s;
+  will-change:transform;
+}
+.module-card:hover{
+  border-color:rgba(91,62,150,.6);
+  box-shadow:0 0 30px rgba(91,62,150,.3),0 0 60px rgba(91,62,150,.1),var(--shadow);
+}
+.card-canvas-wrap{
+  position:relative;height:180px;overflow:hidden;
+  background:linear-gradient(160deg,#050e08 0%,#0d1f14 60%,#0a0d1a 100%);
+}
+[data-theme="light"] .card-canvas-wrap{
+  background:linear-gradient(160deg,#c8c0a8,#d4cdb8);
+}
+.card-canvas{width:100%!important;height:180px!important;display:block;}
+.card-body{padding:22px 24px;}
+.card-shine{
+  position:absolute;inset:0;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.07) 0%,transparent 60%);
+  pointer-events:none;opacity:0;transition:opacity .3s;
+}
+.module-card:hover .card-shine{opacity:1;}
+.card-title{font-size:1.2rem;font-weight:600;margin-bottom:8px;line-height:1.3;}
+.card-desc{color:var(--muted);font-size:.85rem;line-height:1.65;margin-bottom:14px;}
+.card-link{
+  font-size:.82rem;color:var(--blue);
+  font-weight:600;text-decoration:none;
+  transition:color .2s;
+}
+.card-link:hover{color:var(--violet);}
+
+/* ═══════════════════════════════════════════════════════════
+   STATS SECTION
+   ═══════════════════════════════════════════════════════════ */
+#stats{
+  background:linear-gradient(135deg,var(--green) 0%,#0d2218 100%);
+  padding:100px 5%;text-align:center;
+}
+.stats-grid{
+  display:flex;justify-content:center;gap:60px;
+  flex-wrap:wrap;max-width:900px;margin:0 auto;
+}
+.stat-item{flex:1;min-width:180px;}
+.stat-number{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3rem,6vw,5rem);
+  font-weight:700;line-height:1;
+  background:linear-gradient(135deg,var(--sand),var(--blue));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.stat-suffix{
+  font-family:'Cormorant Garamond',serif;
+  font-size:2rem;
+  background:linear-gradient(135deg,var(--violet),var(--blue));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.stat-label{
+  color:var(--muted);font-size:.9rem;
+  letter-spacing:.1em;margin-top:8px;
+  text-transform:uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════ */
+#footer{
+  position:relative;background:#050e08;
+  padding:0;overflow:hidden;
+}
+#footer-canvas{width:100%;height:200px;display:block;}
+.footer-content{
+  padding:40px 5% 30px;
+  display:flex;justify-content:space-between;
+  align-items:center;flex-wrap:wrap;gap:24px;
+}
+.footer-logo{
+  display:flex;align-items:center;gap:10px;
+  text-decoration:none;color:var(--sand);
+}
+.footer-logo svg{width:32px;height:32px;}
+.footer-logo-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.3rem;font-weight:700;
+}
+.footer-copy{
+  color:rgba(168,184,160,.5);
+  font-size:.8rem;text-align:center;
+  padding:0 5% 24px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLL REVEAL
+   ═══════════════════════════════════════════════════════════ */
+.reveal{
+  opacity:0;transform:translateY(40px);
+  transition:opacity .7s ease,transform .7s ease;
+}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+@media(max-width:1024px){
+  .modules-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+  .modules-grid{grid-template-columns:1fr;}
+  .nav-links{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSEUR -->
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<!-- PRELOADER -->
+<div id="preloader">
+  <canvas id="pl-canvas"></canvas>
+  <div id="pl-text">GAIALUMEN</div>
+  <div id="pl-bar"><div id="pl-fill"></div></div>
+</div>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <a href="#hero" class="nav-logo">
+    <svg viewBox="0 0 60 60" fill="none">
+      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <defs>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#5B3E96"/>
+        </radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1F3D2B"/>
+          <stop offset="100%" stop-color="#3A86C4"/>
+        </linearGradient>
+      </defs>
+      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-logo-text">GaiaLumen</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#hero">Accueil</a></li>
+    <li><a href="#modules">Modules</a></li>
+    <li><a href="#stats">À propos</a></li>
+    <li><a href="login.html">Contact</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button id="theme-toggle">🌙 Sombre</button>
+    <a href="login.html" class="btn-login">Connexion</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge">🌿 Nutrition Écologique & Intelligente</div>
+    <h1 class="hero-title">GaiaLumen</h1>
+    <p class="hero-slogan" id="typewriter-text"><span class="cursor-blink"></span></p>
+    <div class="hero-cta">
+      <button class="btn-primary" id="cta-discover">Découvrir les modules</button>
+      <a href="login.html" class="btn-secondary">Commencer gratuitement</a>
+    </div>
+  </div>
+</section>
+
+<!-- MODULES -->
+<section id="modules">
+  <div class="reveal">
+    <p class="section-label">Fonctionnalités</p>
+    <h2 class="section-title">Les 6 Modules GaiaLumen</h2>
+    <p class="section-subtitle">Une plateforme complète pour gérer votre santé, nutrition et défis écologiques.</p>
+  </div>
+  <div class="modules-grid">
+    <div class="module-card reveal">
+      <div class="card-shine"></div>
+      <div class="card-canvas-wrap"><canvas class="card-canvas" id="mc1"></canvas></div>
+      <div class="card-body">
+        <h3 class="card-title">👥 Gestion Utilisateurs</h3>
+        <p class="card-desc">Créez et gérez des profils personnalisés avec préférences et objectifs santé.</p>
+        <a href="login.html" class="card-link">Accéder →</a>
+      </div>
+    </div>
+    <div class="module-card reveal">
+      <div class="card-shine"></div>
+      <div class="card-canvas-wrap"><canvas class="card-canvas" id="mc2"></canvas></div>
+      <div class="card-body">
+        <h3 class="card-title">📅 Gestion Planning</h3>
+        <p class="card-desc">Planifiez votre semaine alimentaire avec calendrier interactif.</p>
+        <a href="login.html" class="card-link">Accéder →</a>
+      </div>
+    </div>
+    <div class="module-card reveal">
+      <div class="card-shine"></div>
+      <div class="card-canvas-wrap"><canvas class="card-canvas" id="mc3"></canvas></div>
+      <div class="card-body">
+        <h3 class="card-title">🎯 Gestion Events</h3>
+        <p class="card-desc">Enregistrez et suivez vos événements alimentaires et sorties.</p>
+        <a href="login.html" class="card-link">Accéder →</a>
+      </div>
+    </div>
+    <div class="module-card reveal">
+      <div class="card-shine"></div>
+      <div class="card-canvas-wrap"><canvas class="card-canvas" id="mc4"></canvas></div>
+      <div class="card-body">
+        <h3 class="card-title">🍽️ Gestion Repas</h3>
+        <p class="card-desc">Composez et analysez vos repas avec calcul automatique des macros.</p>
+        <a href="login.html" class="card-link">Accéder →</a>
+      </div>
+    </div>
+    <div class="module-card reveal">
+      <div class="card-shine"></div>
+      <div class="card-canvas-wrap"><canvas class="card-canvas" id="mc5"></canvas></div>
+      <div class="card-body">
+        <h3 class="card-title">❤️ Gestion Santé</h3>
+        <p class="card-desc">Suivez vos indicateurs : poids, IMC, glycémie, hydratation.</p>
+        <a href="login.html" class="card-link">Accéder →</a>
+      </div>
+    </div>
+    <div class="module-card reveal">
+      <div class="card-shine"></div>
+      <div class="card-canvas-wrap"><canvas class="card-canvas" id="mc6"></canvas></div>
+      <div class="card-body">
+        <h3 class="card-title">🏆 Gestion Défis</h3>
+        <p class="card-desc">Participez à des défis écologiques et gagnez des badges.</p>
+        <a href="login.html" class="card-link">Accéder →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="reveal">
+    <p class="section-label">Impact GaiaLumen</p>
+    <h2 class="section-title">Des chiffres qui parlent</h2>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-item reveal">
+      <div>
+        <span class="stat-number" data-target="12500">0</span>
+        <span class="stat-suffix">+</span>
+      </div>
+      <p class="stat-label">Utilisateurs actifs</p>
+    </div>
+    <div class="stat-item reveal">
+      <div>
+        <span class="stat-number" data-target="98">0</span>
+        <span class="stat-suffix">%</span>
+      </div>
+      <p class="stat-label">Satisfaction client</p>
+    </div>
+    <div class="stat-item reveal">
+      <div>
+        <span class="stat-number" data-target="340">0</span>
+        <span class="stat-suffix">T</span>
+      </div>
+      <p class="stat-label">CO₂ économisé</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <canvas id="footer-canvas"></canvas>
+  <div class="footer-content">
+    <a href="#hero" class="footer-logo">
+      <svg viewBox="0 0 60 60" fill="none">
+        <circle cx="30" cy="30" r="28" stroke="url(#ag2)" stroke-width="1.5" opacity=".5"/>
+        <defs>
+          <radialGradient id="ag2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#3A86C4"/>
+            <stop offset="100%" stop-color="#5B3E96"/>
+          </radialGradient>
+          <linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1F3D2B"/>
+            <stop offset="100%" stop-color="#3A86C4"/>
+          </linearGradient>
+        </defs>
+        <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg2)"/>
+        <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+      </svg>
+      <span class="footer-logo-text">GaiaLumen</span>
+    </a>
+  </div>
+  <p class="footer-copy">© 2026 GaiaLumen – Nutrition Écologique & Intelligente</p>
+</footer>
+
+<script>
+console.log('🌿 GaiaLumen chargé - Vérification THREE.js:', typeof THREE !== 'undefined');
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   PRELOADER
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const c=document.getElementById('pl-canvas');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  c.width=140;c.height=140;
+  const fill=document.getElementById('pl-fill');
+  let a=0,start=null;
+  function draw(ts){
+    if(!start)start=ts;
+    const p=Math.min((ts-start)/2000*100,100);
+    if(fill)fill.style.width=p+'%';
+    a+=.04;
+    ctx.clearRect(0,0,140,140);
+    ctx.save();ctx.translate(70,70);ctx.rotate(a);
+    // Anneaux
+    for(let i=0;i<3;i++){
+      ctx.beginPath();ctx.arc(0,0,48-i*10,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${i===0?'58,134,196':i===1?'91,62,150':'31,61,43'},${.6-i*.15})`;
+      ctx.lineWidth=1.5;ctx.stroke();
+    }
+    ctx.rotate(-a*.3);
+    // Feuille
+    const g=ctx.createLinearGradient(-18,-26,18,26);
+    g.addColorStop(0,'#1F3D2B');g.addColorStop(1,'#3A86C4');
+    ctx.beginPath();ctx.fillStyle=g;
+    ctx.moveTo(0,-26);ctx.bezierCurveTo(19,-12,22,7,0,26);
+    ctx.bezierCurveTo(-22,7,-19,-12,0,-26);ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,-24);ctx.lineTo(0,24);
+    ctx.strokeStyle='rgba(242,232,207,.5)';ctx.lineWidth=1;ctx.stroke();
+    ctx.restore();
+    if(p<100)requestAnimationFrame(draw);
+    else setTimeout(()=>{
+      const pl=document.getElementById('preloader');
+      if(pl)pl.classList.add('hidden');
+    },300);
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   CURSEUR
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const cur=document.getElementById('cursor');
+  const trail=document.getElementById('cursor-trail');
+  if(!cur||!trail)return;
+  let mx=0,my=0,tx=0,ty=0;
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX;my=e.clientY;
+    cur.style.left=mx+'px';cur.style.top=my+'px';
+  });
+  (function loop(){
+    tx+=(mx-tx)*.12;ty+=(my-ty)*.12;
+    trail.style.left=tx+'px';trail.style.top=ty+'px';
+    requestAnimationFrame(loop);
+  })();
+  document.querySelectorAll('a,button,.module-card').forEach(el=>{
+    el.addEventListener('mouseenter',()=>cur.classList.add('hover'));
+    el.addEventListener('mouseleave',()=>cur.classList.remove('hover'));
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   THEME TOGGLE
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const btn=document.getElementById('theme-toggle');
+  const html=document.documentElement;
+  const saved=localStorage.getItem('gaialumen-theme')||'dark';
+  html.setAttribute('data-theme',saved);
+  if(btn)btn.textContent=saved==='dark'?'☀️ Clair':'🌙 Sombre';
+  if(btn)btn.addEventListener('click',()=>{
+    const n=html.getAttribute('data-theme')==='dark'?'light':'dark';
+    html.setAttribute('data-theme',n);
+    localStorage.setItem('gaialumen-theme',n);
+    btn.textContent=n==='dark'?'☀️ Clair':'🌙 Sombre';
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   NAVBAR SCROLL
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const nb=document.getElementById('navbar');
+  window.addEventListener('scroll',()=>{
+    if(nb)nb.classList.toggle('scrolled',window.scrollY>40);
+  });
+  const disc=document.getElementById('cta-discover');
+  if(disc)disc.addEventListener('click',()=>{
+    document.getElementById('modules')?.scrollIntoView({behavior:'smooth'});
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   TYPEWRITER
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const el=document.getElementById('typewriter-text');
+  if(!el)return;
+  const slogans=[
+    'Nourrissez votre corps, respectez la Terre.',
+    'La nutrition intelligente au service de la planète.',
+    'Chaque repas, un geste pour Gaïa.',
+    'Mangez mieux. Vivez mieux. Impactez moins.'
+  ];
+  let si=0,ci=0,del=false;
+  function type(){
+    const txt=slogans[si];
+    const blink='<span class="cursor-blink"></span>';
+    if(!del){
+      ci++;
+      el.innerHTML=txt.slice(0,ci)+blink;
+      if(ci===txt.length){del=true;setTimeout(type,2200);return;}
+      setTimeout(type,55);
+    }else{
+      ci--;
+      el.innerHTML=txt.slice(0,ci)+blink;
+      if(ci===0){del=false;si=(si+1)%slogans.length;setTimeout(type,400);return;}
+      setTimeout(type,28);
+    }
+  }
+  setTimeout(type,2500);
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLL REVEAL
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach((e,i)=>{
+      if(e.isIntersecting){
+        setTimeout(()=>e.target.classList.add('visible'),i*80);
+        obs.unobserve(e.target);
+      }
+    });
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   COUNTERS
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const el=e.target,target=+el.dataset.target;
+        const dur=2000,step=target/(dur/16);
+        let cur=0;
+        const t=setInterval(()=>{
+          cur=Math.min(cur+step,target);
+          el.textContent=Math.floor(cur).toLocaleString('fr-FR');
+          if(cur>=target)clearInterval(t);
+        },16);
+        obs.unobserve(el);
+      }
+    });
+  },{threshold:.5});
+  document.querySelectorAll('.stat-number').forEach(el=>obs.observe(el));
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   CARD TILT 3D
+   ═══════════════════════════════════════════════════════════ */
+document.querySelectorAll('.module-card').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const dx=(e.clientX-r.left-r.width/2)/(r.width/2);
+    const dy=(e.clientY-r.top-r.height/2)/(r.height/2);
+    card.style.transform=`perspective(800px) rotateY(${dx*10}deg) rotateX(${-dy*10}deg) scale(1.03)`;
+    card.style.setProperty('--mx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+    card.style.setProperty('--my',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transform='';
+    card.style.transition='transform .5s ease,box-shadow .3s,border-color .3s';
+  });
+  card.addEventListener('mouseenter',()=>{
+    card.style.transition='box-shadow .3s,border-color .3s';
+  });
+});
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   THREE.JS - HERO AVEC GLOBE TERRESTRE 3D
+   ═══════════════════════════════════════════════════════════ */
+window.addEventListener('load',function(){
+  const canvas=document.getElementById('hero-canvas');
+  if(!canvas||typeof THREE==='undefined'){
+    console.error('Canvas ou THREE.js non disponible');
+    return;
+  }
+  
+  console.log('🌍 Initialisation scène 3D Hero...');
+  
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(50,canvas.offsetWidth/canvas.offsetHeight,.1,1000);
+  camera.position.set(0,0,8);
+  
+  function resize(){
+    const w=canvas.offsetWidth,h=canvas.offsetHeight;
+    renderer.setSize(w,h);
+    camera.aspect=w/h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  
+  // Lumières
+  scene.add(new THREE.AmbientLight(0xffffff,.4));
+  const dl=new THREE.DirectionalLight(0x3A86C4,1.2);
+  dl.position.set(5,3,5);
+  scene.add(dl);
+  const pl=new THREE.PointLight(0x5B3E96,1.5,20);
+  pl.position.set(-3,2,2);
+  scene.add(pl);
+  
+  // Globe Terre (plus grand)
+  const loader=new THREE.TextureLoader();
+  const earth=new THREE.Mesh(
+    new THREE.SphereGeometry(1.8,64,64),
+    new THREE.MeshPhongMaterial({
+      map:loader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
+      specular:new THREE.Color(0x3A86C4),
+      shininess:25
+    })
+  );
+  scene.add(earth);
+  
+  const clouds=new THREE.Mesh(
+    new THREE.SphereGeometry(1.83,64,64),
+    new THREE.MeshPhongMaterial({
+      map:loader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png'),
+      transparent:true,
+      opacity:.35
+    })
+  );
+  scene.add(clouds);
+  
+  // Atmosphère
+  const atm=new THREE.Mesh(
+    new THREE.SphereGeometry(1.3,64,64),
+    new THREE.MeshPhongMaterial({
+      color:0x3A86C4,
+      transparent:true,
+      opacity:.07,
+      side:THREE.FrontSide
+    })
+  );
+  scene.add(atm);
+  
+  // Particules lumineuses
+  const PC=1800,pp=new Float32Array(PC*3),pc=new Float32Array(PC*3);
+  const pal=[
+    new THREE.Color(0x1F3D2B),
+    new THREE.Color(0x3A86C4),
+    new THREE.Color(0x5B3E96),
+    new THREE.Color(0xF2E8CF)
+  ];
+  for(let i=0;i<PC;i++){
+    const r=1.8+Math.random()*3;
+    const th=Math.random()*Math.PI*2;
+    const ph=Math.acos(2*Math.random()-1);
+    pp[i*3]=r*Math.sin(ph)*Math.cos(th);
+    pp[i*3+1]=r*Math.sin(ph)*Math.sin(th);
+    pp[i*3+2]=r*Math.cos(ph);
+    const c=pal[Math.floor(Math.random()*4)];
+    pc[i*3]=c.r;pc[i*3+1]=c.g;pc[i*3+2]=c.b;
+  }
+  const pGeo=new THREE.BufferGeometry();
+  pGeo.setAttribute('position',new THREE.BufferAttribute(pp,3));
+  pGeo.setAttribute('color',new THREE.BufferAttribute(pc,3));
+  const pts=new THREE.Points(
+    pGeo,
+    new THREE.PointsMaterial({
+      size:.025,
+      vertexColors:true,
+      transparent:true,
+      opacity:.75
+    })
+  );
+  scene.add(pts);
+  
+  
+  /* ═══════════════════════════════════════════════════════════
+     ANIMATION LOOP
+     ═══════════════════════════════════════════════════════════ */
+  let t=0;
+  let mx=0,my=0;
+  document.addEventListener('mousemove',e=>{
+    mx=(e.clientX/window.innerWidth-.5)*2;
+    my=(e.clientY/window.innerHeight-.5)*2;
+  });
+  
+  (function anim(){
+    requestAnimationFrame(anim);
+    t+=.01;
+    
+    // Globe
+    earth.rotation.y+=.002;
+    clouds.rotation.y+=.0025;
+    
+    // Particules
+    pts.rotation.y+=.0005;
+    
+    // Caméra suit la souris
+    camera.position.x+=(mx*.5-camera.position.x)*.05;
+    camera.position.y+=(-my*.5-camera.position.y)*.05;
+    camera.lookAt(0,0,0);
+    
+    renderer.render(scene,camera);
+  })();
+  
+  console.log('🎨 Scène 3D Hero initialisée avec succès!');
+});
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   THREE.JS - MODULES CARDS (Assiettes 3D)
+   ═══════════════════════════════════════════════════════════ */
+window.addEventListener('load',function(){
+  function createModuleScene(canvasId,imgUrl,ringColor){
+    const canvas=document.getElementById(canvasId);
+    if(!canvas||typeof THREE==='undefined')return;
+    
+    const wrap=canvas.parentElement;
+    const W=wrap.offsetWidth||300,H=180;
+    canvas.width=W;canvas.height=H;
+    
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(W,H);
+    
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(42,W/H,0.1,50);
+    camera.position.set(0,2.2,3.8);
+    camera.lookAt(0,0,0);
+    
+    function resize(){
+      const w=wrap.offsetWidth||300;
+      renderer.setSize(w,H);
+      camera.aspect=w/H;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize',resize);
+    
+    // Lumières
+    scene.add(new THREE.AmbientLight(0xffffff,.7));
+    const dl=new THREE.DirectionalLight(0xffffff,1.2);
+    dl.position.set(3,5,3);
+    scene.add(dl);
+    const pl=new THREE.PointLight(ringColor,1.5,12);
+    pl.position.set(-2,3,2);
+    scene.add(pl);
+    
+    const group=new THREE.Group();
+    
+    // Assiette base
+    group.add(new THREE.Mesh(
+      new THREE.CylinderGeometry(1.1,.95,.12,64),
+      new THREE.MeshPhysicalMaterial({
+        color:0xF2E8CF,
+        metalness:.05,
+        roughness:.2,
+        clearcoat:1
+      })
+    ));
+    
+    // Rebord
+    const rim=new THREE.Mesh(
+      new THREE.TorusGeometry(1.05,.07,16,64),
+      new THREE.MeshPhysicalMaterial({
+        color:0xd4c9a8,
+        metalness:.1,
+        roughness:.2,
+        clearcoat:.8
+      })
+    );
+    rim.rotation.x=Math.PI/2;
+    rim.position.y=.06;
+    group.add(rim);
+    
+    // Anneau déco
+    const dec=new THREE.Mesh(
+      new THREE.TorusGeometry(.82,.022,8,64),
+      new THREE.MeshPhysicalMaterial({
+        color:ringColor,
+        metalness:.5,
+        roughness:.1,
+        emissive:ringColor,
+        emissiveIntensity:.4
+      })
+    );
+    dec.rotation.x=Math.PI/2;
+    dec.position.y=.07;
+    group.add(dec);
+    
+    // Photo plat
+    const texLoader=new THREE.TextureLoader();
+    texLoader.crossOrigin='anonymous';
+    texLoader.load(imgUrl,function(tex){
+      const dish=new THREE.Mesh(
+        new THREE.CircleGeometry(.92,64),
+        new THREE.MeshBasicMaterial({map:tex,side:THREE.FrontSide})
+      );
+      dish.rotation.x=-Math.PI/2;
+      dish.position.y=.07;
+      group.add(dish);
+    });
+    
+    group.position.y=-.3;
+    scene.add(group);
+    
+    // Particules
+    const PC=250,pp=new Float32Array(PC*3),pc=new Float32Array(PC*3);
+    const pal=[
+      new THREE.Color(0x1F3D2B),
+      new THREE.Color(0x3A86C4),
+      new THREE.Color(0x5B3E96)
+    ];
+    for(let i=0;i<PC;i++){
+      pp[i*3]=(Math.random()-.5)*7;
+      pp[i*3+1]=(Math.random()-.5)*5;
+      pp[i*3+2]=(Math.random()-.5)*5;
+      const c=pal[Math.floor(Math.random()*3)];
+      pc[i*3]=c.r;pc[i*3+1]=c.g;pc[i*3+2]=c.b;
+    }
+    const pGeo=new THREE.BufferGeometry();
+    pGeo.setAttribute('position',new THREE.BufferAttribute(pp,3));
+    pGeo.setAttribute('color',new THREE.BufferAttribute(pc,3));
+    const pts=new THREE.Points(
+      pGeo,
+      new THREE.PointsMaterial({
+        size:.04,
+        vertexColors:true,
+        transparent:true,
+        opacity:.65
+      })
+    );
+    scene.add(pts);
+    
+    // Anneau orbital
+    const ring=new THREE.Mesh(
+      new THREE.TorusGeometry(1.6,.012,8,80),
+      new THREE.MeshBasicMaterial({
+        color:ringColor,
+        transparent:true,
+        opacity:.35
+      })
+    );
+    ring.rotation.x=Math.PI/2.3;
+    scene.add(ring);
+    
+    let t=0;
+    (function anim(){
+      requestAnimationFrame(anim);
+      t+=.016;
+      group.rotation.y=t*.3;
+      group.position.y=-.3+Math.sin(t*.7)*.1;
+      ring.rotation.z+=.007;
+      pts.rotation.y+=.004;
+      renderer.render(scene,camera);
+    })();
+  }
+  
+  // Init 6 modules
+  createModuleScene('mc1','https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',0x3A86C4);
+  createModuleScene('mc2','https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80',0x5B3E96);
+  createModuleScene('mc3','https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80',0x1F3D2B);
+  createModuleScene('mc4','https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80',0x5B3E96);
+  createModuleScene('mc5','https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&q=80',0x3A86C4);
+  createModuleScene('mc6','https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&q=80',0x1F3D2B);
+  
+  console.log('🍽️ Modules 3D initialisés');
+});
+
+/* ═══════════════════════════════════════════════════════════
+   THREE.JS - FOOTER WAVES
+   ═══════════════════════════════════════════════════════════ */
+window.addEventListener('load',function(){
+  const canvas=document.getElementById('footer-canvas');
+  if(!canvas||typeof THREE==='undefined')return;
+  
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(60,canvas.offsetWidth/200,.1,100);
+  camera.position.set(0,2,5);
+  camera.lookAt(0,0,0);
+  
+  function resize(){
+    const w=canvas.offsetWidth;
+    renderer.setSize(w,200);
+    camera.aspect=w/200;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  
+  scene.add(new THREE.AmbientLight(0xffffff,.3));
+  const pl=new THREE.PointLight(0x3A86C4,2,20);
+  pl.position.set(0,5,3);
+  scene.add(pl);
+  
+  const wGeo=new THREE.PlaneGeometry(20,8,80,30);
+  const wave=new THREE.Mesh(
+    wGeo,
+    new THREE.MeshPhongMaterial({
+      color:0x1F3D2B,
+      transparent:true,
+      opacity:.6,
+      side:THREE.DoubleSide
+    })
+  );
+  wave.rotation.x=-Math.PI/3;
+  scene.add(wave);
+  
+  const wGeo2=new THREE.PlaneGeometry(20,8,80,30);
+  const wave2=new THREE.Mesh(
+    wGeo2,
+    new THREE.MeshPhongMaterial({
+      color:0x5B3E96,
+      transparent:true,
+      opacity:.3,
+      side:THREE.DoubleSide
+    })
+  );
+  wave2.rotation.x=-Math.PI/3;
+  wave2.position.z=.3;
+  scene.add(wave2);
+  
+  let t=0;
+  (function anim(){
+    requestAnimationFrame(anim);
+    t+=.02;
+    
+    const p=wGeo.attributes.position;
+    const p2=wGeo2.attributes.position;
+    
+    for(let i=0;i<p.count;i++){
+      const x=p.getX(i);
+      const y=p.getY(i);
+      p.setZ(i,Math.sin(x*.8+t)*.3+Math.sin(y*.6+t*1.2)*.2);
+      p2.setZ(i,Math.sin(x*.6+t*.8+1)*.25+Math.cos(y*.5+t)*.15);
+    }
+    
+    p.needsUpdate=true;
+    p2.needsUpdate=true;
+    wGeo.computeVertexNormals();
+    wGeo2.computeVertexNormals();
+    
+    renderer.render(scene,camera);
+  })();
+  
+  console.log('🌊 Vagues 3D footer initialisées');
+});
+</script>
+</body>
+</html>

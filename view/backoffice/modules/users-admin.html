@@ -1,0 +1,94 @@
+<section class="content-section" id="users">
+  <div class="section">
+    <div class="section-header">
+      <h2 class="module-title">👥 Gestion des Utilisateurs</h2>
+      <div class="section-actions">
+        <button class="btn btn-secondary" onclick="refreshUsers()">🔄 Actualiser</button>
+        <button class="btn btn-primary" onclick="exportData('users')">📥 Exporter</button>
+      </div>
+    </div>
+
+    <div class="filter-chips">
+      <div class="chip active" onclick="filterByChip(this,'all')">Tous</div>
+      <div class="chip" onclick="filterByChip(this,'active')">✅ Actifs</div>
+      <div class="chip" onclick="filterByChip(this,'inactive')">⭕ Inactifs</div>
+      <div class="chip" onclick="filterByChip(this,'admin')">🛡️ Admins</div>
+      <div class="chip" onclick="filterByChip(this,'user')">👤 Utilisateurs</div>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" class="search-input" id="searchInput" placeholder="Rechercher par nom ou email..." onkeyup="searchUsers()">
+      <select class="form-select" id="roleFilter" onchange="filterUsers()">
+        <option value="">Tous les rôles</option>
+        <option value="user">Utilisateur</option>
+        <option value="admin">Administrateur</option>
+      </select>
+      <button class="btn btn-primary" onclick="addUser()">➕ Ajouter</button>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Rôle</th>
+            <th>Statut</th>
+            <th>Inscription</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <tr>
+            <td>1</td>
+            <td>Jean Dupont</td>
+            <td>jean.dupont@email.com</td>
+            <td><span class="badge badge-user">Utilisateur</span></td>
+            <td><span class="badge badge-active">Actif</span></td>
+            <td>15/03/2026</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn action-btn-edit" onclick="editUser(1)">✏️ Modifier</button>
+                <button class="action-btn action-btn-delete" onclick="deleteUser(1)">🗑️ Supprimer</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Marie Martin</td>
+            <td>marie.martin@email.com</td>
+            <td><span class="badge badge-admin">Admin</span></td>
+            <td><span class="badge badge-active">Actif</span></td>
+            <td>10/03/2026</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn action-btn-edit" onclick="editUser(2)">✏️ Modifier</button>
+                <button class="action-btn action-btn-delete" onclick="deleteUser(2)">🗑️ Supprimer</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button class="page-btn" disabled>◀ Précédent</button>
+      <button class="page-btn active">1</button>
+      <button class="page-btn">2</button>
+      <button class="page-btn">3</button>
+      <button class="page-btn">Suivant ▶</button>
+    </div>
+  </div>
+</section>
+
+<style>
+.module-title {
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+</style>

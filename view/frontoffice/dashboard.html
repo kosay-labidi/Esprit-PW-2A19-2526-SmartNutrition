@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>GaiaLumen – Dashboard Modules</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/dashboard.css"/>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<div id="preloader">
+  <canvas id="pl-canvas"></canvas>
+  <div id="pl-text">GAIALUMEN</div>
+  <div id="pl-bar"><div id="pl-fill"></div></div>
+</div>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">
+    <svg viewBox="0 0 60 60" fill="none">
+      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <defs>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#5B3E96"/>
+        </radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1F3D2B"/>
+          <stop offset="100%" stop-color="#3A86C4"/>
+        </linearGradient>
+      </defs>
+      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-logo-text">GaiaLumen</span>
+  </a>
+  <div class="navbar-center">
+    <div class="sidebar-menu" id="primary-navigation">
+      <a href="#" class="menu-item" data-module="welcome">
+        <span class="menu-item-icon">🏠</span>
+        <span class="menu-item-text">Accueil</span>
+      </a>
+      <a href="#" class="menu-item" data-module="users">
+        <span class="menu-item-icon">👥</span>
+        <span class="menu-item-text">Communauté</span>
+      </a>
+      <a href="#" class="menu-item" data-module="planning">
+        <span class="menu-item-icon">📅</span>
+        <span class="menu-item-text">Planning</span>
+      </a>
+      <a href="#" class="menu-item" data-module="events">
+        <span class="menu-item-icon">🎯</span>
+        <span class="menu-item-text">Événements</span>
+      </a>
+      <a href="#" class="menu-item" data-module="meals">
+        <span class="menu-item-icon">🍽️</span>
+        <span class="menu-item-text">Nutrition</span>
+      </a>
+      <a href="#" class="menu-item" data-module="health">
+        <span class="menu-item-icon">❤️</span>
+        <span class="menu-item-text">Bien-être</span>
+      </a>
+      <a href="#" class="menu-item" data-module="challenges">
+        <span class="menu-item-icon">🏆</span>
+        <span class="menu-item-text">Défis</span>
+      </a>
+      
+      <div class="nav-separator"></div>
+      
+      <button id="theme-toggle" class="menu-item action-item" title="Changer le thème">
+        <span class="menu-item-icon">☀️</span>
+        <span class="menu-item-text">Clair</span>
+      </button>
+
+      <a href="#" class="menu-item logout-item" title="Déconnexion" onclick="logout(); return false;">
+        <span class="menu-item-icon">🚪</span>
+        <span class="menu-item-text">Déconnexion</span>
+      </a>
+    </div>
+  </div>
+  <button id="menu-toggle" title="Menu" aria-label="Afficher la navigation" aria-controls="primary-navigation" aria-expanded="false">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+</nav>
+
+<div class="dashboard-container">
+  <main class="main-content">
+    <!-- Les modules seront chargés dynamiquement ici par module-loader.js -->
+  </main>
+</div>
+
+<div id="ai-assistant">
+  <button id="ai-btn" title="Assistant AI">🤖</button>
+  <div id="ai-panel">
+    <div class="ai-header">
+      <div class="ai-title">🤖 Assistant GaiaLumen</div>
+      <button class="ai-close" title="Fermer">×</button>
+    </div>
+    <div class="ai-body">
+      <div class="ai-message bot">Bonjour! Je suis votre assistant GaiaLumen. Comment puis-je vous aider aujourd'hui?</div>
+    </div>
+    <div class="ai-input-wrap">
+      <input type="text" class="ai-input" placeholder="Posez votre question..." />
+      <button class="ai-send" title="Envoyer">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts inline pour le preloader et le curseur -->
+<script>
+// Preloader animation
+(function(){
+  const c=document.getElementById('pl-canvas');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  c.width=140;c.height=140;
+  const fill=document.getElementById('pl-fill');
+  let a=0,start=null;
+  function draw(ts){
+    if(!start)start=ts;
+    const p=Math.min((ts-start)/2000*100,100);
+    if(fill)fill.style.width=p+'%';
+    a+=.04;
+    ctx.clearRect(0,0,140,140);
+    ctx.save();ctx.translate(70,70);ctx.rotate(a);
+    for(let i=0;i<3;i++){
+      ctx.beginPath();ctx.arc(0,0,48-i*10,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${i===0?'58,134,196':i===1?'91,62,150':'31,61,43'},${.6-i*.15})`;
+      ctx.lineWidth=1.5;ctx.stroke();
+    }
+    ctx.rotate(-a*.3);
+    const g=ctx.createLinearGradient(-18,-26,18,26);
+    g.addColorStop(0,'#1F3D2B');g.addColorStop(1,'#3A86C4');
+    ctx.beginPath();ctx.fillStyle=g;
+    ctx.moveTo(0,-26);ctx.bezierCurveTo(19,-12,22,7,0,26);
+    ctx.bezierCurveTo(-22,7,-19,-12,0,-26);ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,-24);ctx.lineTo(0,24);
+    ctx.strokeStyle='rgba(242,232,207,.5)';ctx.lineWidth=1;ctx.stroke();
+    ctx.restore();
+    if(p<100)requestAnimationFrame(draw);
+    else setTimeout(()=>{
+      const pl=document.getElementById('preloader');
+      if(pl)pl.classList.add('hidden');
+    },300);
+  }
+  requestAnimationFrame(draw);
+})();
+
+// Custom cursor
+(function(){
+  const cur=document.getElementById('cursor');
+  const trail=document.getElementById('cursor-trail');
+  if(!cur||!trail)return;
+  let mx=0,my=0,tx=0,ty=0;
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX;my=e.clientY;
+    cur.style.left=mx+'px';cur.style.top=my+'px';
+  });
+  (function loop(){
+    tx+=(mx-tx)*.12;ty+=(my-ty)*.12;
+    trail.style.left=tx+'px';trail.style.top=ty+'px';
+    requestAnimationFrame(loop);
+  })();
+  document.querySelectorAll('a,button,.info-card').forEach(el=>{
+    el.addEventListener('mouseenter',()=>cur.classList.add('hover'));
+    el.addEventListener('mouseleave',()=>cur.classList.remove('hover'));
+  });
+})();
+</script>
+
+<!-- Scripts principaux -->
+<script src="js/dashboard.js?v=20260415-1"></script>
+<script src="js/module-loader.js?v=20260415-1"></script>
+</body>
+</html>

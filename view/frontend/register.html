@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inscription - GaiaLumen</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 :root{
@@ -67,7 +67,7 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
 #bg-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;}
 .container{
   position:relative;z-index:2;
-  max-width:440px;width:90%;
+  max-width:480px;width:90%;
   background:var(--card-bg);
   backdrop-filter:blur(20px) saturate(1.4);
   -webkit-backdrop-filter:blur(20px) saturate(1.4);
@@ -103,6 +103,48 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
 .form-group input::placeholder{color:rgba(242,232,207,0.4);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media(max-width:520px){.form-row{grid-template-columns:1fr;}}
+
+/* --- INDICATEUR FORCE MOT DE PASSE : 6 BARRES --- */
+.password-strength {
+  margin-top: 8px;
+  width: 100%;
+}
+.strength-bars {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  transition: background 0.2s ease, box-shadow 0.2s;
+}
+.bar.active.weak {
+  background: #e74c3c;
+  box-shadow: 0 0 6px #e74c3c;
+}
+.bar.active.medium {
+  background: #f39c12;
+  box-shadow: 0 0 6px #f39c12;
+}
+.bar.active.strong {
+  background: #2ecc71;
+  box-shadow: 0 0 6px #2ecc71;
+}
+.strength-text {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color 0.3s;
+}
+.strength-text.weak { color: #e74c3c; }
+.strength-text.medium { color: #f39c12; }
+.strength-text.strong { color: #2ecc71; }
+
 .btn-submit{
   width:100%;padding:12px;
   background:linear-gradient(135deg,var(--violet),var(--blue));
@@ -177,11 +219,26 @@ input.invalid{border-color:rgba(255,100,100,.6) !important;}
       <input type="text" id="email" name="email" placeholder="ahmed@gmail.com" autocomplete="email"/>
       <span class="field-error" id="err-email"></span>
     </div>
+    
+    <!-- Groupe mot de passe avec indicateur de force -->
     <div class="form-group">
       <label for="mdp">Mot de passe</label>
-      <input type="password" id="mdp" name="mdp" placeholder="Au moins 6 caractères" autocomplete="new-password"/>
+      <input type="password" id="mdp" name="mdp" placeholder="8+ caractères, Maj, Min, Chiffre, Symbole" autocomplete="new-password"/>
+      <!-- Indicateur visuel 6 barres -->
+      <div class="password-strength">
+        <div class="strength-bars" id="strengthBars">
+          <div class="bar" data-index="0"></div>
+          <div class="bar" data-index="1"></div>
+          <div class="bar" data-index="2"></div>
+          <div class="bar" data-index="3"></div>
+          <div class="bar" data-index="4"></div>
+          <div class="bar" data-index="5"></div>
+        </div>
+        <div class="strength-text" id="strengthText">Sécurité du mot de passe</div>
+      </div>
       <span class="field-error" id="err-mdp"></span>
     </div>
+    
     <div class="form-group">
       <label for="mdp2">Confirmer le mot de passe</label>
       <input type="password" id="mdp2" name="mdp2" autocomplete="new-password"/>
@@ -195,7 +252,7 @@ input.invalid{border-color:rgba(255,100,100,.6) !important;}
         <option value="ecologiste">Écologiste</option>
       </select>
     </div>
-    <button type="submit" class="btn-submit" id="btn-submit">S'inscrire</button>
+    <button type="submit" class="btn-submit" id="btn-submit" disabled>S'inscrire</button>
   </form>
 
   <div id="msg" class="msg" role="alert"></div>
@@ -299,81 +356,246 @@ html.setAttribute('data-theme',isDark?'dark':'light');
 themeToggle.addEventListener('click',()=>{isDark=!isDark;html.setAttribute('data-theme',isDark?'dark':'light');localStorage.setItem('gaialumen-theme',isDark?'dark':'light');});
 
 /* ═══════════════════════════════════════════════════
-   FORMULAIRE D'INSCRIPTION — Validation JS pure
-   (aucun attribut HTML5 : required, minlength, pattern)
+   INDICATEUR DE FORCE DU MOT DE PASSE (6 BARRES)
+   ACCEPTE UNIQUEMENT LES MOTS DE PASSE FORTS (score >= 5)
 ═══════════════════════════════════════════════════ */
+
+// Fonction d'évaluation du mot de passe (score sur 6)
+function evaluatePasswordStrength(password) {
+  let score = 0;
+  if (!password) return 0;
+  
+  // Longueur : 0-5:0, 6-7:1, >=8:2
+  if (password.length >= 8) score += 2;
+  else if (password.length >= 6) score += 1;
+  
+  if (/[0-9]/.test(password)) score += 1;       // chiffre
+  if (/[a-z]/.test(password)) score += 1;       // minuscule
+  if (/[A-Z]/.test(password)) score += 1;       // majuscule
+  if (/[^a-zA-Z0-9]/.test(password)) score += 1; // symbole spécial
+  
+  return Math.min(score, 6);
+}
+
+// Mise à jour de l'affichage des barres
+function updateStrengthIndicator(password) {
+  const score = evaluatePasswordStrength(password);
+  const bars = document.querySelectorAll('#strengthBars .bar');
+  const strengthTextEl = document.getElementById('strengthText');
+  
+  // Reset classes
+  bars.forEach(bar => {
+    bar.classList.remove('active', 'weak', 'medium', 'strong');
+  });
+  
+  // Déterminer le type de force
+  let strengthType = 'weak';
+  let label = 'TRÈS FAIBLE';
+  if (score >= 5) {
+    strengthType = 'strong';
+    label = 'FORT ✅ - Accepté';
+  } else if (score >= 3) {
+    strengthType = 'medium';
+    label = 'MOYEN ❌ - Non accepté';
+  } else if (score >= 1) {
+    strengthType = 'weak';
+    label = 'FAIBLE ❌ - Non accepté';
+  } else {
+    label = 'SAISIR UN MOT DE PASSE';
+  }
+  
+  // Activer les barres selon le score
+  for (let i = 0; i < score; i++) {
+    if (bars[i]) {
+      bars[i].classList.add('active', strengthType);
+    }
+  }
+  
+  // Changer le texte
+  strengthTextEl.textContent = label;
+  strengthTextEl.classList.remove('weak', 'medium', 'strong');
+  if (score >= 5) strengthTextEl.classList.add('strong');
+  else if (score >= 3) strengthTextEl.classList.add('medium');
+  else if (score >= 1) strengthTextEl.classList.add('weak');
+}
+
+/* ═══ GESTION DU FORMULAIRE ═══ */
 (function(){
   const form   = document.getElementById('form-register');
   const msgBox = document.getElementById('msg');
   const btn    = document.getElementById('btn-submit');
-
-  /* --- Helpers --- */
+  const mdpInput = document.getElementById('mdp');
+  const mdp2Input = document.getElementById('mdp2');
+  
+  // Fonction pour vérifier si le formulaire est valide (mot de passe fort + confirmation)
+  function checkFormValidity() {
+    const mdp = mdpInput.value;
+    const mdp2 = mdp2Input.value;
+    const score = evaluatePasswordStrength(mdp);
+    
+    // Le bouton est activé UNIQUEMENT si : score >= 5 ET mdp === mdp2 ET mdp.length >= 6
+    if (score >= 5 && mdp === mdp2 && mdp.length >= 6) {
+      btn.disabled = false;
+    } else {
+      btn.disabled = true;
+    }
+  }
+  
+  /* --- Validation en temps réel du mot de passe --- */
+  mdpInput.addEventListener('input', function() {
+    const mdp = this.value;
+    const score = evaluatePasswordStrength(mdp);
+    
+    // Mettre à jour l'affichage des barres
+    updateStrengthIndicator(mdp);
+    
+    // Validation du mot de passe
+    if (!mdp) {
+      document.getElementById('err-mdp').textContent = '';
+      document.getElementById('err-mdp').style.display = 'none';
+      this.classList.remove('invalid');
+    }
+    else if (mdp.length < 6) {
+      document.getElementById('err-mdp').textContent = 'Minimum 6 caractères.';
+      document.getElementById('err-mdp').style.display = 'block';
+      this.classList.add('invalid');
+    }
+    else if (score < 5) {
+      document.getElementById('err-mdp').textContent = '❌ MOT DE PASSE REFUSÉ ! Utilisez : 8+ caractères, Majuscule, Minuscule, Chiffre ET Symbole spécial (@#$%!&*)';
+      document.getElementById('err-mdp').style.display = 'block';
+      this.classList.add('invalid');
+    }
+    else {
+      document.getElementById('err-mdp').style.display = 'none';
+      this.classList.remove('invalid');
+    }
+    
+    // Vérifier la confirmation
+    const mdp2 = mdp2Input.value;
+    if (mdp2 && mdp !== mdp2) {
+      document.getElementById('err-mdp2').textContent = 'Les mots de passe ne correspondent pas.';
+      document.getElementById('err-mdp2').style.display = 'block';
+      mdp2Input.classList.add('invalid');
+    } else if (mdp2) {
+      document.getElementById('err-mdp2').style.display = 'none';
+      mdp2Input.classList.remove('invalid');
+    }
+    
+    // Vérifier la validité globale du formulaire
+    checkFormValidity();
+  });
+  
+  /* --- Validation en temps réel de la confirmation --- */
+  mdp2Input.addEventListener('input', function() {
+    const mdp = mdpInput.value;
+    const mdp2 = this.value;
+    
+    if (mdp !== mdp2) {
+      document.getElementById('err-mdp2').textContent = 'Les mots de passe ne correspondent pas.';
+      document.getElementById('err-mdp2').style.display = 'block';
+      this.classList.add('invalid');
+    } else {
+      document.getElementById('err-mdp2').style.display = 'none';
+      this.classList.remove('invalid');
+    }
+    
+    checkFormValidity();
+  });
+  
+  /* --- Validation nom/prenom sans chiffres --- */
+  document.getElementById('nom').addEventListener('input', function(){
+    if (/\d/.test(this.value)) {
+      document.getElementById('err-nom').textContent = 'Le nom ne doit pas contenir de chiffres.';
+      document.getElementById('err-nom').style.display = 'block';
+      this.classList.add('invalid');
+    } else {
+      document.getElementById('err-nom').style.display = 'none';
+      this.classList.remove('invalid');
+    }
+  });
+  
+  document.getElementById('prenom').addEventListener('input', function(){
+    if (/\d/.test(this.value)) {
+      document.getElementById('err-prenom').textContent = 'Le prénom ne doit pas contenir de chiffres.';
+      document.getElementById('err-prenom').style.display = 'block';
+      this.classList.add('invalid');
+    } else {
+      document.getElementById('err-prenom').style.display = 'none';
+      this.classList.remove('invalid');
+    }
+  });
+  
+  /* --- Helpers pour les messages --- */
   function showMsg(text, ok) {
     msgBox.textContent = text;
     msgBox.className   = 'msg ' + (ok ? 'ok' : 'error');
     msgBox.style.display = 'block';
   }
-
+  
   function fieldError(id, msg) {
     const el = document.getElementById('err-' + id);
     const inp = document.getElementById(id);
     if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
     if (inp) { inp.classList.toggle('invalid', !!msg); }
   }
-
+  
   function clearErrors() {
     ['nom','prenom','email','mdp','mdp2'].forEach(id => fieldError(id, ''));
     msgBox.style.display = 'none';
   }
-
+  
   function validateEmail(v) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
   }
-
-  /* --- Validation temps réel --- */
-  document.getElementById('nom').addEventListener('input', function(){
-    if (/\d/.test(this.value)) fieldError('nom','Le nom ne doit pas contenir de chiffres.');
-    else fieldError('nom','');
-  });
-  document.getElementById('prenom').addEventListener('input', function(){
-    if (/\d/.test(this.value)) fieldError('prenom','Le prénom ne doit pas contenir de chiffres.');
-    else fieldError('prenom','');
-  });
-
-  /* --- Soumission --- */
+  
+  /* --- Soumission du formulaire --- */
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
     clearErrors();
-
+    
     const nom    = document.getElementById('nom').value.trim();
     const prenom = document.getElementById('prenom').value.trim();
     const email  = document.getElementById('email').value.trim();
     const mdp    = document.getElementById('mdp').value;
     const mdp2   = document.getElementById('mdp2').value;
     const role   = document.getElementById('role').value;
-
+    
     let valid = true;
-
-    if (!nom)                    { fieldError('nom','Le nom est obligatoire.');          valid = false; }
-    else if (/\d/.test(nom))     { fieldError('nom','Le nom ne doit pas contenir de chiffres.'); valid = false; }
-
-    if (!prenom)                  { fieldError('prenom','Le prénom est obligatoire.');       valid = false; }
-    else if (/\d/.test(prenom))   { fieldError('prenom','Le prénom ne doit pas contenir de chiffres.'); valid = false; }
-
-    if (!email)                   { fieldError('email',"L'email est obligatoire.");          valid = false; }
-    else if (!validateEmail(email)){ fieldError('email',"Format d'email invalide.");          valid = false; }
-
-    if (!mdp)                     { fieldError('mdp','Le mot de passe est obligatoire.');    valid = false; }
-    else if (mdp.length < 6)      { fieldError('mdp','Minimum 6 caractères.');              valid = false; }
-
-    if (!mdp2)                    { fieldError('mdp2','Veuillez confirmer le mot de passe.'); valid = false; }
-    else if (mdp !== mdp2)        { fieldError('mdp2','Les mots de passe ne correspondent pas.'); valid = false; }
-
-    if (!valid) return;
-
+    
+    // Validation nom
+    if (!nom) { fieldError('nom','Le nom est obligatoire.'); valid = false; }
+    else if (/\d/.test(nom)) { fieldError('nom','Le nom ne doit pas contenir de chiffres.'); valid = false; }
+    
+    // Validation prénom
+    if (!prenom) { fieldError('prenom','Le prénom est obligatoire.'); valid = false; }
+    else if (/\d/.test(prenom)) { fieldError('prenom','Le prénom ne doit pas contenir de chiffres.'); valid = false; }
+    
+    // Validation email
+    if (!email) { fieldError('email',"L'email est obligatoire."); valid = false; }
+    else if (!validateEmail(email)) { fieldError('email',"Format d'email invalide."); valid = false; }
+    
+    // Validation mot de passe (doit être FORT)
+    const score = evaluatePasswordStrength(mdp);
+    if (!mdp) { fieldError('mdp','Le mot de passe est obligatoire.'); valid = false; }
+    else if (mdp.length < 6) { fieldError('mdp','Minimum 6 caractères.'); valid = false; }
+    else if (score < 5) { 
+      fieldError('mdp','❌ MOT DE PASSE REFUSÉ ! Un mot de passe FORT est requis : 8+ caractères, une majuscule, une minuscule, un chiffre ET un symbole spécial (@#$%!&*).');
+      valid = false;
+    }
+    
+    // Validation confirmation
+    if (!mdp2) { fieldError('mdp2','Veuillez confirmer le mot de passe.'); valid = false; }
+    else if (mdp !== mdp2) { fieldError('mdp2','Les mots de passe ne correspondent pas.'); valid = false; }
+    
+    if (!valid) {
+      // Réactiver la vérification pour que le bouton reste désactivé si besoin
+      checkFormValidity();
+      return;
+    }
+    
     btn.disabled    = true;
     btn.textContent = 'Envoi…';
-
+    
     try {
       const response = await fetch(
         'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/addUser.php',
@@ -383,31 +605,35 @@ themeToggle.addEventListener('click',()=>{isDark=!isDark;html.setAttribute('data
           body   : JSON.stringify({ nom, prenom, email, mdp, role })
         }
       );
-
+      
       const contentType = response.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
         const raw = await response.text();
         console.error('Réponse non-JSON:', raw);
         throw new Error('Le serveur ne renvoie pas du JSON.');
       }
-
+      
       const result = await response.json();
-
+      
       if (result.success) {
         showMsg('✅ Inscription réussie ! Redirection vers la connexion…', true);
         form.reset();
+        updateStrengthIndicator(''); // reset barres
+        btn.disabled = true; // désactiver à nouveau le bouton après reset
         setTimeout(() => { window.location.href = 'login.html'; }, 2000);
       } else {
         showMsg(result.message || "Erreur lors de l'inscription.", false);
         btn.disabled    = false;
         btn.textContent = "S'inscrire";
+        checkFormValidity(); // revérifier
       }
-
+      
     } catch (err) {
       console.error('Erreur inscription:', err);
       showMsg('Impossible de contacter le serveur : ' + err.message, false);
       btn.disabled    = false;
       btn.textContent = "S'inscrire";
+      checkFormValidity();
     }
   });
 })();

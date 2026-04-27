@@ -290,22 +290,53 @@
     color: var(--muted);
   }
 
-  /* ==================== PROGRESS INDICATOR ==================== */
-  .progress-indicator {
+  /* ==================== INDICATEUR FORCE MOT DE PASSE (6 BARRES) ==================== */
+  .password-strength {
+    margin-top: 8px;
     width: 100%;
-    height: 4px;
-    background: rgba(91, 62, 150, .1);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 12px;
   }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--violet), var(--blue));
-    transition: width .3s ease;
-    width: 0%;
+  
+  .strength-bars {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
   }
+  
+  .bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    transition: background 0.2s ease, box-shadow 0.2s;
+  }
+  
+  .bar.active.weak {
+    background: #e74c3c;
+    box-shadow: 0 0 6px #e74c3c;
+  }
+  
+  .bar.active.medium {
+    background: #f39c12;
+    box-shadow: 0 0 6px #f39c12;
+  }
+  
+  .bar.active.strong {
+    background: #2ecc71;
+    box-shadow: 0 0 6px #2ecc71;
+  }
+  
+  .strength-text {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+  
+  .strength-text.weak { color: #e74c3c; }
+  .strength-text.medium { color: #f39c12; }
+  .strength-text.strong { color: #2ecc71; }
 
   /* ==================== BOUTONS ==================== */
   .btn-group {
@@ -351,6 +382,12 @@
   .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(91, 62, 150, 0.5);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
   }
 
   .btn-danger {
@@ -625,6 +662,18 @@
           <div class="form-group">
             <label for="new_password">✨ Nouveau mot de passe <span style="font-weight: normal;">(optionnel)</span></label>
             <input type="password" id="new_password" name="new_password" placeholder="Laissez vide pour ne pas changer">
+            <!-- Indicateur visuel 6 barres -->
+            <div class="password-strength" id="passwordStrength">
+              <div class="strength-bars" id="strengthBars">
+                <div class="bar" data-index="0"></div>
+                <div class="bar" data-index="1"></div>
+                <div class="bar" data-index="2"></div>
+                <div class="bar" data-index="3"></div>
+                <div class="bar" data-index="4"></div>
+                <div class="bar" data-index="5"></div>
+              </div>
+              <div class="strength-text" id="strengthText">Sécurité du mot de passe</div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -633,7 +682,7 @@
           </div>
 
           <div class="btn-group">
-            <button type="submit" class="btn btn-primary">💾 Mettre à jour mon profil</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn">💾 Mettre à jour mon profil</button>
           </div>
         </form>
 
@@ -662,6 +711,74 @@
 </div>
 
 <script>
+  /* ═══════════════════════════════════════════════════
+     INDICATEUR DE FORCE DU MOT DE PASSE (6 BARRES)
+     ACCEPTE UNIQUEMENT LES MOTS DE PASSE FORTS (score >= 5)
+  ═══════════════════════════════════════════════════ */
+
+  // Fonction d'évaluation du mot de passe (score sur 6)
+  function evaluatePasswordStrength(password) {
+    let score = 0;
+    if (!password) return 0;
+    
+    // Longueur : 0-5:0, 6-7:1, >=8:2
+    if (password.length >= 8) score += 2;
+    else if (password.length >= 6) score += 1;
+    
+    if (/[0-9]/.test(password)) score += 1;       // chiffre
+    if (/[a-z]/.test(password)) score += 1;       // minuscule
+    if (/[A-Z]/.test(password)) score += 1;       // majuscule
+    if (/[^a-zA-Z0-9]/.test(password)) score += 1; // symbole spécial
+    
+    return Math.min(score, 6);
+  }
+
+  // Mise à jour de l'affichage des barres
+  function updateStrengthIndicator(password) {
+    const score = evaluatePasswordStrength(password);
+    const bars = document.querySelectorAll('#strengthBars .bar');
+    const strengthTextEl = document.getElementById('strengthText');
+    
+    if (!bars.length) return;
+    
+    // Reset classes
+    bars.forEach(bar => {
+      bar.classList.remove('active', 'weak', 'medium', 'strong');
+    });
+    
+    // Déterminer le type de force
+    let strengthType = 'weak';
+    let label = 'TRÈS FAIBLE';
+    if (score >= 5) {
+      strengthType = 'strong';
+      label = 'FORT ✅ - Accepté';
+    } else if (score >= 3) {
+      strengthType = 'medium';
+      label = 'MOYEN ❌ - Non accepté';
+    } else if (score >= 1) {
+      strengthType = 'weak';
+      label = 'FAIBLE ❌ - Non accepté';
+    } else {
+      label = 'SAISIR UN MOT DE PASSE';
+    }
+    
+    // Activer les barres selon le score
+    for (let i = 0; i < score; i++) {
+      if (bars[i]) {
+        bars[i].classList.add('active', strengthType);
+      }
+    }
+    
+    // Changer le texte
+    strengthTextEl.textContent = label;
+    strengthTextEl.classList.remove('weak', 'medium', 'strong');
+    if (score >= 5) strengthTextEl.classList.add('strong');
+    else if (score >= 3) strengthTextEl.classList.add('medium');
+    else if (score >= 1) strengthTextEl.classList.add('weak');
+    
+    return score;
+  }
+
   // ==================== SCROLL NAVBAR ====================
   window.addEventListener('scroll', () => {
     const navbar = document.getElementById('navbar');
@@ -777,6 +894,44 @@
     }
   }
 
+  // Fonction pour vérifier la validité du formulaire (mot de passe fort si nouveau mot de passe fourni)
+  function isFormValid() {
+    const new_password = document.getElementById('new_password').value;
+    const confirm_password = document.getElementById('confirm_password').value;
+    const old_password = document.getElementById('old_password').value;
+    
+    // Si aucun nouveau mot de passe, pas besoin de vérifier la force
+    if (!new_password) {
+      return true;
+    }
+    
+    // Vérifier que l'ancien mot de passe est rempli
+    if (!old_password) {
+      return false;
+    }
+    
+    // Vérifier la force du mot de passe (doit être >= 5)
+    const score = evaluatePasswordStrength(new_password);
+    if (score < 5) {
+      return false;
+    }
+    
+    // Vérifier la confirmation
+    if (new_password !== confirm_password) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Mettre à jour l'état du bouton
+  function updateSubmitButtonState() {
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+      submitBtn.disabled = !isFormValid();
+    }
+  }
+
   async function updateProfile(event) {
     event.preventDefault();
 
@@ -813,9 +968,13 @@
       return false;
     }
 
-    if (new_password && new_password.length < 6) {
-      showMessage("Le nouveau mot de passe doit contenir au moins 6 caractères", "error");
-      return false;
+    // ✅ NOUVEAU: Vérifier que le nouveau mot de passe est FORT (score >= 5)
+    if (new_password) {
+      const score = evaluatePasswordStrength(new_password);
+      if (score < 5) {
+        showMessage("❌ MOT DE PASSE REFUSÉ ! Un mot de passe FORT est requis : 8+ caractères, une majuscule, une minuscule, un chiffre ET un symbole spécial (@#$%!&*).", "error");
+        return false;
+      }
     }
 
     const formData = { 
@@ -826,6 +985,10 @@
       old_password: old_password, 
       new_password: new_password 
     };
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Mise à jour...";
 
     try {
       const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php', {
@@ -845,6 +1008,9 @@
         document.getElementById('old_password').value = '';
         document.getElementById('new_password').value = '';
         document.getElementById('confirm_password').value = '';
+        // Réinitialiser l'indicateur de force
+        updateStrengthIndicator('');
+        updateSubmitButtonState();
         
         if (email) {
           sessionStorage.setItem('user_email', email);
@@ -856,6 +1022,9 @@
     } catch (error) {
       console.error("Erreur update:", error);
       showMessage("Erreur de connexion au serveur: " + error.message, "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "💾 Mettre à jour mon profil";
     }
     return false;
   }
@@ -930,6 +1099,34 @@
   // ==================== INITIALISATION ====================
   document.addEventListener('DOMContentLoaded', () => {
     loadUserProfile();
+    
+    // Ajouter les écouteurs pour la force du mot de passe
+    const newPasswordInput = document.getElementById('new_password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const oldPasswordInput = document.getElementById('old_password');
+    
+    if (newPasswordInput) {
+      newPasswordInput.addEventListener('input', function() {
+        const score = updateStrengthIndicator(this.value);
+        updateSubmitButtonState();
+      });
+    }
+    
+    if (confirmPasswordInput) {
+      confirmPasswordInput.addEventListener('input', function() {
+        updateSubmitButtonState();
+      });
+    }
+    
+    if (oldPasswordInput) {
+      oldPasswordInput.addEventListener('input', function() {
+        updateSubmitButtonState();
+      });
+    }
+    
+    // Initialiser l'état du bouton
+    updateSubmitButtonState();
+    
     window.onclick = function(event) {
       const modal = document.getElementById('deleteModal');
       if (event.target === modal) closeDeleteModal();

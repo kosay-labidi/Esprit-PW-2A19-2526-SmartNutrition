@@ -24,6 +24,10 @@
       <div class="gl-hero__eyebrow">
         <span class="gl-eyebrow-dot"></span>
         GaiaLumen · Défis Collaboratifs
+        <div class="gl-notif-bell-wrap" id="gl-notif-trigger">
+          <span class="gl-notif-bell">🔔</span>
+          <span class="gl-notif-badge" id="gl-notif-count" style="display:none">0</span>
+        </div>
       </div>
       <h2 class="gl-hero__title">
         Relevez les Défis.<br />Gagnez des Récompenses.
@@ -119,6 +123,7 @@
     <div class="gl-filter-chips" id="filter-chips">
       <button class="gl-chip gl-chip--active" data-status="">Tous</button>
       <button class="gl-chip" data-status="actif">⚡ En cours</button>
+      <button class="gl-chip" data-status="liked">❤️ Favoris</button>
       <button class="gl-chip" data-status="futur">🔜 À venir</button>
       <button class="gl-chip" data-status="termine">✅ Terminés</button>
     </div>
@@ -144,6 +149,11 @@
           >
         </div>
         <div class="gl-view-toggle">
+          <select id="challenge-sort-filter" class="gl-rank-select" style="width: auto; margin-right: 10px; height: 32px; font-size: 0.75rem;">
+            <option value="date_desc">📅 Plus récents</option>
+            <option value="participants_desc">👥 Plus populaires</option>
+            <option value="titre_asc">🔤 Nom A-Z</option>
+          </select>
           <button class="gl-view-btn active" id="view-grid" title="Vue grille">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
               <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -237,6 +247,17 @@
         style="display: none"
       ></div>
 
+      <!-- Pagination -->
+      <div id="challenges-pagination" class="gl-pagination" style="display: none; justify-content: center; align-items: center; gap: 20px; margin: 30px 0 10px;">
+        <button id="prev-page" class="gl-btn gl-btn--ghost" style="padding: 8px 16px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1);">
+          ← Précédent
+        </button>
+        <span id="page-info" style="font-size: 0.85rem; font-weight: 600; color: var(--muted);">Page 1 / 1</span>
+        <button id="next-page" class="gl-btn gl-btn--ghost" style="padding: 8px 16px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1);">
+          Suivant →
+        </button>
+      </div>
+
       <!-- ╔════════════════════════════════════╗
            ║       VUE SWIPE (TINDER)           ║
            ╚════════════════════════════════════╝ -->
@@ -295,6 +316,10 @@
           <div class="rank-header-title">
             <span class="rank-header-icon">🏅</span>
             <span class="rank-header-text">Classement</span>
+            <select id="ranking-sort-filter" class="gl-rank-select" style="width: auto; margin-left: 10px; height: 24px; font-size: 0.65rem; padding: 0 5px; border: none; background: rgba(91,62,150,0.2);">
+              <option value="progression">📈 %</option>
+              <option value="points">💎 Pts</option>
+            </select>
             <div class="rank-live-dot"><span></span>Live</div>
           </div>
           <select id="ranking-challenge-filter" class="gl-rank-select">
@@ -652,7 +677,20 @@
       </div>
     </div>
   </div>
+  <!-- ╔════════════════════════════════════╗
+       ║   PANEL NOTIFICATIONS (NEW)        ║
+       ╚════════════════════════════════════╝ -->
+  <div class="gl-notif-panel" id="gl-notif-panel" style="display:none">
+    <div class="gl-notif-panel__header">
+      <h4>Notifications</h4>
+      <button class="gl-notif-clear" onclick="window.clearNotifications()">Effacer</button>
+    </div>
+    <div class="gl-notif-panel__list" id="gl-notif-list">
+      <div class="gl-notif-empty">Aucune nouvelle notification</div>
+    </div>
+  </div>
 </section>
+
 
 <!-- ═══════════════════════════════════════════════════
      CSS — MODULE DÉFIS v4.0 · 3D FRAMES

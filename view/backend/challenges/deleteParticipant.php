@@ -1,32 +1,29 @@
 <?php
 require_once(__DIR__ . '/../../../controller/participant.controller.php');
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$id_challenge = 0;
-if (isset($_GET['id_challenge'])) {
-    $id_challenge = (int)$_GET['id_challenge'];
-} elseif (isset($_GET['challenge_id'])) {
-    $id_challenge = (int)$_GET['challenge_id'];
-}
+$isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+    && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-$participantC = new ParticipantController();
-$success = false;
+$id           = isset($_GET['id'])           ? (int)$_GET['id']           : 0;
+$id_challenge = isset($_GET['id_challenge']) ? (int)$_GET['id_challenge'] : 0;
 
 if ($id > 0) {
-    $success = $participantC->deleteParticipant($id);
+    $participantC = new ParticipantController();
+    $success      = $participantC->deleteParticipant($id);
+} else {
+    $success = false;
 }
 
-if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+if ($isAjax) {
+    if (ob_get_length()) ob_clean();
     header('Content-Type: application/json');
     echo json_encode(['success' => $success]);
     exit;
 }
 
-if ($id_challenge > 0) {
-    header('Location: showParticipant.php?id=' . $id_challenge);
-    exit;
-}
-
-header('Location: showParticipant.php');
+// Redirection HTML normale
+$redirect = 'showParticipant.php';
+if ($id_challenge > 0) $redirect .= '?id_challenge=' . $id_challenge;
+header('Location: ' . $redirect);
 exit;
 ?>

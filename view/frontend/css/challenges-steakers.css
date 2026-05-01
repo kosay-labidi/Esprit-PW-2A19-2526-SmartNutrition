@@ -298,3 +298,225 @@
 .gl-days-badge--urgent { background:rgba(231,76,60,.15); color:#e74c3c; }
 .gl-days-badge--soon { background:rgba(243,156,18,.15); color:#f39c12; }
 @keyframes urgentPulse { 0%,100%{opacity:1}50%{opacity:.6} }
+
+/* ══════════════════════════════════════════════════════════
+   NEW: OVERLAY STATS & LIKE BUTTON
+   ══════════════════════════════════════════════════════════ */
+.challenge-image-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+  cursor: pointer;
+}
+
+.challenge-overlay-stats {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 5;
+}
+
+.stat-item {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.challenge-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.challenge-title {
+  margin: 0;
+  flex: 1;
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+.btn-like {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-like:hover {
+  background: rgba(231, 76, 60, 0.15);
+  color: var(--danger);
+  transform: scale(1.1);
+}
+
+.btn-like.active {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+}
+
+.btn-like i { font-size: 1.1rem; }
+
+/* ══════════════════════════════════════════════════════════
+   NEW: NOTIFICATION SYSTEM
+   ══════════════════════════════════════════════════════════ */
+.gl-notif-bell-wrap {
+  display: inline-flex;
+  position: relative;
+  cursor: pointer;
+  margin-left: 12px;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
+}
+
+.gl-notif-bell-wrap:hover {
+  transform: scale(1.15);
+}
+
+.gl-notif-bell {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+}
+
+.gl-notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--ruby, #E0115F);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #0d1f35;
+  box-shadow: 0 0 10px rgba(224, 17, 95, 0.4);
+}
+
+.gl-notif-panel {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  width: 320px;
+  background: rgba(13, 31, 53, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  overflow: hidden;
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.gl-notif-panel__header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gl-notif-panel__header h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.gl-notif-clear {
+  background: none;
+  border: none;
+  color: var(--muted, #a8b8a0);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.gl-notif-clear:hover {
+  color: #fff;
+}
+
+.gl-notif-panel__list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.gl-notif-item {
+  padding: 14px 20px;
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.gl-notif-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.gl-notif-item--unread {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.gl-notif-item__icon {
+  font-size: 1.2rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.gl-notif-item__content {
+  flex: 1;
+}
+
+.gl-notif-item__text {
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.gl-notif-item__time {
+  font-size: 0.7rem;
+  color: var(--muted, #a8b8a0);
+}
+
+.gl-notif-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted, #a8b8a0);
+  font-size: 0.85rem;
+}

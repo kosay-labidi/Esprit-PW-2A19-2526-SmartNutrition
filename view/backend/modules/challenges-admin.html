@@ -169,12 +169,40 @@
                   <div class="form-group">
                     <label class="form-label">Sticker / Icône <span class="required">*</span></label>
                     <select name="streak_icon" id="challenge-streak-icon" class="form-select adm-input" required onchange="updatePreview()">
-                      <option value="♻️">♻️ Recyclage</option>
-                      <option value="💧">💧 Eau</option>
-                      <option value="🥗">🥗 Repas</option>
-                      <option value="🚲">🚲 Transport</option>
-                      <option value="⚡">⚡ Énergie</option>
-                      <option value="🌍">🌍 Planète</option>
+                      <optgroup label="Écologie & Planète">
+                        <option value="♻️">♻️ Recyclage</option>
+                        <option value="💧">💧 Eau</option>
+                        <option value="🌍">🌍 Planète</option>
+                        <option value="🌱">🌱 Nature</option>
+                        <option value="🌳">🌳 Forêt</option>
+                        <option value="⚡">⚡ Énergie</option>
+                        <option value="☀️">☀️ Solaire</option>
+                      </optgroup>
+                      <optgroup label="Sport & Santé">
+                        <option value="🏃">🏃 Course / Sport</option>
+                        <option value="🚲">🚲 Transport / Vélo</option>
+                        <option value="🧘">🧘 Yoga / Mental</option>
+                        <option value="💪">💪 Musculation</option>
+                        <option value="🥗">🥗 Alimentation</option>
+                        <option value="⏰">⏰ Sommeil</option>
+                        <option value="📵">📵 Détox Digitale</option>
+                        <option value="🍎">🍎 Nutrition</option>
+                        <option value="👟">👟 Marche</option>
+                      </optgroup>
+                      <optgroup label="Bien-être & Social">
+                        <option value="🌿">🌿 Bien-être</option>
+                        <option value="🤝">🤝 Entraide</option>
+                        <option value="📖">📖 Lecture</option>
+                        <option value="🎨">🎨 Créativité</option>
+                        <option value="🙏">🙏 Gratitude</option>
+                        <option value="✨">✨ Méditation</option>
+                      </optgroup>
+                      <optgroup label="Autre">
+                        <option value="🏆">🏆 Victoire</option>
+                        <option value="🚀">🚀 Challenge</option>
+                        <option value="🔥">🔥 Motivation</option>
+                        <option value="💎">💎 Points</option>
+                      </optgroup>
                     </select>
                   </div>
                   <div class="form-group">
@@ -365,7 +393,15 @@
           <span class="adm-section-badge" id="challenges-count-badge">—</span>
         </div>
         <div class="adm-section-header__actions">
-          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="refreshTableAdmin()">
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="exportCSV()" title="Exporter en CSV">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            CSV
+          </button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="exportPDF()" title="Exporter en PDF">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            PDF
+          </button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="refreshTableAdmin()" title="Actualiser">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
         </div>
@@ -377,6 +413,13 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="adm-search" id="search-input-admin" placeholder="Rechercher un défi…" onkeyup="searchChallengesAdmin()">
         </div>
+        <select class="adm-select" id="sort-challenges-admin" onchange="sortAdminChallenges()">
+          <option value="date_desc">📅 Plus récents</option>
+          <option value="participants_desc">👥 Participants</option>
+          <option value="vues_desc">👁️ Vues</option>
+          <option value="likes_desc">❤️ Likes</option>
+          <option value="titre_asc">🔤 Nom A-Z</option>
+        </select>
         <select class="adm-select" id="status-filter-admin" onchange="filterChallengesAdmin()">
           <option value="">Tous statuts</option>
           <option value="actif">✅ Actif</option>
@@ -514,6 +557,11 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="adm-search" id="search-participants" placeholder="Rechercher un participant…" onkeyup="searchParticipants()">
         </div>
+        <select class="adm-select" id="sort-participants-admin" onchange="sortAdminParticipants()">
+          <option value="date_desc">📅 Inscription</option>
+          <option value="progression_desc">📈 Progression</option>
+          <option value="nom_asc">🔤 Nom A-Z</option>
+        </select>
         <select class="adm-select" id="challenge-filter" onchange="filterParticipantsByChallenge()">
           <option value="">Tous les défis</option>
         </select>

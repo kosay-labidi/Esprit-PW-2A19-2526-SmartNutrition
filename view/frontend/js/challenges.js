@@ -79,6 +79,9 @@ function initChallenges() {
 
   // ── Rendu des cartes ──────────────────────────────────────
   function renderChallenges(list) {
+    const countEl = document.getElementById('challenges-count');
+    if (countEl) countEl.textContent = `${list.length} défi(s)`;
+
     if (!list || list.length === 0) {
       grid.innerHTML = '<div class="no-challenges">Aucun défi trouvé</div>';
       return;
@@ -106,10 +109,18 @@ function initChallenges() {
       
       const image = c.image || 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800';
       const statut = c.statut || 'actif';
+      const nbVues = c.nb_vues || 0;
+      const nbLikes = c.nb_likes || 0;
       
       return `
         <div class="challenge-card" data-challenge-id="${c.id}">
-          <img src="${image}" alt="${titre}" class="challenge-image" onclick="window.viewChallengeDetail(${c.id})">
+          <div class="challenge-image-wrap" onclick="window.viewChallengeDetail(${c.id})">
+            <img src="${image}" alt="${titre}" class="challenge-image">
+            <div class="challenge-overlay-stats">
+              <span class="stat-item"><i class="lni lni-eye"></i> ${nbVues}</span>
+              <span class="stat-item like-count-${c.id}"><i class="lni lni-heart"></i> ${nbLikes}</span>
+            </div>
+          </div>
           <div class="challenge-badge ${statut}">${statut.toUpperCase()}</div>
           <div class="challenge-steaker">
             <div class="steaker-3d steaker-${level} steaker-small">
@@ -117,7 +128,12 @@ function initChallenges() {
             </div>
           </div>
           <div class="challenge-content">
-            <h3 class="challenge-title" onclick="window.viewChallengeDetail(${c.id})">${titre}</h3>
+            <div class="challenge-header-row">
+              <h3 class="challenge-title" onclick="window.viewChallengeDetail(${c.id})">${titre}</h3>
+              <button class="btn-like ${c.is_liked ? 'active' : ''}" onclick="event.stopPropagation(); window.toggleLike(${c.id}, this)">
+                <i class="lni lni-heart${c.is_liked ? '-fill' : ''}"></i>
+              </button>
+            </div>
             <p class="challenge-description">${c.description}</p>
             ${streakDisplay}
             <div class="challenge-stats">
@@ -141,18 +157,14 @@ function initChallenges() {
    function loadChallenges() {
      loading.style.display = 'flex';
      
-     // Utiliser l'en-tête X-Requested-With pour que listChallenges.php sache que c'est une requête AJAX
+     // 1. Charger les défis
      fetch('../backend/challenges/listChallenges.php', {
-       headers: {
-         'X-Requested-With': 'XMLHttpRequest'
-       }
+       headers: { 'X-Requested-With': 'XMLHttpRequest' }
      })
        .then(response => response.json())
        .then(data => {
-         // Mettre à jour sampleChallenges pour que les autres fonctions y aient accès
-         sampleChallenges.length = 0; // Vider l'array
+         sampleChallenges.length = 0;
          data.forEach(c => sampleChallenges.push(c));
-         
          renderChallenges(data);
          loading.style.display = 'none';
        })
@@ -161,6 +173,22 @@ function initChallenges() {
          renderChallenges([]);
          loading.style.display = 'none';
        });
+
+     // 2. Charger les statistiques globales pour le hero
+     fetch('../backend/challenges/listChallenges.php?action=stats', {
+       headers: { 'X-Requested-With': 'XMLHttpRequest' }
+     })
+       .then(r => r.json())
+       .then(stats => {
+         const elTotal = document.getElementById('stat-total');
+         const elActive = document.getElementById('stat-active');
+         const elPart = document.getElementById('stat-participants');
+         
+         if (elTotal) elTotal.textContent = stats.total_challenges || 0;
+         if (elActive) elActive.textContent = stats.challenges_actifs || 0;
+         if (elPart) elPart.textContent = stats.total_participants || 0;
+       })
+       .catch(err => console.warn('Erreur stats hero:', err));
    }
 
   // ── Classement ────────────────────────────────────────────
@@ -207,21 +235,63 @@ function initChallenges() {
   // ── Filtre recherche ──────────────────────────────────────
   const searchInput = document.getElementById('challenge-search');
   if (searchInput) {
-    searchInput.oninput = () => {
-      const val = searchInput.value.toLowerCase();
-      renderChallenges(sampleChallenges.filter(c =>
-        c.titre.toLowerCase().includes(val) || c.description.toLowerCase().includes(val)
-      ));
-    };
+    searchInput.oninput = () => filterAndSortChallenges();
   }
 
   // ── Filtre statut ─────────────────────────────────────────
   const statusFilter = document.getElementById('challenge-status-filter');
   if (statusFilter) {
-    statusFilter.onchange = () => {
-      const val = statusFilter.value;
-      renderChallenges(val ? sampleChallenges.filter(c => c.statut === val) : sampleChallenges);
+    statusFilter.onchange = () => filterAndSortChallenges();
+  }
+
+  // ── Filtre Chips ──────────────────────────────────────────
+  document.querySelectorAll('.gl-chip').forEach(chip => {
+    chip.onclick = () => {
+      document.querySelectorAll('.gl-chip').forEach(c => c.classList.remove('gl-chip--active'));
+      chip.classList.add('gl-chip--active');
+      filterAndSortChallenges();
     };
+  });
+
+  // ── Filtre Tri ────────────────────────────────────────────
+  const sortFilter = document.getElementById('challenge-sort-filter');
+  if (sortFilter) {
+    sortFilter.onchange = () => filterAndSortChallenges();
+  }
+
+  function filterAndSortChallenges() {
+    const searchVal = searchInput?.value.toLowerCase() || '';
+    const statusVal = statusFilter?.value || '';
+    const chipStatus = document.querySelector('.gl-chip--active')?.dataset.status || '';
+    const sortType = sortFilter?.value || 'date_desc';
+
+    let filtered = sampleChallenges.filter(c => {
+      const titre = (c.titre || '').toLowerCase();
+      const desc = (c.description || '').toLowerCase();
+      const matchSearch = titre.includes(searchVal) || desc.includes(searchVal);
+      
+      let matchStatus = true;
+      if (chipStatus === 'liked') {
+        matchStatus = !!c.is_liked;
+      } else if (chipStatus) {
+        matchStatus = c.statut === chipStatus;
+      } else if (statusVal) {
+        matchStatus = c.statut === statusVal;
+      }
+      
+      return matchSearch && matchStatus;
+    });
+
+    // Tri
+    filtered.sort((a, b) => {
+      switch (sortType) {
+        case 'participants_desc': return (b.participants_count || 0) - (a.participants_count || 0);
+        case 'titre_asc': return (a.titre || '').localeCompare(b.titre || '');
+        default: return new Date(b.date_debut) - new Date(a.date_debut);
+      }
+    });
+
+    renderChallenges(filtered);
   }
 
   // ── Bouton refresh ────────────────────────────────────────
@@ -536,6 +606,12 @@ window.handleInlineParticipationSubmit = function(event, challengeId) {
         
         // Show success toast
         showToast(`Félicitations ${data.nom}! ${result.message}`, 'success');
+
+        // Ajouter à la liste des notifications
+        window.addNotification(
+          `Vous avez rejoint le défi "${challenge.titre}" !`,
+          challenge.streak_icon || '🏆'
+        );
         
         // Close form on success
         window.hideInlineParticipationForm(challengeId);
@@ -800,11 +876,87 @@ window.handleParticipationSubmit = function(event, challengeId) {
 };
 
 // ═══════════════════════════════════════════════════════════
+// MÉTIER : VUES & LIKES
+// ═══════════════════════════════════════════════════════════
+
+window.incrementVues = function(challengeId) {
+  fetch('../backend/challenges/listChallenges.php?action=incrementVues', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    body: JSON.stringify({ id: challengeId })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      // Mettre à jour les données locales
+      const c = sampleChallenges.find(ch => ch.id === parseInt(challengeId));
+      if (c) {
+        c.nb_vues = (parseInt(c.nb_vues) || 0) + 1;
+        // Mettre à jour l'UI sur la carte si elle existe
+        const card = document.querySelector(`.challenge-card[data-challenge-id="${challengeId}"]`);
+        if (card) {
+          const vueEl = card.querySelector('.lni-eye').parentElement;
+          if (vueEl) vueEl.innerHTML = `<i class="lni lni-eye"></i> ${c.nb_vues}`;
+        }
+      }
+    }
+  })
+  .catch(err => console.warn('Erreur incrementVues:', err));
+};
+
+window.toggleLike = function(challengeId, btn) {
+  const icon = btn.querySelector('i');
+  
+  fetch('../backend/challenges/listChallenges.php?action=toggleLike', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    body: JSON.stringify({ id_challenge: challengeId })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.liked !== undefined) {
+      // Mettre à jour les données locales
+      const c = sampleChallenges.find(ch => ch.id === parseInt(challengeId));
+      if (c) {
+        c.is_liked = data.liked;
+        c.nb_likes = data.count;
+      }
+
+      // Mettre à jour l'UI du bouton
+      btn.classList.toggle('active', data.liked);
+      icon.className = `lni lni-heart${data.liked ? '-fill' : ''}`;
+      
+      // Mettre à jour les compteurs de likes (sur la carte et ailleurs)
+      document.querySelectorAll(`.like-count-${challengeId}`).forEach(el => {
+        el.innerHTML = `<i class="lni lni-heart"></i> ${data.count}`;
+      });
+      
+      showToast(data.liked ? 'Défi ajouté à vos favoris' : 'Défi retiré de vos favoris', 'info');
+
+      // Ajouter à la liste des notifications
+      if (c) {
+        window.addNotification(
+          data.liked ? `Vous avez aimé le défi "${c.titre}"` : `Vous avez retiré votre like du défi "${c.titre}"`,
+          data.liked ? '❤️' : '💔'
+        );
+      }
+    }
+  })
+  .catch(err => {
+    console.error('Erreur toggleLike:', err);
+    showToast('Erreur lors du like. Êtes-vous connecté ?', 'error');
+  });
+};
+
+// ═══════════════════════════════════════════════════════════
 // AUTRES MODALS
 // ═══════════════════════════════════════════════════════════
 window.viewChallengeDetail = function(challengeId) {
   const challenge = sampleChallenges.find(c => c.id === parseInt(challengeId));
   if (!challenge) return;
+
+  // Incrémenter les vues
+  window.incrementVues(challengeId);
 
   const modal = document.getElementById('challenge-modal');
   const body  = document.getElementById('challenge-modal-body');
@@ -817,8 +969,13 @@ window.viewChallengeDetail = function(challengeId) {
     <button onclick="window.closeChallengeModal()" class="modal-close" title="Fermer">×</button>
     <div style="padding:32px;">
       <div style="position:relative;height:220px;background:url('${challenge.image}') center/cover;border-radius:16px;overflow:hidden;margin-bottom:24px;">
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.2),rgba(0,0,0,.7));display:flex;align-items:flex-end;padding:24px;">
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.2),rgba(0,0,0,.7));display:flex;align-items:flex-end;justify-content:space-between;padding:24px;">
           <h2 style="color:#fff;font-size:2rem;margin:0;">${challenge.titre}</h2>
+          <button class="btn-like ${challenge.is_liked ? 'active' : ''}" 
+                  style="width:45px;height:45px;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);"
+                  onclick="event.stopPropagation(); window.toggleLike(${challenge.id}, this)">
+            <i class="lni lni-heart${challenge.is_liked ? '-fill' : ''}" style="font-size:1.4rem;"></i>
+          </button>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;padding:20px;background:rgba(91,62,150,.1);border-radius:16px;">
@@ -869,12 +1026,87 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ═══════════════════════════════════════════════════════════
+// NOTIFICATION SYSTEM
+// ═══════════════════════════════════════════════════════════
+window.notifications = [];
+
+window.addNotification = function(text, icon = '🔔') {
+  const notif = {
+    id: Date.now(),
+    text,
+    icon,
+    time: 'À l\'instant',
+    unread: true
+  };
+  window.notifications.unshift(notif);
+  updateNotifUI();
+};
+
+window.clearNotifications = function() {
+  window.notifications = [];
+  updateNotifUI();
+};
+
+function updateNotifUI() {
+  const panel = document.getElementById('gl-notif-panel');
+  const list = document.getElementById('gl-notif-list');
+  const badge = document.getElementById('gl-notif-count');
+  
+  if (!list || !badge) return;
+
+  const unreadCount = window.notifications.filter(n => n.unread).length;
+  badge.textContent = unreadCount;
+  badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+
+  if (window.notifications.length === 0) {
+    list.innerHTML = '<div class="gl-notif-empty">Aucune nouvelle notification</div>';
+    return;
+  }
+
+  list.innerHTML = window.notifications.map(n => `
+    <div class="gl-notif-item ${n.unread ? 'gl-notif-item--unread' : ''}" onclick="this.classList.remove('gl-notif-item--unread')">
+      <div class="gl-notif-item__icon">${n.icon}</div>
+      <div class="gl-notif-item__content">
+        <div class="gl-notif-item__text">${n.text}</div>
+        <div class="gl-notif-item__time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
 // DÉMARRAGE
 // ═══════════════════════════════════════════════════════════
+function setupNotifEvents() {
+  const trigger = document.getElementById('gl-notif-trigger');
+  const panel = document.getElementById('gl-notif-panel');
+  
+  if (trigger && panel) {
+    trigger.onclick = (e) => {
+      e.stopPropagation();
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      if (panel.style.display === 'block') {
+        window.notifications.forEach(n => n.unread = false);
+        updateNotifUI();
+      }
+    };
+    
+    document.addEventListener('click', (e) => {
+      if (!panel.contains(e.target) && e.target !== trigger) {
+        panel.style.display = 'none';
+      }
+    });
+  }
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initChallenges);
+  document.addEventListener('DOMContentLoaded', () => {
+    initChallenges();
+    setupNotifEvents();
+  });
 } else {
   initChallenges();
+  setupNotifEvents();
 }
 
 document.addEventListener('moduleLoaded', e => {

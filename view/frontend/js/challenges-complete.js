@@ -33,6 +33,10 @@ const currentUser = window.__USER__ || { id: 1, nom: 'Utilisateur', pseudo: 'use
 let activeChallengesView = 'grid';
 let filteredChallenges = [];
 
+// Pagination
+let currentPage = 1;
+const itemsPerPage = 6;
+
 // Données classement
 const sampleParticipants = [
   { id: 1, nom: 'Marie Dupont', pseudo: 'marie_eco', avatar: '👩', progression: 95, points: 1250, steaker_niveau: 'double' },
@@ -207,8 +211,11 @@ function normalizeChallengeStatus(value) {
 }
 
 function filterChallenges() {
+  currentPage = 1; // Reset pagination
   const searchInput = document.getElementById('challenge-search');
   const statusFilter = document.getElementById('challenge-status-filter');
+  const sortFilter = document.getElementById('challenge-sort-filter');
+  const activeChip = document.querySelector('.gl-chip--active');
   const grid = document.getElementById('challenges-grid');
   const empty = document.getElementById('challenges-empty');
   
@@ -216,13 +223,37 @@ function filterChallenges() {
   
   const search = searchInput?.value.toLowerCase() || '';
   const status = statusFilter?.value || '';
+  const chipStatus = activeChip?.dataset.status || '';
+  const sortType = sortFilter?.value || 'date_desc';
   
-  const filtered = allChallenges.filter(c => {
+  let filtered = allChallenges.filter(c => {
     const titre = (c.titre || '').toLowerCase();
     const description = (c.description || '').toLowerCase();
     const matchSearch = titre.includes(search) || description.includes(search);
-    const matchStatus = !status || c.statut === status;
+    
+    // Priorité au chip de filtrage
+    let matchStatus = true;
+    if (chipStatus === 'liked') {
+      matchStatus = !!c.is_liked;
+    } else if (chipStatus) {
+      matchStatus = c.statut === chipStatus;
+    } else if (status) {
+      matchStatus = c.statut === status;
+    }
+    
     return matchSearch && matchStatus;
+  });
+
+  // Tri des défis
+  filtered.sort((a, b) => {
+    if (sortType === 'participants_desc') {
+      return (b.participants_count || 0) - (a.participants_count || 0);
+    } else if (sortType === 'titre_asc') {
+      return (a.titre || '').localeCompare(b.titre || '');
+    } else {
+      // date_desc par défaut
+      return new Date(b.date_debut) - new Date(a.date_debut);
+    }
   });
 
   filteredChallenges = filtered;
@@ -506,10 +537,12 @@ function renderSwipeDeck(challenges) {
 
 function renderChallenges(challenges) {
   const grid = document.getElementById('challenges-grid');
+  const pagination = document.getElementById('challenges-pagination');
   if (!grid) return;
 
   if (challenges.length === 0) {
     grid.style.display = 'none';
+    if (pagination) pagination.style.display = 'none';
     document.getElementById('challenges-empty').style.display = 'block';
     return;
   }
@@ -517,7 +550,35 @@ function renderChallenges(challenges) {
   document.getElementById('challenges-empty').style.display = 'none';
   grid.style.display = 'grid';
 
-  grid.innerHTML = challenges.map(c => {
+  // Logique de pagination
+  const totalPages = Math.ceil(challenges.length / itemsPerPage);
+  if (currentPage > totalPages) currentPage = totalPages || 1;
+  
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const paginatedItems = challenges.slice(start, end);
+
+  // Mise à jour de l'UI de pagination
+  if (pagination) {
+    pagination.style.display = totalPages > 1 ? 'flex' : 'none';
+    const pageInfo = document.getElementById('page-info');
+    if (pageInfo) pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
+    
+    const btnPrev = document.getElementById('prev-page');
+    const btnNext = document.getElementById('next-page');
+    if (btnPrev) {
+      btnPrev.disabled = currentPage === 1;
+      btnPrev.style.opacity = currentPage === 1 ? '0.4' : '1';
+      btnPrev.style.pointerEvents = currentPage === 1 ? 'none' : 'auto';
+    }
+    if (btnNext) {
+      btnNext.disabled = currentPage === totalPages;
+      btnNext.style.opacity = currentPage === totalPages ? '0.4' : '1';
+      btnNext.style.pointerEvents = currentPage === totalPages ? 'none' : 'auto';
+    }
+  }
+
+  grid.innerHTML = paginatedItems.map(c => {
     const dateDebut = new Date(c.date_debut);
     const dateFin = new Date(c.date_fin);
     const hasValidDates = !Number.isNaN(dateDebut.getTime()) && !Number.isNaN(dateFin.getTime());
@@ -533,7 +594,19 @@ function renderChallenges(challenges) {
     return `
       <div class="challenge-card" data-challenge-id="${c.id}">
         <div class="challenge-card-main">
-          ${c.image ? `<img src="${c.image}" alt="${c.titre}" class="challenge-image">` : ''}
+          ${c.image ? `
+            <div class="challenge-image-wrap" style="position:relative;cursor:pointer;" onclick="showChallengeDetail(${c.id})">
+              <img src="${c.image}" alt="${c.titre}" class="challenge-image">
+              <div class="challenge-overlay-stats" style="position:absolute;top:10px;left:10px;display:flex;gap:5px;z-index:2;">
+                <span class="stat-item" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(5px);color:#fff;padding:2px 8px;border-radius:20px;font-size:0.7rem;display:flex;align-items:center;gap:4px;">
+                  <i class="lni lni-eye"></i> ${c.nb_vues || 0}
+                </span>
+                <span class="stat-item like-count-${c.id}" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(5px);color:#fff;padding:2px 8px;border-radius:20px;font-size:0.7rem;display:flex;align-items:center;gap:4px;">
+                  <i class="lni lni-heart"></i> ${c.nb_likes || 0}
+                </span>
+              </div>
+            </div>
+          ` : ''}
           
           <div class="challenge-steaker">
             ${createSteakerHTML(c.steaker, niveau, 'small')}
@@ -544,7 +617,14 @@ function renderChallenges(challenges) {
           </div>
           
           <div class="challenge-content">
-            <h3 class="challenge-title">${c.titre}</h3>
+            <div class="challenge-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <h3 class="challenge-title" style="margin:0;font-size:1.1rem;cursor:pointer;" onclick="showChallengeDetail(${c.id})">${c.titre}</h3>
+              <button class="btn-like ${c.is_liked ? 'active' : ''}" 
+                      style="width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;"
+                      onclick="event.stopPropagation(); window.toggleLike(${c.id}, this)">
+                <i class="lni lni-heart${c.is_liked ? '-fill' : ''}"></i>
+              </button>
+            </div>
             <p class="challenge-description">${c.description}</p>
             
             <div class="challenge-reward">
@@ -660,9 +740,13 @@ function populateRankingSelect() {
 
 function renderPodium() {
   const podium = document.getElementById('ranking-podium');
+  const sortType = document.getElementById('ranking-sort-filter')?.value || 'progression';
   if (!podium) return;
 
-  const sorted = [...allParticipants].sort((a, b) => b.progression - a.progression);
+  const sorted = [...allParticipants].sort((a, b) => {
+    if (sortType === 'points') return b.points - a.points;
+    return b.progression - a.progression;
+  });
   const top3 = sorted.slice(0, 3);
 
   if (top3.length === 0) {
@@ -696,9 +780,13 @@ function renderPodium() {
 
 function renderMyRank() {
   const myRankCard = document.getElementById('my-ranking-card');
+  const sortType = document.getElementById('ranking-sort-filter')?.value || 'progression';
   if (!myRankCard) return;
   
-  const sorted = [...allParticipants].sort((a, b) => b.progression - a.progression);
+  const sorted = [...allParticipants].sort((a, b) => {
+    if (sortType === 'points') return b.points - a.points;
+    return b.progression - a.progression;
+  });
   const myIndex = sorted.findIndex(p => p.id === currentUser.id);
   
   if (myIndex === -1) {
@@ -731,9 +819,13 @@ function renderMyRank() {
 
 function renderRanking() {
   const rankingList = document.getElementById('ranking-list');
+  const sortType = document.getElementById('ranking-sort-filter')?.value || 'progression';
   if (!rankingList) return;
   
-  const sorted = [...allParticipants].sort((a, b) => b.progression - a.progression);
+  const sorted = [...allParticipants].sort((a, b) => {
+    if (sortType === 'points') return b.points - a.points;
+    return b.progression - a.progression;
+  });
   const others = sorted.slice(3); // À partir du rang 4
 
   if (others.length === 0 && sorted.length <= 3) {
@@ -782,6 +874,9 @@ function showChallengeDetail(challengeId) {
   
   if (!challenge || !modal || !modalBody) return;
 
+  // Incrémenter les vues
+  if (window.incrementVues) window.incrementVues(challengeId);
+
   const dateDebut = new Date(challenge.date_debut);
   const dateFin = new Date(challenge.date_fin);
   const niveau = getSteakerLevel(challenge.progression);
@@ -794,9 +889,18 @@ function showChallengeDetail(challengeId) {
   modalBody.innerHTML = `
     <div class="gl-ch-detail">
       ${challenge.image ? `
-        <div class="gl-ch-detail__media">
+        <div class="gl-ch-detail__media" style="position:relative;">
           <img class="gl-ch-detail__img" src="${challenge.image}" alt="${challenge.titre}" loading="lazy" decoding="async">
-          <div class="gl-ch-detail__mediaShade" aria-hidden="true"></div>
+          <div class="gl-ch-detail__mediaShade" aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to bottom, transparent, rgba(0,0,0,0.8));"></div>
+          <div style="position:absolute;bottom:20px;left:20px;right:20px;display:flex;justify-content:space-between;align-items:flex-end;z-index:2;">
+            <h2 style="color:#fff;font-size:1.8rem;margin:0;font-family:'Cormorant Garamond',serif;">${challenge.titre}</h2>
+            <button class="btn-like ${challenge.is_liked ? 'active' : ''}" 
+                    style="width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;"
+                    onclick="event.stopPropagation(); window.toggleLike(${challenge.id}, this)">
+              <i class="lni lni-heart${challenge.is_liked ? '-fill' : ''}" style="font-size:1.3rem;"></i>
+            </button>
+          </div>
+        </div>
         </div>
       ` : ''}
 
@@ -1199,7 +1303,15 @@ function handleParticipationSubmit(event, challengeId = currentChallengeId) {
       challenge.participants_count = parseInt(challenge.participants_count || 0, 10) + 1;
       updateChallengeParticipationCount(normalizedId, challenge.participants_count);
       setInlineFormFeedback(normalizedId, `Participation confirmée pour "${challenge.titre}".`, 'success');
-      showToast(`Participation confirmée au défi "${challenge.titre}"`, 'success');
+      
+      showToast(
+        `Félicitations !`,
+        `Votre participation au défi "${challenge.titre}" a été enregistrée.`,
+        'success',
+        challenge.streak_icon || '🏆'
+      );
+      window.addNotification(`Vous avez rejoint le défi "${challenge.titre}" !`, challenge.streak_icon || '🏆');
+
       markChallengeJoined(normalizedId);
       form.reset();
       const motivationField = form.querySelector('[name="motivation"]');
@@ -1245,31 +1357,101 @@ function handleJoinChallenge(btn, challengeId) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// TOAST NOTIFICATIONS
+// TOAST & NOTIFICATION SYSTEM
 // ═══════════════════════════════════════════════════════════
+window.notifications = [];
 
-function showToast(message, type = 'success') {
+window.addNotification = function(text, icon = '🔔') {
+  const notif = {
+    id: Date.now(),
+    text,
+    icon,
+    time: 'À l\'instant',
+    unread: true
+  };
+  window.notifications.unshift(notif);
+  updateNotifUI();
+};
+
+window.clearNotifications = function() {
+  window.notifications = [];
+  updateNotifUI();
+};
+
+function updateNotifUI() {
+  const panel = document.getElementById('gl-notif-panel');
+  const list = document.getElementById('gl-notif-list');
+  const badge = document.getElementById('gl-notif-count');
+  
+  if (!list || !badge) return;
+
+  const unreadCount = window.notifications.filter(n => n.unread).length;
+  badge.textContent = unreadCount;
+  badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+
+  if (window.notifications.length === 0) {
+    list.innerHTML = '<div class="gl-notif-empty">Aucune nouvelle notification</div>';
+    return;
+  }
+
+  list.innerHTML = window.notifications.map(n => `
+    <div class="gl-notif-item ${n.unread ? 'gl-notif-item--unread' : ''}" onclick="this.classList.remove('gl-notif-item--unread')">
+      <div class="gl-notif-item__icon">${n.icon}</div>
+      <div class="gl-notif-item__content">
+        <div class="gl-notif-item__text">${n.text}</div>
+        <div class="gl-notif-item__time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showToast(title, message = '', type = 'success', customIcon = null) {
+  const cfg = {
+    success: { color: '#22c55e', icon: 'lni lni-checkmark-circle' },
+    error:   { color: '#ef4444', icon: 'lni lni-close' },
+    warning: { color: '#f59e0b', icon: 'lni lni-warning' },
+    info:    { color: '#3b82f6', icon: 'lni lni-bubble' },
+  };
+  const c = cfg[type] || cfg.info;
+  const iconHtml = customIcon 
+    ? `<span style="font-size:1.4rem;flex-shrink:0;">${customIcon}</span>`
+    : `<span style="font-size:1.2rem;flex-shrink:0;margin-top:1px;color:${c.color};"><i class="${c.icon}"></i></span>`;
+
+  let container = document.getElementById('gl-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'gl-toast-container';
+    container.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;`;
+    document.body.appendChild(container);
+  }
+
   const toast = document.createElement('div');
   toast.style.cssText = `
-    position: fixed;
-    top: 100px;
-    right: 30px;
-    z-index: 10000;
-    background: ${type === 'success' ? 'linear-gradient(135deg, var(--violet), var(--blue))' : 'linear-gradient(135deg, #e74c3c, #c0392b)'};
-    color: #fff;
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-    animation: slideIn 0.3s ease;
-    max-width: 400px;
+    background:#1e1e2e; color:#e2e8f0; padding:14px 18px;
+    border-radius:12px; border-left:4px solid ${c.color};
+    box-shadow:0 4px 20px rgba(0,0,0,0.5); font-size:13px;
+    display:flex; align-items:flex-start; gap:12px; min-width:280px; max-width:360px;
+    pointer-events:all; position:relative; overflow:hidden;
+    animation:glToastIn .3s cubic-bezier(.34,1.56,.64,1);
   `;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  
+  toast.innerHTML = `
+    <style>
+      @keyframes glToastIn  { from{opacity:0;transform:translateX(100%)} to{opacity:1;transform:translateX(0)} }
+      @keyframes glToastOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(100%)} }
+    </style>
+    ${iconHtml}
+    <div style="flex:1;">
+      <div style="font-weight:700;margin-bottom:2px;">${title}</div>
+      ${message ? `<div style="color:#94a3b8;font-size:12px;line-height:1.4;">${message}</div>` : ''}
+    </div>
+    <button onclick="this.closest('[style]').remove()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1rem;padding:0;margin-top:1px;flex-shrink:0;">✕</button>
+  `;
+
+  container.appendChild(toast);
   setTimeout(() => {
-    toast.style.animation = 'slideOut 0.3s ease';
+    toast.style.animation = 'glToastOut .3s ease forwards';
     setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  }, 4000);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1351,21 +1533,143 @@ function closeUserProfileModal() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// MÉTIER : VUES & LIKES
+// ═══════════════════════════════════════════════════════════
+
+window.incrementVues = function(challengeId) {
+  const endpoint = getBackendPath('listChallenges.php?action=incrementVues');
+  fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    body: JSON.stringify({ id: challengeId })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      const c = allChallenges.find(ch => ch.id === parseInt(challengeId));
+      if (c) {
+        c.nb_vues = (parseInt(c.nb_vues) || 0) + 1;
+        const card = document.querySelector(`.challenge-card[data-challenge-id="${challengeId}"]`);
+        if (card) {
+          const vueEl = card.querySelector('.lni-eye')?.parentElement;
+          if (vueEl) vueEl.innerHTML = `<i class="lni lni-eye"></i> ${c.nb_vues}`;
+        }
+      }
+    }
+  })
+  .catch(err => console.warn('Erreur incrementVues:', err));
+};
+
+window.toggleLike = function(challengeId, btn) {
+  const icon = btn.querySelector('i');
+  const endpoint = getBackendPath('listChallenges.php?action=toggleLike');
+  
+  fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    body: JSON.stringify({ id_challenge: challengeId })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.liked !== undefined) {
+      const c = allChallenges.find(ch => ch.id === parseInt(challengeId));
+      if (c) {
+        c.is_liked = data.liked;
+        c.nb_likes = data.count;
+      }
+      btn.classList.toggle('active', data.liked);
+      if (icon) icon.className = `lni lni-heart${data.liked ? '-fill' : ''}`;
+      document.querySelectorAll(`.like-count-${challengeId}`).forEach(el => {
+        el.innerHTML = `<i class="lni lni-heart"></i> ${data.count}`;
+      });
+      
+      if (window.showToast) {
+        showToast(
+          data.liked ? 'Coup de cœur !' : 'Favoris mis à jour',
+          data.liked ? `Défi "${c.titre}" ajouté à vos favoris` : `Défi "${c.titre}" retiré de vos favoris`,
+          'info',
+          data.liked ? '❤️' : '💔'
+        );
+      }
+      window.addNotification(
+        data.liked ? `Vous avez aimé le défi "${c.titre}"` : `Vous avez retiré votre like du défi "${c.titre}"`,
+        data.liked ? '❤️' : '💔'
+      );
+    }
+  })
+  .catch(err => {
+    console.error('Erreur toggleLike:', err);
+    if (window.showToast) window.showToast('Erreur lors du like. Êtes-vous connecté ?', 'error');
+  });
+};
+
+// ═══════════════════════════════════════════════════════════
 // INITIALISATION
 // ═══════════════════════════════════════════════════════════
+
+function setupNotifEvents() {
+  const trigger = document.getElementById('gl-notif-trigger');
+  const panel = document.getElementById('gl-notif-panel');
+  
+  if (trigger && panel) {
+    trigger.onclick = (e) => {
+      e.stopPropagation();
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      if (panel.style.display === 'block') {
+        window.notifications.forEach(n => n.unread = false);
+        updateNotifUI();
+      }
+    };
+    
+    document.addEventListener('click', (e) => {
+      if (!panel.contains(e.target) && e.target !== trigger) {
+        panel.style.display = 'none';
+      }
+    });
+  }
+}
 
 function initChallenges() {
   const section = document.getElementById('challenges');
   if (!section) return;
 
   console.log('🎯 Initialisation du module Défis...');
+  setupNotifEvents();
   
   // Event listeners
   const searchInput = document.getElementById('challenge-search');
   const statusFilter = document.getElementById('challenge-status-filter');
+  const sortFilter = document.getElementById('challenge-sort-filter');
+  const rankSortFilter = document.getElementById('ranking-sort-filter');
   const refreshBtn = document.getElementById('challenge-refresh');
   const grid = document.getElementById('challenges-grid');
   
+  const btnPrev = document.getElementById('prev-page');
+  const btnNext = document.getElementById('next-page');
+
+  if (btnPrev && btnPrev.dataset.bound !== 'true') {
+    btnPrev.onclick = () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderChallenges(filteredChallenges.length ? filteredChallenges : allChallenges);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    btnPrev.dataset.bound = 'true';
+  }
+  if (btnNext && btnNext.dataset.bound !== 'true') {
+    btnNext.onclick = () => {
+      const list = filteredChallenges.length ? filteredChallenges : allChallenges;
+      const totalPages = Math.ceil(list.length / itemsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderChallenges(list);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    btnNext.dataset.bound = 'true';
+  }
+
   if (searchInput && searchInput.dataset.bound !== 'true') {
     searchInput.addEventListener('input', filterChallenges);
     searchInput.dataset.bound = 'true';
@@ -1373,6 +1677,18 @@ function initChallenges() {
   if (statusFilter && statusFilter.dataset.bound !== 'true') {
     statusFilter.addEventListener('change', filterChallenges);
     statusFilter.dataset.bound = 'true';
+  }
+  if (sortFilter && sortFilter.dataset.bound !== 'true') {
+    sortFilter.addEventListener('change', filterChallenges);
+    sortFilter.dataset.bound = 'true';
+  }
+  if (rankSortFilter && rankSortFilter.dataset.bound !== 'true') {
+    rankSortFilter.addEventListener('change', () => {
+      renderPodium();
+      renderRanking();
+      renderMyRank();
+    });
+    rankSortFilter.dataset.bound = 'true';
   }
   if (refreshBtn && refreshBtn.dataset.bound !== 'true') {
     refreshBtn.addEventListener('click', loadChallenges);
@@ -1427,6 +1743,17 @@ function initChallenges() {
     });
     btnSwipe.dataset.bound = 'true';
   }
+
+  // Filtre Chips
+  document.querySelectorAll('.gl-chip').forEach(chip => {
+    if (chip.dataset.bound === 'true') return;
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.gl-chip').forEach(c => c.classList.remove('gl-chip--active'));
+      chip.classList.add('gl-chip--active');
+      filterChallenges();
+    });
+    chip.dataset.bound = 'true';
+  });
   
   // Fermer modals en cliquant sur overlay
   document.querySelectorAll('.modal-overlay, .gl-modal-overlay').forEach(overlay => {

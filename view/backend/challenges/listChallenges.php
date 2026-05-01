@@ -1,16 +1,156 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once(__DIR__ . '/../../../controller/challenge.controller.php');
 require_once(__DIR__ . '/../../../Model/Challenge.php');
 
 $challengeC = new ChallengeController();
 
-// Handle form submission (Add Challenge)
+// ═══════════════════════════════════════════════════════════════
+// HANDLER AJAX CENTRAL — toutes les actions passent ici
+// ═══════════════════════════════════════════════════════════════
+$action = $_GET['action'] ?? '';
+$isAjax = !empty($action)
+    || (isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+        && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+    || isset($_GET['ajax']);
+
+if ($action !== '') {
+    if (ob_get_length()) ob_clean();
+
+    switch ($action) {
+
+        // ── Lister les défis (simple, pour le tableau admin) ──
+        case 'list':
+            header('Content-Type: application/json');
+            $idUser = (int)($_SESSION['user_id'] ?? 1);
+            echo json_encode($challengeC->listChallenges($idUser));
+            break;
+
+        // ── Statistiques du dashboard ──────────────────────────
+        case 'stats':
+            header('Content-Type: application/json');
+            echo json_encode($challengeC->getStatistiques());
+            break;
+
+        // ── Changer le statut (Accepté / Refusé / etc.) ────────
+        case 'updateStatut':
+            header('Content-Type: application/json');
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $id     = (int)($body['id']     ?? $_POST['id']     ?? 0);
+            $statut = trim($body['statut']  ?? $_POST['statut'] ?? '');
+            echo json_encode(['success' => $challengeC->updateStatut($id, $statut)]);
+            break;
+
+        // ── Mettre à jour l'ordre drag & drop ─────────────────
+        case 'updateOrdre':
+            header('Content-Type: application/json');
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            echo json_encode(['success' => $challengeC->updateOrdre($body)]);
+            break;
+
+        // ── Toggle like ────────────────────────────────────────
+        case 'toggleLike':
+            header('Content-Type: application/json');
+            $body    = json_decode(file_get_contents('php://input'), true) ?? [];
+            $idC     = (int)($body['id_challenge'] ?? 0);
+            $idUser  = (int)($_SESSION['user_id']  ?? 1);
+            echo json_encode($challengeC->toggleLike($idC, $idUser));
+            break;
+
+        // ── Incrémenter les vues ───────────────────────────────
+        case 'incrementVues':
+            header('Content-Type: application/json');
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $id   = (int)($body['id'] ?? 0);
+            if ($id > 0) $challengeC->incrementVues($id);
+            echo json_encode(['success' => true]);
+            break;
+
+        // ── Notifier les participants par email ────────────────
+        case 'notifier':
+            header('Content-Type: application/json');
+            $body    = json_decode(file_get_contents('php://input'), true) ?? [];
+            $idC     = (int)  ($body['id_challenge'] ?? 0);
+            $sujet   = trim(  $body['sujet']         ?? '');
+            $message = trim(  $body['message']       ?? '');
+            if ($idC <= 0 || $sujet === '' || $message === '') {
+                echo json_encode(['success' => false, 'error' => 'Données manquantes']);
+            } else {
+                echo json_encode($challengeC->notifierParticipants($idC, $sujet, $message));
+            }
+            break;
+
+        // ── Export CSV ─────────────────────────────────────────
+        case 'exportCSV':
+            $challengeC->exportCSV();  // inclut exit()
+            break;
+
+        // ── Export PDF ─────────────────────────────────────────
+        case 'exportPDF':
+            $challengeC->exportPDF();  // inclut exit()
+            break;
+
+        default:
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Action inconnue: ' . htmlspecialchars($action)]);
+    }
+    exit;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RÉPONSE AJAX SIMPLE (compatibilité ancien code : ?ajax=1)
+// ═══════════════════════════════════════════════════════════════
+if ($isAjax) {
+    if (ob_get_length()) ob_clean();
+    header('Content-Type: application/json');
+
+    // Gestion formulaire POST (add / update challenge)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_challenge'])) {
+        if (
+            !empty($_POST['titre']) && !empty($_POST['description']) && !empty($_POST['type']) &&
+            !empty($_POST['objectif']) && !empty($_POST['valeur_cible']) &&
+            !empty($_POST['date_debut']) && !empty($_POST['date_fin']) && !empty($_POST['statut'])
+        ) {
+            $challenge = new Challenge(
+                null,
+                $_POST['titre'],
+                $_POST['description'],
+                $_POST['type'],
+                $_POST['objectif'],
+                (int)$_POST['valeur_cible'],
+                $_POST['date_debut'],
+                $_POST['date_fin'],
+                $_POST['statut'],
+                $_POST['streak_icon'] ?? '🏆',
+                $_POST['image'] ?? ''
+            );
+            $ok = $challengeC->addChallenge($challenge);
+            echo json_encode(['success' => $ok]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Champs manquants']);
+        }
+        exit;
+    }
+
+    // Retour liste simple
+    $idUser = (int)($_SESSION['user_id'] ?? 1);
+    echo json_encode($challengeC->listChallenges($idUser));
+    exit;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDU HTML NORMAL (non-AJAX)
+// ═══════════════════════════════════════════════════════════════
+
+// Handle POST classique (sans JS)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_challenge'])) {
     if (
-        !empty($_POST["titre"]) && !empty($_POST["description"]) && !empty($_POST["type"]) && 
-        !empty($_POST["objectif"]) && !empty($_POST["valeur_cible"]) && !empty($_POST["date_debut"]) && 
-        !empty($_POST["date_fin"]) && !empty($_POST["statut"]) && !empty($_POST["streak_icon"]) && 
-        !empty($_POST["image"])
+        !empty($_POST['titre']) && !empty($_POST['description']) &&
+        !empty($_POST['type']) && !empty($_POST['objectif']) &&
+        !empty($_POST['valeur_cible']) && !empty($_POST['date_debut']) &&
+        !empty($_POST['date_fin']) && !empty($_POST['statut'])
     ) {
         $challenge = new Challenge(
             null,
@@ -22,346 +162,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_challenge'])) {
             $_POST['date_debut'],
             $_POST['date_fin'],
             $_POST['statut'],
-            $_POST['streak_icon'],
-            $_POST['image']
+            $_POST['streak_icon'] ?? '🏆',
+            $_POST['image'] ?? ''
         );
         $challengeC->addChallenge($challenge);
-        header('Location: listChallenges.php');
-        exit;
     }
-}
-
-$list = $challengeC->listChallenges();
-
-// Si c'est une requête AJAX (XMLHttpRequest) ou avec le paramètre ajax=1, on retourne du JSON
-$isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_GET['ajax']);
-
-if ($isAjax) {
-    if (ob_get_length()) ob_clean(); // Nettoyer le tampon pour éviter les warnings parasites
-    header('Content-Type: application/json');
-    echo json_encode($list);
+    header('Location: listChallenges.php');
     exit;
 }
+
+$idUser = (int)($_SESSION['user_id'] ?? 1);
+$list = $challengeC->listChallenges($idUser);
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="assets/images/favicon.svg" type="image/x-icon" />
-    <title>Esprit Challenge | List</title>
-  
-    <!-- ========== All CSS files linkup ========= -->
-    <link rel="stylesheet" href="https://cdn.lineicons.com/4.0/lineicons.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="../../css/admin.css" />
-    <link rel="stylesheet" href="../../css/challenges-admin.css" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Gestion des Défis</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.lineicons.com/4.0/lineicons.css"/>
+    <style>
+        body { background:#0f0f1a; color:#e2e8f0; font-family:Arial,sans-serif; }
+        .container-main { max-width:1200px; margin:auto; padding:30px 20px; }
+        table { width:100%; border-collapse:collapse; }
+        th { background:#6366f1; color:#fff; padding:12px; text-align:left; }
+        td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.07); }
+        tr:hover { background:rgba(99,102,241,0.08); }
+        .badge-statut { padding:4px 12px; border-radius:20px; font-size:12px; color:#fff; }
+        .badge-actif { background:#22c55e; }
+        .badge-termine { background:#6b7280; }
+        .badge-en_attente { background:#f59e0b; }
+        .badge-accepte { background:#3b82f6; }
+        .badge-refuse { background:#ef4444; }
+    </style>
 </head>
 <body>
-    <!-- ======== Preloader =========== -->
-    <div id="preloader">
-      <canvas id="pl-canvas"></canvas>
-      <div id="pl-text">GAIALUMEN ADMIN</div>
-      <div id="pl-bar"><div id="pl-fill"></div></div>
-    </div>
-    <!-- ======== Preloader =========== -->
-
-    <!-- ======== sidebar-nav start =========== -->
-    <aside class="sidebar-nav-wrapper">
-      <div class="navbar-logo">
-        <a href="index.html">
-          <img src="images/logoEspritBook.png" alt="logo" width="40%" height="70%" />
-        </a>
-      </div>
-      <nav class="sidebar-nav">
-        <ul>
-          <li class="nav-item nav-item-has-children">
-            <a
-              href="#0"
-              data-bs-toggle="collapse"
-              data-bs-target="#ddmenu_1"
-              aria-controls="ddmenu_1"
-              aria-expanded="false"
-              aria-label="Toggle navigation"
-            >
-              <span class="icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                     xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M8.74999 18.3333C12.2376 18.3333 15.1364 15.8128 15.7244 12.4941C15.8448 11.8143 15.2737 11.25 14.5833 11.25H9.99999C9.30966 11.25 8.74999 10.6903 8.74999 10V5.41666C8.74999 4.7263 8.18563 4.15512 7.50586 4.27556C4.18711 4.86357 1.66666 7.76243 1.66666 11.25C1.66666 15.162 4.83797 18.3333 8.74999 18.3333Z"
-                    fill="red" />
-                  <path
-                    d="M17.0833 10C17.7737 10 18.3432 9.43708 18.2408 8.75433C17.7005 5.14918 14.8508 2.29947 11.2457 1.75912C10.5629 1.6568 10 2.2263 10 2.91665V9.16666C10 9.62691 10.3731 10 10.8333 10H17.0833Z"
-                    fill="red" />
-                </svg>
-              </span>
-              <span class="text">Dashboard</span>
-            </a>
-            <ul id="ddmenu_1" class="collapse show dropdown-nav">
-              <li>
-                <a href="index.html" class="active"> Challenge Store </a>
-              </li>
-            </ul>
-          </li>
-           <li class="nav-item nav-item-has-children">
-            <a
-              href="#0"
-              class="collapsed"
-              data-bs-toggle="collapse"
-              data-bs-target="#ddmenu_5"
-              aria-controls="ddmenu_5"
-              aria-expanded="false"
-              aria-label="Toggle navigation"
-            >
-             <span class="icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" 
-                     xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M4.16666 3.33335C4.16666 2.41288 4.91285 1.66669 5.83332 1.66669H14.1667C15.0872 1.66669 15.8333 2.41288 15.8333 3.33335V16.6667C15.8333 17.5872 15.0872 18.3334 14.1667 18.3334H5.83332C4.91285 18.3334 4.16666 17.5872 4.16666 16.6667V3.33335ZM6.04166 5.00002C6.04166 5.3452 6.32148 5.62502 6.66666 5.62502H13.3333C13.6785 5.62502 13.9583 5.3452 13.9583 5.00002C13.9583 4.65485 13.6785 4.37502 13.3333 4.37502H6.66666C6.32148 4.37502 6.04166 4.65485 6.04166 5.00002ZM6.66666 6.87502C6.32148 6.87502 6.04166 7.15485 6.04166 7.50002C6.04166 7.8452 6.32148 8.12502 6.66666 8.12502H13.3333C13.6785 8.12502 13.9583 7.8452 13.9583 7.50002C13.9583 7.15485 13.6785 6.87502 13.3333 6.87502H6.66666ZM6.04166 10C6.04166 10.3452 6.32148 10.625 6.66666 10.625H9.99999C10.3452 10.625 10.625 10.3452 10.625 10C10.625 9.65485 10.3452 9.37502 9.99999 9.37502H6.66666C6.32148 9.37502 6.04166 9.65485 6.04166 10ZM9.99999 16.6667C10.9205 16.6667 11.6667 15.9205 11.6667 15C11.6667 14.0795 10.9205 13.3334 9.99999 13.3334C9.07949 13.3334 8.33332 14.0795 8.33332 15C8.33332 15.9205 9.07949 16.6667 9.99999 16.6667Z"
-                    fill="red" />
-                </svg>
-              </span>
-              <span class="text"> Challenge Management </span>
-            </a>
-            <ul id="ddmenu_5" class="collapse dropdown-nav">
-              <li>
-                <a href="listChallenges.php"> Challenge List</a>
-              </li>
-              <li>
-                <a href="addChallenge.php"> ADD</a>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </nav>
-    </aside>
-    <div class="overlay"></div>
- <main class="main-wrapper">
-      <!-- ========== header start ========== -->
-      <header class="header">
-        <div class="container-fluid">
-          <div class="row">
-            <div class="col-lg-5 col-md-5 col-6">
-              <div class="header-left d-flex align-items-center">
-                <div class="menu-toggle-btn mr-15">
-                  <button id="menu-toggle" class="main-btn danger-btn btn-hover">
-                    <i class="lni lni-chevron-left me-2"></i> Menu
-                  </button>
-                </div>
-                <div class="header-search d-none d-md-flex">
-                  <form action="#">
-                    <input type="text" placeholder="Search..." />
-                    <button><i class="lni lni-search-alt"></i></button>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-7 col-md-7 col-6">
-              <div class="header-right">
-                <div class="profile-box ml-15">
-                  <button class="dropdown-toggle bg-transparent border-0" type="button" id="profile"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="profile-info">
-                      <div class="info">
-                        <div class="image">
-                          <img src="assets/images/profile/profile-image.png" alt="" />
-                        </div>
-                        <div>
-                          <h6 class="fw-500">Challenge Store</h6>
-                          <p>Admin</p>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-      <!-- ========== header end ========== -->
-
-      <!-- ========== section start ========== -->
-      <section class="section">
-        <div class="container-fluid">
-          <!-- ========== title-wrapper start ========== -->
-          <div class="title-wrapper pt-30">
-            <div class="row align-items-center">
-              <div class="col-md-6">
-                <div class="title">
-                  <h2>Challenge List</h2>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="breadcrumb-wrapper">
-                  <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                      <li class="breadcrumb-item">
-                        <a href="#0">Dashboard</a>
-                      </li>
-                      <li class="breadcrumb-item active" aria-current="page">
-                       List
-                      </li>
-                    </ol>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          </div>
-       <div class="content">
-    
-    <!-- List Table -->
-    <div class="container mt-4">
-        <div class="table-wrapper table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Title</th>
-                        <th>Type</th>
-                        <th>Objective</th>
-                        <th>Target Value</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($list as $challenge) { ?>
-                        <tr>
-                            <td><?php echo $challenge['id']; ?></td>
-                            <td><?php echo $challenge['titre']; ?></td>
-                            <td><?php echo $challenge['type']; ?></td>
-                            <td><?php echo $challenge['objectif']; ?></td>
-                            <td><?php echo $challenge['valeur_cible']; ?></td>
-                            <td><?php echo $challenge['date_debut']; ?></td>
-                            <td><?php echo $challenge['date_fin']; ?></td>
-                            <td><?php echo $challenge['statut']; ?></td>
-                            <td>
-                                <a href="showChallenge.php?id=<?php echo $challenge['id']; ?>" class="btn btn-info btn-sm">
-                                    <i class="lni lni-eye"></i>
-                                </a>
-                                <a href="updateChallenge.php?id=<?php echo $challenge['id']; ?>" class="btn btn-warning btn-sm">
-                                    <i class="lni lni-pencil"></i>
-                                </a>
-                                <a href="deleteChallenge.php?id=<?php echo $challenge['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
-                                    <i class="lni lni-trash-can"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    <?php } ?>
-                </tbody>
-            </table>
-        </div>
-        <div class="text-center mt-3">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addChallengeModal">
-                <i class="lni lni-plus"></i> Add New Challenge
-            </button>
-        </div>
-    </div>
-  </div>
-        </div>
-      </section>
-
-      <!-- Add Challenge Modal -->
-      <div class="modal fade" id="addChallengeModal" tabindex="-1" aria-labelledby="addChallengeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="addChallengeModalLabel">Add New Challenge</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="listChallenges.php" method="POST">
-              <div class="modal-body">
-                <input type="hidden" name="add_challenge" value="1">
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label for="titre" class="form-label">Title</label>
-                    <input type="text" class="form-control" id="titre" name="titre" required>
-                  </div>
-                  <div class="col-md-6 mb-3">
-                    <label for="type" class="form-label">Type</label>
-                    <select class="form-select" id="type" name="type" required>
-                      <option value="individuel">Individual</option>
-                      <option value="collectif">Collective</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <label for="description" class="form-label">Description</label>
-                  <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
-                </div>
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label for="objectif" class="form-label">Objective</label>
-                    <input type="text" class="form-control" id="objectif" name="objectif" placeholder="e.g., steps, km" required>
-                  </div>
-                  <div class="col-md-6 mb-3">
-                    <label for="valeur_cible" class="form-label">Target Value</label>
-                    <input type="number" class="form-control" id="valeur_cible" name="valeur_cible" required>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label for="date_debut" class="form-label">Start Date</label>
-                    <input type="date" class="form-control" id="date_debut" name="date_debut" required>
-                  </div>
-                  <div class="col-md-6 mb-3">
-                    <label for="date_fin" class="form-label">End Date</label>
-                    <input type="date" class="form-control" id="date_fin" name="date_fin" required>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label for="statut" class="form-label">Status</label>
-                    <select class="form-select" id="statut" name="statut" required>
-                      <option value="En cours">In Progress</option>
-                      <option value="Terminé">Completed</option>
-                      <option value="A venir">Upcoming</option>
-                    </select>
-                  </div>
-                  <div class="col-md-6 mb-3">
-                    <label for="streak_icon" class="form-label">Streak Icon</label>
-                    <input type="text" class="form-control" id="streak_icon" name="streak_icon" placeholder="e.g., lni-fire" required>
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <label for="image" class="form-label">Image URL</label>
-                  <input type="text" class="form-control" id="image" name="image" required>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary">Save Challenge</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      <footer class="footer">
-        <div class="container-fluid">
-          <div class="row">
-            <div class="col-md-6 order-last order-md-first">
-              <div class="copyright text-center text-md-start">
-                <p class="text-sm">
-                  Designed and Developed by Esprit Student 
-                </p>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="terms d-flex justify-content-center justify-content-md-end">
-                <a href="#0" class="text-sm">Term & Conditions</a>
-                <a href="#0" class="text-sm ml-15">Privacy & Policy</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../js/admin.js"></script>
+<div class="container-main">
+    <h2>🏆 Gestion des Défis</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Défi</th>
+                <th>Type</th>
+                <th>Statut</th>
+                <th>Participants</th>
+                <th>Date Fin</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($list as $c): ?>
+            <tr>
+                <td><?= htmlspecialchars($c['streak_icon'] . ' ' . $c['titre']) ?></td>
+                <td><?= htmlspecialchars($c['type']) ?></td>
+                <td>
+                    <span class="badge-statut badge-<?= htmlspecialchars($c['statut']) ?>">
+                        <?= htmlspecialchars($c['statut']) ?>
+                    </span>
+                </td>
+                <td><?= (int)$c['participants_count'] ?></td>
+                <td><?= htmlspecialchars($c['date_fin']) ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>

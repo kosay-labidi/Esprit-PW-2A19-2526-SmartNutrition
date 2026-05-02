@@ -513,6 +513,152 @@ function filterUsers() {
   const roleFilter = document.getElementById('roleFilter')?.value;
   console.log(`🔍 Filtre rôle: ${roleFilter}`);
 }
+// Fonction de tri par date
+// Fonction de tri par date
+// Fonction de tri par date
+// Fonction de tri par date
+async function tri() {
+    console.log("🔄 Function tri() appelée");
+    
+    const selectTri = document.getElementById('triDate');
+    if (!selectTri) {
+        console.error("❌ Élément triDate non trouvé");
+        return;
+    }
+    
+    const order = selectTri.value;
+    console.log("📊 Ordre sélectionné:", order);
+    
+    // Si aucune option sélectionnée, ne rien faire
+    if (order === '') {
+        console.log("ℹ️ Aucun tri sélectionné");
+        return;
+    }
+    
+    // Afficher un indicateur de chargement
+    const tableBody = document.getElementById('usersTableBody');
+    if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">⏳ Tri en cours...</td></tr>';
+    }
+    
+    try {
+        // Appeler tri.php avec le paramètre order (API JSON)
+        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${order}&t=${Date.now()}`;
+        console.log("📡 Appel API:", url);
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("📄 Réponse JSON reçue:", result);
+        
+        if (result.success && result.data) {
+            // Mettre à jour le tableau avec les données JSON
+            updateUsersTableFromData(result.data);
+            
+            // Sauvegarder l'ordre
+            localStorage.setItem('userSortOrder', order);
+            
+            // Afficher un toast
+            if (typeof showToast === 'function') {
+                const message = order === 'asc' ? 'Tri : plus ancien → plus récent' : 'Tri : plus récent → plus ancien';
+                showToast('Tri', message, 'success');
+            }
+            
+            console.log(`✅ Utilisateurs triés par date (${order === 'asc' ? 'croissant' : 'décroissant'}) - ${result.data.length} utilisateurs`);
+        } else {
+            throw new Error(result.error || 'Erreur lors du tri');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur lors du tri:', error);
+        if (typeof showToast === 'function') {
+            showToast('Erreur', 'Impossible de trier les utilisateurs', 'error');
+        }
+        // Recharger la liste normale
+        loadUsers();
+    }
+}
+
+// Nouvelle fonction pour mettre à jour le tableau à partir des données JSON
+function updateUsersTableFromData(users) {
+    console.log("📊 Mise à jour du tableau avec", users.length, "utilisateurs");
+    
+    const tableBody = document.getElementById('usersTableBody');
+    if (!tableBody) {
+        console.error("❌ usersTableBody non trouvé");
+        return;
+    }
+    
+    if (!users || users.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucun utilisateur trouvé</td></tr>';
+        return;
+    }
+    
+    // Générer le HTML du tableau
+    let html = '';
+    users.forEach((user, index) => {
+        // Déterminer la classe et l'icône du rôle
+        let roleClass = '';
+        let roleIcon = '👤';
+        let roleLabel = '';
+        
+        switch(user.role) {
+            case 'admin':
+                roleClass = 'role-admin';
+                roleIcon = '🛡️';
+                roleLabel = 'Admin';
+                break;
+            case 'nutritionniste':
+                roleClass = 'role-nutritionniste';
+                roleIcon = '🥗';
+                roleLabel = 'Nutritionniste';
+                break;
+            case 'ecologiste':
+                roleClass = 'role-ecologiste';
+                roleIcon = '🌱';
+                roleLabel = 'Écologiste';
+                break;
+            default:
+                roleClass = 'role-user';
+                roleIcon = '👤';
+                roleLabel = 'Utilisateur';
+        }
+        
+        // Afficher le nom complet
+        const fullName = `${user.prenom || ''} ${user.nom || ''}`.trim();
+        
+        html += `
+            <tr style="opacity: 1; animation: fadeIn 0.3s ease-in;">
+                <td>${user.id || ''}</td>
+                <td>${fullName}</td>
+                <td>${user.email || ''}</td>
+                <td><span class="role-badge ${roleClass}">${roleIcon} ${roleLabel}</span></td>
+                <td>${user.date_creation || ''}</td>
+                <td class="actions-cell">
+                   <button class="action-btn edit" onclick="editUser(${user.id})" title="Modifier">
+                        ✏️
+                    </button>
+                    <button class="action-btn delete" onclick="deleteUser(${user.id})" title="Supprimer">
+                        🗑️
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tableBody.innerHTML = html;
+    console.log("✅ Tableau mis à jour");
+    
+    // Ajouter les styles CSS si nécessaire
+    addTriTableStyles();
+}
+// Fonction pour ajouter les styles CSS du tableau trié
+function addTriTableStyles() {
+}
 
 // Fonction pour animer les éléments d'un module de manière séquentielle
 function animateModuleElements(moduleName) {
@@ -532,57 +678,104 @@ function animateModuleElements(moduleName) {
   });
 }
 async function loadUsers() {
-  console.log("📡 Chargement des utilisateurs...");
+    console.log("📡 Chargement des utilisateurs...");
 
-  const tableBody = document.getElementById("usersTableBody");
-  
-  if (!tableBody) {
-    console.error("❌ usersTableBody introuvable !");
-    setTimeout(loadUsers, 100);
-    return;
-  }
+    const tableBody = document.getElementById("usersTableBody");
+    
+    if (!tableBody) {
+        console.error("❌ usersTableBody introuvable !");
+        setTimeout(loadUsers, 100);
+        return;
+    }
 
-  try {
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">⏳ Chargement...<\/td><\/tr>';
-    
-    const response = await fetch("http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/showUser.php");
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">⏳ Chargement...</td></tr>';
+        
+        // Récupérer l'ordre sauvegardé
+        const savedOrder = localStorage.getItem('userSortOrder');
+        const selectTri = document.getElementById('triDate');
+        
+        let url = "http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php";
+        
+        // Appliquer le tri sauvegardé
+        if (savedOrder && savedOrder !== '') {
+            url += `?order=${savedOrder}`;
+            if (selectTri) {
+                selectTri.value = savedOrder;
+            }
+            console.log(`📊 Application du tri sauvegardé: ${savedOrder}`);
+        } else {
+            url += `?order=desc`; // Tri par défaut
+            if (selectTri) {
+                selectTri.value = 'desc';
+            }
+        }
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            updateUsersTableFromData(result.data);
+        } else {
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${result.error || 'Données invalides'}</td></tr>`;
+        }
+        
+    } catch (error) {
+        console.error("❌ Erreur:", error);
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${error.message}</td></tr>`;
     }
-    
-    const htmlContent = await response.text();
-    
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    
-    const phpTable = tempDiv.querySelector('#usersTable');
-    
-    if (phpTable) {
-      const phpTableBody = phpTable.querySelector('tbody');
-      
-      if (phpTableBody) {
-        tableBody.innerHTML = phpTableBody.innerHTML;
-        
-        // FORCER l'opacité à 1 pour toutes les lignes
-        const rows = tableBody.querySelectorAll('tr');
-        rows.forEach(row => {
-          row.style.opacity = '1';
-        });
-        
-        console.log(`✅ ${rows.length} utilisateurs affichés`);
-        
-      } else {
-        tableBody.innerHTML = `<td><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: Tableau sans corps<\/td><\/tr>`;
-      }
-    } else {
-      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: Tableau non trouvé<\/td><\/tr>`;
-    }
-    
-  } catch (error) {
-    console.error("❌ Erreur:", error);
-    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${error.message}<\/td><\/tr>`;
-  }
 }
+// Fonction toast pour les notifications
+// Fonction toast simplifiée (sans création dynamique de styles)
+function showToast(title, message, type = 'info') {
+    let toastContainer = document.getElementById('toast-container');
+    
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
+    
+    const toast = document.createElement('div');
+    const colors = {
+        success: '#2ecc71',
+        error: '#e74c3c',
+        info: '#3498db',
+        warning: '#f39c12'
+    };
+    
+    toast.style.cssText = `
+        background: ${colors[type] || colors.info};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease-out;
+        cursor: pointer;
+        min-width: 250px;
+        max-width: 350px;
+    `;
+    
+    toast.innerHTML = `<strong>${title}</strong><br><small>${message}</small>`;
+    toast.onclick = () => toast.remove();
+    
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 3000);
+}
+
+// Ajouter les animations CSS pour les toasts
 
 console.log('✅ Admin Module Loader prêt');

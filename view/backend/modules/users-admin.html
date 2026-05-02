@@ -23,6 +23,12 @@
         <option value="user">Utilisateur</option>
         <option value="admin">Administrateur</option>
       </select>
+     <select class="form-select" id="triDate" onchange="tri()" 
+        style="background-color: #2a2a2a; color: #ffffff; border: 1px solid #4a4a6a; border-radius: 8px; padding: 8px 12px;">
+    <option value="">-- Trier par date --</option>
+    <option value="desc">📅 Plus récent → Plus ancien</option>
+    <option value="asc">📅 Plus ancien → Plus récent</option>
+</select>
       <button class="btn btn-primary" onclick="addUser()">➕ Ajouter</button>
     </div>
 

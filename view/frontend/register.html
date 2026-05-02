@@ -355,10 +355,9 @@ let isDark=localStorage.getItem('gaialumen-theme')!=='light';
 html.setAttribute('data-theme',isDark?'dark':'light');
 themeToggle.addEventListener('click',()=>{isDark=!isDark;html.setAttribute('data-theme',isDark?'dark':'light');localStorage.setItem('gaialumen-theme',isDark?'dark':'light');});
 
-/* ═══════════════════════════════════════════════════
-   INDICATEUR DE FORCE DU MOT DE PASSE (6 BARRES)
-   ACCEPTE UNIQUEMENT LES MOTS DE PASSE FORTS (score >= 5)
-═══════════════════════════════════════════════════ */
+
+
+
 
 // Fonction d'évaluation du mot de passe (score sur 6)
 function evaluatePasswordStrength(password) {

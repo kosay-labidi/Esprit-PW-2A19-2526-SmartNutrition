@@ -359,7 +359,7 @@ tr {
   width: 40px;
   height: 40px;
   background: var(--glass);
-  border: 1.5px solid rgba(91, 62, 150, .5);
+  border: 1.5px solid #5b3e9680;
   border-radius: 8px;
   cursor: none;
   flex-direction: column;
@@ -1310,4 +1310,259 @@ tbody tr:hover {
     font-size: 0.85rem;
     margin: 5px 0;
     list-style: none;
+}
+/* Correction rapide pour le select de tri - Version simplifiée */
+#triDate,
+#roleFilter,
+.search-bar select {
+    background: #2d2d3a !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(91, 62, 150, 0.4) !important;
+}
+
+#triDate option,
+#roleFilter option,
+.search-bar select option {
+    background: #1a1a2a !important;
+    color: #ffffff !important;
+}
+
+#triDate:hover,
+#roleFilter:hover,
+.search-bar select:hover {
+    background: #3d3d4a !important;
+    border-color: var(--violet) !important;
+}
+
+/* Mode clair */
+[data-theme="light"] #triDate,
+[data-theme="light"] #roleFilter,
+[data-theme="light"] .search-bar select {
+    background: #f5f5f5 !important;
+    color: #1F3D2B !important;
+}
+
+[data-theme="light"] #triDate option,
+[data-theme="light"] #roleFilter option,
+[data-theme="light"] .search-bar select option {
+    background: #ffffff !important;
+    color: #1F3D2B !important;
+}
+/* ============================================ */
+/* STYLES TRANSFERES DEPUIS admin-module-loader.js */
+/* ============================================ */
+
+/* Animations pour les toasts */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Styles pour les badges de rôle (tri table) */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.role-admin {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.role-nutritionniste {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.role-ecologiste {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+.role-user {
+    background: rgba(155, 89, 182, 0.15);
+    color: #9b59b6;
+    border: 1px solid rgba(155, 89, 182, 0.3);
+}
+
+/* Mode clair pour les badges */
+[data-theme="light"] .role-admin {
+    background: rgba(231, 76, 60, 0.1);
+    color: #c0392b;
+}
+
+[data-theme="light"] .role-nutritionniste {
+    background: rgba(46, 204, 113, 0.1);
+    color: #27ae60;
+}
+
+[data-theme="light"] .role-ecologiste {
+    background: rgba(52, 152, 219, 0.1);
+    color: #2980b9;
+}
+
+[data-theme="light"] .role-user {
+    background: rgba(155, 89, 182, 0.1);
+    color: #8e44ad;
+}
+
+/* Cellules d'actions dans le tableau */
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.action-btn.edit:hover {
+    background: rgba(52, 152, 219, 0.2);
+    transform: scale(1.1);
+}
+
+.action-btn.delete:hover {
+    background: rgba(231, 76, 60, 0.2);
+    transform: scale(1.1);
+}
+
+/* Animation fadeIn pour les lignes du tableau */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Style pour les lignes du tableau avec animation */
+#usersTableBody tr {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Style pour le conteneur de toast */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ============================================ */
+/* CORRECTIONS POUR LES SELECTS (TRI, FILTRES) */
+/* ============================================ */
+
+/* Style de base pour tous les selects */
+select.form-select,
+select#triDate,
+select#roleFilter,
+.search-bar select {
+    background-color: #2d2d3a !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(91, 62, 150, 0.4) !important;
+    border-radius: 12px !important;
+    padding: 10px 16px !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239b59b6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    padding-right: 36px !important;
+}
+
+/* Style des options */
+select.form-select option,
+select#triDate option,
+select#roleFilter option,
+.search-bar select option {
+    background-color: #1a1a2a !important;
+    color: #ffffff !important;
+    padding: 10px !important;
+}
+
+/* Hover */
+select.form-select:hover,
+select#triDate:hover,
+select#roleFilter:hover,
+.search-bar select:hover {
+    background-color: #3d3d4a !important;
+    border-color: var(--violet) !important;
+}
+
+/* Focus */
+select.form-select:focus,
+select#triDate:focus,
+select#roleFilter:focus,
+.search-bar select:focus {
+    border-color: var(--violet) !important;
+    box-shadow: 0 0 0 2px rgba(91, 62, 150, 0.2) !important;
+}
+
+/* ===== MODE CLAIR ===== */
+[data-theme="light"] select.form-select,
+[data-theme="light"] select#triDate,
+[data-theme="light"] select#roleFilter,
+[data-theme="light"] .search-bar select {
+    background-color: #ffffff !important;
+    color: #1F3D2B !important;
+    border-color: rgba(91, 62, 150, 0.3) !important;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235B3E96' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>") !important;
+}
+
+[data-theme="light"] select.form-select option,
+[data-theme="light"] select#triDate option,
+[data-theme="light"] select#roleFilter option,
+[data-theme="light"] .search-bar select option {
+    background-color: #ffffff !important;
+    color: #1F3D2B !important;
+}
+
+[data-theme="light"] select.form-select:hover,
+[data-theme="light"] select#triDate:hover,
+[data-theme="light"] select#roleFilter:hover,
+[data-theme="light"] .search-bar select:hover {
+    background-color: #f5f0e8 !important;
+    border-color: var(--violet) !important;
 }

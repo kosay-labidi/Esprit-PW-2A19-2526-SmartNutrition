@@ -383,8 +383,16 @@ document.addEventListener('adminModuleLoaded', (e) => {
 
 // Fonctions utilitaires admin
 function refreshUsers() {
-  loadUsers();
-  showToast('Actualisé', 'Liste mise à jour', 'success');
+    // Effacer le terme de recherche
+    localStorage.removeItem('userSearchTerm');
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    loadUsers();
+    if (typeof showToast === 'function') {
+        showToast('Actualisé', 'Liste mise à jour', 'success');
+    }
 }
 
 function exportData(type) {
@@ -504,9 +512,63 @@ function filterByChip(chip, filter) {
   console.log(`🔍 Filtre appliqué: ${filter}`);
 }
 
-function searchUsers() {
-  const searchValue = document.getElementById('searchInput')?.value;
-  console.log(`🔍 Recherche: ${searchValue}`);
+// Fonction de recherche en temps réel par nom
+// Version CLIENT-SIDE - Pas besoin de nouveau fichier PHP
+async function searchUsers() {
+    console.log("🔍 Recherche en temps réel...");
+    
+    const searchTerm = document.getElementById('searchInput')?.value.trim().toLowerCase() || '';
+    
+    // Recharger les données depuis l'API existante
+    try {
+        // Utiliser l'API de tri existante
+        const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
+        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${savedOrder}&t=${Date.now()}`;
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            let filteredUsers = result.data;
+            
+            // FILTRER CÔTÉ CLIENT (pas besoin de PHP)
+            if (searchTerm !== '') {
+                filteredUsers = filteredUsers.filter(user => {
+                    const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
+                    const email = (user.email || '').toLowerCase();
+                    return fullName.includes(searchTerm) || email.includes(searchTerm);
+                });
+            }
+            
+            // Appliquer le filtre rôle existant
+            const roleFilter = document.getElementById('roleFilter');
+            if (roleFilter && roleFilter.value !== '') {
+                filteredUsers = filteredUsers.filter(user => user.role === roleFilter.value);
+            }
+            
+            // Mettre à jour l'affichage
+            updateUsersTableFromData(filteredUsers);
+            
+            // Message si aucun résultat
+            if (filteredUsers.length === 0 && searchTerm !== '') {
+                const tableBody = document.getElementById('usersTableBody');
+                if (tableBody) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px;">🔍 Aucun utilisateur trouvé pour "${searchTerm}"</td></tr>`;
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Erreur recherche:', error);
+    }
+}
+
+// Version debounced pour optimiser les performances
+let searchTimeout;
+function debouncedSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchUsers();
+    }, 300); // Délai de 300ms après la dernière frappe
 }
 
 // Fonction de filtre par rôle
@@ -764,16 +826,23 @@ async function loadUsers() {
     }
 
     try {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">⏳ Chargement...<\/td><\/tr>';
+        tableBody.innerHTML = '<table><td colspan="6" style="text-align:center;">⏳ Chargement...<\/td><\/tr>';
         
-        // Récupérer l'ordre sauvegardé et le filtre
+        // Récupérer les paramètres sauvegardés
         const savedOrder = localStorage.getItem('userSortOrder');
         const savedRoleFilter = localStorage.getItem('userRoleFilter');
+        const savedSearchTerm = localStorage.getItem('userSearchTerm');
         
         const selectTri = document.getElementById('triDate');
         const roleFilter = document.getElementById('roleFilter');
+        const searchInput = document.getElementById('searchInput');
         
-        // Construire l'URL
+        // Restaurer le terme de recherche si présent
+        if (savedSearchTerm && searchInput) {
+            searchInput.value = savedSearchTerm;
+        }
+        
+        // Construire l'URL de base
         let url = "http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php";
         
         // Appliquer le tri sauvegardé
@@ -801,6 +870,17 @@ async function loadUsers() {
         if (result.success && result.data) {
             let users = result.data;
             
+            // Appliquer la recherche si présente
+            if (savedSearchTerm && savedSearchTerm !== '') {
+                const searchLower = savedSearchTerm.toLowerCase();
+                users = users.filter(user => {
+                    const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
+                    const email = (user.email || '').toLowerCase();
+                    return fullName.includes(searchLower) || email.includes(searchLower);
+                });
+                console.log(`📊 Application de la recherche sauvegardée: "${savedSearchTerm}" -> ${users.length} résultats`);
+            }
+            
             // Appliquer le filtre par rôle si présent
             if (savedRoleFilter && savedRoleFilter !== '') {
                 users = users.filter(user => user.role === savedRoleFilter);
@@ -815,6 +895,11 @@ async function loadUsers() {
             }
             
             updateUsersTableFromData(users);
+            
+            // Afficher un message si aucun résultat avec recherche
+            if (users.length === 0 && savedSearchTerm) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px;">🔍 Aucun utilisateur trouvé pour "${savedSearchTerm}"<\/td><\/tr>`;
+            }
         } else {
             tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${result.error || 'Données invalides'}<\/td><\/tr>`;
         }

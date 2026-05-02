@@ -781,6 +781,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         console.error('❌ Aucun ID trouvé dans userData:', userData);
       }
       
+      
       sessionStorage.setItem('user_email', userData.email);
       sessionStorage.setItem('user_nom', userData.nom || '');
       sessionStorage.setItem('user_prenom', userData.prenom || '');

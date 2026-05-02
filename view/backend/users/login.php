@@ -30,7 +30,6 @@ $result = $userC->login($email, $mdp);
 
 switch ($result['status']) {
     case 'ok':
-        // ✅ Stocker l'utilisateur en session PHP (côté serveur)
         $_SESSION['user'] = $result['data'];
         echo json_encode(['success' => true, 'data' => $result['data']]);
         break;

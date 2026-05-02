@@ -1566,3 +1566,20 @@ select#roleFilter:focus,
     background-color: #f5f0e8 !important;
     border-color: var(--violet) !important;
 }
+/* Indicateur de recherche en temps réel */
+.search-input.searching {
+    border-color: var(--violet) !important;
+    box-shadow: 0 0 0 2px rgba(91, 62, 150, 0.2);
+    transition: all 0.2s ease;
+}
+
+/* Animation de pulsation pour l'indicateur de recherche */
+@keyframes searchPulse {
+    0% { box-shadow: 0 0 0 0 rgba(91, 62, 150, 0.4); }
+    70% { box-shadow: 0 0 0 5px rgba(91, 62, 150, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(91, 62, 150, 0); }
+}
+
+.searching {
+    animation: searchPulse 0.8s ease-out;
+}

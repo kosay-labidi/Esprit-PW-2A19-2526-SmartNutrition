@@ -19,12 +19,13 @@
     <div class="search-bar">
       <input type="text" class="search-input" id="searchInput" placeholder="Rechercher par nom ou email..." onkeyup="searchUsers()">
       <select class="form-select" id="roleFilter" onchange="filterUsers()">
-        <option value="">Tous les rôles</option>
-        <option value="user">Utilisateur</option>
-        <option value="admin">Administrateur</option>
-      </select>
-     <select class="form-select" id="triDate" onchange="tri()" 
-        style="background-color: #2a2a2a; color: #ffffff; border: 1px solid #4a4a6a; border-radius: 8px; padding: 8px 12px;">
+    <option value="">Tous les rôles</option>
+    <option value="utilisateur">👤 Utilisateur</option>
+    <option value="admin">🛡️ Administrateur</option>
+    <option value="nutritionniste">🥗 Nutritionniste</option>
+    <option value="ecologiste">🌱 Écologiste</option>
+</select>
+      <select class="form-select" id="triDate" onchange="tri()">
     <option value="">-- Trier par date --</option>
     <option value="desc">📅 Plus récent → Plus ancien</option>
     <option value="asc">📅 Plus ancien → Plus récent</option>

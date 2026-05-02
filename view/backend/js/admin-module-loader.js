@@ -509,9 +509,84 @@ function searchUsers() {
   console.log(`🔍 Recherche: ${searchValue}`);
 }
 
-function filterUsers() {
-  const roleFilter = document.getElementById('roleFilter')?.value;
-  console.log(`🔍 Filtre rôle: ${roleFilter}`);
+// Fonction de filtre par rôle
+async function filterUsers() {
+    console.log("🔄 Function filterUsers() appelée");
+    
+    const roleFilter = document.getElementById('roleFilter');
+    if (!roleFilter) {
+        console.error("❌ Élément roleFilter non trouvé");
+        return;
+    }
+    
+    const role = roleFilter.value;
+    console.log("📊 Rôle sélectionné:", role || 'Tous');
+    
+    // Afficher un indicateur de chargement
+    const tableBody = document.getElementById('usersTableBody');
+    if (tableBody) {
+        tableBody.innerHTML = '</tr><td colspan="6" style="text-align:center;">⏳ Filtrage en cours...<\/td><\/tr>';
+    }
+    
+    try {
+        // Appeler triRole.php avec le paramètre role
+        let url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/triRole.php?t=${Date.now()}`;
+        if (role) {
+            url += `&role=${encodeURIComponent(role)}`;
+        }
+        
+        console.log("📡 Appel API:", url);
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("📄 Réponse JSON reçue:", result);
+        
+        if (result.success && result.data) {
+            // Mettre à jour le tableau
+            updateUsersTableFromData(result.data);
+            
+            // Sauvegarder le filtre
+            if (role) {
+                localStorage.setItem('userRoleFilter', role);
+            } else {
+                localStorage.removeItem('userRoleFilter');
+            }
+            
+            // Afficher un toast
+            if (typeof showToast === 'function') {
+                const message = role ? `Filtre: ${getRoleLabel(role)}` : 'Affichage de tous les utilisateurs';
+                showToast('Filtre', message, 'success');
+            }
+            
+            console.log(`✅ ${result.data.length} utilisateurs filtrés par rôle: ${role || 'tous'}`);
+        } else {
+            throw new Error(result.error || 'Erreur lors du filtrage');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur lors du filtrage:', error);
+        if (typeof showToast === 'function') {
+            showToast('Erreur', 'Impossible de filtrer les utilisateurs', 'error');
+        }
+        // Recharger la liste normale
+        loadUsers();
+    }
+}
+
+// Fonction utilitaire pour obtenir le libellé du rôle
+function getRoleLabel(role) {
+    const roles = {
+        'user': 'Utilisateur',
+        'admin': 'Administrateur',
+        'nutritionniste': 'Nutritionniste',
+        'ecologiste': 'Écologiste'
+    };
+    return roles[role] || role;
 }
 // Fonction de tri par date
 // Fonction de tri par date
@@ -689,12 +764,16 @@ async function loadUsers() {
     }
 
     try {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">⏳ Chargement...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">⏳ Chargement...<\/td><\/tr>';
         
-        // Récupérer l'ordre sauvegardé
+        // Récupérer l'ordre sauvegardé et le filtre
         const savedOrder = localStorage.getItem('userSortOrder');
-        const selectTri = document.getElementById('triDate');
+        const savedRoleFilter = localStorage.getItem('userRoleFilter');
         
+        const selectTri = document.getElementById('triDate');
+        const roleFilter = document.getElementById('roleFilter');
+        
+        // Construire l'URL
         let url = "http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php";
         
         // Appliquer le tri sauvegardé
@@ -705,7 +784,7 @@ async function loadUsers() {
             }
             console.log(`📊 Application du tri sauvegardé: ${savedOrder}`);
         } else {
-            url += `?order=desc`; // Tri par défaut
+            url += `?order=desc`;
             if (selectTri) {
                 selectTri.value = 'desc';
             }
@@ -720,14 +799,29 @@ async function loadUsers() {
         const result = await response.json();
         
         if (result.success && result.data) {
-            updateUsersTableFromData(result.data);
+            let users = result.data;
+            
+            // Appliquer le filtre par rôle si présent
+            if (savedRoleFilter && savedRoleFilter !== '') {
+                users = users.filter(user => user.role === savedRoleFilter);
+                if (roleFilter) {
+                    roleFilter.value = savedRoleFilter;
+                }
+                console.log(`📊 Application du filtre sauvegardé: ${savedRoleFilter}`);
+            } else {
+                if (roleFilter) {
+                    roleFilter.value = '';
+                }
+            }
+            
+            updateUsersTableFromData(users);
         } else {
-            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${result.error || 'Données invalides'}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${result.error || 'Données invalides'}<\/td><\/tr>`;
         }
         
     } catch (error) {
         console.error("❌ Erreur:", error);
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${error.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${error.message}<\/td><\/tr>`;
     }
 }
 // Fonction toast pour les notifications

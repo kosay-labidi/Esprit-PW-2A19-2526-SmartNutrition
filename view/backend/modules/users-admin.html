@@ -30,6 +30,12 @@
     <option value="desc">📅 Plus récent → Plus ancien</option>
     <option value="asc">📅 Plus ancien → Plus récent</option>
 </select>
+ <select class="form-select" id="rowsPerPageSelect" onchange="setRowsPerPage(parseInt(this.value))">
+        <option value="5">5 par page</option>
+        <option value="10">10 par page</option>
+        <option value="25">25 par page</option>
+        <option value="50">50 par page</option>
+    </select>
       <button class="btn btn-primary" onclick="addUser()">➕ Ajouter</button>
     </div>
 

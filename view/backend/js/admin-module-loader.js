@@ -1,4 +1,9 @@
 console.log('🛡️ Admin Module Loader initialisé');
+// Variables de pagination
+let currentPage = 1;
+let rowsPerPage = 5;
+let currentUsersData = []; // Stocke les données actuelles des utilisateurs
+let totalPages = 1;
 
 // Configuration des modules admin
 const adminModules = {
@@ -701,9 +706,7 @@ async function searchUsers() {
     
     const searchTerm = document.getElementById('searchInput')?.value.trim().toLowerCase() || '';
     
-    // Recharger les données depuis l'API existante
     try {
-        // Utiliser l'API de tri existante
         const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
         const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${savedOrder}&t=${Date.now()}`;
         
@@ -713,7 +716,6 @@ async function searchUsers() {
         if (result.success && result.data) {
             let filteredUsers = result.data;
             
-            // FILTRER CÔTÉ CLIENT (pas besoin de PHP)
             if (searchTerm !== '') {
                 filteredUsers = filteredUsers.filter(user => {
                     const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
@@ -722,16 +724,17 @@ async function searchUsers() {
                 });
             }
             
-            // Appliquer le filtre rôle existant
             const roleFilter = document.getElementById('roleFilter');
             if (roleFilter && roleFilter.value !== '') {
                 filteredUsers = filteredUsers.filter(user => user.role === roleFilter.value);
             }
             
+            // Réinitialiser à la première page
+            currentPage = 1;
+            
             // Mettre à jour l'affichage
             updateUsersTableFromData(filteredUsers);
             
-            // Message si aucun résultat
             if (filteredUsers.length === 0 && searchTerm !== '') {
                 const tableBody = document.getElementById('usersTableBody');
                 if (tableBody) {
@@ -743,7 +746,6 @@ async function searchUsers() {
         console.error('Erreur recherche:', error);
     }
 }
-
 // Version debounced pour optimiser les performances
 let searchTimeout;
 function debouncedSearch() {
@@ -792,6 +794,7 @@ async function filterUsers() {
         
         if (result.success && result.data) {
             // Mettre à jour le tableau
+            currentPage = 1;
             updateUsersTableFromData(result.data);
             
             // Sauvegarder le filtre
@@ -875,6 +878,7 @@ async function tri() {
         console.log("📄 Réponse JSON reçue:", result);
         
         if (result.success && result.data) {
+          currentPage = 1;
             // Mettre à jour le tableau avec les données JSON
             updateUsersTableFromData(result.data);
             
@@ -903,6 +907,7 @@ async function tri() {
 }
 
 // Nouvelle fonction pour mettre à jour le tableau à partir des données JSON
+// Nouvelle fonction pour mettre à jour le tableau avec pagination
 function updateUsersTableFromData(users) {
     console.log("📊 Mise à jour du tableau avec", users.length, "utilisateurs");
     
@@ -912,14 +917,35 @@ function updateUsersTableFromData(users) {
         return;
     }
     
-    if (!users || users.length === 0) {
+    // Stocker les données actuelles
+    currentUsersData = users;
+    
+    // Calculer le nombre total de pages
+    totalPages = Math.ceil(users.length / rowsPerPage);
+    if (totalPages === 0) totalPages = 1;
+    
+    // S'assurer que la page courante est valide
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+        currentPage = 1;
+    }
+    
+    // Calculer les indices de début et fin
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = Math.min(startIndex + rowsPerPage, users.length);
+    const pageUsers = users.slice(startIndex, endIndex);
+    
+    if (pageUsers.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucun utilisateur trouvé</td></tr>';
+        updatePaginationButtons();
         return;
     }
     
-    // Générer le HTML du tableau
+    // Générer le HTML du tableau pour la page courante
     let html = '';
-    users.forEach((user, index) => {
+    pageUsers.forEach((user) => {
         // Déterminer la classe et l'icône du rôle
         let roleClass = '';
         let roleIcon = '👤';
@@ -947,18 +973,17 @@ function updateUsersTableFromData(users) {
                 roleLabel = 'Utilisateur';
         }
         
-        // Afficher le nom complet
         const fullName = `${user.prenom || ''} ${user.nom || ''}`.trim();
         
         html += `
             <tr style="opacity: 1; animation: fadeIn 0.3s ease-in;">
                 <td>${user.id || ''}</td>
-                <td>${fullName}</td>
-                <td>${user.email || ''}</td>
+                <td>${escapeHtml(fullName)}</td>
+                <td>${escapeHtml(user.email || '')}</td>
                 <td><span class="role-badge ${roleClass}">${roleIcon} ${roleLabel}</span></td>
                 <td>${user.date_creation || ''}</td>
                 <td class="actions-cell">
-                   <button class="action-btn edit" onclick="editUser(${user.id})" title="Modifier">
+                    <button class="action-btn edit" onclick="editUser(${user.id})" title="Modifier">
                         ✏️
                     </button>
                     <button class="action-btn delete" onclick="deleteUser(${user.id})" title="Supprimer">
@@ -970,10 +995,117 @@ function updateUsersTableFromData(users) {
     });
     
     tableBody.innerHTML = html;
-    console.log("✅ Tableau mis à jour");
     
-    // Ajouter les styles CSS si nécessaire
-    addTriTableStyles();
+    // Mettre à jour les boutons de pagination
+    updatePaginationButtons();
+    
+    // Afficher un message si aucun résultat
+    if (users.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;">📭 Aucun utilisateur trouvé</td></tr>';
+    } else {
+        // Afficher un petit indicateur du nombre d'utilisateurs
+        const infoSpan = document.getElementById('paginationInfo');
+        if (infoSpan) {
+            const start = startIndex + 1;
+            const end = endIndex;
+            infoSpan.innerHTML = `${start}-${end} sur ${users.length} utilisateurs`;
+        }
+    }
+    
+    console.log(`✅ Page ${currentPage}/${totalPages} - Affichage de ${pageUsers.length} utilisateurs`);
+}
+
+// Fonction utilitaire pour échapper le HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+// Mettre à jour les boutons de pagination
+function updatePaginationButtons() {
+    const paginationContainer = document.querySelector('.pagination');
+    if (!paginationContainer) return;
+    
+    // Sauvegarder le HTML actuel pour le restaurer après mise à jour
+    const oldButtons = paginationContainer.innerHTML;
+    
+    // Générer les nouveaux boutons
+    let html = '';
+    
+    // Bouton Précédent
+    html += `<button class="page-btn" onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''}>
+        ◀ Précédent
+    </button>`;
+    
+    // Numéros des pages
+    const maxButtons = 5; // Nombre maximum de boutons de page à afficher
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    
+    if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+    
+    // Première page si nécessaire
+    if (startPage > 1) {
+        html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+        if (startPage > 2) {
+            html += `<button class="page-btn disabled" disabled>...</button>`;
+        }
+    }
+    
+    // Pages numérotées
+    for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">
+            ${i}
+        </button>`;
+    }
+    
+    // Dernière page si nécessaire
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            html += `<button class="page-btn disabled" disabled>...</button>`;
+        }
+        html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+    }
+    
+    // Bouton Suivant
+    html += `<button class="page-btn" onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}>
+        Suivant ▶
+    </button>`;
+    
+    paginationContainer.innerHTML = html;
+}
+
+// Naviguer vers une page spécifique
+function goToPage(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    updateUsersTableFromData(currentUsersData);
+}
+
+// Page précédente
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        updateUsersTableFromData(currentUsersData);
+    }
+}
+
+// Page suivante
+function nextPage() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        updateUsersTableFromData(currentUsersData);
+    }
+}
+
+// Changer le nombre d'éléments par page
+function setRowsPerPage(rows) {
+    rowsPerPage = rows;
+    currentPage = 1; // Retour à la première page
+    updateUsersTableFromData(currentUsersData);
 }
 // Fonction pour ajouter les styles CSS du tableau trié
 function addTriTableStyles() {

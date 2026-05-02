@@ -895,6 +895,7 @@ async function loadUsers() {
             }
             
             updateUsersTableFromData(users);
+            refreshUserStats();
             
             // Afficher un message si aucun résultat avec recherche
             if (users.length === 0 && savedSearchTerm) {
@@ -909,6 +910,335 @@ async function loadUsers() {
         tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${error.message}<\/td><\/tr>`;
     }
 }
+// ===== STATISTIQUES DYNAMIQUES =====
+let currentChart = null; // Pour stocker l'instance du graphique actuel
+let currentChartType = 'pie'; // Type de graphique actuel ('pie' ou 'bar')
+
+// Fonction pour calculer les statistiques des utilisateurs par rôle
+function calculateUserStats(users) {
+    const stats = {
+        admin: { count: 0, label: 'Administrateurs', icon: '🛡️', color: '#e74c3c' },
+        nutritionniste: { count: 0, label: 'Nutritionnistes', icon: '🥗', color: '#2ecc71' },
+        ecologiste: { count: 0, label: 'Écologistes', icon: '🌱', color: '#3498db' },
+        user: { count: 0, label: 'Utilisateurs', icon: '👤', color: '#9b59b6' }
+    };
+    
+    // Compter les utilisateurs par rôle
+    users.forEach(user => {
+        const role = user.role;
+        if (stats[role]) {
+            stats[role].count++;
+        } else {
+            // Si rôle non reconnu, compter comme utilisateur standard
+            stats.user.count++;
+        }
+    });
+    
+    const total = users.length;
+    
+    // Calculer les pourcentages
+    const statsArray = [];
+    for (const [key, value] of Object.entries(stats)) {
+        if (value.count > 0) {
+            statsArray.push({
+                role: key,
+                label: value.label,
+                icon: value.icon,
+                count: value.count,
+                percent: total > 0 ? ((value.count / total) * 100).toFixed(1) : 0,
+                color: value.color
+            });
+        }
+    }
+    
+    // Trier par nombre décroissant
+    statsArray.sort((a, b) => b.count - a.count);
+    
+    return { stats: statsArray, total };
+}
+
+// Fonction pour mettre à jour la légende des statistiques
+// Fonction pour mettre à jour la légende des statistiques
+// Fonction pour mettre à jour la légende des statistiques (version améliorée)
+function updateStatsLegend(users) {
+    const { stats, total } = calculateUserStats(users);
+    const legendContainer = document.getElementById('userStatsLegend');
+    
+    if (!legendContainer) return;
+    
+    if (stats.length === 0) {
+        legendContainer.innerHTML = '<div class="stat-item">Aucune donnée disponible</div>';
+        return;
+    }
+    
+    let html = '';
+    stats.forEach(stat => {
+        html += `
+            <div class="stat-item-enhanced">
+                <div class="stat-role-enhanced">
+                    <div class="stat-icon-enhanced" style="background: ${stat.color}20; border-left: 3px solid ${stat.color};">
+                        <span>${stat.icon}</span>
+                        <span class="stat-label-enhanced">${stat.label}</span>
+                    </div>
+                </div>
+                <div class="stat-percent-enhanced">
+                    <span class="percent-value">${stat.percent}%</span>
+                </div>
+                <div class="stat-bar-enhanced">
+                    <div class="stat-bar-fill-enhanced" style="width: ${stat.percent}%; background: ${stat.color};"></div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+        <div class="stats-total-enhanced">
+            <span>📊 Total utilisateurs</span>
+            <strong>${total}</strong>
+        </div>
+    `;
+    
+    legendContainer.innerHTML = html;
+}
+
+// Fonction pour créer/détruire un graphique Chart.js
+function destroyChart() {
+    if (currentChart) {
+        currentChart.destroy();
+        currentChart = null;
+    }
+}
+
+// Fonction pour créer un graphique camembert (pie chart)
+function createPieChart(users) {
+    const { stats, total } = calculateUserStats(users);
+    const ctx = document.getElementById('userPieChart')?.getContext('2d');
+    
+    if (!ctx) return;
+    
+    destroyChart();
+    
+    const labels = stats.map(s => `${s.label} (${s.percent}%)`);
+    const data = stats.map(s => s.count);
+    const colors = stats.map(s => s.color);
+    
+    currentChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderColor: 'rgba(15, 35, 24, 0.5)',
+                borderWidth: 2,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: getComputedStyle(document.body).getPropertyValue('--text'),
+                        font: { size: 11 },
+                        padding: 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = stats[context.dataIndex].label;
+                            const value = context.raw;
+                            const percent = stats[context.dataIndex].percent;
+                            return `${label}: ${value} utilisateur(s) (${percent}%)`;
+                        }
+                    }
+                }
+            },
+            onClick: (event, activeElements) => {
+                if (activeElements.length > 0) {
+                    const index = activeElements[0].index;
+                    const role = stats[index].role;
+                    // Filtrer le tableau par ce rôle
+                    const roleFilter = document.getElementById('roleFilter');
+                    if (roleFilter) {
+                        roleFilter.value = role;
+                        filterUsers();
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Fonction pour créer un graphique à barres
+function createBarChart(users) {
+    const { stats, total } = calculateUserStats(users);
+    const ctx = document.getElementById('userBarChart')?.getContext('2d');
+    
+    if (!ctx) return;
+    
+    // Si le graphique existe déjà, le détruire
+    if (currentChart) {
+        currentChart.destroy();
+        currentChart = null;
+    }
+    
+    const labels = stats.map(s => s.label);
+    const data = stats.map(s => s.count);
+    const colors = stats.map(s => s.color);
+    
+    currentChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Nombre d\'utilisateurs',
+                data: data,
+                backgroundColor: colors,
+                borderColor: 'rgba(15, 35, 24, 0.8)',
+                borderWidth: 1,
+                borderRadius: 8,
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.raw;
+                            const percent = stats[context.dataIndex].percent;
+                            return `${value} utilisateur(s) (${percent}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(91, 62, 150, 0.1)'
+                    },
+                    ticks: {
+                        color: getComputedStyle(document.body).getPropertyValue('--muted'),
+                        stepSize: 1
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: getComputedStyle(document.body).getPropertyValue('--text'),
+                        font: { size: 12 }
+                    }
+                }
+            },
+            onClick: (event, activeElements) => {
+                if (activeElements.length > 0) {
+                    const index = activeElements[0].index;
+                    const role = stats[index].role;
+                    const roleFilter = document.getElementById('roleFilter');
+                    if (roleFilter) {
+                        roleFilter.value = role;
+                        filterUsers();
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Fonction pour basculer entre les types de graphiques
+function switchChartType(type) {
+    currentChartType = type;
+    
+    // Mettre à jour l'état des boutons
+    const pieBtn = document.querySelector('.toggle-btn[onclick="switchChartType(\'pie\')"]');
+    const barBtn = document.querySelector('.toggle-btn[onclick="switchChartType(\'bar\')"]');
+    
+    if (pieBtn) pieBtn.classList.remove('active');
+    if (barBtn) barBtn.classList.remove('active');
+    
+    const pieContainer = document.getElementById('pieChartContainer');
+    const barContainer = document.getElementById('barChartContainer');
+    
+    if (type === 'pie') {
+        if (pieBtn) pieBtn.classList.add('active');
+        pieContainer.style.display = 'block';
+        barContainer.style.display = 'none';
+        // Recharger les données actuelles pour le camembert
+        loadUserStatsForCurrentData();
+    } else {
+        if (barBtn) barBtn.classList.add('active');
+        pieContainer.style.display = 'none';
+        barContainer.style.display = 'block';
+        // Recharger les données actuelles pour les barres
+        loadUserStatsForCurrentData();
+    }
+}
+
+// Fonction pour charger les statistiques basées sur les données actuelles du tableau
+async function loadUserStatsForCurrentData() {
+    try {
+        const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
+        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${savedOrder}&t=${Date.now()}`;
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            let users = result.data;
+            
+            // Appliquer le filtre de recherche si présent
+            const savedSearchTerm = localStorage.getItem('userSearchTerm');
+            if (savedSearchTerm && savedSearchTerm !== '') {
+                const searchLower = savedSearchTerm.toLowerCase();
+                users = users.filter(user => {
+                    const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
+                    const email = (user.email || '').toLowerCase();
+                    return fullName.includes(searchLower) || email.includes(searchLower);
+                });
+            }
+            
+            // Appliquer le filtre de rôle si présent
+            const savedRoleFilter = localStorage.getItem('userRoleFilter');
+            if (savedRoleFilter && savedRoleFilter !== '') {
+                users = users.filter(user => user.role === savedRoleFilter);
+            }
+            
+            // Mettre à jour les statistiques
+            updateStatsLegend(users);
+            
+            // Créer le graphique selon le type actuel
+            if (currentChartType === 'pie') {
+                createPieChart(users);
+            } else {
+                createBarChart(users);
+            }
+        }
+    } catch (error) {
+        console.error('Erreur chargement stats:', error);
+    }
+}
+
+// Fonction pour rafraîchir les statistiques (appelée après modification des données)
+function refreshUserStats() {
+    loadUserStatsForCurrentData();
+}
+
+// Exposer les fonctions globalement
+window.switchChartType = switchChartType;
+window.refreshUserStats = refreshUserStats;
 // Fonction toast pour les notifications
 // Fonction toast simplifiée (sans création dynamique de styles)
 function showToast(title, message, type = 'info') {

@@ -1583,3 +1583,305 @@ select#roleFilter:focus,
 .searching {
     animation: searchPulse 0.8s ease-out;
 }
+/* ===== STATISTIQUES DYNAMIQUES ===== */
+.stats-section {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(91, 62, 150, 0.2);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+}
+
+.stats-header h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--text);
+    margin: 0;
+}
+
+.chart-toggle {
+    display: flex;
+    gap: 12px;
+}
+
+.toggle-btn {
+    background: var(--glass);
+    border: 1px solid rgba(91, 62, 150, 0.3);
+    border-radius: 50px;
+    padding: 6px 18px;
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.toggle-btn:hover {
+    background: rgba(91, 62, 150, 0.2);
+    transform: translateY(-2px);
+}
+
+.toggle-btn.active {
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    border-color: transparent;
+    color: white;
+}
+
+.stats-grid-custom {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 32px;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .stats-grid-custom {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+}
+
+.chart-card {
+    background: rgba(15, 35, 24, 0.5);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(91, 62, 150, 0.15);
+}
+
+.chart-card canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+.stats-legend {
+    background: rgba(15, 35, 24, 0.5);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid rgba(91, 62, 150, 0.15);
+}
+
+.legend-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+    color: var(--text);
+}
+
+.legend-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.stat-item:hover {
+    background: rgba(91, 62, 150, 0.1);
+    transform: translateX(5px);
+}
+
+.stat-role {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.stat-role-icon {
+    font-size: 1.2rem;
+}
+
+.stat-count {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+}
+
+.stat-number {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.stat-percent {
+    font-size: 0.85rem;
+    color: var(--violet);
+    font-weight: 600;
+}
+
+.stat-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(91, 62, 150, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--violet), var(--blue));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+/* Total des utilisateurs */
+.stats-total {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(91, 62, 150, 0.2);
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+.stats-total strong {
+    color: var(--text);
+    font-size: 1.1rem;
+}
+/* ===== LEGENDE AMELIOREE ===== */
+.stats-legend {
+    background: rgba(15, 35, 24, 0.5);
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid rgba(91, 62, 150, 0.15);
+}
+
+.legend-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Item de légende amélioré */
+.stat-item-enhanced {
+    margin-bottom: 16px;
+    padding: 8px 0;
+}
+
+/* Ligne rôle + icône */
+.stat-role-enhanced {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.stat-icon-enhanced {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.stat-icon-enhanced span:first-child {
+    font-size: 1.1rem;
+}
+
+.stat-label-enhanced {
+    color: var(--text);
+}
+
+/* Pourcentage */
+.stat-percent-enhanced {
+    text-align: right;
+    margin-bottom: 6px;
+}
+
+.percent-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 0.5px;
+}
+
+/* Barre de progression */
+.stat-bar-enhanced {
+    width: 100%;
+    height: 6px;
+    background: rgba(91, 62, 150, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.stat-bar-fill-enhanced {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Total utilisateur amélioré */
+.stats-total-enhanced {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(91, 62, 150, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.stats-total-enhanced span {
+    color: var(--muted);
+}
+
+.stats-total-enhanced strong {
+    font-size: 1.3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Version compacte pour mobile */
+@media (max-width: 768px) {
+    .stat-item-enhanced {
+        margin-bottom: 12px;
+    }
+    
+    .stat-icon-enhanced {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .percent-value {
+        font-size: 0.95rem;
+    }
+    
+    .stats-total-enhanced strong {
+        font-size: 1.1rem;
+    }
+}

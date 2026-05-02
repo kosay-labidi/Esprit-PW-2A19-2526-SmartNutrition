@@ -59,4 +59,35 @@
       <button class="page-btn">Suivant ▶</button>
     </div>
   </div>
+      <!-- ============ NOUVEAU : STATISTIQUES DYNAMIQUES ============ -->
+    <div class="stats-section">
+      <div class="stats-header">
+        <h3>📊 Répartition des utilisateurs par rôle</h3>
+        <div class="chart-toggle">
+          <button class="toggle-btn active" onclick="switchChartType('pie')">🥧 Camembert</button>
+          <button class="toggle-btn" onclick="switchChartType('bar')">📊 Barres</button>
+        </div>
+      </div>
+      
+      <div class="stats-grid-custom">
+        <!-- Graphique camembert (visible par défaut) -->
+        <div class="chart-card" id="pieChartContainer">
+          <canvas id="userPieChart" width="400" height="400"></canvas>
+        </div>
+        
+        <!-- Graphique barres (caché par défaut) -->
+        <div class="chart-card" id="barChartContainer" style="display: none;">
+          <canvas id="userBarChart" width="400" height="400"></canvas>
+        </div>
+        
+        <!-- Légende et statistiques -->
+        <div class="stats-legend">
+          <div class="legend-title">📈 Résumé</div>
+          <div class="legend-stats" id="userStatsLegend">
+            <!-- Les statistiques seront injectées dynamiquement -->
+            <div class="stat-item">Chargement...</div>
+          </div>
+        </div>
+      </div>
+    </div>
 </section>

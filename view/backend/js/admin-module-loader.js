@@ -395,8 +395,190 @@ function refreshUsers() {
     }
 }
 
-function exportData(type) {
-  showToast('Export', `Export des données ${type} en cours...`, 'info');
+// Exportation des données en CSV
+async function exportData(type) {
+    console.log(`📥 Export des données ${type} en cours...`);
+    
+    if (type === 'users') {
+        await exportUsersToCSV();
+    } else {
+        showToast('Export', `Export des données ${type} en cours...`, 'info');
+    }
+}
+
+// Fonction d'exportation des utilisateurs en CSV
+async function exportUsersToCSV() {
+    try {
+        showToast('Export', 'Préparation de l\'export...', 'info');
+        
+        // Récupérer les données actuelles (avec les filtres appliqués)
+        const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
+        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${savedOrder}&t=${Date.now()}`;
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            throw new Error('Impossible de récupérer les données');
+        }
+        
+        let users = result.data;
+        
+        // Appliquer les filtres actifs (recherche + rôle)
+        const savedSearchTerm = localStorage.getItem('userSearchTerm');
+        if (savedSearchTerm && savedSearchTerm !== '') {
+            const searchLower = savedSearchTerm.toLowerCase();
+            users = users.filter(user => {
+                const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
+                const email = (user.email || '').toLowerCase();
+                return fullName.includes(searchLower) || email.includes(searchLower);
+            });
+        }
+        
+        const savedRoleFilter = localStorage.getItem('userRoleFilter');
+        if (savedRoleFilter && savedRoleFilter !== '') {
+            users = users.filter(user => user.role === savedRoleFilter);
+        }
+        
+        if (users.length === 0) {
+            showToast('Export', 'Aucune donnée à exporter', 'warning');
+            return;
+        }
+        
+        // Générer le CSV
+        const csvData = convertUsersToCSV(users);
+        
+        // Télécharger le fichier
+        downloadCSV(csvData, `utilisateurs_${formatDateForFilename()}.csv`);
+        
+        showToast('Export réussi', `${users.length} utilisateur(s) exporté(s)`, 'success');
+        
+    } catch (error) {
+        console.error('❌ Erreur export:', error);
+        showToast('Erreur', 'Impossible d\'exporter les données', 'error');
+    }
+}
+
+// Convertir les utilisateurs en format CSV
+// Convertir les utilisateurs en format CSV
+function convertUsersToCSV(users) {
+    // Définir les en-têtes
+    const headers = [
+        'ID',
+        'Nom',
+        'Prénom',
+        'Email',
+        'Rôle',
+        'Date inscription',
+        'Statut'
+    ];
+    
+    // Créer les lignes de données
+    const rows = users.map(user => {
+        // Formater la date plus court (YYYY-MM-DD)
+        let formattedDate = '';
+        if (user.date_creation) {
+            // Si la date est au format "2024-01-15 14:30:00" ou similaire
+            formattedDate = user.date_creation.split(' ')[0]; // Ne garde que YYYY-MM-DD
+        }
+        
+        // Traduire le rôle en français
+        let roleFrench = '';
+        switch(user.role) {
+            case 'admin':
+                roleFrench = 'Administrateur';
+                break;
+            case 'nutritionniste':
+                roleFrench = 'Nutritionniste';
+                break;
+            case 'ecologiste':
+                roleFrench = 'Écologiste';
+                break;
+            default:
+                roleFrench = 'Utilisateur';
+        }
+        
+        // Statut (par défaut "Actif" si non spécifié)
+        const status = user.status === 'inactif' ? 'Inactif' : 'Actif';
+        
+        return [
+            escapeCSVField(user.id || ''),
+            escapeCSVField(user.nom || ''),
+            escapeCSVField(user.prenom || ''),
+            escapeCSVField(user.email || ''),
+            escapeCSVField(roleFrench),
+            escapeCSVField(formattedDate), // Date au format YYYY-MM-DD
+            escapeCSVField(status)
+        ];
+    });
+    
+    // Combiner en-têtes et lignes
+    const csvContent = [
+        headers.join(';'),
+        ...rows.map(row => row.join(';'))
+    ].join('\n');
+    
+    return '\uFEFF' + csvContent;
+}
+// Échapper les caractères spéciaux pour le CSV
+function escapeCSVField(field) {
+    if (field === undefined || field === null) return '';
+    
+    // Convertir en string
+    let stringField = String(field);
+    
+    // Si le champ contient des guillemets, points-virgules ou retours à la ligne
+    if (stringField.includes('"') || stringField.includes(';') || stringField.includes('\n') || stringField.includes(',')) {
+        // Remplacer les guillemets par des guillemets doubles
+        stringField = stringField.replace(/"/g, '""');
+        // Entourer le champ de guillemets
+        return `"${stringField}"`;
+    }
+    
+    return stringField;
+}
+
+// Formater la date pour le nom de fichier
+function formatDateForFilename() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+}
+
+// Télécharger le fichier CSV
+function downloadCSV(csvContent, filename) {
+    // Créer un blob avec le contenu CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Créer un lien de téléchargement
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Nettoyer l'URL
+    URL.revokeObjectURL(url);
+}
+
+// Exporter également pour les autres modules
+function exportLogs() {
+    showToast('Export', 'Export des logs en cours...', 'info');
+}
+
+function exportAll() {
+    showToast('Export', 'Export complet en cours...', 'info');
 }
 
 function addUser() {

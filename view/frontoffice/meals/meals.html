@@ -1,0 +1,159 @@
+<section class="content-section" id="meals">
+  <div class="section-header">
+    <h2 class="module-title">🍽️ Mes Repas</h2>
+    <p>Suivez votre alimentation et vos apports nutritionnels</p>
+  </div>
+
+  <div class="meals-actions">
+    <button class="btn btn-primary" onclick="window.location.href='meals/addMeal.php'">
+      ➕ Ajouter un Repas
+    </button>
+  </div>
+
+  <div class="meals-grid" id="meals-list"></div>
+</section>
+
+<style>
+.module-title {
+  background: linear-gradient(135deg, var(--text), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.meals-actions {
+  margin-bottom: 24px;
+}
+
+.meals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.meal-card {
+  background: var(--surface);
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(168, 184, 160, 0.2);
+  transition: all 0.3s ease;
+}
+
+.meal-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.meal-type {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.meal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.meal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.meal-macros {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.macro-item {
+  text-align: center;
+  padding: 8px;
+  background: rgba(168, 184, 160, 0.1);
+  border-radius: 8px;
+}
+
+.macro-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.macro-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+</style>
+
+<script>
+function loadMeals() {
+  fetch('../../controller/meal.controller.php?action=read')
+    .then(response => response.json())
+    .then(result => {
+      if(result.success) {
+        displayMeals(result.data);
+      }
+    });
+}
+
+function displayMeals(meals) {
+  const container = document.getElementById('meals-list');
+  
+  if(meals.length === 0) {
+    container.innerHTML = '<p>Aucun repas enregistré.</p>';
+    return;
+  }
+
+  const html = meals.map(m => `
+    <div class="meal-card">
+      <div class="meal-header">
+        <span class="meal-type">${m.type_repas}</span>
+        <span>${m.date_repas}</span>
+      </div>
+      <h3 class="meal-title">${m.nom}</h3>
+      <div class="meal-meta">
+        <span>🕐 ${m.heure_repas}</span>
+      </div>
+      <div class="meal-macros">
+        <div class="macro-item">
+          <div class="macro-value">${m.calories || 0}</div>
+          <div class="macro-label">kcal</div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-value">${m.proteines || 0}</div>
+          <div class="macro-label">Prot.</div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-value">${m.glucides || 0}</div>
+          <div class="macro-label">Gluc.</div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-value">${m.lipides || 0}</div>
+          <div class="macro-label">Lip.</div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-top: 12px; width: 100%;" onclick="window.location.href='meals/updateMeal.php?id=${m.id}'">
+        ✏️ Modifier
+      </button>
+    </div>
+  `).join('');
+  
+  container.innerHTML = html;
+}
+
+window.addEventListener('load', loadMeals);
+</script>

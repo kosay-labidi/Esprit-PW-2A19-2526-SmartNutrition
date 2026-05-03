@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Dashboard - GaiaLumen</title>
+
+<!-- Polices -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+
+<!-- Styles -->
+<link rel="stylesheet" href="css/admin.css"/>
+
+<!-- Librairies externes -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<div id="preloader">
+  <canvas id="pl-canvas"></canvas>
+  <div id="pl-text">GAIALUMEN ADMIN</div>
+  <div id="pl-bar"><div id="pl-fill"></div></div>
+</div>
+
+<nav id="navbar">
+  <a href="admin.html" class="nav-logo">
+    <svg viewBox="0 0 60 60" fill="none">
+      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <defs>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#5B3E96"/>
+        </radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1F3D2B"/>
+          <stop offset="100%" stop-color="#3A86C4"/>
+        </linearGradient>
+      </defs>
+      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-logo-text">🛡️ Admin GaiaLumen</span>
+  </a>
+  <div class="nav-actions">
+    <button id="menu-toggle" title="Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
+    <button class="btn-logout" onclick="logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Déconnexion
+    </button>
+  </div>
+</nav>
+
+<button id="sidebar-toggle" title="Toggle sidebar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+</button>
+
+<div class="dashboard-container">
+  <aside class="sidebar-menu">
+    <div class="menu-title">📊 Modules Admin</div>
+    <a href="#" class="menu-item" data-module="dashboard">
+      <span class="menu-item-icon">🏠</span>
+      <span class="menu-item-text">Dashboard</span>
+    </a>
+    <a href="#" class="menu-item" data-module="users">
+      <span class="menu-item-icon">👥</span>
+      <span class="menu-item-text">GS Utilisateurs</span>
+    </a>
+    <a href="#" class="menu-item" data-module="planning">
+      <span class="menu-item-icon">📅</span>
+      <span class="menu-item-text">GS Planning</span>
+    </a>
+    <a href="#" class="menu-item" data-module="events">
+      <span class="menu-item-icon">🎯</span>
+      <span class="menu-item-text">GS Events</span>
+    </a>
+    <a href="#" class="menu-item" data-module="meals">
+      <span class="menu-item-icon">🍽️</span>
+      <span class="menu-item-text">GS Repas</span>
+    </a>
+    <a href="#" class="menu-item" data-module="health">
+      <span class="menu-item-icon">❤️</span>
+      <span class="menu-item-text">GS Santé</span>
+    </a>
+    <a href="#" class="menu-item" data-module="challenges">
+      <span class="menu-item-icon">🏆</span>
+      <span class="menu-item-text">GS Défis</span>
+    </a>
+    <a href="#" class="menu-item" data-module="activity">
+      <span class="menu-item-icon">📜</span>
+      <span class="menu-item-text">Logs Activité</span>
+    </a>
+  </aside>
+
+  <main class="main-content">
+      <div id="module-initial-loader" class="section-loader">
+        <div class="section-loader-spinner"></div>
+        <p style="color:var(--muted); font-size:1.1rem;">Initialisation du dashboard...</p>
+      </div>
+    </main>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-bar-fill" id="progressBar"></div>
+</div>
+
+<!-- Scripts -->
+<script src="js/admin.js"></script>
+<script>
+// Afficher alerte si retour depuis add.php
+if (window.location.search.indexOf("ev=added") !== -1) {
+  window.addEventListener("load", function() {
+    setTimeout(function() {
+      alert("✅ Événement créé avec succès !");
+      // Nettoyer URL
+      history.replaceState(null, "", window.location.pathname);
+    }, 300);
+  });
+}
+</script>
+<script src="js/admin-module-loader.js"></script>
+</body>
+</html>

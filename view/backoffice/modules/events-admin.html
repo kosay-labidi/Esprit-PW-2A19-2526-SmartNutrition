@@ -1,0 +1,451 @@
+<section class="content-section active" id="events">
+
+  <div class="section-header">
+    <h2>Gestion des Événements</h2>
+    <p>Gérez et organisez tous les événements de votre communauté</p>
+  </div>
+
+  <!-- ═══ FORMULAIRE NATIF ═══ -->
+  <div class="ev-form-panel">
+    <div class="ev-form-panel-header">
+      <h3>➕ Nouvel Événement</h3>
+    </div>
+    <form method="POST" action="evenement/add.php">
+      <input type="hidden" name="redirect_to" value="../admin.html">
+      <div class="ev-row-2">
+        <div class="ev-group">
+          <label class="ev-label">Titre <span class="ev-req">*</span></label>
+          <input type="text" name="titre" class="ev-input" placeholder="Ex: Atelier Bien-être Naturel" required>
+        </div>
+        <div class="ev-group">
+          <label class="ev-label">Description</label>
+          <textarea name="description" class="ev-textarea" placeholder="Décrivez votre événement..."></textarea>
+        </div>
+      </div>
+      <div class="ev-row-4">
+        <div class="ev-group">
+          <label class="ev-label">Date <span class="ev-req">*</span></label>
+          <input type="date" name="date" class="ev-input" required>
+        </div>
+        <div class="ev-group">
+          <label class="ev-label">Heure <span class="ev-req">*</span></label>
+          <input type="time" name="heure" class="ev-input" required>
+        </div>
+        <div class="ev-group">
+          <label class="ev-label">Type <span class="ev-req">*</span></label>
+          <select name="type" class="ev-select" required>
+            <option value="" disabled selected>Sélectionner...</option>
+            <option value="repas">🍽️ Repas / Cuisine</option>
+            <option value="sport">🏃 Sport / Yoga</option>
+            <option value="medical">🩺 Consultation Nutrition</option>
+            <option value="atelier">🎨 Atelier Pratique</option>
+          </select>
+        </div>
+        <div class="ev-group ev-group-btns">
+          <label class="ev-label">&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button type="reset" class="ev-btn ev-btn-cancel">✖ Annuler</button>
+            <button type="submit" class="ev-btn ev-btn-create">✅ Créer</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Stats -->
+  <div class="ev-stats-grid">
+    <div class="ev-stat-card ev-stat-total-card">
+      <div class="ev-stat-icon">📊</div>
+      <div class="ev-stat-value" id="ev-stat-total">—</div>
+      <div class="ev-stat-label">Événements total</div>
+      <div class="ev-stat-sub" id="ev-stat-year">+0 cette année</div>
+    </div>
+    <div class="ev-stat-card ev-stat-upcoming-card">
+      <div class="ev-stat-icon">📅</div>
+      <div class="ev-stat-value" id="ev-stat-upcoming">—</div>
+      <div class="ev-stat-label">À venir</div>
+      <div class="ev-stat-sub">Prochainement</div>
+    </div>
+    <div class="ev-stat-card ev-stat-type-card">
+      <div class="ev-stat-icon">🏆</div>
+      <div class="ev-stat-value" id="ev-stat-toptype-count">—</div>
+      <div class="ev-stat-label">Top type</div>
+      <div class="ev-stat-sub" id="ev-stat-toptype-label">—</div>
+    </div>
+    <div class="ev-stat-card ev-stat-types-card">
+      <div class="ev-stat-label" style="margin-bottom:10px;font-weight:700;">Répartition par type</div>
+      <div id="ev-stat-types-bars"></div>
+    </div>
+  </div>
+
+  <!-- Barre Recherche + Filtres -->
+  <div class="ev-search-bar">
+    <div class="ev-search-wrap">
+      <span class="ev-search-icon">🔍</span>
+      <input type="text" class="ev-search-input" id="ev-search-input" placeholder="Rechercher un événement...">
+      <button class="ev-search-clear" id="ev-search-clear" title="Effacer">✕</button>
+    </div>
+    <select class="ev-filter-select" id="ev-filter-type">
+      <option value="">Tous les types</option>
+      <option value="repas">🍲 Repas</option>
+      <option value="sport">🧘 Sport</option>
+      <option value="medical">🥗 Nutrition</option>
+      <option value="atelier">🌱 Atelier</option>
+    </select>
+    <select class="ev-filter-select" id="ev-sort-select">
+      <option value="date ASC">📅 Date ↑</option>
+      <option value="date DESC">📅 Date ↓</option>
+      <option value="titre ASC">🔤 A → Z</option>
+      <option value="titre DESC">🔤 Z → A</option>
+    </select>
+    <div class="ev-count-badge" id="ev-count-badge">0 résultat</div>
+    <a href="participation/list.php" class="ev-btn ev-btn-sec">📋 Participations</a>
+    <a href="evenement/list.php"     class="ev-btn ev-btn-info">📅 Liste complète</a>
+  </div>
+
+  <!-- Tableau -->
+  <div class="ev-table-wrap">
+    <table class="ev-table" id="ev-main-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Titre</th>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Heure</th>
+        </tr>
+      </thead>
+      <tbody id="events-tbody">
+        <tr>
+          <td colspan="5" style="text-align:center;padding:50px;">
+            <div class="ev-spinner"></div>
+            <p style="color:var(--muted);margin-top:12px;">Chargement des événements...</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+
+<style>
+/* ── Form panel ── */
+.ev-form-panel{background:var(--card-bg);backdrop-filter:blur(16px);border-radius:16px;padding:20px 24px;border:1px solid rgba(91,62,150,.25);box-shadow:var(--shadow);margin-bottom:28px;transition:all .3s;}
+.ev-form-panel:hover{box-shadow:0 12px 40px rgba(91,62,150,.3);border-color:rgba(91,62,150,.5);}
+.ev-form-panel-header{display:flex;align-items:center;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid rgba(91,62,150,.2);}
+.ev-form-panel-header h3{margin:0;font-size:1.1rem;font-weight:700;color:var(--text);}
+.ev-row-2{display:grid;grid-template-columns:1fr 1.5fr;gap:12px;margin-bottom:12px;}
+.ev-row-4{display:grid;grid-template-columns:1fr 1fr 1.2fr auto;gap:12px;align-items:end;}
+.ev-group{display:flex;flex-direction:column;}
+.ev-group-btns{justify-content:flex-end;}
+.ev-label{font-size:.83rem;font-weight:600;color:var(--text);margin-bottom:5px;}
+.ev-req{color:#e74c3c;}
+.ev-input,.ev-textarea,.ev-select{width:100%;padding:9px 11px;border:1.5px solid rgba(91,62,150,.3);border-radius:10px;font-size:.85rem;font-family:inherit;background:rgba(91,62,150,.1);color:var(--text);transition:all .3s;box-sizing:border-box;}
+.ev-input:focus,.ev-textarea:focus,.ev-select:focus{outline:none;border-color:var(--violet);background:rgba(91,62,150,.15);box-shadow:0 0 0 3px rgba(91,62,150,.1);}
+.ev-input::placeholder,.ev-textarea::placeholder{color:var(--muted);}
+.ev-textarea{resize:vertical;min-height:55px;max-height:80px;}
+.ev-select{cursor:pointer;}
+.ev-btn{padding:9px 18px;border-radius:10px;border:none;cursor:pointer;font-size:.85rem;font-weight:700;transition:all .3s;display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap;}
+.ev-btn-cancel{background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:#e74c3c;}
+.ev-btn-cancel:hover{background:rgba(231,76,60,.22);}
+.ev-btn-create{background:linear-gradient(135deg,var(--violet),var(--blue));color:#fff;box-shadow:0 2px 8px rgba(91,62,150,.35);}
+.ev-btn-create:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(91,62,150,.5);}
+.ev-btn-sec{background:rgba(91,62,150,.15);border:1px solid rgba(91,62,150,.3);color:var(--text);}
+.ev-btn-sec:hover{background:rgba(91,62,150,.25);color:var(--text);}
+.ev-btn-info{background:rgba(52,152,219,.15);border:1px solid rgba(52,152,219,.3);color:#3498db;}
+.ev-btn-info:hover{background:rgba(52,152,219,.25);}
+
+/* ── Stats ── */
+.ev-stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr 2fr;gap:16px;margin-bottom:28px;}
+.ev-stat-card{background:var(--card-bg);backdrop-filter:blur(16px);border:1px solid rgba(91,62,150,.2);border-radius:16px;padding:20px;transition:all .3s;position:relative;overflow:hidden;}
+.ev-stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;opacity:0;transition:opacity .3s;}
+.ev-stat-total-card::after{background:linear-gradient(90deg,var(--violet),var(--blue));opacity:1;}
+.ev-stat-upcoming-card::after{background:linear-gradient(90deg,#27ae60,#2ecc71);opacity:1;}
+.ev-stat-type-card::after{background:linear-gradient(90deg,#e67e22,#f39c12);opacity:1;}
+.ev-stat-types-card::after{background:linear-gradient(90deg,var(--blue),var(--violet));opacity:1;}
+.ev-stat-card:hover{border-color:rgba(91,62,150,.4);transform:translateY(-3px);box-shadow:0 10px 30px rgba(91,62,150,.2);}
+.ev-stat-icon{font-size:1.8rem;margin-bottom:8px;}
+.ev-stat-value{font-size:2rem;font-weight:800;color:var(--text);margin-bottom:2px;line-height:1;}
+.ev-stat-label{color:var(--muted);font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.ev-stat-sub{font-size:.8rem;padding:3px 9px;border-radius:20px;display:inline-block;background:rgba(91,62,150,.12);color:var(--violet);font-weight:600;}
+
+/* ── Mini barres de répartition ── */
+.ev-type-bar{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.ev-type-bar-label{font-size:.75rem;color:var(--muted);width:60px;flex-shrink:0;}
+.ev-type-bar-track{flex:1;height:6px;background:rgba(91,62,150,.1);border-radius:10px;overflow:hidden;}
+.ev-type-bar-fill{height:100%;border-radius:10px;transition:width .6s ease;}
+.ev-type-bar-count{font-size:.75rem;font-weight:700;color:var(--text);width:20px;text-align:right;}
+.ev-bar-repas{background:linear-gradient(90deg,#e67e22,#f39c12);}
+.ev-bar-sport{background:linear-gradient(90deg,#27ae60,#2ecc71);}
+.ev-bar-medical{background:linear-gradient(90deg,#d4ac0d,#f1c40f);}
+.ev-bar-atelier{background:linear-gradient(90deg,#8e44ad,#9b59b6);}
+
+/* ── Barre de recherche ── */
+.ev-search-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.ev-search-wrap{flex:2;min-width:200px;position:relative;display:flex;align-items:center;}
+.ev-search-icon{position:absolute;left:12px;font-size:.9rem;pointer-events:none;}
+.ev-search-input{width:100%;padding:10px 36px 10px 34px;border-radius:12px;background:var(--card-bg);border:1.5px solid rgba(91,62,150,.25);color:var(--text);font-size:.9rem;outline:none;transition:all .3s;font-family:inherit;}
+.ev-search-input:focus{border-color:var(--violet);box-shadow:0 0 0 3px rgba(91,62,150,.1);}
+.ev-search-input::placeholder{color:var(--muted);}
+.ev-search-clear{position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.9rem;padding:4px;border-radius:50%;transition:all .2s;display:none;}
+.ev-search-clear:hover{background:rgba(231,76,60,.15);color:#e74c3c;}
+.ev-filter-select{flex:1;min-width:130px;padding:10px 14px;border-radius:12px;background:var(--card-bg);border:1.5px solid rgba(91,62,150,.25);color:var(--text);font-size:.88rem;outline:none;cursor:pointer;transition:all .3s;font-family:inherit;}
+.ev-filter-select:focus{border-color:var(--violet);}
+.ev-count-badge{background:rgba(91,62,150,.12);border:1px solid rgba(91,62,150,.2);color:var(--violet);padding:8px 14px;border-radius:20px;font-size:.82rem;font-weight:700;white-space:nowrap;}
+
+/* ── Tableau ── */
+.ev-table-wrap{overflow-x:auto;background:var(--card-bg);backdrop-filter:blur(16px);border:1px solid rgba(91,62,150,.15);border-radius:16px;box-shadow:var(--shadow);}
+.ev-table{width:100%;border-collapse:collapse;}
+.ev-table thead{background:linear-gradient(135deg,rgba(91,62,150,.2),rgba(58,134,196,.1));}
+.ev-table th{padding:14px 16px;text-align:left;font-weight:700;color:var(--text);font-size:.8rem;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid rgba(91,62,150,.15);}
+.ev-table td{padding:13px 16px;border-bottom:1px solid rgba(91,62,150,.07);color:var(--text);font-size:.9rem;transition:background .2s;}
+.ev-table tbody tr:hover td{background:rgba(91,62,150,.07);}
+.ev-table tbody tr:last-child td{border-bottom:none;}
+.ev-table tbody tr{transition:all .2s;}
+
+/* ── Badges type ── */
+.ev-badge{padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:700;display:inline-flex;align-items:center;gap:5px;letter-spacing:.2px;}
+.ev-badge-repas  {background:rgba(230,126,34,.15);color:#e67e22;border:1px solid rgba(230,126,34,.3);}
+.ev-badge-sport  {background:rgba(46,204,113,.15);color:#27ae60;border:1px solid rgba(46,204,113,.3);}
+.ev-badge-medical{background:rgba(212,172,13,.15);color:#d4ac0d;border:1px solid rgba(212,172,13,.3);}
+.ev-badge-atelier{background:rgba(142,68,173,.15);color:#8e44ad;border:1px solid rgba(142,68,173,.3);}
+
+/* ── Boutons action ── */
+.ev-titre-link{color:var(--text);font-weight:600;text-decoration:none;transition:color .2s;}
+.ev-titre-link:hover{color:var(--violet);}
+.ev-btn-sm{padding:5px 11px !important;font-size:.78rem !important;border-radius:8px !important;margin:0 2px;}
+.ev-btn-danger{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;}
+.ev-btn-danger:hover{background:rgba(231,76,60,.2);}
+
+/* ── Spinner ── */
+.ev-spinner{width:32px;height:32px;border:3px solid rgba(91,62,150,.2);border-top-color:var(--violet);border-radius:50%;animation:ev-spin .7s linear infinite;margin:0 auto;}
+@keyframes ev-spin{to{transform:rotate(360deg);}}
+
+/* ── État vide ── */
+.ev-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.ev-empty-icon{font-size:3rem;margin-bottom:12px;}
+
+/* ── Highlight recherche ── */
+.ev-highlight{background:rgba(91,62,150,.25);border-radius:3px;padding:0 2px;}
+
+@media(max-width:900px){
+  .ev-stats-grid{grid-template-columns:1fr 1fr;}
+  .ev-stat-types-card{grid-column:1/-1;}
+}
+@media(max-width:600px){
+  .ev-row-2,.ev-row-4{grid-template-columns:1fr;}
+  .ev-stats-grid{grid-template-columns:1fr;}
+  .ev-search-bar{flex-direction:column;}
+  .ev-search-wrap{min-width:100%;}
+}
+</style>
+
+<script>
+(function() {
+  /* ─────────────────────────────────────────────
+     Détection du chemin de base de l'API.
+     Le module est injecté dans admin.html qui se
+     trouve dans /view/backoffice/.
+     On calcule le chemin absolu depuis window.location.
+  ───────────────────────────────────────────── */
+  var base = window.location.href.replace(/\/[^\/]*(\?.*)?$/, '/');
+  /* S'assure que la base se termine par /view/backoffice/ */
+  if (base.indexOf('backoffice') === -1) {
+    base = base.replace(/\/$/, '') + '/view/backoffice/';
+  }
+  var API = base + 'evenement/list.php';
+
+  var TYPE_ICONS = { repas:'🍲', sport:'🧘', medical:'🥗', atelier:'🌱' };
+  var TYPE_BADGES = {
+    repas:   'ev-badge ev-badge-repas',
+    sport:   'ev-badge ev-badge-sport',
+    medical: 'ev-badge ev-badge-medical',
+    atelier: 'ev-badge ev-badge-atelier'
+  };
+  var TYPE_LABELS = { repas:'Repas', sport:'Sport', medical:'Nutrition', atelier:'Atelier' };
+  var TYPE_BAR_CLASSES = { repas:'ev-bar-repas', sport:'ev-bar-sport', medical:'ev-bar-medical', atelier:'ev-bar-atelier' };
+
+  /* ── Stats ── */
+  function loadStats() {
+    fetch(API + '?action=getstats')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var elTotal    = document.getElementById('ev-stat-total');
+        var elUpcoming = document.getElementById('ev-stat-upcoming');
+        var elYear     = document.getElementById('ev-stat-year');
+        var elTopCount = document.getElementById('ev-stat-toptype-count');
+        var elTopLabel = document.getElementById('ev-stat-toptype-label');
+        var elBars     = document.getElementById('ev-stat-types-bars');
+
+        if (elTotal)    elTotal.textContent    = data.total    != null ? data.total    : '0';
+        if (elUpcoming) elUpcoming.textContent = data.upcoming != null ? data.upcoming : '0';
+        if (elYear)     elYear.textContent     = '+' + (data.thisYear != null ? data.thisYear : 0) + ' cette année';
+
+        /* Top type + barres */
+        if (data.byType) {
+          var maxCount = 0;
+          var maxKey   = '';
+          var total    = 0;
+          Object.keys(data.byType).forEach(function(k) {
+            total += data.byType[k];
+            if (data.byType[k] > maxCount) { maxCount = data.byType[k]; maxKey = k; }
+          });
+          if (elTopCount) elTopCount.textContent = maxCount > 0 ? maxCount : '0';
+          if (elTopLabel) elTopLabel.textContent  = maxKey ? (TYPE_LABELS[maxKey] || maxKey) : '—';
+
+          /* Mini barres */
+          if (elBars) {
+            var html = '';
+            var order = ['repas','sport','medical','atelier'];
+            order.forEach(function(k) {
+              var cnt = data.byType[k] || 0;
+              var pct = total > 0 ? Math.round(cnt / total * 100) : 0;
+              var cls = TYPE_BAR_CLASSES[k] || '';
+              html +=
+                '<div class="ev-type-bar">' +
+                  '<span class="ev-type-bar-label">' + (TYPE_ICONS[k] || '') + ' ' + (TYPE_LABELS[k] || k) + '</span>' +
+                  '<div class="ev-type-bar-track"><div class="ev-type-bar-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+                  '<span class="ev-type-bar-count">' + cnt + '</span>' +
+                '</div>';
+            });
+            elBars.innerHTML = html;
+          }
+        }
+      })
+      .catch(function(e) { console.warn('Stats erreur:', e); });
+  }
+
+  /* ── Highlight ── */
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function highlight(text, search) {
+    if (!search) return escapeHtml(text);
+    var escaped = escapeHtml(text);
+    var re = new RegExp('(' + search.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    return escaped.replace(re, '<span class="ev-highlight">$1</span>');
+  }
+
+  /* ── Chargement du tableau ── */
+  function loadEvents() {
+    var searchEl = document.getElementById('ev-search-input');
+    var typeEl   = document.getElementById('ev-filter-type');
+    var sortEl   = document.getElementById('ev-sort-select');
+    var tbody    = document.getElementById('events-tbody');
+    var badge    = document.getElementById('ev-count-badge');
+    if (!tbody) return;
+
+    var search = searchEl ? searchEl.value.trim() : '';
+    var type   = typeEl   ? typeEl.value           : '';
+    var sort   = sortEl   ? sortEl.value           : 'date ASC';
+
+    /* Clear bouton visible si recherche active */
+    var clearBtn = document.getElementById('ev-search-clear');
+    if (clearBtn) clearBtn.style.display = search ? 'flex' : 'none';
+
+    tbody.innerHTML =
+      '<tr><td colspan="5" style="text-align:center;padding:40px;">' +
+      '<div class="ev-spinner"></div>' +
+      '<p style="color:var(--muted);margin-top:12px;font-size:.9rem;">Chargement…</p>' +
+      '</td></tr>';
+
+    var params = 'action=getall';
+    if (search) params += '&search=' + encodeURIComponent(search);
+    if (type)   params += '&type='   + encodeURIComponent(type);
+    params += '&sort=' + encodeURIComponent(sort);
+
+    fetch(API + '?' + params)
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(events) {
+        if (badge) badge.textContent = events.length + ' résultat' + (events.length > 1 ? 's' : '');
+
+        if (!events || !events.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="5">' +
+            '<div class="ev-empty">' +
+            '<div class="ev-empty-icon">📅</div>' +
+            '<strong>Aucun événement trouvé</strong>' +
+            (search ? '<br><small style="color:var(--muted);">Essayez un autre terme de recherche</small>' : '') +
+            '</div></td></tr>';
+          return;
+        }
+
+        var rows = [];
+        for (var i = 0; i < events.length; i++) {
+          var e     = events[i];
+          var icon  = TYPE_ICONS[e.type]  || '📌';
+          var badge2 = TYPE_BADGES[e.type] || 'ev-badge';
+          var parts = e.date ? e.date.split('-') : [];
+          var dateFr = parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : '—';
+          var id    = parseInt(e.id_event, 10);
+          var titre = highlight(e.titre || '—', search);
+          var heure = escapeHtml(e.heure || '—');
+          var typeEsc = escapeHtml(e.type || '—');
+
+          var tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td><strong style="color:var(--violet);">#' + id + '</strong></td>' +
+            '<td><a href="participation/list.php?id_event=' + id + '" class="ev-titre-link">' + titre + '</a></td>' +
+            '<td><span class="' + badge2 + '">' + icon + ' ' + typeEsc + '</span></td>' +
+            '<td>' + dateFr + '</td>' +
+            '<td>' + heure + '</td>';
+          rows.push(tr);
+        }
+        tbody.innerHTML = '';
+        rows.forEach(function(tr) {
+          tbody.appendChild(tr);
+          // Sans ce setTimeout, les <tr> restent à opacity:0 (règle admin.css)
+          // car animateModuleElements() s'exécute avant la réponse AJAX
+          setTimeout(function() { tr.classList.add('animate-in'); }, 0);
+        });
+      })
+      .catch(function(err) {
+        console.error('loadEvents erreur:', err, 'URL:', API);
+        if (badge) badge.textContent = 'Erreur';
+        tbody.innerHTML =
+          '<tr><td colspan="5" style="text-align:center;padding:40px;">' +
+          '<div style="color:#e74c3c;font-size:1.5rem;margin-bottom:8px;">❌</div>' +
+          '<strong style="color:#e74c3c;">Erreur de chargement</strong><br>' +
+          '<small style="color:var(--muted);">Vérifiez la connexion au serveur PHP. URL: ' + API + '</small>' +
+          '</td></tr>';
+      });
+  }
+
+  /* ── Debounce ── */
+  var debounceTimer;
+  function debounce(fn, delay) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fn, delay);
+  }
+
+  /* ── Wiring ── */
+  function wire() {
+    var searchEl = document.getElementById('ev-search-input');
+    var typeEl   = document.getElementById('ev-filter-type');
+    var sortEl   = document.getElementById('ev-sort-select');
+    var clearBtn = document.getElementById('ev-search-clear');
+
+    if (searchEl) {
+      searchEl.addEventListener('input', function() { debounce(loadEvents, 300); });
+      searchEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { searchEl.value = ''; loadEvents(); }
+      });
+    }
+    if (typeEl)   typeEl.addEventListener('change',  function() { loadEvents(); });
+    if (sortEl)   sortEl.addEventListener('change',  function() { loadEvents(); });
+    if (clearBtn) clearBtn.addEventListener('click', function() {
+      var inp = document.getElementById('ev-search-input');
+      if (inp) { inp.value = ''; inp.focus(); }
+      loadEvents();
+    });
+  }
+
+  /* ── Boot ── */
+  wire();
+  loadStats();
+  loadEvents();
+})();
+</script>

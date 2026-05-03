@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Mot de passe oublié - GaiaLumen</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --green:#1F3D2B;--sand:#F2E8CF;--violet:#5B3E96;--blue:#3A86C4;
+  --bg:#0a1a10;--text:#F2E8CF;--muted:#a8b8a0;
+  --card-bg:rgba(15,35,24,0.85);--glass:rgba(31,61,43,0.45);
+  --shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+[data-theme="light"]{
+  --bg:#f5f0e8;--text:#1F3D2B;--muted:#5a6e5a;
+  --card-bg:rgba(242,232,207,0.85);--glass:rgba(242,232,207,0.6);
+  --shadow:0 20px 60px rgba(31,61,43,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Lato',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  cursor:none;
+  transition:background 0.3s,color 0.3s;
+}
+h1,h2,h3{font-family:'Cormorant Garamond',serif;}
+
+/* CURSEUR */
+#cursor{
+  position:fixed;top:0;left:0;z-index:9999;pointer-events:none;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--violet);
+  box-shadow:0 0 12px var(--violet),0 0 24px var(--blue);
+  transform:translate(-50%,-50%);
+  transition:width .2s,height .2s;
+  mix-blend-mode:screen;
+}
+#cursor.hover{width:28px;height:28px;background:var(--blue);}
+#cursor-trail{
+  position:fixed;top:0;left:0;z-index:9998;pointer-events:none;
+  width:36px;height:36px;border-radius:50%;
+  border:1.5px solid rgba(91,62,150,.5);
+  transform:translate(-50%,-50%);
+}
+
+/* PRELOADER */
+#preloader{
+  position:fixed;inset:0;z-index:10000;
+  background:#050e08;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .8s,visibility .8s;
+}
+#preloader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+#pl-canvas{width:140px;height:140px;}
+#pl-text{
+  margin-top:20px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.5rem;letter-spacing:.3em;color:var(--sand);
+  animation:pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* BACKGROUND 3D */
+#bg-canvas{
+  position:fixed;inset:0;width:100%;height:100%;z-index:0;
+}
+
+/* CONTAINER */
+.container{
+  position:relative;z-index:2;
+  max-width:450px;width:90%;
+  background:var(--card-bg);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-radius:20px;
+  padding:40px 35px;
+  box-shadow:var(--shadow);
+  border:1px solid rgba(91,62,150,0.3);
+  animation:slideUp .8s ease;
+  margin-left:auto;
+  margin-right:10%;
+}
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(40px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* LOGO */
+.logo{text-align:center;margin-bottom:28px;}
+.logo svg{width:50px;height:50px;margin-bottom:12px;}
+.logo h1{
+  font-size:1.8rem;
+  background:linear-gradient(135deg,var(--sand),var(--blue));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:6px;
+}
+.logo p{
+  color:rgba(242,232,207,0.7);
+  font-size:0.85rem;
+}
+
+/* INFO BOX */
+.info{
+  background:rgba(58,134,196,0.15);
+  border-left:4px solid var(--blue);
+  padding:14px;
+  border-radius:8px;
+  margin-bottom:20px;
+  font-size:0.85rem;
+  line-height:1.6;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+}
+.info-icon{
+  font-size:1.3rem;
+  flex-shrink:0;
+}
+
+/* FORM */
+.form-group{margin-bottom:20px;}
+.form-group label{
+  display:block;
+  margin-bottom:6px;
+  font-size:0.85rem;
+  color:var(--sand);
+  font-weight:600;
+}
+.form-group input{
+  width:100%;
+  padding:12px 14px;
+  background:rgba(31,61,43,0.4);
+  border:1px solid rgba(91,62,150,0.3);
+  border-radius:10px;
+  color:var(--sand);
+  font-size:0.95rem;
+  transition:all 0.3s;
+}
+.form-group input:focus{
+  outline:none;
+  border-color:var(--violet);
+  background:rgba(31,61,43,0.6);
+  box-shadow:0 0 20px rgba(91,62,150,0.3);
+}
+.form-group input::placeholder{
+  color:rgba(242,232,207,0.4);
+}
+
+/* BUTTON */
+.btn-submit{
+  width:100%;
+  padding:12px;
+  background:linear-gradient(135deg,var(--violet),var(--blue));
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  font-size:0.95rem;
+  font-weight:600;
+  cursor:none;
+  transition:transform 0.2s,box-shadow 0.3s;
+  position:relative;
+  overflow:hidden;
+}
+.btn-submit:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 30px rgba(91,62,150,0.5);
+}
+.btn-submit::before{
+  content:'';
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:0;
+  height:0;
+  border-radius:50%;
+  background:rgba(255,255,255,0.3);
+  transform:translate(-50%,-50%);
+  transition:width 0.6s,height 0.6s;
+}
+.btn-submit:active::before{
+  width:300px;
+  height:300px;
+}
+
+/* LINKS */
+.links{
+  text-align:center;
+  margin-top:20px;
+}
+.links a{
+  color:var(--blue);
+  text-decoration:none;
+  font-size:0.85rem;
+  transition:color 0.3s;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.links a:hover{
+  color:var(--violet);
+  text-decoration:underline;
+}
+
+/* SUCCESS MESSAGE */
+.success{
+  display:none;
+  background:rgba(39,174,96,0.15);
+  border-left:4px solid #27ae60;
+  padding:16px;
+  border-radius:8px;
+  margin-top:20px;
+  animation:slideDown .5s ease;
+}
+.success.show{display:block;}
+@keyframes slideDown{
+  from{opacity:0;transform:translateY(-20px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* PARTICLES */
+.particle{
+  position:fixed;
+  pointer-events:none;
+  z-index:1;
+  font-size:20px;
+  animation:float 3s ease-out forwards;
+}
+@keyframes float{
+  0%{opacity:1;transform:translateY(0) rotate(0deg);}
+  100%{opacity:0;transform:translateY(-100px) rotate(360deg);}
+}
+
+/* STEPS */
+.steps{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:28px;
+  position:relative;
+}
+.steps::before{
+  content:'';
+  position:absolute;
+  top:15px;
+  left:15px;
+  right:15px;
+  height:2px;
+  background:rgba(91,62,150,0.3);
+  z-index:0;
+}
+.step{
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+.step-circle{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:rgba(91,62,150,0.3);
+  border:2px solid rgba(91,62,150,0.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:0.8rem;
+  font-weight:700;
+  transition:all 0.3s;
+}
+.step.active .step-circle{
+  background:linear-gradient(135deg,var(--violet),var(--blue));
+  border-color:var(--blue);
+  box-shadow:0 0 20px rgba(91,62,150,0.5);
+}
+.step-label{
+  font-size:0.7rem;
+  color:var(--muted);
+  text-align:center;
+}
+.step.active .step-label{
+  color:var(--sand);
+  font-weight:600;
+}
+
+/* THEME TOGGLE BUTTON */
+#theme-toggle{
+  position:fixed;top:20px;right:20px;z-index:1000;
+  width:50px;height:50px;border-radius:50%;
+  border:2px solid rgba(91,62,150,0.4);
+  background:var(--glass);
+  backdrop-filter:blur(10px);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;
+  box-shadow:0 4px 15px rgba(0,0,0,0.2);
+}
+#theme-toggle:hover{
+  transform:scale(1.1);
+  border-color:var(--violet);
+  box-shadow:0 6px 20px rgba(91,62,150,0.4);
+}
+#theme-toggle svg{
+  transition:transform 0.3s;
+}
+#theme-toggle:hover svg{
+  transform:rotate(20deg);
+}
+
+/* AI TOGGLE BUTTON */
+#ai-toggle{
+  position:fixed;bottom:30px;left:30px;z-index:1000;
+  width:60px;height:60px;border-radius:50%;
+  border:none;
+  background:linear-gradient(135deg,var(--violet),var(--blue));
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;
+  box-shadow:0 8px 25px rgba(91,62,150,0.4);
+}
+#ai-toggle:hover{
+  transform:scale(1.1) translateY(-2px);
+  box-shadow:0 12px 35px rgba(91,62,150,0.6);
+}
+
+/* TOOLTIP */
+.tooltip{
+  position:absolute;
+  background:rgba(0,0,0,0.9);
+  color:#fff;
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:0.85rem;
+  white-space:nowrap;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.3s;
+  z-index:10001;
+}
+#theme-toggle:hover .tooltip,
+#ai-toggle:hover .tooltip{
+  opacity:1;
+}
+#theme-toggle .tooltip{
+  top:60px;right:0;
+}
+#ai-toggle .tooltip{
+  bottom:70px;left:0;
+}
+
+/* EARTH HINT */
+.earth-hint{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.8);
+  color:#fff;
+  padding:12px 24px;
+  border-radius:30px;
+  font-size:0.9rem;
+  z-index:100;
+  animation:fadeInOut 4s ease-in-out;
+  pointer-events:none;
+}
+@keyframes fadeInOut{
+  0%,100%{opacity:0;}
+  10%,90%{opacity:1;}
+}
+
+@media(max-width:600px){
+  .container{
+    margin:20px auto;
+    padding:30px 25px;
+    max-width:95%;
+  }
+  .steps{
+    flex-direction:column;
+    gap:16px;
+  }
+  .steps::before{
+    display:none;
+  }
+  #theme-toggle{
+    width:45px;height:45px;top:15px;right:15px;
+  }
+  #ai-toggle{
+    width:55px;height:55px;bottom:20px;left:20px;
+  }
+  .tooltip{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSEUR -->
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<!-- PRELOADER -->
+<div id="preloader">
+  <canvas id="pl-canvas"></canvas>
+  <div id="pl-text">GAIALUMEN</div>
+</div>
+
+<!-- BACKGROUND 3D -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- EARTH HINT -->
+<div class="earth-hint">🌍 Cliquez et faites glisser pour faire tourner la Terre</div>
+
+<!-- BOUTON THEME -->
+<button id="theme-toggle" aria-label="Changer le thème">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <span class="tooltip">Changer le thème</span>
+</button>
+
+<!-- BOUTON AI ASSISTANT -->
+<button id="ai-toggle" aria-label="Assistant AI">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    <circle cx="9" cy="10" r="1" fill="#fff"/>
+    <circle cx="15" cy="10" r="1" fill="#fff"/>
+    <path d="M9 14c.5.5 1.5 1 3 1s2.5-.5 3-1"/>
+  </svg>
+</button>
+
+<!-- AI ASSISTANT PANEL -->
+<div id="ai-panel" style="position:fixed;bottom:100px;left:30px;z-index:999;width:350px;height:500px;background:var(--card-bg);backdrop-filter:blur(20px);border-radius:20px;border:1px solid rgba(91,62,150,0.3);box-shadow:0 20px 60px rgba(0,0,0,0.4);display:none;flex-direction:column;overflow:hidden;transition:all 0.3s;">
+  <div style="padding:20px;border-bottom:1px solid rgba(91,62,150,0.2);display:flex;justify-content:space-between;align-items:center;">
+    <h3 style="margin:0;font-size:1.2rem;color:var(--text);">🤖 Assistant GaiaLumen</h3>
+    <button id="ai-close" style="background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;padding:0;width:30px;height:30px;">×</button>
+  </div>
+  <div id="ai-messages" style="flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+    <div style="background:rgba(91,62,150,0.2);padding:12px;border-radius:12px;font-size:0.9rem;">
+      👋 Bonjour! Besoin d'aide pour réinitialiser votre mot de passe?
+    </div>
+  </div>
+  <div style="padding:15px;border-top:1px solid rgba(91,62,150,0.2);">
+    <div style="display:flex;gap:8px;">
+      <input id="ai-input" type="text" placeholder="Posez votre question..." style="flex:1;padding:12px;background:rgba(31,61,43,0.4);border:1px solid rgba(91,62,150,0.3);border-radius:12px;color:var(--text);font-size:0.9rem;">
+      <button id="ai-send" style="padding:12px 20px;background:linear-gradient(135deg,var(--violet),var(--blue));border:none;border-radius:12px;color:#fff;cursor:pointer;font-weight:600;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTAINER -->
+<div class="container">
+  <div class="logo">
+    <svg viewBox="0 0 60 60" fill="none">
+      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <defs>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#5B3E96"/>
+        </radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1F3D2B"/>
+          <stop offset="100%" stop-color="#3A86C4"/>
+        </linearGradient>
+      </defs>
+      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <h1>🔒 Mot de passe oublié</h1>
+    <p>Réinitialisez votre mot de passe</p>
+  </div>
+  
+  <div class="steps">
+    <div class="step active">
+      <div class="step-circle">1</div>
+      <div class="step-label">Email</div>
+    </div>
+    <div class="step">
+      <div class="step-circle">2</div>
+      <div class="step-label">Vérification</div>
+    </div>
+    <div class="step">
+      <div class="step-circle">3</div>
+      <div class="step-label">Nouveau MDP</div>
+    </div>
+  </div>
+  
+  <div class="info">
+    <div class="info-icon">📧</div>
+    <div>
+      Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+    </div>
+  </div>
+  
+  <form onsubmit="handleReset(event)">
+    <div class="form-group">
+      <label>Adresse email</label>
+      <input type="email" id="email" placeholder="votre@email.com" required/>
+    </div>
+    
+    <button type="submit" class="btn-submit">Envoyer le lien de réinitialisation</button>
+  </form>
+  
+  <div class="success" id="success">
+    <strong>✅ Email envoyé!</strong><br/>
+    Vérifiez votre boîte de réception. Le lien expire dans 1 heure.
+  </div>
+  
+  <div class="links">
+    <a href="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Retour à la connexion
+    </a>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   PRELOADER
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const c=document.getElementById('pl-canvas');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  c.width=140;c.height=140;
+  let a=0,prog=0;
+  function draw(){
+    prog=Math.min(prog+2,100);
+    a+=.04;
+    ctx.clearRect(0,0,140,140);
+    ctx.save();ctx.translate(70,70);ctx.rotate(a);
+    for(let i=0;i<3;i++){
+      ctx.beginPath();ctx.arc(0,0,48-i*10,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${i===0?'58,134,196':i===1?'91,62,150':'31,61,43'},${.6-i*.15})`;
+      ctx.lineWidth=1.5;ctx.stroke();
+    }
+    ctx.rotate(-a*.3);
+    const g=ctx.createLinearGradient(-18,-26,18,26);
+    g.addColorStop(0,'#1F3D2B');g.addColorStop(1,'#3A86C4');
+    ctx.beginPath();ctx.fillStyle=g;
+    ctx.moveTo(0,-26);ctx.bezierCurveTo(19,-12,22,7,0,26);
+    ctx.bezierCurveTo(-22,7,-19,-12,0,-26);ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,-24);ctx.lineTo(0,24);
+    ctx.strokeStyle='rgba(242,232,207,.5)';ctx.lineWidth=1;ctx.stroke();
+    ctx.restore();
+    if(prog<100)requestAnimationFrame(draw);
+    else setTimeout(()=>{
+      const pl=document.getElementById('preloader');
+      if(pl)pl.classList.add('hidden');
+    },300);
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   CURSEUR
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const cur=document.getElementById('cursor');
+  const trail=document.getElementById('cursor-trail');
+  if(!cur||!trail)return;
+  let mx=0,my=0,tx=0,ty=0;
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX;my=e.clientY;
+    cur.style.left=mx+'px';cur.style.top=my+'px';
+  });
+  (function loop(){
+    tx+=(mx-tx)*.12;ty+=(my-ty)*.12;
+    trail.style.left=tx+'px';trail.style.top=ty+'px';
+    requestAnimationFrame(loop);
+  })();
+  document.querySelectorAll('a,button,input').forEach(el=>{
+    el.addEventListener('mouseenter',()=>cur.classList.add('hover'));
+    el.addEventListener('mouseleave',()=>cur.classList.remove('hover'));
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   PARTICULES AU CLIC
+   ═══════════════════════════════════════════════════════════ */
+document.addEventListener('click',e=>{
+  const emojis=['🍃','🌿','🍀','✨','🔑','📧'];
+  for(let i=0;i<6;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    p.style.left=e.clientX+'px';
+    p.style.top=e.clientY+'px';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),3000);
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   THREE.JS - BACKGROUND 3D
+   ═══════════════════════════════════════════════════════════ */
+window.addEventListener('load',function(){
+  const canvas=document.getElementById('bg-canvas');
+  if(!canvas||typeof THREE==='undefined')return;
+  
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.shadowMap.enabled=true;
+  
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,.1,200);
+  camera.position.set(0,0,6);
+  
+  function resize(){
+    const w=window.innerWidth,h=window.innerHeight;
+    renderer.setSize(w,h);
+    camera.aspect=w/h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  
+  // Lumières
+  scene.add(new THREE.AmbientLight(0xffffff,.3));
+  const dl=new THREE.DirectionalLight(0x3A86C4,1.2);
+  dl.position.set(5,5,5);
+  dl.castShadow=true;
+  scene.add(dl);
+  const pl=new THREE.PointLight(0x5B3E96,2,20);
+  pl.position.set(-3,2,2);
+  scene.add(pl);
+  
+  // Globe Terre (centré et plus grand)
+  const loader=new THREE.TextureLoader();
+  const earth=new THREE.Mesh(
+    new THREE.SphereGeometry(2.8,64,64),
+    new THREE.MeshPhongMaterial({
+      map:loader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
+      specular:new THREE.Color(0x3A86C4),
+      shininess:28
+    })
+  );
+  earth.position.set(-4,0,-2);
+  scene.add(earth);
+  
+  const clouds=new THREE.Mesh(
+    new THREE.SphereGeometry(2.83,64,64),
+    new THREE.MeshPhongMaterial({
+      map:loader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png'),
+      transparent:true,
+      opacity:.28
+    })
+  );
+  clouds.position.copy(earth.position);
+  scene.add(clouds);
+  
+  scene.add(Object.assign(new THREE.Mesh(
+    new THREE.SphereGeometry(2.9,64,64),
+    new THREE.MeshPhongMaterial({
+      color:0x3A86C4,
+      transparent:true,
+      opacity:.06,
+      side:THREE.FrontSide
+    })
+  ),{position:earth.position.clone()}));
+  
+  // Clé 3D flottante (symbole de réinitialisation)
+  const keyGroup=new THREE.Group();
+  const keyMat=new THREE.MeshPhysicalMaterial({
+    color:0xFFD700,
+    metalness:.8,
+    roughness:.2,
+    clearcoat:1,
+    emissive:0xFFD700,
+    emissiveIntensity:.2
+  });
+  // Tête de clé
+  const head=new THREE.Mesh(
+    new THREE.TorusGeometry(.3,.1,16,32),
+    keyMat
+  );
+  keyGroup.add(head);
+  // Corps de clé
+  const body=new THREE.Mesh(
+    new THREE.CylinderGeometry(.08,.08,1.2,16),
+    keyMat
+  );
+  body.position.y=-.6;
+  keyGroup.add(body);
+  // Dents
+  for(let i=0;i<3;i++){
+    const tooth=new THREE.Mesh(
+      new THREE.BoxGeometry(.15,.1,.08),
+      keyMat
+    );
+    tooth.position.set(.08,-1+i*.2,0);
+    keyGroup.add(tooth);
+  }
+  keyGroup.position.set(3.5,1,-0.5);
+  keyGroup.rotation.z=Math.PI/4;
+  keyGroup.scale.setScalar(1.2);
+  scene.add(keyGroup);
+  
+  // Enveloppe 3D
+  const envGroup=new THREE.Group();
+  const envMat=new THREE.MeshPhysicalMaterial({
+    color:0xF2E8CF,
+    metalness:.1,
+    roughness:.3
+  });
+  const envBody=new THREE.Mesh(
+    new THREE.BoxGeometry(1,.7,.05),
+    envMat
+  );
+  envGroup.add(envBody);
+  const flapMat=new THREE.MeshPhysicalMaterial({
+    color:0xd4c9a8,
+    metalness:.1,
+    roughness:.3
+  });
+  const flap=new THREE.Mesh(
+    new THREE.ConeGeometry(.5,.4,4),
+    flapMat
+  );
+  flap.rotation.z=Math.PI/4;
+  flap.position.y=.35;
+  envGroup.add(flap);
+  envGroup.position.set(-3.5,-2,-0.5);
+  envGroup.scale.setScalar(1.4);
+  scene.add(envGroup);
+  
+  // Cadenas 3D (sécurité)
+  const lockGroup=new THREE.Group();
+  const lockBodyMat=new THREE.MeshPhysicalMaterial({
+    color:0x5B3E96,
+    metalness:.7,
+    roughness:.2,
+    clearcoat:.9,
+    emissive:0x5B3E96,
+    emissiveIntensity:.2
+  });
+  const lockBody=new THREE.Mesh(
+    new THREE.BoxGeometry(.6,.5,.25),
+    lockBodyMat
+  );
+  lockGroup.add(lockBody);
+  const shackleMat=new THREE.MeshPhysicalMaterial({
+    color:0x3A86C4,
+    metalness:.8,
+    roughness:.15,
+    clearcoat:1
+  });
+  const shackle=new THREE.Mesh(
+    new THREE.TorusGeometry(.2,.05,16,32,Math.PI),
+    shackleMat
+  );
+  shackle.position.y=.35;
+  shackle.rotation.z=Math.PI;
+  lockGroup.add(shackle);
+  lockGroup.position.set(3.2,2.5,-0.5);
+  lockGroup.scale.setScalar(1.4);
+  scene.add(lockGroup);
+  
+  // Bouclier 3D (protection)
+  const shieldGroup=new THREE.Group();
+  const shieldMat=new THREE.MeshPhysicalMaterial({
+    color:0x3A86C4,
+    metalness:.6,
+    roughness:.3,
+    clearcoat:.8,
+    emissive:0x3A86C4,
+    emissiveIntensity:.15
+  });
+  const shieldShape=new THREE.Shape();
+  shieldShape.moveTo(0,.8);
+  shieldShape.lineTo(.5,.3);
+  shieldShape.lineTo(.5,-.3);
+  shieldShape.lineTo(0,-.8);
+  shieldShape.lineTo(-.5,-.3);
+  shieldShape.lineTo(-.5,.3);
+  shieldShape.closePath();
+  const shieldGeo=new THREE.ExtrudeGeometry(shieldShape,{
+    depth:.15,
+    bevelEnabled:true,
+    bevelThickness:.05,
+    bevelSize:.05,
+    bevelSegments:3
+  });
+  const shield=new THREE.Mesh(shieldGeo,shieldMat);
+  shieldGroup.add(shield);
+  const checkMat=new THREE.MeshBasicMaterial({color:0xFFD700});
+  const check=new THREE.Mesh(
+    new THREE.TorusGeometry(.15,.04,16,32,Math.PI*.6),
+    checkMat
+  );
+  check.rotation.z=-Math.PI/4;
+  check.position.set(-.05,-.05,.1);
+  shieldGroup.add(check);
+  const check2=new THREE.Mesh(
+    new THREE.CylinderGeometry(.04,.04,.35,16),
+    checkMat
+  );
+  check2.rotation.z=Math.PI/3;
+  check2.position.set(.1,-.15,.1);
+  shieldGroup.add(check2);
+  shieldGroup.position.set(-3.5,2.5,-0.5);
+  shieldGroup.scale.setScalar(1.2);
+  scene.add(shieldGroup);
+  
+  // Particules
+  const PC=1500,pp=new Float32Array(PC*3),pc=new Float32Array(PC*3);
+  const pal=[
+    new THREE.Color(0x1F3D2B),
+    new THREE.Color(0x3A86C4),
+    new THREE.Color(0x5B3E96),
+    new THREE.Color(0xF2E8CF)
+  ];
+  for(let i=0;i<PC;i++){
+    pp[i*3]=(Math.random()-.5)*25;
+    pp[i*3+1]=(Math.random()-.5)*25;
+    pp[i*3+2]=(Math.random()-.5)*12;
+    const c=pal[Math.floor(Math.random()*4)];
+    pc[i*3]=c.r;pc[i*3+1]=c.g;pc[i*3+2]=c.b;
+  }
+  const pGeo=new THREE.BufferGeometry();
+  pGeo.setAttribute('position',new THREE.BufferAttribute(pp,3));
+  pGeo.setAttribute('color',new THREE.BufferAttribute(pc,3));
+  const pts=new THREE.Points(
+    pGeo,
+    new THREE.PointsMaterial({
+      size:.025,
+      vertexColors:true,
+      transparent:true,
+      opacity:.65
+    })
+  );
+  scene.add(pts);
+  
+  let t=0;
+  let mx=0,my=0;
+  let isDragging=false;
+  let previousMouseX=0;
+  let previousMouseY=0;
+  let earthRotationX=0;
+  let earthRotationY=0;
+  let targetRotationX=0;
+  let targetRotationY=0;
+  
+  // Contrôle souris pour rotation de la Terre
+  canvas.addEventListener('mousedown',e=>{
+    isDragging=true;
+    previousMouseX=e.clientX;
+    previousMouseY=e.clientY;
+  });
+  
+  canvas.addEventListener('mousemove',e=>{
+    mx=(e.clientX/window.innerWidth-.5)*2;
+    my=(e.clientY/window.innerHeight-.5)*2;
+    
+    if(isDragging){
+      const deltaX=e.clientX-previousMouseX;
+      const deltaY=e.clientY-previousMouseY;
+      targetRotationY+=deltaX*0.005;
+      targetRotationX+=deltaY*0.005;
+      targetRotationX=Math.max(-Math.PI/2,Math.min(Math.PI/2,targetRotationX));
+      previousMouseX=e.clientX;
+      previousMouseY=e.clientY;
+    }
+  });
+  
+  canvas.addEventListener('mouseup',()=>{
+    isDragging=false;
+  });
+  
+  canvas.addEventListener('mouseleave',()=>{
+    isDragging=false;
+  });
+  
+  (function anim(){
+    requestAnimationFrame(anim);
+    t+=.01;
+    
+    // Globe - rotation automatique + contrôle souris
+    if(!isDragging){
+      earthRotationY+=.002;
+    }
+    earthRotationX+=(targetRotationX-earthRotationX)*0.1;
+    earthRotationY+=(targetRotationY-earthRotationY)*0.1;
+    
+    earth.rotation.y=earthRotationY;
+    earth.rotation.x=earthRotationX;
+    clouds.rotation.y=earthRotationY+t*0.0005;
+    clouds.rotation.x=earthRotationX;
+    
+    keyGroup.rotation.y=t*.5;
+    keyGroup.position.y=1+Math.sin(t*1.5)*.25;
+    keyGroup.rotation.z=Math.PI/4+Math.sin(t*.8)*.1;
+    
+    envGroup.rotation.y=Math.sin(t*.3)*.2;
+    envGroup.position.y=-2+Math.cos(t)*.25;
+    
+    lockGroup.rotation.y=Math.sin(t*.6)*.3;
+    lockGroup.position.y=2.5+Math.sin(t*1.2)*.25;
+    
+    shieldGroup.rotation.y=Math.cos(t*.4)*.25;
+    shieldGroup.position.y=2.5+Math.cos(t*1.3)*.25;
+    
+    pts.rotation.y+=.0002;
+    pts.rotation.x+=.0001;
+    
+    camera.position.x+=(mx*.5-camera.position.x)*.05;
+    camera.position.y+=(-my*.5-camera.position.y)*.05;
+    camera.lookAt(0,0,0);
+    
+    renderer.render(scene,camera);
+  })();
+  
+  console.log('🔑 Scène 3D Forgot Password initialisée');
+});
+
+/* ═══════════════════════════════════════════════════════════
+   FORM HANDLER
+   ═══════════════════════════════════════════════════════════ */
+function handleReset(e){
+  e.preventDefault();
+  const btn=e.target.querySelector('.btn-submit');
+  const success=document.getElementById('success');
+  const email=document.getElementById('email').value;
+  
+  btn.textContent='Envoi en cours...';
+  btn.disabled=true;
+  
+  setTimeout(()=>{
+    btn.textContent='Email envoyé!';
+    success.classList.add('show');
+    
+    // Animer les steps
+    document.querySelectorAll('.step')[1].classList.add('active');
+    
+    setTimeout(()=>{
+      btn.textContent='Envoyer le lien de réinitialisation';
+      btn.disabled=false;
+    },3000);
+  },1500);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME TOGGLE
+   ═══════════════════════════════════════════════════════════ */
+const themeToggle=document.getElementById('theme-toggle');
+const html=document.documentElement;
+let isDark=localStorage.getItem('gaialumen-theme')!=='light';
+html.setAttribute('data-theme',isDark?'dark':'light');
+themeToggle.querySelector('svg').innerHTML=isDark
+  ?'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+  :'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+themeToggle.addEventListener('click',()=>{
+  isDark=!isDark;
+  html.setAttribute('data-theme',isDark?'dark':'light');
+  localStorage.setItem('gaialumen-theme',isDark?'dark':'light');
+  themeToggle.querySelector('svg').innerHTML=isDark
+    ?'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+    :'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+});
+
+/* ═══════════════════════════════════════════════════════════
+   AI ASSISTANT
+   ═══════════════════════════════════════════════════════════ */
+const aiToggle=document.getElementById('ai-toggle');
+const aiPanel=document.getElementById('ai-panel');
+const aiClose=document.getElementById('ai-close');
+const aiInput=document.getElementById('ai-input');
+const aiSend=document.getElementById('ai-send');
+const aiMessages=document.getElementById('ai-messages');
+
+aiToggle.addEventListener('click',()=>{
+  aiPanel.style.display=aiPanel.style.display==='flex'?'none':'flex';
+});
+aiClose.addEventListener('click',()=>{
+  aiPanel.style.display='none';
+});
+
+function addMessage(text,isUser=false){
+  const msg=document.createElement('div');
+  msg.style.cssText=`padding:12px;border-radius:12px;font-size:0.9rem;${isUser?'background:linear-gradient(135deg,var(--violet),var(--blue));color:#fff;align-self:flex-end;max-width:80%;':'background:rgba(91,62,150,0.2);'}`;
+  msg.textContent=text;
+  aiMessages.appendChild(msg);
+  aiMessages.scrollTop=aiMessages.scrollHeight;
+}
+
+function aiRespond(question){
+  const q=question.toLowerCase();
+  if(q.includes('email')||q.includes('lien')){
+    return "Entrez votre email et cliquez sur 'Envoyer'. Vous recevrez un lien de réinitialisation dans quelques minutes. 📧";
+  }else if(q.includes('reçu')||q.includes('spam')){
+    return "Vérifiez votre dossier spam/courrier indésirable. Le lien expire dans 1 heure. ⏰";
+  }else if(q.includes('sécurité')||q.includes('sécurisé')){
+    return "Votre mot de passe est crypté et sécurisé. Le lien de réinitialisation est à usage unique. 🔒";
+  }else if(q.includes('connexion')||q.includes('login')){
+    return "Une fois votre mot de passe réinitialisé, retournez à la page de connexion pour vous connecter. 🔑";
+  }else{
+    return "Je suis là pour vous aider avec la réinitialisation de votre mot de passe. Posez-moi vos questions! 😊";
+  }
+}
+
+aiSend.addEventListener('click',()=>{
+  const text=aiInput.value.trim();
+  if(text){
+    addMessage(text,true);
+    aiInput.value='';
+    setTimeout(()=>{
+      addMessage(aiRespond(text));
+    },500);
+  }
+});
+aiInput.addEventListener('keypress',e=>{
+  if(e.key==='Enter'){
+    aiSend.click();
+  }
+});
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost:3000');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -16,9 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-$body  = json_decode(file_get_contents('php://input'), true);
-$email = trim($body['email'] ?? '');
-$mdp   = $body['mdp'] ?? '';
+$body      = json_decode(file_get_contents('php://input'), true);
+$email     = trim($body['email'] ?? '');
+$mdp       = $body['mdp'] ?? '';
+$rememberMe = !empty($body['remember_me']); // ← nouveau
 
 if ($email === '' || $mdp === '') {
     echo json_encode(['success' => false, 'message' => 'Email et mot de passe requis']);
@@ -31,14 +32,41 @@ $result = $userC->login($email, $mdp);
 switch ($result['status']) {
     case 'ok':
         $_SESSION['user'] = $result['data'];
+
+        // ── REMEMBER ME ──────────────────────────────────────────────
+        if ($rememberMe) {
+            $token   = bin2hex(random_bytes(32));          // 64 chars hex
+            $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
+            $userId  = $result['data']['id_utilisateur'];
+
+            $userC->saveRememberToken($userId, $token, $expires);
+
+            // Cookie sécurisé, 30 jours
+            setcookie(
+                'remember_token',
+                $token,
+                [
+                    'expires'  => time() + 60 * 60 * 24 * 30,
+                    'path'     => '/',
+                    'httponly' => true,
+                    'samesite' => 'Lax',
+                    // 'secure' => true, // activer en HTTPS
+                ]
+            );
+        }
+        // ─────────────────────────────────────────────────────────────
+
         echo json_encode(['success' => true, 'data' => $result['data']]);
         break;
+
     case 'wrong_password':
         echo json_encode(['success' => false, 'message' => 'Mot de passe incorrect']);
         break;
+
     case 'account_not_found':
         echo json_encode(['success' => false, 'message' => 'Aucun compte trouvé']);
         break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Erreur serveur']);
 }

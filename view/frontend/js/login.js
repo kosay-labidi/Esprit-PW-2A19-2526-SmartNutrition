@@ -1,34 +1,70 @@
 /**
  * Login Page JavaScript
- * Gestion de la connexion utilisateur
+ * Gestion de la connexion utilisateur + Remember Me
  */
 
-// Gestion du formulaire de connexion
+// ── REMEMBER ME : Pré-remplir l'email au chargement ──────────────────────────
+(function () {
+  const savedEmail = localStorage.getItem('gaialumen-remember-email');
+  if (savedEmail) {
+    const emailInput = document.getElementById('email-input');
+    const rememberCheckbox = document.getElementById('remember');
+    if (emailInput) emailInput.value = savedEmail;
+    if (rememberCheckbox) rememberCheckbox.checked = true;
+  }
+})();
+
+// ── Gestion du formulaire de connexion ───────────────────────────────────────
 async function handleLogin(event) {
   event.preventDefault();
 
-  const email = document.getElementById('email-input').value;
-  const password = document.getElementById('password-input').value;
-  const btn = event.target.querySelector('.btn-submit');
-  const errorDiv = document.getElementById('login-error');
+  const email      = document.getElementById('email-input').value.trim();
+  const password   = document.getElementById('password-input').value;
+  const remember   = document.getElementById('remember')?.checked || false;
+  const btn        = event.target.querySelector('.btn-submit');
+  const errorDiv   = document.getElementById('login-error');
+
+  // Validation basique
+  errorDiv.style.display = 'none';
+  if (!email || !password) {
+    errorDiv.textContent = "L'email et le mot de passe sont obligatoires.";
+    errorDiv.style.display = 'block';
+    return;
+  }
 
   btn.textContent = 'Connexion en cours...';
   btn.disabled = true;
-  errorDiv.style.display = 'none';
 
   try {
-    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/login.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email: email, mdp: password })
-    });
+    const response = await fetch(
+      'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/login.php',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',   // indispensable pour que le cookie soit déposé
+        body: JSON.stringify({
+          email,
+          mdp: password,
+          remember_me: remember   // ← envoyé au backend
+        })
+      }
+    );
 
     const result = await response.json();
-    console.log(result);
+    console.log('Résultat login:', result);
 
     if (result.success) {
+      // ── Sauvegarder / effacer l'email selon la case ──
+      if (remember) {
+        localStorage.setItem('gaialumen-remember-email', email);
+      } else {
+        localStorage.removeItem('gaialumen-remember-email');
+      }
+
+      // ── Stocker les infos utilisateur ──
       localStorage.setItem('gaialumen-user', JSON.stringify(result.data));
+      localStorage.setItem('gaialumen-token', 'session-' + Date.now());
+
       btn.textContent = '✓ Connexion réussie!';
 
       setTimeout(() => {
@@ -42,11 +78,12 @@ async function handleLogin(event) {
     } else {
       btn.textContent = 'Se connecter';
       btn.disabled = false;
-      errorDiv.textContent = result.message;
+      errorDiv.textContent = result.message || 'Identifiants incorrects.';
       errorDiv.style.display = 'block';
     }
 
   } catch (error) {
+    console.error('Erreur login:', error);
     btn.textContent = 'Se connecter';
     btn.disabled = false;
     errorDiv.textContent = 'Erreur de connexion au serveur.';
@@ -54,7 +91,7 @@ async function handleLogin(event) {
   }
 }
 
-// Gestion du thème
+// ── Gestion du thème ─────────────────────────────────────────────────────────
 function initTheme() {
   const themeToggle = document.getElementById('theme-toggle');
   const html = document.documentElement;
@@ -77,7 +114,7 @@ function initTheme() {
   }
 }
 
-// Initialisation
+// ── Initialisation ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   console.log('🔐 Login page loaded');

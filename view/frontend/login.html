@@ -691,7 +691,16 @@ window.addEventListener('load',function(){
   
   console.log('🔐 Scène 3D Login initialisée');
 });
-
+/* ═══════════════════════════════════════════════════════════
+   REMEMBER ME — Pré-remplir l'email au chargement
+   ═══════════════════════════════════════════════════════════ */
+(function() {
+  const savedEmail = localStorage.getItem('gaialumen-remember-email');
+  if (savedEmail) {
+    document.getElementById('email-input').value = savedEmail;
+    document.getElementById('remember').checked = true;
+  }
+})();
 /* ═══════════════════════════════════════════════════════════
    CONTROLE DE SAISIE - FORMULAIRE LOGIN (sans HTML5)
    ═══════════════════════════════════════════════════════════ */
@@ -754,7 +763,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/login.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, mdp: password })
+      body: JSON.stringify({ email, mdp: password,
+        remember_me: document.getElementById('remember').checked
+       })
     });
 
     const contentType = response.headers.get('content-type') || '';
@@ -811,6 +822,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       errorDiv.textContent = result.message || 'Identifiants incorrects.';
       errorDiv.style.display = 'block';
     }
+    // Remember Me — sauvegarder ou supprimer l'email
+if (document.getElementById('remember').checked) {
+  localStorage.setItem('gaialumen-remember-email', email);
+} else {
+  localStorage.removeItem('gaialumen-remember-email');
+}
 
   } catch (err) {
     console.error('Erreur login:', err);

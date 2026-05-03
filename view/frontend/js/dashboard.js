@@ -7,27 +7,26 @@ console.log('🌿 GaiaLumen Dashboard chargé');
 
 // ✅ Vérifier l'authentification via un endpoint existant
 async function checkAuth() {
+    // ── 1. Vérifier d'abord via auto_login (session PHP ou cookie remember me)
     try {
-        // Utiliser getUserById ou un appel qui nécessite l'authentification
-        const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateprofil.php?action=get&id=0', {
-            method: 'GET',
-            credentials: 'include'  // Important pour les cookies de session
-        });
-        
+        const response = await fetch(
+            'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/auto_login.php',
+            { credentials: 'include' }  // important : envoie le cookie remember_token
+        );
         const data = await response.json();
-        
-        // Si non authentifié, updateprofil.php retournera une erreur 401
-        if (!data.success && data.message === 'Non authentifié. Veuillez vous connecter.') {
+
+        if (data.success) {
+            // Stocker localement pour usage rapide
+            localStorage.setItem('gaialumen-token', 'session-' + Date.now());
+            localStorage.setItem('gaialumen-user', JSON.stringify(data.data));
+            return data.data;
+        } else {
+            // Ni session PHP ni cookie valide → retour login
+            localStorage.removeItem('gaialumen-token');
+            localStorage.removeItem('gaialumen-user');
             window.location.href = 'login.html';
             return false;
         }
-        
-        // Récupérer l'utilisateur depuis la réponse si possible
-        if (data.user) {
-            return data.user;
-        }
-        
-        return true;
     } catch (error) {
         console.error('Erreur vérification session:', error);
         window.location.href = 'login.html';

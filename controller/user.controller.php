@@ -170,4 +170,57 @@ class UserController
             return false;
         }
     }
+    // ── REMEMBER ME ──────────────────────────────────────────────────────────────
+
+public function saveRememberToken(int $userId, string $token, string $expires): bool
+{
+    // Supprimer les anciens tokens de cet utilisateur
+    $del = 'DELETE FROM remember_tokens WHERE id_utilisateur = :id';
+    $ins = 'INSERT INTO remember_tokens (id_utilisateur, token, expires_at)
+            VALUES (:id, :token, :expires)';
+    try {
+        $db = config::getConnexion();
+        $db->prepare($del)->execute(['id' => $userId]);
+        $stmt = $db->prepare($ins);
+        return $stmt->execute([
+            'id'      => $userId,
+            'token'   => $token,
+            'expires' => $expires,
+        ]);
+    } catch (Exception $e) {
+        error_log("saveRememberToken: " . $e->getMessage());
+        return false;
+    }
+}
+
+public function getUserByRememberToken(string $token): ?array
+{
+    $sql = 'SELECT u.id_utilisateur, u.nom, u.prenom, u.email, u.role
+            FROM remember_tokens rt
+            JOIN utilisateurs u ON u.id_utilisateur = rt.id_utilisateur
+            WHERE rt.token = :token AND rt.expires_at > NOW()
+            LIMIT 1';
+    try {
+        $db    = config::getConnexion();
+        $stmt  = $db->prepare($sql);
+        $stmt->execute(['token' => $token]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    } catch (Exception $e) {
+        error_log("getUserByRememberToken: " . $e->getMessage());
+        return null;
+    }
+}
+
+public function deleteRememberToken(string $token): bool
+{
+    $sql = 'DELETE FROM remember_tokens WHERE token = :token';
+    try {
+        $db = config::getConnexion();
+        return $db->prepare($sql)->execute(['token' => $token]);
+    } catch (Exception $e) {
+        error_log("deleteRememberToken: " . $e->getMessage());
+        return false;
+    }
+}
 }

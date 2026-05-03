@@ -608,7 +608,7 @@ document.addEventListener('click',e=>{
 });
 
 /* ═══════════════════════════════════════════════════════════
-   THREE.JS - BACKGROUND 3D
+   THREE.JS - BACKGROUND 3D (version simplifiée comme login.html)
    ═══════════════════════════════════════════════════════════ */
 window.addEventListener('load',function(){
   const canvas=document.getElementById('bg-canvas');
@@ -616,10 +616,9 @@ window.addEventListener('load',function(){
   
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.shadowMap.enabled=true;
   
   const scene=new THREE.Scene();
-  const camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,.1,200);
+  const camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,.1,1000);
   camera.position.set(0,0,6);
   
   function resize(){
@@ -633,18 +632,17 @@ window.addEventListener('load',function(){
   
   // Lumières
   scene.add(new THREE.AmbientLight(0xffffff,.3));
-  const dl=new THREE.DirectionalLight(0x3A86C4,1.2);
-  dl.position.set(5,5,5);
-  dl.castShadow=true;
+  const dl=new THREE.DirectionalLight(0x3A86C4,1);
+  dl.position.set(5,3,5);
   scene.add(dl);
-  const pl=new THREE.PointLight(0x5B3E96,2,20);
+  const pl=new THREE.PointLight(0x5B3E96,1.5,20);
   pl.position.set(-3,2,2);
   scene.add(pl);
   
-  // Globe Terre (centré et plus grand)
+  // Globe Terre
   const loader=new THREE.TextureLoader();
   const earth=new THREE.Mesh(
-    new THREE.SphereGeometry(2.8,64,64),
+    new THREE.SphereGeometry(2,64,64),
     new THREE.MeshPhongMaterial({
       map:loader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
       specular:new THREE.Color(0x3A86C4),
@@ -655,7 +653,7 @@ window.addEventListener('load',function(){
   scene.add(earth);
   
   const clouds=new THREE.Mesh(
-    new THREE.SphereGeometry(2.83,64,64),
+    new THREE.SphereGeometry(2.03,64,64),
     new THREE.MeshPhongMaterial({
       map:loader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png'),
       transparent:true,
@@ -665,161 +663,20 @@ window.addEventListener('load',function(){
   clouds.position.copy(earth.position);
   scene.add(clouds);
   
-  scene.add(Object.assign(new THREE.Mesh(
-    new THREE.SphereGeometry(2.9,64,64),
+  const atm=new THREE.Mesh(
+    new THREE.SphereGeometry(2.1,64,64),
     new THREE.MeshPhongMaterial({
       color:0x3A86C4,
       transparent:true,
       opacity:.06,
       side:THREE.FrontSide
     })
-  ),{position:earth.position.clone()}));
-  
-  // Clé 3D flottante (symbole de réinitialisation)
-  const keyGroup=new THREE.Group();
-  const keyMat=new THREE.MeshPhysicalMaterial({
-    color:0xFFD700,
-    metalness:.8,
-    roughness:.2,
-    clearcoat:1,
-    emissive:0xFFD700,
-    emissiveIntensity:.2
-  });
-  // Tête de clé
-  const head=new THREE.Mesh(
-    new THREE.TorusGeometry(.3,.1,16,32),
-    keyMat
   );
-  keyGroup.add(head);
-  // Corps de clé
-  const body=new THREE.Mesh(
-    new THREE.CylinderGeometry(.08,.08,1.2,16),
-    keyMat
-  );
-  body.position.y=-.6;
-  keyGroup.add(body);
-  // Dents
-  for(let i=0;i<3;i++){
-    const tooth=new THREE.Mesh(
-      new THREE.BoxGeometry(.15,.1,.08),
-      keyMat
-    );
-    tooth.position.set(.08,-1+i*.2,0);
-    keyGroup.add(tooth);
-  }
-  keyGroup.position.set(3.5,1,-0.5);
-  keyGroup.rotation.z=Math.PI/4;
-  keyGroup.scale.setScalar(1.2);
-  scene.add(keyGroup);
-  
-  // Enveloppe 3D
-  const envGroup=new THREE.Group();
-  const envMat=new THREE.MeshPhysicalMaterial({
-    color:0xF2E8CF,
-    metalness:.1,
-    roughness:.3
-  });
-  const envBody=new THREE.Mesh(
-    new THREE.BoxGeometry(1,.7,.05),
-    envMat
-  );
-  envGroup.add(envBody);
-  const flapMat=new THREE.MeshPhysicalMaterial({
-    color:0xd4c9a8,
-    metalness:.1,
-    roughness:.3
-  });
-  const flap=new THREE.Mesh(
-    new THREE.ConeGeometry(.5,.4,4),
-    flapMat
-  );
-  flap.rotation.z=Math.PI/4;
-  flap.position.y=.35;
-  envGroup.add(flap);
-  envGroup.position.set(-3.5,-2,-0.5);
-  envGroup.scale.setScalar(1.4);
-  scene.add(envGroup);
-  
-  // Cadenas 3D (sécurité)
-  const lockGroup=new THREE.Group();
-  const lockBodyMat=new THREE.MeshPhysicalMaterial({
-    color:0x5B3E96,
-    metalness:.7,
-    roughness:.2,
-    clearcoat:.9,
-    emissive:0x5B3E96,
-    emissiveIntensity:.2
-  });
-  const lockBody=new THREE.Mesh(
-    new THREE.BoxGeometry(.6,.5,.25),
-    lockBodyMat
-  );
-  lockGroup.add(lockBody);
-  const shackleMat=new THREE.MeshPhysicalMaterial({
-    color:0x3A86C4,
-    metalness:.8,
-    roughness:.15,
-    clearcoat:1
-  });
-  const shackle=new THREE.Mesh(
-    new THREE.TorusGeometry(.2,.05,16,32,Math.PI),
-    shackleMat
-  );
-  shackle.position.y=.35;
-  shackle.rotation.z=Math.PI;
-  lockGroup.add(shackle);
-  lockGroup.position.set(3.2,2.5,-0.5);
-  lockGroup.scale.setScalar(1.4);
-  scene.add(lockGroup);
-  
-  // Bouclier 3D (protection)
-  const shieldGroup=new THREE.Group();
-  const shieldMat=new THREE.MeshPhysicalMaterial({
-    color:0x3A86C4,
-    metalness:.6,
-    roughness:.3,
-    clearcoat:.8,
-    emissive:0x3A86C4,
-    emissiveIntensity:.15
-  });
-  const shieldShape=new THREE.Shape();
-  shieldShape.moveTo(0,.8);
-  shieldShape.lineTo(.5,.3);
-  shieldShape.lineTo(.5,-.3);
-  shieldShape.lineTo(0,-.8);
-  shieldShape.lineTo(-.5,-.3);
-  shieldShape.lineTo(-.5,.3);
-  shieldShape.closePath();
-  const shieldGeo=new THREE.ExtrudeGeometry(shieldShape,{
-    depth:.15,
-    bevelEnabled:true,
-    bevelThickness:.05,
-    bevelSize:.05,
-    bevelSegments:3
-  });
-  const shield=new THREE.Mesh(shieldGeo,shieldMat);
-  shieldGroup.add(shield);
-  const checkMat=new THREE.MeshBasicMaterial({color:0xFFD700});
-  const check=new THREE.Mesh(
-    new THREE.TorusGeometry(.15,.04,16,32,Math.PI*.6),
-    checkMat
-  );
-  check.rotation.z=-Math.PI/4;
-  check.position.set(-.05,-.05,.1);
-  shieldGroup.add(check);
-  const check2=new THREE.Mesh(
-    new THREE.CylinderGeometry(.04,.04,.35,16),
-    checkMat
-  );
-  check2.rotation.z=Math.PI/3;
-  check2.position.set(.1,-.15,.1);
-  shieldGroup.add(check2);
-  shieldGroup.position.set(-3.5,2.5,-0.5);
-  shieldGroup.scale.setScalar(1.2);
-  scene.add(shieldGroup);
+  atm.position.copy(earth.position);
+  scene.add(atm);
   
   // Particules
-  const PC=1500,pp=new Float32Array(PC*3),pc=new Float32Array(PC*3);
+  const PC=1200,pp=new Float32Array(PC*3),pc=new Float32Array(PC*3);
   const pal=[
     new THREE.Color(0x1F3D2B),
     new THREE.Color(0x3A86C4),
@@ -827,9 +684,9 @@ window.addEventListener('load',function(){
     new THREE.Color(0xF2E8CF)
   ];
   for(let i=0;i<PC;i++){
-    pp[i*3]=(Math.random()-.5)*25;
-    pp[i*3+1]=(Math.random()-.5)*25;
-    pp[i*3+2]=(Math.random()-.5)*12;
+    pp[i*3]=(Math.random()-.5)*20;
+    pp[i*3+1]=(Math.random()-.5)*20;
+    pp[i*3+2]=(Math.random()-.5)*10;
     const c=pal[Math.floor(Math.random()*4)];
     pc[i*3]=c.r;pc[i*3+1]=c.g;pc[i*3+2]=c.b;
   }
@@ -839,84 +696,29 @@ window.addEventListener('load',function(){
   const pts=new THREE.Points(
     pGeo,
     new THREE.PointsMaterial({
-      size:.025,
+      size:.03,
       vertexColors:true,
       transparent:true,
-      opacity:.65
+      opacity:.6
     })
   );
   scene.add(pts);
   
   let t=0;
   let mx=0,my=0;
-  let isDragging=false;
-  let previousMouseX=0;
-  let previousMouseY=0;
-  let earthRotationX=0;
-  let earthRotationY=0;
-  let targetRotationX=0;
-  let targetRotationY=0;
-  
-  // Contrôle souris pour rotation de la Terre
-  canvas.addEventListener('mousedown',e=>{
-    isDragging=true;
-    previousMouseX=e.clientX;
-    previousMouseY=e.clientY;
-  });
-  
-  canvas.addEventListener('mousemove',e=>{
+  document.addEventListener('mousemove',e=>{
     mx=(e.clientX/window.innerWidth-.5)*2;
     my=(e.clientY/window.innerHeight-.5)*2;
-    
-    if(isDragging){
-      const deltaX=e.clientX-previousMouseX;
-      const deltaY=e.clientY-previousMouseY;
-      targetRotationY+=deltaX*0.005;
-      targetRotationX+=deltaY*0.005;
-      targetRotationX=Math.max(-Math.PI/2,Math.min(Math.PI/2,targetRotationX));
-      previousMouseX=e.clientX;
-      previousMouseY=e.clientY;
-    }
-  });
-  
-  canvas.addEventListener('mouseup',()=>{
-    isDragging=false;
-  });
-  
-  canvas.addEventListener('mouseleave',()=>{
-    isDragging=false;
   });
   
   (function anim(){
     requestAnimationFrame(anim);
     t+=.01;
     
-    // Globe - rotation automatique + contrôle souris
-    if(!isDragging){
-      earthRotationY+=.002;
-    }
-    earthRotationX+=(targetRotationX-earthRotationX)*0.1;
-    earthRotationY+=(targetRotationY-earthRotationY)*0.1;
+    earth.rotation.y+=.002;
+    clouds.rotation.y+=.0025;
     
-    earth.rotation.y=earthRotationY;
-    earth.rotation.x=earthRotationX;
-    clouds.rotation.y=earthRotationY+t*0.0005;
-    clouds.rotation.x=earthRotationX;
-    
-    keyGroup.rotation.y=t*.5;
-    keyGroup.position.y=1+Math.sin(t*1.5)*.25;
-    keyGroup.rotation.z=Math.PI/4+Math.sin(t*.8)*.1;
-    
-    envGroup.rotation.y=Math.sin(t*.3)*.2;
-    envGroup.position.y=-2+Math.cos(t)*.25;
-    
-    lockGroup.rotation.y=Math.sin(t*.6)*.3;
-    lockGroup.position.y=2.5+Math.sin(t*1.2)*.25;
-    
-    shieldGroup.rotation.y=Math.cos(t*.4)*.25;
-    shieldGroup.position.y=2.5+Math.cos(t*1.3)*.25;
-    
-    pts.rotation.y+=.0002;
+    pts.rotation.y+=.0003;
     pts.rotation.x+=.0001;
     
     camera.position.x+=(mx*.5-camera.position.x)*.05;
@@ -926,33 +728,74 @@ window.addEventListener('load',function(){
     renderer.render(scene,camera);
   })();
   
-  console.log('🔑 Scène 3D Forgot Password initialisée');
+  console.log('🔑 Scène 3D Forgot Password initialisée (comme login)');
 });
 
 /* ═══════════════════════════════════════════════════════════
-   FORM HANDLER
+   FORM HANDLER — appel réel vers forgot_password.php
    ═══════════════════════════════════════════════════════════ */
-function handleReset(e){
+async function handleReset(e){
   e.preventDefault();
-  const btn=e.target.querySelector('.btn-submit');
-  const success=document.getElementById('success');
-  const email=document.getElementById('email').value;
+  const btn     = e.target.querySelector('.btn-submit');
+  const success = document.getElementById('success');
+  const email   = document.getElementById('email').value.trim();
   
-  btn.textContent='Envoi en cours...';
-  btn.disabled=true;
-  
-  setTimeout(()=>{
-    btn.textContent='Email envoyé!';
-    success.classList.add('show');
-    
-    // Animer les steps
-    document.querySelectorAll('.step')[1].classList.add('active');
-    
-    setTimeout(()=>{
-      btn.textContent='Envoyer le lien de réinitialisation';
-      btn.disabled=false;
-    },3000);
-  },1500);
+  // Effacer ancien message d'erreur
+  const oldErr = document.getElementById('err-msg');
+  if(oldErr) oldErr.remove();
+
+  btn.textContent = 'Envoi en cours...';
+  btn.disabled    = true;
+
+  try {
+    const res  = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/forgot_password.php', {
+      method  : 'POST',
+      headers : { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body    : JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      // ✅ Succès
+      success.classList.add('show');
+      btn.textContent = '✓ Email envoyé!';
+
+      // Animer les steps
+      document.querySelectorAll('.step')[1].classList.add('active');
+
+      // Ré-activer après 5 s
+      setTimeout(()=>{
+        btn.textContent = 'Envoyer le lien de réinitialisation';
+        btn.disabled    = false;
+      }, 5000);
+
+    } else {
+      // ⚠️ Erreur côté serveur
+      const errDiv = document.createElement('div');
+      errDiv.id = 'err-msg';
+      errDiv.style.cssText =
+        'background:rgba(231,76,60,.15);border-left:4px solid #e74c3c;' +
+        'padding:12px 14px;border-radius:8px;margin-top:14px;font-size:.87rem;color:#e74c3c;';
+      errDiv.textContent = '⚠️ ' + (data.message || 'Une erreur est survenue.');
+      e.target.appendChild(errDiv);
+      btn.textContent = 'Envoyer le lien de réinitialisation';
+      btn.disabled    = false;
+    }
+
+  } catch(err){
+    console.error('Erreur réseau :', err);
+    const errDiv = document.createElement('div');
+    errDiv.id = 'err-msg';
+    errDiv.style.cssText =
+      'background:rgba(231,76,60,.15);border-left:4px solid #e74c3c;' +
+      'padding:12px 14px;border-radius:8px;margin-top:14px;font-size:.87rem;color:#e74c3c;';
+    errDiv.textContent = '⚠️ Impossible de contacter le serveur. Vérifiez que XAMPP est démarré.';
+    e.target.appendChild(errDiv);
+    btn.textContent = 'Envoyer le lien de réinitialisation';
+    btn.disabled    = false;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════

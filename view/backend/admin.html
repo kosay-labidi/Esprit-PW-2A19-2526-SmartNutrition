@@ -16,6 +16,7 @@
 <!-- Librairies externes -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 </head>
 <body>
 
@@ -49,6 +50,10 @@
     <span class="nav-logo-text">🛡️ Admin GaiaLumen</span>
   </a>
   <div class="nav-actions">
+     <button id="lang-toggle" title="Changer de langue">
+    <span id="lang-flag">🌐</span>
+    <span id="lang-label">FR</span>
+  </button>
     <button id="menu-toggle" title="Menu">
       <span></span>
       <span></span>
@@ -160,7 +165,16 @@
     </div>
 </div>
 <!-- Scripts -->
+<script src="js/admin-translations.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/admin-module-loader.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof initAdminLanguage === 'function') {
+            initAdminLanguage();
+        }
+    });
+</script>
 </body>
 </html>

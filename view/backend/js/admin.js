@@ -1,4 +1,3 @@
-
 console.log('🛡️ GaiaLumen Admin Dashboard chargé');
 
 // Initialisation globale au chargement du document
@@ -94,22 +93,37 @@ function initCursor() {
 /* ═══════════════════════════════════════════════════════════
    GESTION DU THÈME
    ═══════════════════════════════════════════════════════════ */
+function updateThemeBtn() {
+  const btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  // Utilise t() si disponible, sinon fallback FR
+  if (typeof t === 'function') {
+    btn.textContent = isDark ? t('themeLight') : t('themeDark');
+  } else {
+    btn.textContent = isDark ? '☀️ Clair' : '🌙 Sombre';
+  }
+}
+
 function initTheme() {
   const btn = document.getElementById('theme-toggle');
   const html = document.documentElement;
   const saved = localStorage.getItem('gaialumen-theme') || 'dark';
-  
+
   html.setAttribute('data-theme', saved);
-  if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
-  
+  updateThemeBtn();
+
   if (btn) {
     btn.addEventListener('click', () => {
       const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', n);
       localStorage.setItem('gaialumen-theme', n);
-      btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+      updateThemeBtn();
     });
   }
+
+  // Mettre à jour le libellé quand la langue change
+  document.addEventListener('languageChanged', updateThemeBtn);
 }
 
 /* ═══════════════════════════════════════════════════════════

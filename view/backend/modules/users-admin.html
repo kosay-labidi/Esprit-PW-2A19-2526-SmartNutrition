@@ -17,25 +17,25 @@
     </div>
 
     <div class="search-bar">
-<input type="text" class="search-input" id="searchInput" placeholder="Rechercher par nom ou email..." onkeyup="searchUsers()">
+      <input type="text" class="search-input" id="searchInput" placeholder="Rechercher par nom ou email..." onkeyup="searchUsers()">
       <select class="form-select" id="roleFilter" onchange="filterUsers()">
-    <option value="">Tous les rôles</option>
-    <option value="utilisateur">👤 Utilisateur</option>
-    <option value="admin">🛡️ Administrateur</option>
-    <option value="nutritionniste">🥗 Nutritionniste</option>
-    <option value="ecologiste">🌱 Écologiste</option>
-</select>
+        <option value="">Tous les rôles</option>
+        <option value="utilisateur">👤 Utilisateur</option>
+        <option value="admin">🛡️ Administrateur</option>
+        <option value="nutritionniste">🥗 Nutritionniste</option>
+        <option value="ecologiste">🌱 Écologiste</option>
+      </select>
       <select class="form-select" id="triDate" onchange="tri()">
-    <option value="">-- Trier par date --</option>
-    <option value="desc">📅 Plus récent → Plus ancien</option>
-    <option value="asc">📅 Plus ancien → Plus récent</option>
-</select>
- <select class="form-select" id="rowsPerPageSelect" onchange="setRowsPerPage(parseInt(this.value))">
+        <option value="">-- Trier par date --</option>
+        <option value="desc">📅 Plus récent → Plus ancien</option>
+        <option value="asc">📅 Plus ancien → Plus récent</option>
+      </select>
+      <select class="form-select" id="rowsPerPageSelect" onchange="setRowsPerPage(parseInt(this.value))">
         <option value="5">5 par page</option>
         <option value="10">10 par page</option>
         <option value="25">25 par page</option>
         <option value="50">50 par page</option>
-    </select>
+      </select>
       <button class="btn btn-primary" onclick="addUser()">➕ Ajouter</button>
     </div>
 
@@ -54,7 +54,7 @@
         <tbody id="usersTableBody">
           <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
         </tbody>
-       </table>
+      </table>
     </div>
 
     <div class="pagination">
@@ -65,35 +65,36 @@
       <button class="page-btn">Suivant ▶</button>
     </div>
   </div>
-      <!-- ============ NOUVEAU : STATISTIQUES DYNAMIQUES ============ -->
-    <div class="stats-section">
-      <div class="stats-header">
-        <h3>📊 Répartition des utilisateurs par rôle</h3>
-        <div class="chart-toggle">
-          <button class="toggle-btn active" onclick="switchChartType('pie')">🥧 Camembert</button>
-          <button class="toggle-btn" onclick="switchChartType('bar')">📊 Barres</button>
-        </div>
+
+  <!-- ============ STATISTIQUES DYNAMIQUES ============ -->
+  <div class="stats-section">
+    <div class="stats-header">
+      <h3>📊 Répartition des utilisateurs par rôle</h3>
+      <div class="chart-toggle">
+        <button class="toggle-btn active" onclick="switchChartType('pie')">🥧 Camembert</button>
+        <button class="toggle-btn" onclick="switchChartType('bar')">📊 Barres</button>
       </div>
-      
-      <div class="stats-grid-custom">
-        <!-- Graphique camembert (visible par défaut) -->
-        <div class="chart-card" id="pieChartContainer">
-          <canvas id="userPieChart" width="400" height="400"></canvas>
-        </div>
-        
-        <!-- Graphique barres (caché par défaut) -->
-        <div class="chart-card" id="barChartContainer" style="display: none;">
-          <canvas id="userBarChart" width="400" height="400"></canvas>
-        </div>
-        
-        <!-- Légende et statistiques -->
-        <div class="stats-legend">
-          <div class="legend-title">📈 Résumé</div>
-          <div class="legend-stats" id="userStatsLegend">
-            <!-- Les statistiques seront injectées dynamiquement -->
-            <div class="stat-item">Chargement...</div>
-          </div>
+    </div>
+
+    <div class="stats-grid-custom">
+      <!-- Graphique camembert (visible par défaut) -->
+      <div class="chart-card" id="pieChartContainer">
+        <canvas id="userPieChart" width="400" height="400"></canvas>
+      </div>
+
+      <!-- Graphique barres (caché par défaut) -->
+      <div class="chart-card" id="barChartContainer" style="display: none;">
+        <canvas id="userBarChart" width="400" height="400"></canvas>
+      </div>
+
+      <!-- Légende et statistiques -->
+      <div class="stats-legend">
+        <div class="legend-title">📈 Résumé</div>
+        <div class="legend-stats" id="userStatsLegend">
+          <!-- Les statistiques seront injectées dynamiquement -->
+          <div class="stat-item">Chargement...</div>
         </div>
       </div>
     </div>
+  </div>
 </section>

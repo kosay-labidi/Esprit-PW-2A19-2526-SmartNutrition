@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reloadBtn.id = 'reload-module-btn';
     reloadBtn.title = 'Recharger le module actuel';
     reloadBtn.style.cssText = 'background:var(--glass);border:1.5px solid rgba(91,62,150,.5);border-radius:50px;padding:6px 14px;color:var(--text);cursor:pointer;font-size:.82rem;transition:all .3s;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:4px;margin-right:8px;';
-    reloadBtn.innerHTML = '🔄 Recharger';
+    reloadBtn.innerHTML = (typeof t === 'function') ? t('reload') : '🔄 Recharger';
     reloadBtn.addEventListener('click', () => {
       const activeMenuItem = document.querySelector('.menu-item.active');
       if (activeMenuItem) {
@@ -378,6 +378,7 @@ document.addEventListener('adminModuleLoaded', (e) => {
         if (document.getElementById('usersTableBody')) {
           clearInterval(waitForTable);
           loadUsers();
+          initUserModuleLanguage();
         }
       }, 50);
       // Timeout de sécurité après 3 secondes
@@ -1023,23 +1024,28 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 // Mettre à jour les boutons de pagination
+// Mettre à jour les boutons de pagination (version traduite)
 function updatePaginationButtons() {
     const paginationContainer = document.querySelector('.pagination');
     if (!paginationContainer) return;
     
-    // Sauvegarder le HTML actuel pour le restaurer après mise à jour
-    const oldButtons = paginationContainer.innerHTML;
+    // Mettre à jour l'info de pagination
+    const infoSpan = document.getElementById('paginationInfo');
+    if (infoSpan && currentUsersData) {
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, currentUsersData.length);
+        const start = startIndex + 1;
+        const end = endIndex;
+        infoSpan.innerHTML = `${start}-${end} ${t('of')} ${currentUsersData.length} ${t('usersLabel')}`;
+    }
     
-    // Générer les nouveaux boutons
     let html = '';
     
-    // Bouton Précédent
     html += `<button class="page-btn" onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''}>
-        ◀ Précédent
+        ${t('previous')}
     </button>`;
     
-    // Numéros des pages
-    const maxButtons = 5; // Nombre maximum de boutons de page à afficher
+    const maxButtons = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
     let endPage = Math.min(totalPages, startPage + maxButtons - 1);
     
@@ -1047,7 +1053,6 @@ function updatePaginationButtons() {
         startPage = Math.max(1, endPage - maxButtons + 1);
     }
     
-    // Première page si nécessaire
     if (startPage > 1) {
         html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
         if (startPage > 2) {
@@ -1055,14 +1060,12 @@ function updatePaginationButtons() {
         }
     }
     
-    // Pages numérotées
     for (let i = startPage; i <= endPage; i++) {
         html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">
             ${i}
         </button>`;
     }
     
-    // Dernière page si nécessaire
     if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
             html += `<button class="page-btn disabled" disabled>...</button>`;
@@ -1070,9 +1073,8 @@ function updatePaginationButtons() {
         html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
     }
     
-    // Bouton Suivant
     html += `<button class="page-btn" onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}>
-        Suivant ▶
+        ${t('next')}
     </button>`;
     
     paginationContainer.innerHTML = html;
@@ -1231,10 +1233,10 @@ let currentChartType = 'pie'; // Type de graphique actuel ('pie' ou 'bar')
 // Fonction pour calculer les statistiques des utilisateurs par rôle
 function calculateUserStats(users) {
     const stats = {
-        admin: { count: 0, label: 'Administrateurs', icon: '🛡️', color: '#e74c3c' },
-        nutritionniste: { count: 0, label: 'Nutritionnistes', icon: '🥗', color: '#2ecc71' },
-        ecologiste: { count: 0, label: 'Écologistes', icon: '🌱', color: '#3498db' },
-        user: { count: 0, label: 'Utilisateurs', icon: '👤', color: '#9b59b6' }
+        admin:          { count: 0, label: t('roleAdminPlural'),         icon: '🛡️', color: '#e74c3c' },
+        nutritionniste: { count: 0, label: t('roleNutritionistPlural'),  icon: '🥗', color: '#2ecc71' },
+        ecologiste:     { count: 0, label: t('roleEcologistPlural'),     icon: '🌱', color: '#3498db' },
+        user:           { count: 0, label: t('roleUserPlural'),          icon: '👤', color: '#9b59b6' }
     };
     
     // Compter les utilisateurs par rôle
@@ -1274,6 +1276,7 @@ function calculateUserStats(users) {
 // Fonction pour mettre à jour la légende des statistiques
 // Fonction pour mettre à jour la légende des statistiques
 // Fonction pour mettre à jour la légende des statistiques (version améliorée)
+// Fonction pour mettre à jour la légende des statistiques (version traduite)
 function updateStatsLegend(users) {
     const { stats, total } = calculateUserStats(users);
     const legendContainer = document.getElementById('userStatsLegend');
@@ -1287,12 +1290,28 @@ function updateStatsLegend(users) {
     
     let html = '';
     stats.forEach(stat => {
+        // Traduire le label du rôle
+        let translatedLabel = stat.label;
+        switch(stat.role) {
+            case 'admin':
+                translatedLabel = t('administrator');
+                break;
+            case 'nutritionniste':
+                translatedLabel = t('nutritionist');
+                break;
+            case 'ecologiste':
+                translatedLabel = t('ecologist');
+                break;
+            default:
+                translatedLabel = t('standardUser');
+        }
+        
         html += `
             <div class="stat-item-enhanced">
                 <div class="stat-role-enhanced">
                     <div class="stat-icon-enhanced" style="background: ${stat.color}20; border-left: 3px solid ${stat.color};">
                         <span>${stat.icon}</span>
-                        <span class="stat-label-enhanced">${stat.label}</span>
+                        <span class="stat-label-enhanced">${translatedLabel}</span>
                     </div>
                 </div>
                 <div class="stat-percent-enhanced">
@@ -1307,7 +1326,7 @@ function updateStatsLegend(users) {
     
     html += `
         <div class="stats-total-enhanced">
-            <span>📊 Total utilisateurs</span>
+            <span>${t('totalUsers')}</span>
             <strong>${total}</strong>
         </div>
     `;
@@ -1366,7 +1385,7 @@ function createPieChart(users) {
                             const label = stats[context.dataIndex].label;
                             const value = context.raw;
                             const percent = stats[context.dataIndex].percent;
-                            return `${label}: ${value} utilisateur(s) (${percent}%)`;
+                            return `${label}: ${value} ${t('chartUserCount')} (${percent}%)`;
                         }
                     }
                 }
@@ -1409,7 +1428,7 @@ function createBarChart(users) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Nombre d\'utilisateurs',
+                label: t('chartUsersDataset'),
                 data: data,
                 backgroundColor: colors,
                 borderColor: 'rgba(15, 35, 24, 0.8)',
@@ -1431,7 +1450,7 @@ function createBarChart(users) {
                         label: function(context) {
                             const value = context.raw;
                             const percent = stats[context.dataIndex].percent;
-                            return `${value} utilisateur(s) (${percent}%)`;
+                            return `${value} ${t('chartUserCount')} (${percent}%)`;
                         }
                     }
                 }
@@ -1600,5 +1619,115 @@ function showToast(title, message, type = 'info') {
 }
 
 // Ajouter les animations CSS pour les toasts
+
+// ===== TRADUCTION DU MODULE USERS =====
+
+// Applique toutes les traductions aux éléments statiques de users-admin.html
+function applyUsersTranslations() {
+    // Titre du module
+    const moduleTitle = document.querySelector('#users .module-title');
+    if (moduleTitle) moduleTitle.innerHTML = t('userManagement');
+
+    // Boutons d'action — itération pour éviter les problèmes d'échappement CSS
+    document.querySelectorAll('#users .btn').forEach(btn => {
+        const oc = btn.getAttribute('onclick') || '';
+        if (oc.includes('refreshUsers')) btn.innerHTML = t('refresh');
+        else if (oc.includes('exportData')) btn.innerHTML = t('exportCSV');
+        else if (oc.includes('addUser'))   btn.innerHTML = t('addUser');
+    });
+
+    // Filter chips
+    const chips = document.querySelectorAll('#users .filter-chips .chip');
+    if (chips.length >= 5) {
+        chips[0].textContent = t('all');
+        chips[1].innerHTML = t('active');
+        chips[2].innerHTML = t('inactive');
+        chips[3].innerHTML = t('admins');
+        chips[4].innerHTML = t('users');
+    }
+
+    // Search placeholder
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.placeholder = t('searchPlaceholder');
+
+    // Select rôles
+    const roleFilter = document.getElementById('roleFilter');
+    if (roleFilter && roleFilter.options.length >= 5) {
+        roleFilter.options[0].text = t('allRoles');
+        roleFilter.options[1].text = '👤 ' + t('standardUser');
+        roleFilter.options[2].text = '🛡️ ' + t('administrator');
+        roleFilter.options[3].text = '🥗 ' + t('nutritionist');
+        roleFilter.options[4].text = '🌱 ' + t('ecologist');
+    }
+
+    // Select tri date
+    const triDate = document.getElementById('triDate');
+    if (triDate && triDate.options.length >= 3) {
+        triDate.options[0].text = t('sortByDate');
+        triDate.options[1].text = t('newestFirst');
+        triDate.options[2].text = t('oldestFirst');
+    }
+
+    // Select rows per page
+    const rowsSelect = document.getElementById('rowsPerPageSelect');
+    if (rowsSelect) {
+        Array.from(rowsSelect.options).forEach(opt => {
+            opt.text = opt.value + ' ' + t('rowsPerPage');
+        });
+    }
+
+    // En-têtes du tableau
+    const ths = document.querySelectorAll('#users .data-table thead th');
+    if (ths.length >= 6) {
+        ths[0].textContent = t('id');
+        ths[1].textContent = t('fullName');
+        ths[2].textContent = t('email');
+        ths[3].textContent = t('role');
+        ths[4].textContent = t('registrationDate');
+        ths[5].textContent = t('actions');
+    }
+
+    // Titre section stats
+    const statsTitle = document.querySelector('#users .stats-header h3');
+    if (statsTitle) statsTitle.innerHTML = t('userStats');
+
+    // Boutons type graphique — itération
+    document.querySelectorAll('#users .toggle-btn').forEach(btn => {
+        const oc = btn.getAttribute('onclick') || '';
+        if (oc.includes("'pie'")) btn.innerHTML = t('pieChart');
+        else if (oc.includes("'bar'")) btn.innerHTML = t('barChart');
+    });
+
+    // Titre légende
+    const legendTitle = document.querySelector('#users .legend-title');
+    if (legendTitle) legendTitle.innerHTML = t('summary');
+
+    // Re-rendre la légende et les graphiques avec les labels traduits
+    if (currentUsersData && currentUsersData.length > 0) {
+        updateStatsLegend(currentUsersData);
+        updatePaginationButtons();
+        // Recréer le graphique pour mettre à jour les labels traduits
+        if (currentChartType === 'pie') {
+            createPieChart(currentUsersData);
+        } else {
+            createBarChart(currentUsersData);
+        }
+    }
+}
+
+// Appelée par adminModuleLoaded event (case 'users')
+function initUserModuleLanguage() {
+    applyUsersTranslations();
+
+    // Écouter les changements de langue (une seule fois par session de module)
+    if (!window._usersLangListenerAttached) {
+        document.addEventListener('languageChanged', () => {
+            applyUsersTranslations();
+        });
+        window._usersLangListenerAttached = true;
+    }
+}
+
+window.initUserModuleLanguage = initUserModuleLanguage;
 
 console.log('✅ Admin Module Loader prêt');

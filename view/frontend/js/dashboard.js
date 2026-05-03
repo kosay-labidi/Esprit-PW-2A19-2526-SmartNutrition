@@ -7,21 +7,29 @@ console.log('🌿 GaiaLumen Dashboard chargé');
 
 // ✅ Vérifier l'authentification via un endpoint existant
 async function checkAuth() {
-    // ── 1. Vérifier d'abord via auto_login (session PHP ou cookie remember me)
     try {
         const response = await fetch(
             'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/auto_login.php',
-            { credentials: 'include' }  // important : envoie le cookie remember_token
+            { credentials: 'include' }
         );
         const data = await response.json();
 
         if (data.success) {
-            // Stocker localement pour usage rapide
+            const user = data.data;
+
+            // ── Vérification du rôle ──────────────────────────────
+            if (user.role === 'admin') {
+                // Un admin n'a rien à faire sur dashboard.html
+                window.location.href = '../backend/admin.html';
+                return false;
+            }
+
+            // ── Utilisateur normal → OK ───────────────────────────
             localStorage.setItem('gaialumen-token', 'session-' + Date.now());
-            localStorage.setItem('gaialumen-user', JSON.stringify(data.data));
-            return data.data;
+            localStorage.setItem('gaialumen-user', JSON.stringify(user));
+            return user;
+
         } else {
-            // Ni session PHP ni cookie valide → retour login
             localStorage.removeItem('gaialumen-token');
             localStorage.removeItem('gaialumen-user');
             window.location.href = 'login.html';

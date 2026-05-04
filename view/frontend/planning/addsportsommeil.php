@@ -63,9 +63,6 @@ try {
     $ctrl = new SportSommeilController();
     $idSS = $ctrl->addSportSommeil($ss);
 
-    // PAS DE GENERATION AUTOMATIQUE
-    // Le planning sera genere par l'admin via Approuver dans listDemandeplanning.php
-
     ob_end_clean();
     http_response_code(201);
     echo json_encode([

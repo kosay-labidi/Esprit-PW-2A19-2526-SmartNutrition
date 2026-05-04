@@ -449,7 +449,8 @@ function exportAll() {
 
 // ==================== PLANNING FUNCTIONS ====================
 let planningDataCache  = [];
-let planningFiltreML   = 'all';  // filtre statut actif
+let planningFiltreML   = 'all';
+let planningSort       = { col: 'id', dir: 'desc' };
 
 // ── Chargement & rendu ────────────────────────────────────────────────────
 function loadPlanningData() {
@@ -487,25 +488,363 @@ function loadPlanningData() {
 }
 
 function updatePlanningStats(data) {
-  const s = id => document.getElementById(id);
-  if (s('stat-total'))     s('stat-total').textContent     = data.length;
-  if (s('stat-quotidien')) s('stat-quotidien').textContent = data.filter(d => d.type_budget === 'quotidien').length;
-  if (s('stat-hebdo'))     s('stat-hebdo').textContent     = data.filter(d => d.type_budget === 'hebdomadaire').length;
-  const totalJours = data.reduce((sum, d) =>
-    sum + (d.type_duree === 'semaines' ? (parseInt(d.duree)||0)*7 : (parseInt(d.duree)||0)), 0);
-  if (s('stat-jours')) s('stat-jours').textContent = totalJours;
+  const el = document.getElementById('adminPlanningStats');
+  if (!el) return;
+
+  // ── Calculs ────────────────────────────────────────────────────────────
+  const total      = data.length;
+  const approuves  = data.filter(d => d.statut === 'approuve').length;
+  const enAttente  = data.filter(d => d.statut === 'en_attente').length;
+  const rejetes    = data.filter(d => d.statut === 'rejete').length;
+  const quotidien  = data.filter(d => d.type_budget === 'quotidien').length;
+  const hebdo      = data.filter(d => d.type_budget === 'hebdomadaire').length;
+  const totalJours = data.reduce((s,d) => s + (d.type_duree==='semaines'?(parseInt(d.duree)||0)*7:(parseInt(d.duree)||0)), 0);
+  const avgCal     = total ? Math.round(data.reduce((s,d)=>s+(parseFloat(d.calories)||0),0)/total) : 0;
+  const byDate     = data.slice().sort((a,b) => new Date(a.date_demande||0)-new Date(b.date_demande||0));
+
+  const uid = Date.now();
+  const pct = (n,d) => d ? Math.round(n/d*100) : 0;
+
+  // ── Helper KPI ─────────────────────────────────────────────────────────
+  const kpi = (ico,val,lbl,color,p) =>
+    `<div class="ars-kpi">
+      <div class="ars-kpi-glow" style="background:${color}"></div>
+      <span class="ars-kpi-ico">${ico}</span>
+      <div class="ars-kpi-val" data-t="${val}">0</div>
+      <div class="ars-kpi-lbl">${lbl}</div>
+      <div class="ars-kpi-bar"><div class="ars-kpi-fill" data-p="${p}" style="background:${color}"></div></div>
+    </div>`;
+
+  // ── Helper bar ─────────────────────────────────────────────────────────
+  const barMax = Math.max(quotidien, hebdo, 1);
+  const bar = (lbl,val,color) => {
+    const h = Math.max(Math.round(val/barMax*62), val>0?4:0);
+    return `<div class="ars-bar-col">
+      <div class="ars-bar-val">${val}</div>
+      <div class="ars-bar-rect" style="background:${color};height:${h}px" title="${lbl}: ${val}"></div>
+      <div class="ars-bar-lbl">${lbl}</div>
+    </div>`;
+  };
+
+  // ── HTML ────────────────────────────────────────────────────────────────
+  el.innerHTML = `
+  <div class="ars-wrap">
+    <div class="ars-kpi-row">
+      ${kpi('📋', total,      'Total demandes',    '#7b6eea', 100)}
+      ${kpi('✅', approuves,  'Approuvés',         '#2ecc71', pct(approuves,total))}
+      ${kpi('⏳', enAttente,  'En attente',        '#f39c12', pct(enAttente,total))}
+      ${kpi('📆', totalJours, 'Jours planifiés',   '#3b82f6', Math.min(totalJours,100))}
+    </div>
+    <div class="ars-charts-row">
+
+      <!-- Donut -->
+      <div class="ars-chart-card">
+        <div class="ars-chart-title">Répartition statuts</div>
+        <div class="ars-donut-wrap">
+          <div style="position:relative;width:100px;height:100px;flex-shrink:0">
+            <svg id="ars-donut-${uid}" width="100" height="100" viewBox="0 0 100 100"></svg>
+            <div class="ars-donut-center" id="ars-dc-${uid}">
+              <span class="ars-dc-val">${total}</span>
+              <span class="ars-dc-lbl">total</span>
+            </div>
+          </div>
+          <div class="ars-donut-legend">
+            <div class="ars-leg" data-seg="0" onmouseenter="arsHoverSeg(this,${uid})" onmouseleave="arsUnhoverSeg(${uid})">
+              <span class="ars-leg-dot" style="background:#2ecc71"></span>
+              <span class="ars-leg-lbl">Approuvés</span>
+              <span class="ars-leg-val">${approuves}</span>
+            </div>
+            <div class="ars-leg" data-seg="1" onmouseenter="arsHoverSeg(this,${uid})" onmouseleave="arsUnhoverSeg(${uid})">
+              <span class="ars-leg-dot" style="background:#f39c12"></span>
+              <span class="ars-leg-lbl">En attente</span>
+              <span class="ars-leg-val">${enAttente}</span>
+            </div>
+            <div class="ars-leg" data-seg="2" onmouseenter="arsHoverSeg(this,${uid})" onmouseleave="arsUnhoverSeg(${uid})">
+              <span class="ars-leg-dot" style="background:#e74c3c"></span>
+              <span class="ars-leg-lbl">Rejetés</span>
+              <span class="ars-leg-val">${rejetes}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bars -->
+      <div class="ars-chart-card">
+        <div class="ars-chart-title">Type de budget</div>
+        <div class="ars-bars-wrap">
+          ${bar('Quotidien',    quotidien, '#7b6eea')}
+          ${bar('Hebdomadaire', hebdo,     '#3b82f6')}
+        </div>
+        <div class="ars-avg-line">Moy. calories : <strong>${avgCal} kcal</strong></div>
+      </div>
+
+      <!-- Sparkline -->
+      <div class="ars-chart-card" style="display:flex;flex-direction:column">
+        <div class="ars-chart-title">Évolution calories</div>
+        <div style="position:relative;flex:1">
+          <svg id="ars-spark-${uid}" class="ars-spark-svg" viewBox="0 0 300 75" preserveAspectRatio="none"></svg>
+          <div class="ars-tooltip" id="ars-tt-${uid}" style="display:none"></div>
+        </div>
+        <div class="ars-spark-footer" id="ars-sf-${uid}"></div>
+      </div>
+
+    </div>
+  </div>`;
+
+  // ── Animations & interactions ───────────────────────────────────────────
+  setTimeout(() => {
+
+    // 1. Compteurs animés
+    el.querySelectorAll('.ars-kpi-val[data-t]').forEach(v => {
+      const target = +v.dataset.t;
+      let t0 = null;
+      const raf = ts => {
+        if (!t0) t0 = ts;
+        const p = Math.min((ts-t0)/850,1), e = 1-Math.pow(2,-10*p);
+        v.textContent = Math.round(target*e);
+        if (p<1) requestAnimationFrame(raf);
+      };
+      requestAnimationFrame(raf);
+    });
+
+    // 2. Barres KPI fill
+    el.querySelectorAll('.ars-kpi-fill[data-p]').forEach(b => {
+      setTimeout(() => b.style.width = b.dataset.p+'%', 120);
+    });
+
+    // 3. Bar chart scaleY
+    el.querySelectorAll('.ars-bar-rect').forEach((b,i) => {
+      setTimeout(() => b.style.transform = 'scaleY(1)', 100+i*80);
+    });
+
+    // 4. Donut SVG interactif
+    const donutSvg = document.getElementById(`ars-donut-${uid}`);
+    const dcEl     = document.getElementById(`ars-dc-${uid}`);
+    if (donutSvg && total > 0) {
+      const cx=50, cy=50, r=34, sw=10, circ=2*Math.PI*r;
+      const segs = [
+        {val:approuves, color:'#2ecc71', lbl:'approuvés'},
+        {val:enAttente, color:'#f39c12', lbl:'en attente'},
+        {val:rejetes,   color:'#e74c3c', lbl:'rejetés'}
+      ];
+      donutSvg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(91,62,150,.1)" stroke-width="${sw}"/>`;
+      const circles = [];
+      let offset = 0;
+      segs.forEach((seg, i) => {
+        const len = (seg.val/total)*circ;
+        if (len <= 0) { circles.push(null); return; }
+        const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r);
+        c.setAttribute('fill','none'); c.setAttribute('stroke',seg.color);
+        c.setAttribute('stroke-width',sw); c.setAttribute('stroke-linecap','round');
+        c.setAttribute('stroke-dasharray',`${len} ${circ-len}`);
+        c.style.transform = `rotate(-90deg)`; c.style.transformOrigin = `${cx}px ${cy}px`;
+        c.style.strokeDashoffset = circ - offset;
+        c.style.transition = 'stroke-dashoffset 0s, stroke-width .2s, opacity .2s';
+        c.style.cursor = 'pointer';
+        donutSvg.appendChild(c);
+        const myOffset = offset;
+        circles.push({el:c, i, seg, len});
+        offset += len;
+        setTimeout(() => {
+          c.style.transition = `stroke-dashoffset .9s cubic-bezier(.4,0,.2,1), stroke-width .2s, opacity .2s`;
+          c.style.strokeDashoffset = circ - myOffset - len;
+        }, 60+i*120);
+        // Hover arc
+        c.addEventListener('mouseenter', () => {
+          circles.forEach(x => { if(x && x.el!==c){ x.el.style.opacity='.3'; x.el.setAttribute('stroke-width',sw); }});
+          c.setAttribute('stroke-width', sw+3);
+          if (dcEl) { dcEl.querySelector('.ars-dc-val').textContent=seg.val; dcEl.querySelector('.ars-dc-lbl').textContent=seg.lbl; }
+        });
+        c.addEventListener('mouseleave', () => {
+          circles.forEach(x => { if(x){ x.el.style.opacity='1'; x.el.setAttribute('stroke-width',sw); }});
+          if (dcEl) { dcEl.querySelector('.ars-dc-val').textContent=total; dcEl.querySelector('.ars-dc-lbl').textContent='total'; }
+        });
+      });
+      window[`_arsCircles${uid}`] = circles;
+      window[`_arsDc${uid}`]      = dcEl;
+      window[`_arsTotal${uid}`]   = total;
+    }
+
+    // 5. Sparkline bezier interactive
+    const sparkSvg = document.getElementById(`ars-spark-${uid}`);
+    const tooltip  = document.getElementById(`ars-tt-${uid}`);
+    const footer   = document.getElementById(`ars-sf-${uid}`);
+    if (sparkSvg && byDate.length > 0) {
+      const W=300, H=75, px=10, py=8;
+      const vals  = byDate.map(d => parseFloat(d.calories)||0);
+      const dates = byDate.map(d => d.date_demande ? new Date(d.date_demande).toLocaleDateString('fr-FR') : '?');
+      const minV  = Math.min(...vals), maxV = Math.max(...vals), rng = maxV-minV||1;
+      const pts   = vals.map((v,i) => [
+        vals.length===1 ? W/2 : px+(i/(vals.length-1))*(W-px*2),
+        (H-py)-((v-minV)/rng)*(H-py*2)
+      ]);
+      // Bezier
+      const bezier = pts => {
+        if (pts.length===1) return `M${pts[0][0]} ${pts[0][1]}`;
+        let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+        for (let i=0;i<pts.length-1;i++) {
+          const cpx1=pts[i][0]+(pts[i+1][0]-pts[i][0])*.45, cpy1=pts[i][1];
+          const cpx2=pts[i+1][0]-(pts[i+1][0]-pts[i][0])*.45, cpy2=pts[i+1][1];
+          d+=` C${cpx1.toFixed(1)} ${cpy1.toFixed(1)},${cpx2.toFixed(1)} ${cpy2.toFixed(1)},${pts[i+1][0].toFixed(1)} ${pts[i+1][1].toFixed(1)}`;
+        }
+        return d;
+      };
+      const pathD = bezier(pts);
+      const fillD = `${pathD} L${pts[pts.length-1][0]} ${H-py} L${pts[0][0]} ${H-py} Z`;
+      sparkSvg.innerHTML = `
+        <defs>
+          <linearGradient id="arsg${uid}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7b6eea" stop-opacity=".4"/>
+            <stop offset="100%" stop-color="#7b6eea" stop-opacity="0"/>
+          </linearGradient>
+          <clipPath id="arscp${uid}"><rect x="0" y="0" width="0" height="${H}"/></clipPath>
+        </defs>
+        <path d="${fillD}" fill="url(#arsg${uid})" clip-path="url(#arscp${uid})" opacity=".7"/>
+        <path id="arsp${uid}" d="${pathD}" fill="none" stroke="#7b6eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line id="arscross${uid}" x1="0" y1="0" x2="0" y2="${H}" stroke="rgba(123,110,234,.5)" stroke-width="1" stroke-dasharray="3,3" style="display:none"/>`;
+      // Animate
+      const pathEl = document.getElementById(`arsp${uid}`);
+      const clip   = sparkSvg.querySelector('clipPath rect');
+      if (pathEl && clip) {
+        const len = pathEl.getTotalLength ? pathEl.getTotalLength() : 400;
+        pathEl.style.strokeDasharray = pathEl.style.strokeDashoffset = len;
+        pathEl.style.transition = 'stroke-dashoffset 1.3s cubic-bezier(.4,0,.2,1)';
+        setTimeout(() => {
+          pathEl.style.strokeDashoffset = 0;
+          clip.style.transition = 'width 1.3s cubic-bezier(.4,0,.2,1)';
+          clip.setAttribute('width', W);
+        }, 80);
+      }
+      // Dots
+      const dotEls = pts.map((p,i) => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        c.setAttribute('cx',p[0]); c.setAttribute('cy',p[1]);
+        c.setAttribute('r','3.5'); c.setAttribute('fill','#7b6eea');
+        c.setAttribute('stroke','rgba(255,255,255,.15)'); c.setAttribute('stroke-width','1.5');
+        c.classList.add('ars-spark-dot'); c.style.opacity='0';
+        sparkSvg.appendChild(c);
+        setTimeout(() => c.style.opacity='1', 1100+i*50);
+        return c;
+      });
+      // Crosshair hover
+      const cross = document.getElementById(`arscross${uid}`);
+      sparkSvg.addEventListener('mousemove', ev => {
+        const rect = sparkSvg.getBoundingClientRect();
+        const mx   = (ev.clientX-rect.left)/rect.width*W;
+        let minD=Infinity, ci=0;
+        pts.forEach(([px],i) => { const d=Math.abs(px-mx); if(d<minD){minD=d;ci=i;} });
+        const [cpx,cpy] = pts[ci];
+        if (cross) { cross.setAttribute('x1',cpx); cross.setAttribute('x2',cpx); cross.style.display=''; }
+        dotEls.forEach((d,i) => { d.setAttribute('r',i===ci?'5.5':'3.5'); d.setAttribute('fill',i===ci?'#a78bfa':'#7b6eea'); });
+        if (tooltip) {
+          tooltip.style.display='';
+          tooltip.innerHTML = `<strong>${vals[ci]} kcal</strong><br>${dates[ci]}`;
+          tooltip.style.left = (cpx/W*100)+'%';
+          tooltip.style.top  = (cpy/H*rect.height-46)+'px';
+        }
+      });
+      sparkSvg.addEventListener('mouseleave', () => {
+        if (cross) cross.style.display='none';
+        dotEls.forEach(d => { d.setAttribute('r','3.5'); d.setAttribute('fill','#7b6eea'); });
+        if (tooltip) tooltip.style.display='none';
+      });
+      // Footer
+      if (footer) footer.innerHTML = `<span>Min : ${minV} kcal</span><span>Moy : ${Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)} kcal</span><span>Max : ${maxV} kcal</span>`;
+    }
+
+  }, 60);
 }
+
+// Hover donut via légende (exposé global car appelé depuis HTML inline)
+window.arsHoverSeg = function(legEl, uid) {
+  const i       = parseInt(legEl.dataset.seg,10);
+  const circles = window[`_arsCircles${uid}`] || [];
+  const dcEl    = window[`_arsDc${uid}`];
+  const lbls    = ['approuvés','en attente','rejetés'];
+  const valEl   = legEl.querySelector('.ars-leg-val');
+  circles.forEach(x => { if(x){ x.el.style.opacity=x.i===i?'1':'.3'; x.el.setAttribute('stroke-width',x.i===i?'13':'10'); }});
+  if (dcEl && valEl) { dcEl.querySelector('.ars-dc-val').textContent=valEl.textContent; dcEl.querySelector('.ars-dc-lbl').textContent=lbls[i]||''; }
+};
+window.arsUnhoverSeg = function(uid) {
+  const circles = window[`_arsCircles${uid}`] || [];
+  const dcEl    = window[`_arsDc${uid}`];
+  const total   = window[`_arsTotal${uid}`] || 0;
+  circles.forEach(x => { if(x){ x.el.style.opacity='1'; x.el.setAttribute('stroke-width','10'); }});
+  if (dcEl) { dcEl.querySelector('.ars-dc-val').textContent=total; dcEl.querySelector('.ars-dc-lbl').textContent='total'; }
+};
 
 function renderPlanningRows(data) {
   const tb = document.getElementById('planningTableBody');
   if (!tb) return;
 
-  // Appliquer filtre statut
-  const search = ((document.getElementById('planningSearchInput')||{}).value||'').toLowerCase();
-  const filtered = data.filter(d => {
-    if (planningFiltreML !== 'all' && (d.statut||'en_attente') !== planningFiltreML) return false;
-    if (!search) return true;
-    return (d.id+' '+d.id_utilisateur+' '+d.calories+' '+(d.statut||'')).toLowerCase().includes(search);
+  // ── Recherche ciblée sur le champ sélectionné ─────────────────────────
+  const searchInput    = document.getElementById('planningSearchInput');
+  const searchFieldEl  = document.getElementById('planningSearchField');
+  const searchVal      = searchInput   ? searchInput.value.trim()  : '';
+  const searchField    = searchFieldEl ? searchFieldEl.value        : 'id';
+
+  let filtered = data.filter(d => {
+    // filtre statut
+    if (planningFiltreML !== 'all' && (d.statut || 'en_attente') !== planningFiltreML) return false;
+    // pas de texte → tout passe
+    if (!searchVal) return true;
+
+    let fieldVal = '';
+    switch (searchField) {
+      case 'id':       fieldVal = String(d.id       ?? ''); break;
+      case 'budget':   fieldVal = String(d.budget   ?? '').replace(',', '.'); break;
+      case 'calories': fieldVal = String(d.calories ?? ''); break;
+      default:         fieldVal = '';
+    }
+    return fieldVal.toLowerCase().includes(searchVal.toLowerCase());
+  });
+
+  // ── Synchroniser la colonne de tri depuis le select ───────────────────
+  const sortFieldEl = document.getElementById('planningSortField');
+  if (sortFieldEl && sortFieldEl.value) planningSort.col = sortFieldEl.value;
+
+  // ── Tri ───────────────────────────────────────────────────────────────
+  const col = planningSort.col;
+  const dir = planningSort.dir;
+
+  filtered = filtered.slice().sort((a, b) => {
+    let va, vb;
+    switch (col) {
+      case 'id':
+        va = parseInt(a.id, 10)  || 0;
+        vb = parseInt(b.id, 10)  || 0;
+        break;
+      case 'calories':
+        va = parseFloat(a.calories) || 0;
+        vb = parseFloat(b.calories) || 0;
+        break;
+      case 'budget':
+        va = parseFloat(a.budget) || 0;
+        vb = parseFloat(b.budget) || 0;
+        break;
+      case 'duree': {
+        const toJ = x => x.type_duree === 'semaines'
+          ? (parseInt(x.duree, 10) || 0) * 7
+          : (parseInt(x.duree, 10) || 0);
+        va = toJ(a); vb = toJ(b);
+        break;
+      }
+      case 'statut': {
+        const ord = { en_attente: 0, approuve: 1, rejete: 2 };
+        va = ord[a.statut] ?? 9;
+        vb = ord[b.statut] ?? 9;
+        break;
+      }
+      case 'date':
+        va = a.date_demande ? new Date(a.date_demande).getTime() : 0;
+        vb = b.date_demande ? new Date(b.date_demande).getTime() : 0;
+        break;
+      default:
+        va = 0; vb = 0;
+    }
+    if (va === vb) return 0;
+    return dir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
   });
 
   if (!filtered.length) {
@@ -672,36 +1011,69 @@ function _renderDetail(res, id) {
     </div>`;
   }
 
-  // ── Bloc 4 : Tableau planning calendrier ──
+  // ── Bloc 4 : Tableau planning calendrier PAR SEMAINE ──
   let bloc4 = '';
   if (hasPlanning) {
-    const headers = pl.map(j =>
-      `<th class="th-jour"><span style="font-weight:700;display:block">${j.jourFr}</span><span style="font-size:.68rem;color:var(--muted)">${j.dateAff}</span></th>`
-    ).join('');
-    const mkRepas = (ico, lbl, idx, extra='') => `<tr class="cal-repas${extra}">
-      <td class="td-act"><span style="display:block;font-size:.95rem">${ico}</span>${lbl}</td>
-      ${pl.map(j=>{const v=(j.repas||[])[idx];return`<td>${v||'<span style="color:var(--muted)">—</span>'}</td>`;}).join('')}
-    </tr>`;
-    const mkRow = (cls,ico,lbl,type) => `<tr class="${cls}">
-      <td class="td-act"><span style="display:block;font-size:.95rem">${ico}</span>${lbl}</td>
-      ${pl.map(j=>{const v=(j[type]||[])[0];return`<td>${v||'<span style="color:var(--muted)">—</span>'}</td>`;}).join('')}
-    </tr>`;
+    window._planningDetailData = pl;
+    window._planningDetailSemaine = 0;
+    const nbSemaines = Math.ceil(pl.length / 7);
+
+    window._renderSemaine = function(semIdx) {
+      const debut = semIdx * 7;
+      const slice = window._planningDetailData.slice(debut, debut + 7);
+      const headers = slice.map(j =>
+        `<th class="th-jour"><span style="font-weight:700;display:block">${j.jourFr}</span><span style="font-size:.68rem;color:var(--muted)">${j.dateAff}</span></th>`
+      ).join('');
+      const mkRepas = (ico, lbl, idx, extra) => {
+        extra = extra || '';
+        return `<tr class="cal-repas${extra}">
+          <td class="td-act"><span style="display:block;font-size:.95rem">${ico}</span>${lbl}</td>
+          ${slice.map(j=>{const v=(j.repas||[])[idx];return`<td>${v||'<span style="color:var(--muted)">—</span>'}</td>`;}).join('')}
+        </tr>`;
+      };
+      const mkRow = (cls,ico,lbl,type) => `<tr class="${cls}">
+        <td class="td-act"><span style="display:block;font-size:.95rem">${ico}</span>${lbl}</td>
+        ${slice.map(j=>{const v=(j[type]||[])[0];return`<td>${v||'<span style="color:var(--muted)">—</span>'}</td>`;}).join('')}
+      </tr>`;
+      const tbl = document.getElementById('planningCalBody');
+      if (tbl) tbl.innerHTML =
+        `<thead><tr><th class="th-act">Activité</th>${headers}</tr></thead>
+         <tbody>
+           ${mkRepas('🍳','Petit-déj',0,' cal-repas-first')}
+           ${mkRepas('🍽️','Déjeuner',1)}
+           ${mkRepas('🌮','Dîner',2)}
+           ${mkRow('cal-sport','🏃','Sport','sport')}
+           ${mkRow('cal-sommeil','🌙','Sommeil','sommeil')}
+         </tbody>`;
+      const lbl = document.getElementById('planningWeekLabel');
+      if (lbl) lbl.textContent = `Semaine ${semIdx + 1} / ${nbSemaines}`;
+      const btnPrev = document.getElementById('planningWeekPrev');
+      const btnNext = document.getElementById('planningWeekNext');
+      if (btnPrev) btnPrev.disabled = semIdx === 0;
+      if (btnNext) btnNext.disabled = semIdx >= nbSemaines - 1;
+    };
 
     bloc4 = `<div class="detail-bloc">
-      <div class="detail-bloc-hd">📅 Planning complet — ${st.nb_jours} jour(s)</div>
+      <div class="detail-bloc-hd" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span>📅 Planning complet — ${st.nb_jours} jour(s)</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button id="planningWeekPrev"
+            onclick="window._planningDetailSemaine=Math.max(0,window._planningDetailSemaine-1);window._renderSemaine(window._planningDetailSemaine)"
+            style="padding:5px 14px;border-radius:8px;border:1.5px solid rgba(91,62,150,.35);background:rgba(91,62,150,.1);color:var(--text);font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s"
+            disabled>← Préc.</button>
+          <span id="planningWeekLabel" style="font-size:.8rem;font-weight:700;color:var(--violet,#a78bfa);white-space:nowrap">Semaine 1 / ${nbSemaines}</span>
+          <button id="planningWeekNext"
+            onclick="window._planningDetailSemaine=Math.min(${nbSemaines-1},window._planningDetailSemaine+1);window._renderSemaine(window._planningDetailSemaine)"
+            style="padding:5px 14px;border-radius:8px;border:1.5px solid rgba(91,62,150,.35);background:rgba(91,62,150,.1);color:var(--text);font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s"
+            ${nbSemaines <= 1 ? 'disabled' : ''}>Suiv. →</button>
+        </div>
+      </div>
       <div class="planning-table-scroll">
-        <table class="planning-cal">
-          <thead><tr><th class="th-act">Activité</th>${headers}</tr></thead>
-          <tbody>
-            ${mkRepas('🍳','Petit-déj',0,' cal-repas-first')}
-            ${mkRepas('🍽️','Déjeuner',1)}
-            ${mkRepas('🌮','Dîner',2)}
-            ${mkRow('cal-sport','🏃','Sport','sport')}
-            ${mkRow('cal-sommeil','🌙','Sommeil','sommeil')}
-          </tbody>
-        </table>
+        <table class="planning-cal" id="planningCalBody"></table>
       </div>
     </div>`;
+
+    setTimeout(() => window._renderSemaine(0), 0);
   } else {
     bloc4 = `<div style="text-align:center;padding:40px 20px;border:2px dashed rgba(91,62,150,.2);border-radius:14px;color:var(--muted);margin-top:8px">
       <div style="font-size:2.2rem;margin-bottom:12px;opacity:.5">📅</div>
@@ -800,6 +1172,21 @@ function setPlanningFilter(f, el) {
   renderPlanningRows(planningDataCache);
 }
 
+function applySortPlanning() {
+  // Le select a déjà sa nouvelle valeur — renderPlanningRows() la lira
+  renderPlanningRows(planningDataCache);
+}
+
+function toggleSortDir() {
+  planningSort.dir = planningSort.dir === 'asc' ? 'desc' : 'asc';
+  const btn = document.getElementById('planningSortDirBtn');
+  if (btn) {
+    btn.textContent  = planningSort.dir === 'asc' ? '↑ ASC' : '↓ DESC';
+    btn.style.color  = planningSort.dir === 'asc' ? '#2ecc71' : 'var(--violet, #a78bfa)';
+  }
+  renderPlanningRows(planningDataCache);
+}
+
 // ── Toast ─────────────────────────────────────────────────────────────────
 
 function planningToast(msg, type) {
@@ -824,6 +1211,8 @@ function planningToast(msg, type) {
 window.loadPlanningData      = loadPlanningData;
 window.filterPlanningTable   = filterPlanningTable;
 window.setPlanningFilter     = setPlanningFilter;
+window.applySortPlanning     = applySortPlanning;
+window.toggleSortDir         = toggleSortDir;
 window.planningVoir          = planningVoir;
 window.planningChangerStatut = planningChangerStatut;
 window.planningRegen         = planningRegen;

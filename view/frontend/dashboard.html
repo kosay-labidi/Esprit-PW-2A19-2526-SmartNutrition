@@ -58,45 +58,34 @@
   </div>
 </nav>
 
-<button id="sidebar-toggle" title="Toggle sidebar">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path d="M15 18l-6-6 6-6"/>
-  </svg>
-</button>
+<nav id="top-modules-nav">
+  <a href="#" class="menu-item active" data-module="welcome">
+    <span class="menu-item-icon">🏠</span>
+    <span class="menu-item-text">Accueil</span>
+  </a>
+  <a href="#" class="menu-item" data-module="users">
+    <span class="menu-item-icon">👥</span>
+    <span class="menu-item-text">Utilisateurs</span>
+  </a>
+  <a href="#" class="menu-item" data-module="planning">
+    <span class="menu-item-icon">📅</span>
+    <span class="menu-item-text">Planning</span>
+  </a>
+  <a href="#" class="menu-item" data-module="meals">
+    <span class="menu-item-icon">🍽️</span>
+    <span class="menu-item-text">Repas</span>
+  </a>
+  <a href="#" class="menu-item" data-module="challenges">
+    <span class="menu-item-icon">🏆</span>
+    <span class="menu-item-text">Défis</span>
+  </a>
+  <a href="#" class="menu-item" data-module="events">
+    <span class="menu-item-icon">🎯</span>
+    <span class="menu-item-text">Événements</span>
+  </a>
+</nav>
 
 <div class="dashboard-container">
-  <aside class="sidebar-menu">
-    <div class="menu-title">📊 Modules</div>
-    <a href="#" class="menu-item" data-module="welcome">
-      <span class="menu-item-icon">🏠</span>
-      <span class="menu-item-text">Accueil</span>
-    </a>
-    <a href="#" class="menu-item" data-module="users">
-      <span class="menu-item-icon">👥</span>
-      <span class="menu-item-text">GS Utilisateur</span>
-    </a>
-    <a href="#" class="menu-item" data-module="planning">
-      <span class="menu-item-icon">📅</span>
-      <span class="menu-item-text">GS Planning</span>
-    </a>
-    <a href="#" class="menu-item" data-module="events">
-      <span class="menu-item-icon">🎯</span>
-      <span class="menu-item-text">GS Events</span>
-    </a>
-    <a href="#" class="menu-item" data-module="meals">
-      <span class="menu-item-icon">🍽️</span>
-      <span class="menu-item-text">GS Repas</span>
-    </a>
-    <a href="#" class="menu-item" data-module="health">
-      <span class="menu-item-icon">❤️</span>
-      <span class="menu-item-text">GS Santé</span>
-    </a>
-    <a href="#" class="menu-item" data-module="challenges">
-      <span class="menu-item-icon">🏆</span>
-      <span class="menu-item-text">GS Défis</span>
-    </a>
-  </aside>
-
   <main class="main-content">
     <!-- Les modules seront chargés dynamiquement ici par module-loader.js -->
   </main>

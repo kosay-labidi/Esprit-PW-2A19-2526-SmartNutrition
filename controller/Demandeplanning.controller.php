@@ -4,7 +4,6 @@ require_once __DIR__ . '/../Model/Demandeplanning.php';
 
 class DemandeplanningController {
 
-    // Verifie une seule fois si la colonne statut existe (defensive)
     private static ?bool $_hasStatut = null;
     private function hasStatutColumn(): bool {
         if (self::$_hasStatut !== null) return self::$_hasStatut;
@@ -18,7 +17,6 @@ class DemandeplanningController {
         return self::$_hasStatut;
     }
 
-    // ── INSERT — retourne lastInsertId (int) pour le frontend JS ──────────
     public function addDemande(Demandeplanning $demande): int {
         try {
             $db = config::getConnexion();
@@ -71,9 +69,6 @@ class DemandeplanningController {
         } catch (PDOException $e) { return []; }
     }
 
-    // ── LIST WITH STATS (jointure triple) ─────────────────────────────────
-    // CORRECTION : liste explicite des colonnes pour eviter la duplication de 'statut'
-    // quand hasStatutColumn=true (SELECT d.*, d.statut = erreur MariaDB)
     public function listAllDemandesAvecStats(): array {
         try {
             $db  = config::getConnexion();
@@ -101,7 +96,6 @@ class DemandeplanningController {
         } catch (PDOException $e) { return []; }
     }
 
-    // ── JOINTURE planning ↔ demandeplanning (workshop PDF) ───────────────
     public function afficherPlanningByDemande(int $idDemande): array {
         try {
             $db   = config::getConnexion();
@@ -152,7 +146,6 @@ class DemandeplanningController {
         } catch (PDOException $e) { return false; }
     }
 
-    // ── DELETE cascade ────────────────────────────────────────────────────
     public function deleteDemande(int $id): bool {
         try {
             $db = config::getConnexion();
@@ -164,9 +157,6 @@ class DemandeplanningController {
             return true;
         } catch (PDOException $e) { $db->rollBack(); return false; }
     }
-
-    // ── LIST BY USER ──────────────────────────────────────────────────────
-    // CORRECTION : liste explicite des colonnes + virgule correcte selon hasStatutColumn
     public function listDemandesByUser(int $userId): array {
         try {
             $db  = config::getConnexion();

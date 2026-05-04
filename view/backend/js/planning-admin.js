@@ -9,6 +9,7 @@ console.log('📅 Planning Admin JS charge');
 let planningAllData     = [];
 let planningFiltre      = 'all';
 let planningInitialized = false;
+let planningSort        = { col: 'id', dir: 'desc' };  // tri actif par défaut : ID décroissant
 
 function initPlanningModule() {
     const tbody = document.getElementById('planningTableBody');
@@ -70,18 +71,237 @@ function loadPlanningData() {
     });
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   PLANNING STATS — Moteur d'animation professionnel
+══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Anime un compteur numérique de 0 vers la valeur cible.
+ * @param {string} id       – ID de l'élément DOM
+ * @param {number} target   – valeur finale
+ * @param {number} duration – durée ms (défaut 900)
+ * @param {string} [suffix] – suffixe optionnel (ex: "%")
+ */
+function animateCounter(id, target, duration = 900, suffix = '') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('pstats-skeleton');
+    const start = performance.now();
+    const from  = parseFloat(el.dataset.current || 0) || 0;
+    el.dataset.current = target;
+
+    function step(now) {
+        const p  = Math.min((now - start) / duration, 1);
+        // easeOutExpo
+        const ep = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
+        const v  = from + (target - from) * ep;
+        el.textContent = (Number.isInteger(target) ? Math.round(v) : v.toFixed(1)) + suffix;
+        if (p < 1) requestAnimationFrame(step);
+        else {
+            el.textContent = target + suffix;
+            el.classList.remove('pstats-skeleton');
+            el.classList.add('updating');
+            setTimeout(() => el.classList.remove('updating'), 400);
+        }
+    }
+    requestAnimationFrame(step);
+}
+
+/**
+ * Met à jour le mini anneau SVG de progression dans chaque KPI card.
+ */
+function animateRing(id, pct) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const circ = 2 * Math.PI * 15.5; // r=15.5 → ≈97.4
+    const fill = (pct / 100) * circ;
+    // délai pour permettre le rendu initial
+    setTimeout(() => {
+        el.style.transition = 'stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1)';
+        el.setAttribute('stroke-dasharray', `${fill} ${circ}`);
+    }, 200);
+}
+
+/**
+ * Met à jour le donut chart de répartition des statuts.
+ */
+function animateDonut(approuve, attente, rejete, total) {
+    const circ = 2 * Math.PI * 48; // r=48 → ≈301.6
+    let offset = 0;
+
+    function setArc(id, count) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const fill = total > 0 ? (count / total) * circ : 0;
+        el.style.strokeDashoffset = offset;
+        el.setAttribute('stroke-dasharray', '0 ' + circ); // reset
+        setTimeout(() => {
+            el.setAttribute('stroke-dasharray', `${fill} ${circ - fill}`);
+            el.style.strokeDashoffset = -offset;
+        }, 300);
+        offset += fill;
+    }
+
+    setArc('donut-approuve', approuve);
+    setArc('donut-attente',  attente);
+    setArc('donut-rejete',   rejete);
+
+    // Centre
+    const centerEl = document.getElementById('donut-center-val');
+    if (centerEl) { centerEl.textContent = total; }
+    const badgeEl = document.getElementById('donut-total-badge');
+    if (badgeEl) { badgeEl.textContent = total + ' total'; }
+
+    // Légende
+    const setLeg = (id, n) => { const e = document.getElementById(id); if(e) e.textContent = n; };
+    setLeg('legend-approuve', approuve);
+    setLeg('legend-attente',  attente);
+    setLeg('legend-rejete',   rejete);
+}
+
+/**
+ * Anime les barres de budget (quotidien / hebdo).
+ */
+function animateBars(quotidien, hebdo) {
+    const total = quotidien + hebdo || 1;
+    const pctQ  = (quotidien / total) * 100;
+    const pctH  = (hebdo    / total) * 100;
+
+    setTimeout(() => {
+        const bq = document.getElementById('bar-quotidien');
+        const bh = document.getElementById('bar-hebdo');
+        if (bq) bq.style.width = Math.max(pctQ, 4) + '%';
+        if (bh) bh.style.width = Math.max(pctH, 4) + '%';
+        const tq = document.getElementById('bar-quotidien-tip');
+        const th = document.getElementById('bar-hebdo-tip');
+        if (tq) tq.textContent = quotidien + ' demande' + (quotidien > 1 ? 's' : '');
+        if (th) th.textContent = hebdo     + ' demande' + (hebdo     > 1 ? 's' : '');
+    }, 400);
+
+    const vq = document.getElementById('bar-quotidien-val');
+    const vh = document.getElementById('bar-hebdo-val');
+    if (vq) vq.textContent = quotidien;
+    if (vh) vh.textContent = hebdo;
+}
+
+/**
+ * Génère et anime les mini barres de calories.
+ */
+function animateMiniCalBars(data) {
+    const container = document.getElementById('pstats-cal-bars');
+    if (!container) return;
+
+    // Grouper par semaine (approximation : tranches de 7 dem.)
+    const buckets = [];
+    const step = Math.max(1, Math.ceil(data.length / 7));
+    for (let i = 0; i < data.length; i += step) {
+        const slice = data.slice(i, i + step);
+        const avg   = slice.reduce((s, d) => s + (parseInt(d.calories) || 0), 0) / (slice.length || 1);
+        buckets.push(Math.round(avg));
+    }
+    if (buckets.length === 0) buckets.push(0);
+
+    const maxV = Math.max(...buckets, 1);
+    container.innerHTML = buckets.map((v, idx) => {
+        const pct = (v / maxV) * 100;
+        return `<div class="pstats-mini-bar-col">
+            <div class="pstats-mini-bar-fill" id="mcb-${idx}" style="height:0;max-height:40px" title="${v.toLocaleString('fr')} kcal"></div>
+            <div class="pstats-mini-bar-lbl">S${idx + 1}</div>
+        </div>`;
+    }).join('');
+
+    // Anime après rendu
+    setTimeout(() => {
+        buckets.forEach((v, idx) => {
+            const el = document.getElementById(`mcb-${idx}`);
+            if (el) el.style.height = Math.max((v / maxV) * 40, 3) + 'px';
+        });
+    }, 500 + buckets.length * 30);
+}
+
+/**
+ * Anime l'aiguille et l'arc du gauge d'approbation.
+ */
+function animateGauge(pct) {
+    const arcEl    = document.getElementById('gauge-arc');
+    const needleEl = document.getElementById('gauge-needle');
+    const valEl    = document.getElementById('gauge-val');
+
+    const arcLen = 283; // longueur approx de l'arc demi-cercle r=90
+
+    setTimeout(() => {
+        if (arcEl) {
+            const fill = (pct / 100) * arcLen;
+            arcEl.setAttribute('stroke-dasharray', `${fill} ${arcLen}`);
+        }
+        if (needleEl) {
+            // angle : 0% = -90deg (gauche) → 100% = +90deg (droite)
+            const deg = -90 + (pct / 100) * 180;
+            needleEl.style.transform = `rotate(${deg}deg)`;
+        }
+        if (valEl) valEl.textContent = Math.round(pct) + '%';
+    }, 350);
+}
+
+/**
+ * Fonction principale appelée après chargement des données.
+ */
 function updateStats(data) {
-    // CORRECTION : garde-fou si data n'est pas un tableau
     if (!Array.isArray(data)) data = [];
 
-    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    setEl('stat-total',     data.length);
-    setEl('stat-quotidien', data.filter(d => d.type_budget === 'quotidien').length);
-    setEl('stat-hebdo',     data.filter(d => d.type_budget === 'hebdomadaire').length);
+    // ── Calculs ──────────────────────────────────────────────────────────
+    const total     = data.length;
+    const approuve  = data.filter(d => d.statut === 'approuve').length;
+    const attente   = data.filter(d => d.statut === 'en_attente').length;
+    const rejete    = data.filter(d => d.statut === 'rejete').length;
+    const quotidien = data.filter(d => d.type_budget === 'quotidien').length;
+    const hebdo     = data.filter(d => d.type_budget === 'hebdomadaire').length;
+
     const totalJours = data.reduce((s, d) => {
         return s + (d.type_duree === 'semaines' ? (parseInt(d.duree) || 0) * 7 : (parseInt(d.duree) || 0));
     }, 0);
-    setEl('stat-jours', totalJours);
+
+    const calAvg    = total > 0 ? Math.round(data.reduce((s, d) => s + (parseInt(d.calories) || 0), 0) / total) : 0;
+    const budgetAvg = total > 0 ? (data.reduce((s, d) => s + (parseFloat(d.budget) || 0), 0) / total).toFixed(1) : '0.0';
+    const dureeAvg  = total > 0 ? Math.round(totalJours / total) : 0;
+    const tauxApprob = total > 0 ? (approuve / total) * 100 : 0;
+
+    // ── KPI counters ─────────────────────────────────────────────────────
+    animateCounter('stat-total',      total);
+    animateCounter('stat-approuve',   approuve);
+    animateCounter('stat-en-attente', attente);
+    animateCounter('stat-jours',      totalJours);
+
+    // Maintient la compatibilité avec les IDs legacy si présents dans d'autres modules
+    const legacyQ = document.getElementById('stat-quotidien');
+    const legacyH = document.getElementById('stat-hebdo');
+    if (legacyQ) legacyQ.textContent = quotidien;
+    if (legacyH) legacyH.textContent = hebdo;
+
+    // ── Rings (progress circles sur les KPI) ─────────────────────────────
+    const maxJours = Math.max(totalJours, 365);
+    animateRing('ring-total',    Math.min((total    / 50)  * 100, 100));
+    animateRing('ring-approuve', total > 0 ? (approuve / total) * 100 : 0);
+    animateRing('ring-attente',  total > 0 ? (attente  / total) * 100 : 0);
+    animateRing('ring-jours',    Math.min((totalJours / maxJours) * 100, 100));
+
+    // ── Donut chart ───────────────────────────────────────────────────────
+    animateDonut(approuve, attente, rejete, total);
+
+    // ── Bar chart budget ──────────────────────────────────────────────────
+    animateBars(quotidien, hebdo);
+
+    // ── Mini bars calories ────────────────────────────────────────────────
+    animateMiniCalBars(data);
+
+    // ── Gauge taux d'approbation ──────────────────────────────────────────
+    animateGauge(tauxApprob);
+
+    // ── Stats secondaires ─────────────────────────────────────────────────
+    const setSec = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+    setSec('sec-cal-avg',    calAvg.toLocaleString('fr'));
+    setSec('sec-budget-avg', budgetAvg);
+    setSec('sec-duree-avg',  dureeAvg);
 }
 
 function renderPlanningTable() {
@@ -91,11 +311,84 @@ function renderPlanningTable() {
     // CORRECTION : garde-fou si planningAllData a ete corrompu
     if (!Array.isArray(planningAllData)) planningAllData = [];
 
-    const search = ((document.getElementById('planningSearchInput') || {}).value || '').toLowerCase();
-    const data   = planningAllData.filter(d => {
+    const searchInput = document.getElementById('planningSearchInput');
+    const searchFieldEl = document.getElementById('planningSearchField');
+    const searchVal   = searchInput  ? searchInput.value.trim()  : '';
+    const searchField = searchFieldEl ? searchFieldEl.value       : 'id';
+
+    // ── Filtrage statut + recherche ciblée sur le champ choisi ──────────
+    let data = planningAllData.filter(d => {
+        // filtre statut
         if (planningFiltre !== 'all' && d.statut !== planningFiltre) return false;
-        if (!search) return true;
-        return (d.id + ' ' + d.id_utilisateur + ' ' + d.calories + ' ' + (d.statut || '')).toLowerCase().includes(search);
+        // pas de recherche → tout passe
+        if (!searchVal) return true;
+
+        // Valeur brute du champ, toujours traitée comme string pour .includes()
+        let fieldVal;
+        switch (searchField) {
+            case 'id':
+                fieldVal = String(d.id ?? '');
+                break;
+            case 'budget':
+                // On retire les espaces/virgules pour robustesse, on compare les chiffres bruts
+                fieldVal = String(d.budget ?? '').replace(',', '.');
+                break;
+            case 'calories':
+                fieldVal = String(d.calories ?? '');
+                break;
+            default:
+                fieldVal = '';
+        }
+        return fieldVal.toLowerCase().includes(searchVal.toLowerCase());
+    });
+
+    // ── Synchroniser planningSort.col depuis le select avant de trier ────
+    const sortFieldEl = document.getElementById('planningSortField');
+    if (sortFieldEl && sortFieldEl.value) {
+        planningSort.col = sortFieldEl.value;
+    }
+
+    // ── Tri ──────────────────────────────────────────────────────────────
+    const col = planningSort.col;
+    const dir = planningSort.dir;
+
+    data = data.slice().sort((a, b) => {
+        let va, vb;
+        switch (col) {
+            case 'id':
+                va = parseInt(a.id, 10)  || 0;
+                vb = parseInt(b.id, 10)  || 0;
+                break;
+            case 'calories':
+                va = parseFloat(a.calories) || 0;
+                vb = parseFloat(b.calories) || 0;
+                break;
+            case 'budget':
+                va = parseFloat(a.budget) || 0;
+                vb = parseFloat(b.budget) || 0;
+                break;
+            case 'duree': {
+                const toJ = x => x.type_duree === 'semaines'
+                    ? (parseInt(x.duree, 10) || 0) * 7
+                    : (parseInt(x.duree, 10) || 0);
+                va = toJ(a); vb = toJ(b);
+                break;
+            }
+            case 'statut': {
+                const ord = { en_attente: 0, approuve: 1, rejete: 2 };
+                va = ord[a.statut] ?? 9;
+                vb = ord[b.statut] ?? 9;
+                break;
+            }
+            case 'date':
+                va = a.date_demande ? new Date(a.date_demande).getTime() : 0;
+                vb = b.date_demande ? new Date(b.date_demande).getTime() : 0;
+                break;
+            default:
+                va = 0; vb = 0;
+        }
+        if (va === vb) return 0;
+        return dir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
     });
 
     if (!data.length) {
@@ -446,6 +739,30 @@ window.setPlanningFilter   = function(f, el) {
     if (el) el.classList.add('active');
     renderPlanningTable();
 };
+
+// ── Tri via bouton dédié ──────────────────────────────────────────────────
+window.applySortPlanning = function() {
+    // Le select a déjà changé de valeur — renderPlanningTable() le relira
+    renderPlanningTable();
+};
+
+window.toggleSortDir = function() {
+    planningSort.dir = planningSort.dir === 'asc' ? 'desc' : 'asc';
+    _updateSortDirBtn();
+    renderPlanningTable();
+};
+
+function _updateSortDirBtn() {
+    const btn = document.getElementById('planningSortDirBtn');
+    if (!btn) return;
+    if (planningSort.dir === 'asc') {
+        btn.textContent = '↑ ASC';
+        btn.style.color = '#2ecc71';
+    } else {
+        btn.textContent = '↓ DESC';
+        btn.style.color = 'var(--violet, #a78bfa)';
+    }
+}
 
 // ── Auto-init ─────────────────────────────────────────────────────────────
 document.addEventListener('adminModuleLoaded', e => {

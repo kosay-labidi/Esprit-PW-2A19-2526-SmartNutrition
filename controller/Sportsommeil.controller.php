@@ -11,41 +11,39 @@ require_once __DIR__ . '/../controller/Demandeplanning.controller.php';
 
 class SportSommeilController {
 
-    // ── Bibliothèque interne de repas ───────────────────────────
-    // Clé = type_repas, valeur = tableau de repas avec calories et budget estimé
     private static array $BIBLIOTHEQUE = [
         'petit-dejeuner' => [
-            ['nom' => 'Yaourt nature + fruits rouges',     'cal' => 180, 'bud' => 1.20],
-            ['nom' => 'Oeufs brouillés + toast complet',  'cal' => 250, 'bud' => 1.80],
-            ['nom' => 'Avoine au lait + banane',           'cal' => 290, 'bud' => 1.50],
-            ['nom' => 'Smoothie épinards + pomme',         'cal' => 160, 'bud' => 1.60],
-            ['nom' => 'Pain complet + beurre de cacahuète','cal' => 320, 'bud' => 1.40],
-            ['nom' => 'Fromage blanc + miel + noix',       'cal' => 210, 'bud' => 1.70],
-            ['nom' => 'Crêpes légères + confiture',        'cal' => 280, 'bud' => 1.30],
+            ['nom' => 'Yaourt nature + fruits rouges',          'cal' => 180],
+            ['nom' => 'Smoothie épinards + pomme',              'cal' => 250],
+            ['nom' => 'Oeufs brouillés + toast complet',       'cal' => 350],
+            ['nom' => 'Avoine + banane + miel',                 'cal' => 450],
+            ['nom' => 'Pain complet + beurre de cacahuète',     'cal' => 520],
+            ['nom' => 'Granola + lait entier + fruits secs',    'cal' => 620],
+            ['nom' => 'Pancakes + sirop + oeufs brouillés',     'cal' => 750],
+            ['nom' => 'Bagel + cream cheese + saumon fumé',     'cal' => 850],
+            ['nom' => 'Oeufs bénédicte + pain brioché',        'cal' => 980],
+            ['nom' => 'Porridge protéiné + noix + beurre',     'cal' => 1100],
         ],
         'dejeuner' => [
-            ['nom' => 'Poulet grillé + riz basmati + brocoli',  'cal' => 520, 'bud' => 4.50],
-            ['nom' => 'Salade de thon + haricots verts',        'cal' => 380, 'bud' => 3.20],
-            ['nom' => 'Pâtes bolognaise maison',                'cal' => 560, 'bud' => 3.80],
-            ['nom' => 'Filet de poisson + légumes vapeur',      'cal' => 420, 'bud' => 5.00],
-            ['nom' => 'Quiche légumes + salade verte',          'cal' => 450, 'bud' => 3.50],
-            ['nom' => 'Couscous poulet + légumes',              'cal' => 580, 'bud' => 4.20],
-            ['nom' => 'Bowl saumon + avocat + quinoa',          'cal' => 490, 'bud' => 5.50],
+            ['nom' => 'Salade de thon + haricots verts',        'cal' => 380],
+            ['nom' => 'Poulet grillé + riz basmati + brocoli',  'cal' => 520],
+            ['nom' => 'Bowl saumon + quinoa + avocat',          'cal' => 650],
+            ['nom' => 'Pâtes bolognaise maison',                'cal' => 780],
+            ['nom' => 'Couscous poulet + légumes + pois chiches','cal' => 900],
+            ['nom' => 'Burger maison + frites four + salade',   'cal' => 1050],
+            ['nom' => 'Riz + poulet + légumes sautés + sauce',  'cal' => 1200],
+            ['nom' => 'Pâtes + viande hachée + fromage gratiné','cal' => 1400],
         ],
         'diner' => [
-            ['nom' => 'Soupe de légumes + pain complet',        'cal' => 280, 'bud' => 2.00],
-            ['nom' => 'Omelette aux légumes + salade',          'cal' => 320, 'bud' => 2.50],
-            ['nom' => 'Gratin de courgettes léger',             'cal' => 350, 'bud' => 2.80],
-            ['nom' => 'Salade composée protéinée',              'cal' => 300, 'bud' => 3.00],
-            ['nom' => 'Risotto aux champignons',                'cal' => 410, 'bud' => 3.20],
-            ['nom' => 'Wrap poulet + légumes rôtis',            'cal' => 370, 'bud' => 3.50],
-            ['nom' => 'Dhal de lentilles + riz',               'cal' => 390, 'bud' => 2.20],
+            ['nom' => 'Soupe de légumes + pain complet',        'cal' => 280],
+            ['nom' => 'Omelette aux légumes + salade verte',    'cal' => 380],
+            ['nom' => 'Risotto aux champignons',                'cal' => 500],
+            ['nom' => 'Wrap poulet + légumes rôtis',            'cal' => 630],
+            ['nom' => 'Gratin dauphinois + steak haché',        'cal' => 820],
+            ['nom' => 'Pizza maison + salade composée',         'cal' => 980],
+            ['nom' => 'Lasagnes maison + pain à l\'ail',        'cal' => 1200],
         ],
     ];
-
-    // ══════════════════════════════════════════════════════════
-    //  CRUD SPORTSOMMEIL
-    // ══════════════════════════════════════════════════════════
 
     public function addSportSommeil(SportSommeil $ss): int {
         try {
@@ -107,48 +105,27 @@ class SportSommeilController {
             return false;
         }
     }
-
-    // ══════════════════════════════════════════════════════════
-    //  GÉNÉRATION DU PLANNING COMPLET — appelée par le backend
-    //  après confirmation admin dans showDemandeplanning.php
-    // ══════════════════════════════════════════════════════════
-
-    /**
-     * Génère le planning COMPLET pour une demande :
-     * - Supprime d'abord les anciennes lignes (régénération propre)
-     * - Boucle sur N jours
-     * - 5 lignes par jour : 3 repas (bibliothèque) + 1 sport + 1 sommeil
-     *
-     * @param int $idDemande ID de la DemandePlanning
-     * @return array Les lignes générées pour affichage
-     */
     public function genererPlanningComplet(int $idDemande): array {
-        // 1. Récupérer la demande (calories, budget, duree, type_duree)
         $demandeCtrl = new DemandeplanningController();
         $demande     = $demandeCtrl->getDemandeById($idDemande);
         if (!$demande) {
             throw new RuntimeException("Demande #$idDemande introuvable.");
         }
 
-        // 2. Récupérer SportSommeil lié
         $ss = $this->getSportSommeilByDemande($idDemande);
         if (!$ss) {
             throw new RuntimeException("SportSommeil non trouvé pour la demande #$idDemande. Complétez d'abord l'étape 2.");
         }
 
-        // 3. Supprimer l'ancien planning (régénération propre)
         $this->deletePlanningByDemande($idDemande);
 
-        // 4. Calculer le nombre de jours
         $nbJours = (int) $demande['duree'];
         if ($demande['type_duree'] === 'semaines') {
             $nbJours *= 7;
         }
-
-        // 5. Boucle sur N jours
-        $dt          = new DateTime();
+        $dt           = new DateTime('today');
         $toutesLignes = [];
-        $indexJour   = 0; // Pour varier les repas de jour en jour
+        $indexJour    = 0;
 
         for ($i = 0; $i < $nbJours; $i++) {
             $date   = $dt->format('Y-m-d');
@@ -164,19 +141,12 @@ class SportSommeilController {
         return $toutesLignes;
     }
 
-    /**
-     * Construit 5 lignes pour un jour donné :
-     * 3 repas depuis bibliothèque interne + 1 sport + 1 sommeil
-     * Variation des repas selon $indexJour (rotation dans la bibliothèque)
-     */
     private function construireLignesDuJour(array $ss, array $demande, string $date, int $indexJour): array {
         $lignes    = [];
         $idDemande = (int) $demande['id'];
         $calories  = (int) $demande['calories'];
         $budget    = (float) $demande['budget'];
 
-        // ── 3 REPAS depuis bibliothèque interne ───────────────
-        // Répartition calorique : 25% PdJ / 40% Déj / 35% Dîner
         $repasTypes = [
             ['type' => 'petit-dejeuner', 'ratio_cal' => 0.25, 'ratio_bud' => 0.20],
             ['type' => 'dejeuner',       'ratio_cal' => 0.40, 'ratio_bud' => 0.45],
@@ -184,30 +154,25 @@ class SportSommeilController {
         ];
 
         foreach ($repasTypes as $rt) {
-            $type         = $rt['type'];
-            $calCible     = (int)($calories * $rt['ratio_cal']);
-            $budCible     = round($budget * $rt['ratio_bud'], 2);
-            $repas        = $this->choisirRepas($type, $calCible, $indexJour);
-            $nomRepas     = $repas['nom'];
-            $calRepas     = $repas['cal'];
-            $budRepas     = $repas['bud'];
-
-            $desc = "{$nomRepas} | {$calRepas} kcal | {$budRepas} EUR";
+            $type     = $rt['type'];
+            $calCible = (int)($calories * $rt['ratio_cal']);
+            $budCible = round($budget * $rt['ratio_bud'], 2);
+            $repas    = $this->choisirRepas($type, $calCible, $budCible, $indexJour);
+            $desc     = "{$repas['nom']} | {$repas['cal']} kcal | {$budCible} EUR";
             $lignes[] = new Planning(null, $idDemande, $date, 'repas', $desc);
         }
 
-        // ── SPORT ─────────────────────────────────────────────
-        $minParJour   = (int) round((int)$ss['duree_sport_hebdo'] / 7);
-        $h            = intdiv($minParJour, 60);
-        $m            = $minParJour % 60;
-        $dureeLabel   = $h > 0 ? ($m > 0 ? "{$h}h{$m}min" : "{$h}h") : "{$minParJour}min";
-        $activite     = htmlspecialchars($ss['activite_sportive'], ENT_QUOTES, 'UTF-8');
-        $lignes[]     = new Planning(null, $idDemande, $date, 'sport', "{$activite} — {$dureeLabel}");
+        // SPORT
+        $minParJour = (int) round((int)$ss['duree_sport_hebdo'] / 7);
+        $h          = intdiv($minParJour, 60);
+        $m          = $minParJour % 60;
+        $dureeLabel = $h > 0 ? ($m > 0 ? "{$h}h{$m}min" : "{$h}h") : "{$minParJour}min";
+        $activite   = htmlspecialchars($ss['activite_sportive'], ENT_QUOTES, 'UTF-8');
+        $lignes[]   = new Planning(null, $idDemande, $date, 'sport', "{$activite} — {$dureeLabel}");
 
-        // ── SOMMEIL ───────────────────────────────────────────
+        // SOMMEIL
         $coucher      = substr($ss['heure_coucher'], 0, 5);
         $reveil       = substr($ss['heure_reveil'],  0, 5);
-        // Calcul durée sommeil
         [$hC, $mC]    = array_map('intval', explode(':', $coucher));
         [$hR, $mR]    = array_map('intval', explode(':', $reveil));
         $minC         = $hC * 60 + $mC;
@@ -216,32 +181,29 @@ class SportSommeilController {
         $dureeSommeil = round(($minR - $minC) / 60, 1);
         $lignes[]     = new Planning(null, $idDemande, $date, 'sommeil', "{$coucher} - {$reveil} ({$dureeSommeil}h)");
 
-        return $lignes; // 5 lignes : 3 repas + 1 sport + 1 sommeil
+        return $lignes;
     }
 
-    /**
-     * Choisit un repas dans la bibliothèque interne.
-     * Rotation selon $indexJour pour varier chaque jour.
-     * Futur : remplacer par une requête SQL vers table repas du module ami.
-     */
-    private function choisirRepas(string $type, int $calCible, int $indexJour): array {
+    private function choisirRepas(string $type, int $calCible, float $budCible, int $indexJour): array {
         $liste = self::$BIBLIOTHEQUE[$type] ?? [];
         if (empty($liste)) {
-            return ['nom' => ucfirst($type) . ' à définir', 'cal' => $calCible, 'bud' => 0];
+            return ['nom' => ucfirst($type) . ' à définir', 'cal' => $calCible];
         }
-        // Rotation simple : jour 0 → repas[0], jour 1 → repas[1], etc.
-        $index = $indexJour % count($liste);
-        return $liste[$index];
+
+        // Trier par proximité calorique
+        usort($liste, function($a, $b) use ($calCible) {
+            return abs($a['cal'] - $calCible) - abs($b['cal'] - $calCible);
+        });
+
+        // Rotation sur les 3 meilleurs
+        $topN  = min(3, count($liste));
+        $repas = $liste[$indexJour % $topN];
+
+        return [
+            'nom' => $repas['nom'],
+            'cal' => $repas['cal'],
+        ];
     }
-
-    // ══════════════════════════════════════════════════════════
-    //  LECTURE — JOINTURE (workshop)
-    // ══════════════════════════════════════════════════════════
-
-    /**
-     * Jointure planning + demandeplanning + sportsommeil
-     * Retourne toutes les lignes enrichies pour affichage tableau
-     */
     public function getPlanningCompletByDemande(int $idDemande): array {
         try {
             $db   = config::getConnexion();
@@ -264,8 +226,8 @@ class SportSommeilController {
                     ss.heure_reveil,
                     ss.qualite_sommeil
                 FROM planning p
-                INNER JOIN demandeplanning d  ON d.id          = p.id_demande
-                LEFT  JOIN sportsommeil   ss ON ss.id_demande  = p.id_demande
+                INNER JOIN demandeplanning d  ON d.id         = p.id_demande
+                LEFT  JOIN sportsommeil   ss ON ss.id_demande = p.id_demande
                 WHERE p.id_demande = :id_demande
                 ORDER BY p.date ASC,
                          FIELD(p.type_activite, 'repas', 'sport', 'sommeil')
@@ -277,10 +239,6 @@ class SportSommeilController {
         }
     }
 
-    /**
-     * Regroupe les lignes par date → tableau hebdomadaire
-     * Structure : [ 'YYYY-MM-DD' => [ 'repas'=>[], 'sport'=>[], 'sommeil'=>[] ] ]
-     */
     public function getPlanningGroupeParDate(int $idDemande): array {
         $lignes  = $this->getPlanningCompletByDemande($idDemande);
         $groupes = [];

@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 require_once __DIR__ . '/../../../controller/user.controller.php';
-require_once __DIR__ . '/../../../controller/Passwordreset.controller.php';  // Modifier cette ligne
+require_once __DIR__ . '/../../../controller/Passwordreset.controller.php';
 $body  = json_decode(file_get_contents('php://input'), true);
 $email = trim($body['email'] ?? '');
 
@@ -29,14 +29,18 @@ if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit();
 }
 
-// Réponse neutre pour ne pas révéler quels emails existent
-$ok = ['success' => true, 'message' => 'Si un compte correspond à cette adresse, vous recevrez un email dans quelques minutes.'];
-
 $userCtrl  = new UserController();
 $resetCtrl = new PasswordResetController();
 
 $user = $userCtrl->getUserByEmail($email);
-if (!$user) { echo json_encode($ok); exit(); }
+
+// ✅ OPTION 1 : Vérification stricte - email doit exister
+if (!$user) {
+    echo json_encode(['success' => false, 'message' => '❌ Aucun compte trouvé avec cette adresse email.']);
+    exit();
+}
+
+
 
 $token = $resetCtrl->createResetToken($email);
 if (!$token) {
@@ -47,4 +51,5 @@ if (!$token) {
 $name = trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? ''));
 $resetCtrl->sendResetEmail($email, $token, $name);
 
-echo json_encode($ok);
+echo json_encode(['success' => true, 'message' => '✓ Email envoyé ! Vérifiez votre boîte de réception.']);
+?>

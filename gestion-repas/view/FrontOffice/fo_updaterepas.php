@@ -1,10 +1,5 @@
 <?php
-/* ============================================================
-   view/FrontOffice/updaterepas.php — UPDATE d'un repas (MVC)
-   RÔLE : Formulaire de modification d'un repas existant.
-          Pré-remplit les données actuelles du repas et les
-          aliments déjà sélectionnés (via la jointure).
-   ============================================================ */
+
 
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../model/repas_model.php';

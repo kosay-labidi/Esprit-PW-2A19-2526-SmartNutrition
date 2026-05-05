@@ -1,18 +1,65 @@
 <?php
 
-require_once __DIR__ . '/../model/aliment.php';
+require_once __DIR__ . '/../config.php';
 
-$alimentModel = new Aliment();
+/* ============================================================
+   FONCTIONS SQL — Aliment (requêtes dans le Controller)
+   ============================================================ */
+
+function aliment_create($pdo, $data) {
+    $sql = "INSERT INTO aliments (nom, type, categorie, calories, proteines, glucides, lipides, fibres, sucre, sodium, vitamines, co2, label_ecologique, prix, origine, allergenes) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        $data['nom'], $data['type'], $data['categorie'], $data['calories'],
+        $data['proteines'], $data['glucides'], $data['lipides'], $data['fibres'],
+        $data['sucre'], $data['sodium'], $data['vitamines'], $data['co2'],
+        $data['label_ecologique'], $data['prix'], $data['origine'], $data['allergenes']
+    ]);
+    return $pdo->lastInsertId();
+}
+
+function aliment_getAll($pdo) {
+    $stmt = $pdo->query("SELECT * FROM aliments ORDER BY nom ASC");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function aliment_getById($pdo, $id) {
+    $stmt = $pdo->prepare("SELECT * FROM aliments WHERE id_aliment = ?");
+    $stmt->execute([$id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function aliment_update($pdo, $id, $data) {
+    $sql = "UPDATE aliments SET nom=?, type=?, categorie=?, calories=?, proteines=?, glucides=?, lipides=?, fibres=?, sucre=?, sodium=?, vitamines=?, co2=?, label_ecologique=?, prix=?, origine=?, allergenes=? WHERE id_aliment=?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        $data['nom'], $data['type'], $data['categorie'], $data['calories'],
+        $data['proteines'], $data['glucides'], $data['lipides'], $data['fibres'],
+        $data['sucre'], $data['sodium'], $data['vitamines'], $data['co2'],
+        $data['label_ecologique'], $data['prix'], $data['origine'], $data['allergenes'],
+        $id
+    ]);
+}
+
+function aliment_delete($pdo, $id) {
+    $stmt = $pdo->prepare("DELETE FROM aliments WHERE id_aliment = ?");
+    $stmt->execute([$id]);
+}
+
+/* ============================================================
+   ROUTING — Traitement des requêtes POST/GET
+   ============================================================ */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = $_POST;
 
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'create') {
-            $alimentModel->create($data);
+            aliment_create($pdo, $data);
             header("Location: ../view/BackOffice/bo_alimentlist.php?success=created");
         } elseif ($_POST['action'] === 'update') {
-            $alimentModel->update($_POST['id_aliment'], $data);
+            aliment_update($pdo, $_POST['id_aliment'], $data);
             header("Location: ../view/BackOffice/bo_alimentlist.php?success=updated");
         }
     }
@@ -20,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if (isset($_GET['action']) && $_GET['action'] === 'delete') {
-    $alimentModel->delete($_GET['id']);
+    aliment_delete($pdo, $_GET['id']);
     header("Location: ../view/BackOffice/bo_alimentlist.php?success=deleted");
     exit;
 }

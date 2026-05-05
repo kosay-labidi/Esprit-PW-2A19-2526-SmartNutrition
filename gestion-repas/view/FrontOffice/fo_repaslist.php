@@ -1,12 +1,5 @@
 <?php
 /* ================================================================
-   view/FrontOffice/fo_repaslist.php — FRONT OFFICE Repas
-   ARCHITECTURE MVC :
-     Model      : model/repas_model.php + model/aliment.php
-     View       : ce fichier
-     Controller : controller/repascontroller.php
-     Helpers    : helpers/aliment_helpers.php
-                  helpers/repas_helpers.php  ← FONCTIONNALITÉS INNOVANTES
 
    ┌──────────────────────────────────────────────────────────────┐
    │  SECTION A — CRUD (opérations sur la BDD)                   │
@@ -24,30 +17,32 @@
    ================================================================ */
 
 
-/* ════════════════════════════════════════════════════════════════
-   SECTION 1 — DÉPENDANCES
-   ════════════════════════════════════════════════════════════════ */
-require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/../../model/repas_model.php';
-require_once __DIR__ . '/../../model/aliment.php';
+
 require_once __DIR__ . '/../../helpers/aliment_helpers.php';
-/* Helpers des fonctionnalités innovantes */
 require_once __DIR__ . '/../../helpers/repas_helpers.php';
 
-$repasModel   = new Repas();
-$alimentModel = new Aliment();
 
-
-/* ════════════════════════════════════════════════════════════════
-   SECTION 2 — DONNÉES (appels Model → BDD)
-   ════════════════════════════════════════════════════════════════ */
-$mesRepas  = $repasModel->getAllByUser(1);
-$aliments  = $alimentModel->getAll();
-$success   = $_GET['success'] ?? '';
-$error     = urldecode($_GET['error'] ?? '');
-
-/* Préparer les données JSON des aliments pour le JS (Fonctionnalité 1&2) */
-$alimentsJson = json_encode(array_column($aliments, null, 'id_aliment'));
+if (!isset($mesRepas)) {
+    /* Fallback : accès direct à la vue → on passe par le Controller */
+    require_once __DIR__ . '/../../config.php';
+    require_once __DIR__ . '/../../model/repas_model.php';
+    require_once __DIR__ . '/../../model/aliment.php';
+    $repasModel   = new Repas();
+    $alimentModel = new Aliment();
+    $mesRepas     = $repasModel->getAllByUser(1);
+    $aliments     = $alimentModel->getAll();
+    $repaDetails  = [];
+    foreach ($mesRepas as $r) {
+        $id = (int)$r['id_repas'];
+        $repaDetails[$id] = [
+            'aliments' => $repasModel->getAlimentsOfRepas($id),
+            'totaux'   => $repasModel->getTotauxNutritionnels($id),
+        ];
+    }
+    $success  = $_GET['success'] ?? '';
+    $error    = urldecode($_GET['error'] ?? '');
+    $alimentsJson = json_encode(array_column($aliments, null, 'id_aliment'));
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -658,10 +653,12 @@ function updateQuantitesList() {
     list.innerHTML = keys.map(id => `
         <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:11px;color:var(--vert);font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${selected[id]}</span>
-            <input type="number" name="quantites[${id}]" value="100" min="1" max="2000"
-                   onchange="analyseTempsReel()"
-                   style="width:70px;padding:4px 8px;border-radius:8px;border:1.5px solid #e8e0d8;font-size:12px;text-align:center;" placeholder="g">
+            <input type="number" name="quantites[${id}]" value="100"
+                   onchange="validerQuantite(this,'qte_err_${id}'); analyseTempsReel();"
+                   id="qte_${id}"
+                   style="width:70px;padding:4px 8px;border-radius:8px;border:1.5px solid #e8e0d8;font-size:12px;text-align:center;">
             <span style="font-size:10px;color:#9ca3af;">g</span>
+            <span id="qte_err_${id}" style="font-size:10px;color:#8a2020;display:none;font-weight:600;" title="Entre 1 et 2000 g">!</span>
         </div>
     `).join('');
 }
@@ -935,23 +932,89 @@ function onDateChange() {
 }
 
 /* ── CRUD : Validation et soumission du formulaire ────────────── */
+/* ────────────────────────────────────────────────────────────
+   CONTRÔLE DE SAISIE — Validation JS (sans attributs HTML5)
+   Règle : pas de required / min / max dans le HTML.
+   Tout le contrôle se fait ici en JavaScript.
+   ─────────────────────────────────────────────────────────── */
+
+/**
+ * validerQuantite() — Valide une quantité saisie (1 à 2000 g)
+ * Appelée à chaque changement d'un champ quantité.
+ * Affiche un indicateur rouge "!" si la valeur est invalide.
+ */
+function validerQuantite(input, errId) {
+    const val = parseFloat(input.value);
+    const err = document.getElementById(errId);
+    const invalid = isNaN(val) || val < 1 || val > 2000;
+    if (invalid) {
+        input.style.borderColor = '#c09090';
+        input.style.background  = '#fdf5f5';
+        if (err) { err.style.display = 'inline'; err.title = 'Valeur entre 1 et 2000 g'; }
+    } else {
+        input.style.borderColor = '#e8e0d8';
+        input.style.background  = 'white';
+        if (err) err.style.display = 'none';
+    }
+    return !invalid;
+}
+
+/**
+ * validateAndCreate() — Validation complète du formulaire
+ * Vérifie : nom, date, sélection d'aliments, quantités.
+ * Sans aucun attribut HTML5 (required, min, max).
+ */
 function validateAndCreate() {
     let valid = true;
+
+    /* Utilitaire : marque/démarque un champ en erreur */
     function setErr(id, errId, show) {
         const el=document.getElementById(id), er=document.getElementById(errId);
         if(!el||!er) return;
         if(show){ el.classList.add('error'); er.classList.add('show'); valid=false; }
         else    { el.classList.remove('error'); er.classList.remove('show'); }
     }
-    setErr('f_nom',  'e_nom',  document.getElementById('f_nom').value.trim().length < 2);
-    setErr('f_date', 'e_date', !document.getElementById('f_date').value);
+
+    /* 1. Nom du repas : obligatoire, minimum 2 caractères */
+    const nom = document.getElementById('f_nom').value.trim();
+    setErr('f_nom', 'e_nom', nom.length < 2);
+
+    /* 2. Date du repas : obligatoire */
+    const date = document.getElementById('f_date').value;
+    setErr('f_date', 'e_date', !date || date.trim() === '');
+
+    /* 3. Aliments : au moins un sélectionné */
     const hasAlim = Object.keys(selected).length > 0;
-    document.getElementById('e_alim').style.display = hasAlim ? 'none' : 'block';
-    if (!hasAlim) valid = false;
-    if (valid) document.getElementById('createRepasForm').submit();
-    else {
+    const eAlim   = document.getElementById('e_alim');
+    if (!hasAlim) { eAlim.style.display = 'block'; valid = false; }
+    else            eAlim.style.display = 'none';
+
+    /* 4. Quantités : chaque aliment sélectionné doit avoir
+          une quantité valide entre 1 et 2000 grammes.
+          (validation purement JS, aucun attribut HTML5) */
+    let qtesValides = true;
+    Object.keys(selected).forEach(id => {
+        const input = document.querySelector(`input[name="quantites[${id}]"]`);
+        const errId = `qte_err_${id}`;
+        if (input) {
+            const ok = validerQuantite(input, errId);
+            if (!ok) { qtesValides = false; valid = false; }
+        }
+    });
+
+    if (!qtesValides) {
+        /* Afficher un message global pour les quantités */
+        const eAlim = document.getElementById('e_alim');
+        eAlim.textContent = 'Vérifiez les quantités (entre 1 et 2000 g par aliment).';
+        eAlim.style.display = 'block';
+    }
+
+    /* Soumission si tout est valide */
+    if (valid) {
+        document.getElementById('createRepasForm').submit();
+    } else {
         const first = document.querySelector('.fi.error');
-        if (first) first.scrollIntoView({behavior:'smooth',block:'center'});
+        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
 

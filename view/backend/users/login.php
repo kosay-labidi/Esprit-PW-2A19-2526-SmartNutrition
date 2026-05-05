@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $body      = json_decode(file_get_contents('php://input'), true);
 $email     = trim($body['email'] ?? '');
 $mdp       = $body['mdp'] ?? '';
-$rememberMe = !empty($body['remember_me']); // ← nouveau
+$rememberMe = !empty($body['remember_me']);
 
 if ($email === '' || $mdp === '') {
     echo json_encode(['success' => false, 'message' => 'Email et mot de passe requis']);
@@ -31,17 +31,22 @@ $result = $userC->login($email, $mdp);
 
 switch ($result['status']) {
     case 'ok':
-        $_SESSION['user'] = $result['data'];
+        // ✅ CRÉER LA SESSION ICI
+        $_SESSION['user'] = [
+            'id_utilisateur' => $result['data']['id_utilisateur'],
+            'nom' => $result['data']['nom'],
+            'prenom' => $result['data']['prenom'],
+            'email' => $result['data']['email'],
+            'role' => $result['data']['role']
+        ];
 
-        // ── REMEMBER ME ──────────────────────────────────────────────
         if ($rememberMe) {
-            $token   = bin2hex(random_bytes(32));          // 64 chars hex
+            $token   = bin2hex(random_bytes(32));
             $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
             $userId  = $result['data']['id_utilisateur'];
 
             $userC->saveRememberToken($userId, $token, $expires);
 
-            // Cookie sécurisé, 30 jours
             setcookie(
                 'remember_token',
                 $token,
@@ -50,11 +55,9 @@ switch ($result['status']) {
                     'path'     => '/',
                     'httponly' => true,
                     'samesite' => 'Lax',
-                    // 'secure' => true, // activer en HTTPS
                 ]
             );
         }
-        // ─────────────────────────────────────────────────────────────
 
         echo json_encode(['success' => true, 'data' => $result['data']]);
         break;
@@ -70,3 +73,4 @@ switch ($result['status']) {
     default:
         echo json_encode(['success' => false, 'message' => 'Erreur serveur']);
 }
+?>

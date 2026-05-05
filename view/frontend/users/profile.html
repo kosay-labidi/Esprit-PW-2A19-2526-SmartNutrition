@@ -106,7 +106,7 @@
     border-radius: 50px;
     padding: 6px 14px;
     color: var(--text);
-    cursor: none;
+    cursor: pointer;
     font-size: .82rem;
     transition: all .3s;
     backdrop-filter: blur(10px);
@@ -124,7 +124,7 @@
     border-radius: 50px;
     padding: 6px 16px;
     color: var(--text);
-    cursor: none;
+    cursor: pointer;
     text-decoration: none;
     font-size: .85rem;
     transition: all .3s;
@@ -295,13 +295,13 @@
     margin-top: 8px;
     width: 100%;
   }
-  
+
   .strength-bars {
     display: flex;
     gap: 8px;
     margin-bottom: 6px;
   }
-  
+
   .bar {
     flex: 1;
     height: 6px;
@@ -309,22 +309,22 @@
     border-radius: 6px;
     transition: background 0.2s ease, box-shadow 0.2s;
   }
-  
+
   .bar.active.weak {
     background: #e74c3c;
     box-shadow: 0 0 6px #e74c3c;
   }
-  
+
   .bar.active.medium {
     background: #f39c12;
     box-shadow: 0 0 6px #f39c12;
   }
-  
+
   .bar.active.strong {
     background: #2ecc71;
     box-shadow: 0 0 6px #2ecc71;
   }
-  
+
   .strength-text {
     font-size: 0.7rem;
     text-transform: uppercase;
@@ -333,7 +333,7 @@
     color: var(--muted);
     transition: color 0.3s;
   }
-  
+
   .strength-text.weak { color: #e74c3c; }
   .strength-text.medium { color: #f39c12; }
   .strength-text.strong { color: #2ecc71; }
@@ -350,7 +350,7 @@
     border: none;
     border-radius: 50px;
     font-weight: 600;
-    cursor: none;
+    cursor: pointer;
     transition: all 0.3s ease;
     font-size: 0.9rem;
     letter-spacing: 0.5px;
@@ -548,45 +548,45 @@
     .navbar {
       padding: 0.5rem 1rem;
     }
-    
+
     .nav-logo-text {
       font-size: 1rem;
     }
-    
+
     .nav-actions {
       gap: 8px;
     }
-    
+
     #theme-toggle, .btn-back {
       padding: 4px 10px;
       font-size: 0.75rem;
     }
-    
+
     .profile-container {
       padding-top: 80px;
     }
-    
+
     .profile-wrapper {
       width: 95%;
     }
-    
+
     .form-row {
       grid-template-columns: 1fr;
       gap: 1rem;
     }
-    
+
     .btn-group {
       flex-direction: column;
     }
-    
+
     .profile-header {
       padding: 1rem 1.5rem;
     }
-    
+
     .profile-header h1 {
       font-size: 1.3rem;
     }
-    
+
     .profile-form {
       padding: 1.5rem;
     }
@@ -712,43 +712,78 @@
 
 <script>
   /* ═══════════════════════════════════════════════════
-     INDICATEUR DE FORCE DU MOT DE PASSE (6 BARRES)
-     ACCEPTE UNIQUEMENT LES MOTS DE PASSE FORTS (score >= 5)
+     ÉTAT GLOBAL
+     currentUserId est la SEULE source de vérité pour l'ID.
+     Il est alimenté par loadUserProfile() via auto_login.php.
   ═══════════════════════════════════════════════════ */
+  let currentUserId = null;
 
-  // Fonction d'évaluation du mot de passe (score sur 6)
+  /* ═══════════════════════════════════════════════════
+     UTILITAIRES
+  ═══════════════════════════════════════════════════ */
+  function getBaseUrl() {
+    return 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition';
+  }
+
+  function showMessage(msg, type) {
+    const msgDiv = document.getElementById('messageArea');
+    msgDiv.textContent = msg;
+    msgDiv.className = `message ${type}`;
+    msgDiv.style.display = 'block';
+    msgDiv.style.opacity = '1';
+
+    setTimeout(() => {
+      msgDiv.style.opacity = '0';
+      setTimeout(() => {
+        msgDiv.style.display = 'none';
+        msgDiv.style.opacity = '1';
+      }, 300);
+    }, 5000);
+  }
+
+  function openDeleteModal() {
+    document.getElementById('deleteModal').classList.add('active');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+  }
+
+  function goBackToUsers() {
+    window.location.href = getBaseUrl() + '/view/frontend/dashboard.html';
+  }
+
+  /* ═══════════════════════════════════════════════════
+     INDICATEUR DE FORCE DU MOT DE PASSE (6 BARRES)
+     Accepte uniquement les mots de passe forts (score >= 5)
+  ═══════════════════════════════════════════════════ */
   function evaluatePasswordStrength(password) {
     let score = 0;
     if (!password) return 0;
-    
-    // Longueur : 0-5:0, 6-7:1, >=8:2
+
     if (password.length >= 8) score += 2;
     else if (password.length >= 6) score += 1;
-    
-    if (/[0-9]/.test(password)) score += 1;       // chiffre
-    if (/[a-z]/.test(password)) score += 1;       // minuscule
-    if (/[A-Z]/.test(password)) score += 1;       // majuscule
+
+    if (/[0-9]/.test(password))       score += 1; // chiffre
+    if (/[a-z]/.test(password))       score += 1; // minuscule
+    if (/[A-Z]/.test(password))       score += 1; // majuscule
     if (/[^a-zA-Z0-9]/.test(password)) score += 1; // symbole spécial
-    
+
     return Math.min(score, 6);
   }
 
-  // Mise à jour de l'affichage des barres
   function updateStrengthIndicator(password) {
     const score = evaluatePasswordStrength(password);
     const bars = document.querySelectorAll('#strengthBars .bar');
     const strengthTextEl = document.getElementById('strengthText');
-    
-    if (!bars.length) return;
-    
-    // Reset classes
-    bars.forEach(bar => {
-      bar.classList.remove('active', 'weak', 'medium', 'strong');
-    });
-    
-    // Déterminer le type de force
+
+    if (!bars.length) return score;
+
+    bars.forEach(bar => bar.classList.remove('active', 'weak', 'medium', 'strong'));
+
     let strengthType = 'weak';
     let label = 'TRÈS FAIBLE';
+
     if (score >= 5) {
       strengthType = 'strong';
       label = 'FORT ✅ - Accepté';
@@ -761,191 +796,97 @@
     } else {
       label = 'SAISIR UN MOT DE PASSE';
     }
-    
-    // Activer les barres selon le score
+
     for (let i = 0; i < score; i++) {
-      if (bars[i]) {
-        bars[i].classList.add('active', strengthType);
-      }
+      if (bars[i]) bars[i].classList.add('active', strengthType);
     }
-    
-    // Changer le texte
+
     strengthTextEl.textContent = label;
     strengthTextEl.classList.remove('weak', 'medium', 'strong');
-    if (score >= 5) strengthTextEl.classList.add('strong');
+    if (score >= 5)      strengthTextEl.classList.add('strong');
     else if (score >= 3) strengthTextEl.classList.add('medium');
     else if (score >= 1) strengthTextEl.classList.add('weak');
-    
+
     return score;
   }
 
-  // ==================== SCROLL NAVBAR ====================
-  window.addEventListener('scroll', () => {
-    const navbar = document.getElementById('navbar');
-    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 40);
-  });
+  /* ═══════════════════════════════════════════════════
+     VALIDATION DU FORMULAIRE
+  ═══════════════════════════════════════════════════ */
+  function isFormValid() {
+    const new_password     = document.getElementById('new_password').value;
+    const confirm_password = document.getElementById('confirm_password').value;
+    const old_password     = document.getElementById('old_password').value;
 
-  // ==================== CURSEUR PERSONNALISÉ ====================
-  (function(){
-    const cur = document.getElementById('cursor');
-    const trail = document.getElementById('cursor-trail');
-    if(!cur || !trail) return;
-    let mx = 0, my = 0, tx = 0, ty = 0;
-    document.addEventListener('mousemove', e => {
-      mx = e.clientX;
-      my = e.clientY;
-      cur.style.left = mx + 'px';
-      cur.style.top = my + 'px';
-    });
-    (function loop(){
-      tx += (mx - tx) * 0.12;
-      ty += (my - ty) * 0.12;
-      trail.style.left = tx + 'px';
-      trail.style.top = ty + 'px';
-      requestAnimationFrame(loop);
-    })();
-    
-    const interactiveElements = 'button, .btn-back, .btn, input, select';
-    document.querySelectorAll(interactiveElements).forEach(el => {
-      el.addEventListener('mouseenter', () => cur.classList.add('hover'));
-      el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
-    });
-  })();
+    if (!new_password) return true;          // pas de nouveau mdp → ok
+    if (!old_password) return false;         // nouveau mdp sans ancien → ko
+    if (evaluatePasswordStrength(new_password) < 5) return false; // trop faible
+    if (new_password !== confirm_password)   return false;         // confirmation différente
 
-  // ==================== GESTION DU THÈME ====================
-  function initTheme() {
-    const btn = document.getElementById('theme-toggle');
-    const html = document.documentElement;
-    const saved = localStorage.getItem('gaialumen-theme') || 'dark';
-    
-    html.setAttribute('data-theme', saved);
-    if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
-    
-    if (btn) {
-      btn.addEventListener('click', () => {
-        const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', n);
-        localStorage.setItem('gaialumen-theme', n);
-        btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
-      });
-    }
-  }
-  initTheme();
-
-  // ==================== GESTION UTILISATEUR ====================
-  let currentUserId = null;
-
-  function getCurrentUserId() {
-    let userId = sessionStorage.getItem('user_id');
-    if (!userId) {
-      userId = localStorage.getItem('user_id');
-    }
-    if (!userId) {
-      return null;
-    }
-    return parseInt(userId);
+    return true;
   }
 
-  function getBaseUrl() {
-    return 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition';
+  function updateSubmitButtonState() {
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) submitBtn.disabled = !isFormValid();
   }
 
+  /* ═══════════════════════════════════════════════════
+     CHARGEMENT DU PROFIL
+     ✅ Remplit currentUserId depuis la session PHP.
+  ═══════════════════════════════════════════════════ */
   async function loadUserProfile() {
-    const userId = getCurrentUserId();
-    if (!userId) {
+    try {
+      const response = await fetch(getBaseUrl() + '/view/backend/users/auto_login.php', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+
+      console.log('loadUserProfile - auto_login response:', data);
+
+      if (data.success && data.data) {
+        // ✅ Stocker l'ID dans la variable globale (SEULE SOURCE DE VÉRITÉ)
+        currentUserId = data.data.id_utilisateur;
+        console.log('✅ Profil chargé depuis session, ID:', currentUserId);
+
+        // Remplir le formulaire
+        document.getElementById('nom').value    = data.data.nom    || '';
+        document.getElementById('prenom').value = data.data.prenom || '';
+        document.getElementById('email').value  = data.data.email  || '';
+        return;
+      }
+
       showMessage("Vous n'êtes pas connecté. Redirection vers la page de connexion...", "error");
       setTimeout(() => {
         window.location.href = getBaseUrl() + '/view/frontend/login.html';
       }, 2000);
-      return;
-    }
-    
-    try {
-      const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php?action=get&id=' + userId, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (!response.ok) {
-        throw new Error('HTTP error ' + response.status);
-      }
-      
-      const data = await response.json();
-      if (data.success) {
-        document.getElementById('nom').value = data.user.nom || '';
-        document.getElementById('prenom').value = data.user.prenom || '';
-        document.getElementById('email').value = data.user.email || '';
-        currentUserId = data.user.id;
-      } else {
-        if (data.message === "Utilisateur non trouvé") {
-          sessionStorage.removeItem('user_id');
-          localStorage.removeItem('user_id');
-          showMessage("Session expirée. Veuillez vous reconnecter.", "error");
-          setTimeout(() => {
-            window.location.href = getBaseUrl() + '/view/frontend/login.html';
-          }, 2000);
-        } else {
-          showMessage(data.message || "Erreur de chargement", "error");
-        }
-      }
+
     } catch (error) {
       console.error("Erreur chargement profil:", error);
       showMessage("Impossible de charger le profil. Vérifiez que le serveur est accessible.", "error");
     }
   }
 
-  // Fonction pour vérifier la validité du formulaire (mot de passe fort si nouveau mot de passe fourni)
-  function isFormValid() {
-    const new_password = document.getElementById('new_password').value;
-    const confirm_password = document.getElementById('confirm_password').value;
-    const old_password = document.getElementById('old_password').value;
-    
-    // Si aucun nouveau mot de passe, pas besoin de vérifier la force
-    if (!new_password) {
-      return true;
-    }
-    
-    // Vérifier que l'ancien mot de passe est rempli
-    if (!old_password) {
-      return false;
-    }
-    
-    // Vérifier la force du mot de passe (doit être >= 5)
-    const score = evaluatePasswordStrength(new_password);
-    if (score < 5) {
-      return false;
-    }
-    
-    // Vérifier la confirmation
-    if (new_password !== confirm_password) {
-      return false;
-    }
-    
-    return true;
-  }
-
-  // Mettre à jour l'état du bouton
-  function updateSubmitButtonState() {
-    const submitBtn = document.getElementById('submitBtn');
-    if (submitBtn) {
-      submitBtn.disabled = !isFormValid();
-    }
-  }
-
+  /* ═══════════════════════════════════════════════════
+     MISE À JOUR DU PROFIL
+     ✅ Utilise currentUserId directement (pas de fonction async).
+  ═══════════════════════════════════════════════════ */
   async function updateProfile(event) {
     event.preventDefault();
 
-    const userId = getCurrentUserId();
-    if (!userId) {
+    // ✅ FIX PRINCIPAL : utiliser directement currentUserId
+    if (!currentUserId) {
       showMessage("Vous n'êtes pas connecté", "error");
       return false;
     }
 
-    const nom = document.getElementById('nom').value.trim();
-    const prenom = document.getElementById('prenom').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const old_password = document.getElementById('old_password').value;
-    const new_password = document.getElementById('new_password').value;
+    const nom             = document.getElementById('nom').value.trim();
+    const prenom          = document.getElementById('prenom').value.trim();
+    const email           = document.getElementById('email').value.trim();
+    const old_password    = document.getElementById('old_password').value;
+    const new_password    = document.getElementById('new_password').value;
     const confirm_password = document.getElementById('confirm_password').value;
 
     if (!nom || !prenom || !email) {
@@ -968,7 +909,6 @@
       return false;
     }
 
-    // ✅ NOUVEAU: Vérifier que le nouveau mot de passe est FORT (score >= 5)
     if (new_password) {
       const score = evaluatePasswordStrength(new_password);
       if (score < 5) {
@@ -977,14 +917,16 @@
       }
     }
 
-    const formData = { 
-      id: userId, 
-      nom: nom, 
-      prenom: prenom, 
-      email: email, 
-      old_password: old_password, 
-      new_password: new_password 
+    const formData = {
+      id: currentUserId,   // ✅ FIX : valeur numérique directe, jamais NaN
+      nom,
+      prenom,
+      email,
+      old_password,
+      new_password
     };
+
+    console.log('📤 Envoi updateprofil avec ID:', currentUserId);
 
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
@@ -993,29 +935,24 @@
     try {
       const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php', {
         method: 'POST',
+        credentials: 'include',   // ✅ FIX : envoyer le cookie de session PHP
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      
+
       if (!response.ok) {
         throw new Error('HTTP error ' + response.status);
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         showMessage("✅ " + result.message, "success");
-        document.getElementById('old_password').value = '';
-        document.getElementById('new_password').value = '';
+        document.getElementById('old_password').value     = '';
+        document.getElementById('new_password').value     = '';
         document.getElementById('confirm_password').value = '';
-        // Réinitialiser l'indicateur de force
         updateStrengthIndicator('');
         updateSubmitButtonState();
-        
-        if (email) {
-          sessionStorage.setItem('user_email', email);
-          localStorage.setItem('user_email', email);
-        }
       } else {
         showMessage(result.message || "Erreur lors de la mise à jour", "error");
       }
@@ -1026,30 +963,36 @@
       submitBtn.disabled = false;
       submitBtn.textContent = "💾 Mettre à jour mon profil";
     }
+
     return false;
   }
 
+  /* ═══════════════════════════════════════════════════
+     SUPPRESSION DU COMPTE
+     ✅ Utilise currentUserId directement.
+  ═══════════════════════════════════════════════════ */
   async function deleteAccount() {
-    const userId = getCurrentUserId();
-    if (!userId) {
+    // ✅ FIX : utiliser directement currentUserId
+    if (!currentUserId) {
       showMessage("Vous n'êtes pas connecté", "error");
       closeDeleteModal();
       return;
     }
-    
+
     try {
       const response = await fetch(getBaseUrl() + '/view/backend/users/deleteprofil.php', {
         method: 'POST',
+        credentials: 'include',   // ✅ FIX : envoyer le cookie de session PHP
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId })
+        body: JSON.stringify({ id: currentUserId })
       });
-      
+
       if (!response.ok) {
         throw new Error('HTTP error ' + response.status);
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         showMessage("Votre compte a été supprimé. Redirection...", "success");
         sessionStorage.clear();
@@ -1069,65 +1012,97 @@
     }
   }
 
-  function goBackToUsers() {
-    window.location.href = getBaseUrl() + '/view/frontend/dashboard.html';
+  /* ═══════════════════════════════════════════════════
+     SCROLL NAVBAR
+  ═══════════════════════════════════════════════════ */
+  window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar');
+    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  /* ═══════════════════════════════════════════════════
+     CURSEUR PERSONNALISÉ
+  ═══════════════════════════════════════════════════ */
+  (function () {
+    const cur   = document.getElementById('cursor');
+    const trail = document.getElementById('cursor-trail');
+    if (!cur || !trail) return;
+
+    let mx = 0, my = 0, tx = 0, ty = 0;
+
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX;
+      my = e.clientY;
+      cur.style.left = mx + 'px';
+      cur.style.top  = my + 'px';
+    });
+
+    (function loop() {
+      tx += (mx - tx) * 0.12;
+      ty += (my - ty) * 0.12;
+      trail.style.left = tx + 'px';
+      trail.style.top  = ty + 'px';
+      requestAnimationFrame(loop);
+    })();
+
+    document.querySelectorAll('button, .btn-back, .btn, input, select').forEach(el => {
+      el.addEventListener('mouseenter', () => cur.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+    });
+  })();
+
+  /* ═══════════════════════════════════════════════════
+     GESTION DU THÈME
+  ═══════════════════════════════════════════════════ */
+  function initTheme() {
+    const btn  = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('gaialumen-theme') || 'dark';
+
+    html.setAttribute('data-theme', saved);
+    if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', n);
+        localStorage.setItem('gaialumen-theme', n);
+        btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+      });
+    }
   }
 
-  function showMessage(msg, type) {
-    const msgDiv = document.getElementById('messageArea');
-    msgDiv.textContent = msg;
-    msgDiv.className = `message ${type}`;
-    msgDiv.style.display = 'block';
-    
-    setTimeout(() => {
-      msgDiv.style.opacity = '0';
-      setTimeout(() => {
-        msgDiv.style.display = 'none';
-        msgDiv.style.opacity = '1';
-      }, 300);
-    }, 5000);
-  }
-
-  function openDeleteModal() {
-    document.getElementById('deleteModal').classList.add('active');
-  }
-
-  function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
-  }
-
-  // ==================== INITIALISATION ====================
+  /* ═══════════════════════════════════════════════════
+     INITIALISATION
+  ═══════════════════════════════════════════════════ */
   document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     loadUserProfile();
-    
-    // Ajouter les écouteurs pour la force du mot de passe
-    const newPasswordInput = document.getElementById('new_password');
+
+    // Écouteurs mot de passe
+    const newPasswordInput     = document.getElementById('new_password');
     const confirmPasswordInput = document.getElementById('confirm_password');
-    const oldPasswordInput = document.getElementById('old_password');
-    
+    const oldPasswordInput     = document.getElementById('old_password');
+
     if (newPasswordInput) {
-      newPasswordInput.addEventListener('input', function() {
-        const score = updateStrengthIndicator(this.value);
+      newPasswordInput.addEventListener('input', function () {
+        updateStrengthIndicator(this.value);
         updateSubmitButtonState();
       });
     }
-    
+
     if (confirmPasswordInput) {
-      confirmPasswordInput.addEventListener('input', function() {
-        updateSubmitButtonState();
-      });
+      confirmPasswordInput.addEventListener('input', updateSubmitButtonState);
     }
-    
+
     if (oldPasswordInput) {
-      oldPasswordInput.addEventListener('input', function() {
-        updateSubmitButtonState();
-      });
+      oldPasswordInput.addEventListener('input', updateSubmitButtonState);
     }
-    
-    // Initialiser l'état du bouton
+
     updateSubmitButtonState();
-    
-    window.onclick = function(event) {
+
+    // Fermer la modale en cliquant dehors
+    window.onclick = function (event) {
       const modal = document.getElementById('deleteModal');
       if (event.target === modal) closeDeleteModal();
     };

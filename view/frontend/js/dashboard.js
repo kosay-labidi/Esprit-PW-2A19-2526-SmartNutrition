@@ -1,68 +1,75 @@
 /**
  * Dashboard User JavaScript
- * UNIQUEMENT avec sessions PHP - Sans fichiers supplémentaires
+ * Version SESSION UNIQUEMENT - Utilise auto_login.php pour tout
  */
 
 console.log('🌿 GaiaLumen Dashboard chargé');
 
-// ✅ Vérifier l'authentification via un endpoint existant
-async function checkAuth() {
+// ✅ UNE SEULE FONCTION pour vérifier ET récupérer l'utilisateur
+async function checkAuthAndGetUser() {
     try {
         const response = await fetch(
             'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/auto_login.php',
-            { credentials: 'include' }
+            { 
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            }
         );
         const data = await response.json();
+        console.log('auto_login.php response:', data);
 
-        if (data.success) {
+        if (data.success && data.data) {
             const user = data.data;
 
-            // ── Vérification du rôle ──────────────────────────────
+            // Vérification du rôle
             if (user.role === 'admin') {
-                // Un admin n'a rien à faire sur dashboard.html
                 window.location.href = '../backend/admin.html';
-                return false;
+                return null;
             }
 
-            // ── Utilisateur normal → OK ───────────────────────────
-            localStorage.setItem('gaialumen-token', 'session-' + Date.now());
+            // Stocker dans localStorage uniquement pour l'affichage (optionnel)
             localStorage.setItem('gaialumen-user', JSON.stringify(user));
+            localStorage.setItem('gaialumen-token', 'session-' + Date.now());
+            
             return user;
-
         } else {
-            localStorage.removeItem('gaialumen-token');
+            // Non authentifié - redirection
             localStorage.removeItem('gaialumen-user');
+            localStorage.removeItem('gaialumen-token');
             window.location.href = 'login.html';
-            return false;
+            return null;
         }
     } catch (error) {
-        console.error('Erreur vérification session:', error);
+        console.error('Erreur vérification:', error);
         window.location.href = 'login.html';
-        return false;
+        return null;
     }
 }
 
-// ✅ Récupérer l'utilisateur connecté via un appel API
-async function getCurrentUser() {
+// ✅ Mettre à jour le profil (via updateprofil.php)
+async function updateProfile(userData) {
     try {
-        // Option 1: Utiliser updateprofil.php avec un ID invalide
-        const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateprofil.php?action=get&id=0', {
-            credentials: 'include'
+        const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateprofil.php', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
         });
         const data = await response.json();
-        
-        if (data.success && data.user) {
-            return data.user;
+        if (data.success) {
+            // Recharger l'utilisateur après mise à jour
+            const updatedUser = await checkAuthAndGetUser();
+            return updatedUser;
         }
-        
-        // Option 2: Si ça ne marche pas, essayer de récupérer depuis la page
         return null;
     } catch (error) {
+        console.error('Erreur mise à jour:', error);
         return null;
     }
 }
 
-// ✅ Déconnexion - utilise logout.php existant
+// ✅ Déconnexion
 async function logout() {
     if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
         try {
@@ -70,6 +77,8 @@ async function logout() {
                 method: 'POST',
                 credentials: 'include'
             });
+            localStorage.removeItem('gaialumen-user');
+            localStorage.removeItem('gaialumen-token');
             window.location.href = 'login.html';
         } catch (error) {
             console.error('Erreur déconnexion:', error);
@@ -78,6 +87,8 @@ async function logout() {
     }
 }
 
+// ========== FONCTIONS D'INTERFACE ==========
+
 // Gestion du thème
 function initTheme() {
     const btn = document.getElementById('theme-toggle');
@@ -85,19 +96,19 @@ function initTheme() {
     const saved = localStorage.getItem('gaialumen-theme') || 'dark';
     
     html.setAttribute('data-theme', saved);
-    if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+    if (btn) btn.textContent = saved === 'dark' ? '☀️' : '🌙';
     
     if (btn) {
         btn.addEventListener('click', () => {
             const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', n);
             localStorage.setItem('gaialumen-theme', n);
-            btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+            btn.textContent = n === 'dark' ? '☀️' : '🌙';
         });
     }
 }
 
-// Gestion de la navbar au scroll
+// Navbar au scroll
 function initNavbar() {
     const nb = document.getElementById('navbar');
     window.addEventListener('scroll', () => {
@@ -105,7 +116,7 @@ function initNavbar() {
     });
 }
 
-// Gestion du menu mobile
+// Menu mobile
 function initMobileMenu() {
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
@@ -124,26 +135,14 @@ function initMobileMenu() {
         document.body.style.overflow = '';
     }
     
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', openMobileMenu);
-    }
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openMobileMenu);
+    if (mobileClose) mobileClose.addEventListener('click', closeMobileMenu);
+    if (mobileOverlay) mobileOverlay.addEventListener('click', closeMobileMenu);
     
-    if (mobileClose) {
-        mobileClose.addEventListener('click', closeMobileMenu);
-    }
-    
-    if (mobileOverlay) {
-        mobileOverlay.addEventListener('click', closeMobileMenu);
-    }
-    
-    // Fermer le menu mobile quand un module est sélectionné
     document.querySelectorAll('.mobile-menu-item').forEach(item => {
-        item.addEventListener('click', () => {
-            closeMobileMenu();
-        });
+        item.addEventListener('click', closeMobileMenu);
     });
     
-    // Fermer avec la touche Echap
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && mobileMenu?.classList.contains('open')) {
             closeMobileMenu();
@@ -151,9 +150,8 @@ function initMobileMenu() {
     });
 }
 
-// Gestion de l'indicateur actif dans la navbar horizontale
+// Indicateur actif
 function updateActiveNavItem(moduleName) {
-    // Mettre à jour les items de la navbar horizontale
     document.querySelectorAll('.nav-module-item').forEach(item => {
         if (item.dataset.module === moduleName) {
             item.classList.add('active');
@@ -162,7 +160,6 @@ function updateActiveNavItem(moduleName) {
         }
     });
     
-    // Mettre à jour les items du menu mobile
     document.querySelectorAll('.mobile-menu-item').forEach(item => {
         if (item.dataset.module === moduleName) {
             item.classList.add('active');
@@ -172,7 +169,7 @@ function updateActiveNavItem(moduleName) {
     });
 }
 
-// Gestion de l'assistant AI
+// Assistant AI
 function initAIAssistant() {
     const btn = document.getElementById('ai-btn');
     const panel = document.getElementById('ai-panel');
@@ -200,30 +197,27 @@ function initAIAssistant() {
         if (input) input.value = '';
         
         setTimeout(() => {
-            let response = '';
             const lowerText = text.toLowerCase();
+            let response = '';
             
             if (lowerText.includes('planning') || lowerText.includes('repas')) {
-                response = '📅 Le module Planning vous permet d\'organiser vos repas de la semaine. Cliquez sur "Planning" dans le menu pour commencer!';
+                response = '📅 Le module Planning vous permet d\'organiser vos repas de la semaine.';
             } else if (lowerText.includes('santé') || lowerText.includes('health')) {
-                response = '❤️ Le module Santé vous aide à suivre vos indicateurs corporels, glycémie et hydratation. Consultez "Santé" pour plus de détails.';
+                response = '❤️ Le module Santé vous aide à suivre vos indicateurs corporels.';
             } else if (lowerText.includes('défi') || lowerText.includes('challenge')) {
-                response = '🏆 Relevez des défis écologiques dans le module "Défis" et gagnez des badges en réduisant votre empreinte carbone!';
+                response = '🏆 Relevez des défis écologiques dans le module "Défis" !';
             } else if (lowerText.includes('aide') || lowerText.includes('help')) {
-                response = 'Je peux vous aider avec tous les modules GaiaLumen: Utilisateurs, Planning, Events, Repas, Santé et Défis. Que souhaitez-vous savoir?';
-            } else if (lowerText.includes('merci') || lowerText.includes('thanks')) {
-                response = 'Avec plaisir! 😊 N\'hésitez pas si vous avez d\'autres questions.';
+                response = 'Je peux vous aider avec Planning, Santé, Défis, Events et Repas.';
             } else {
                 const responses = [
                     'Je peux vous aider avec vos modules! Que recherchez-vous?',
-                    'Consultez la section Planning pour organiser vos repas de la semaine.',
-                    'Le module Santé vous permet de suivre vos indicateurs corporels.',
+                    'Consultez la section Planning pour organiser vos repas.',
                     'Besoin d\'aide? Je suis là pour vous guider! 🌿'
                 ];
                 response = responses[Math.floor(Math.random() * responses.length)];
             }
             addMessage(response, false);
-        }, 800);
+        }, 500);
     }
     
     if (send) send.addEventListener('click', handleSend);
@@ -232,7 +226,7 @@ function initAIAssistant() {
     });
 }
 
-// Fonction pour afficher un toast (notification)
+// Toast notification
 function showToast(message, type = 'info') {
     let toast = document.querySelector('.toast-notification');
     if (!toast) {
@@ -249,27 +243,45 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Initialisation principale
+// ========== INITIALISATION PRINCIPALE ==========
 document.addEventListener('DOMContentLoaded', async () => {
-    // Vérifier l'authentification
-    const isAuthenticated = await checkAuth();
-    if (!isAuthenticated) return;
+    console.log('Initialisation du dashboard...');
     
-    // Optionnel: essayer de récupérer l'utilisateur
-    const user = await getCurrentUser();
+    // Récupérer l'utilisateur via SESSION UNIQUEMENT
+    const user = await checkAuthAndGetUser();
+    
     if (user) {
-        console.log('👤 Utilisateur connecté:', user);
+        console.log('✅ Utilisateur connecté (session):', user);
+        
+        // Afficher le nom
         const userNameElement = document.getElementById('user-name');
-        if (userNameElement && user.prenom) {
-            userNameElement.textContent = `${user.prenom} ${user.nom}`;
+        if (userNameElement) {
+            const fullName = `${user.prenom} ${user.nom}`.trim();
+            userNameElement.textContent = fullName || user.email;
+        }
+        
+        // Afficher l'email
+        const userEmailElement = document.getElementById('user-email');
+        if (userEmailElement) {
+            userEmailElement.textContent = user.email;
+        }
+        
+        // Afficher le rôle
+        const userRoleElement = document.getElementById('user-role');
+        if (userRoleElement) {
+            userRoleElement.textContent = user.role;
         }
     }
     
+    // Initialiser tous les composants
     initTheme();
     initNavbar();
     initMobileMenu();
     initAIAssistant();
     
-    // Exposer la fonction updateActiveNavItem globalement
+    // Exposer les fonctions globalement
     window.updateActiveNavItem = updateActiveNavItem;
+    window.logout = logout;
+    window.updateProfile = updateProfile;
+    window.showToast = showToast;
 });

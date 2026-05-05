@@ -116,7 +116,7 @@ class UserController
     if ($email === '') {
         return null;
     }
-    $sql = 'SELECT id_utilisateur, nom, prenom, email, mdp, role, date_creation, date_mise_a_jour
+    $sql = 'SELECT id_utilisateur, nom, prenom, email, mdp, role, date_creation, date_mise_a_jour, provider, provider_id, photo
             FROM utilisateurs WHERE email = :email LIMIT 1';
     try {
         $db = config::getConnexion();

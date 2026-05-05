@@ -11,15 +11,26 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../../../config.php';
 require_once __DIR__ . '/../../../controller/user.controller.php';
 
-// Utiliser des variables d'environnement
-define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID') ?: '');
-define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET') ?: '');
-define('GOOGLE_REDIRECT_URI', 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/auth/google-callback.php');
+// Charger les variables depuis gaia.env (fichier local non commité)
+$envFile = __DIR__ . '/../../../gaia.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
+            list($key, $value) = explode('=', $line, 2);
+            $value = trim($value);
+            if ($key === 'GOOGLE_CLIENT_ID') define('GOOGLE_CLIENT_ID', $value);
+            if ($key === 'GOOGLE_CLIENT_SECRET') define('GOOGLE_CLIENT_SECRET', $value);
+        }
+    }
+}
 
 // Vérifier que les variables sont définies
-if (empty(GOOGLE_CLIENT_ID) || empty(GOOGLE_CLIENT_SECRET)) {
-    die('Configuration Google OAuth manquante. Veuillez configurer les variables d\'environnement.');
+if (!defined('GOOGLE_CLIENT_ID') || empty(GOOGLE_CLIENT_ID)) {
+    die('Configuration Google OAuth manquante. Fichier gaia.env introuvable ou mal configuré.');
 }
+
+define('GOOGLE_REDIRECT_URI', 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/auth/google-callback.php');
 
 // Régénérer l'ID de session pour la sécurité
 session_regenerate_id(true);

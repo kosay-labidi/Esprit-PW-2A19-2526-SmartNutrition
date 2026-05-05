@@ -2,428 +2,790 @@
 <html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
 <title>Connexion - GaiaLumen</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-/* ... vos styles existants ... */
-:root{
-  --green:#1F3D2B;--sand:#F2E8CF;--violet:#5B3E96;--blue:#3A86C4;
-  --bg:#0a1a10;--text:#F2E8CF;--muted:#a8b8a0;
-  --card-bg:rgba(15,35,24,0.85);--glass:rgba(31,61,43,0.45);
-  --shadow:0 20px 60px rgba(0,0,0,0.5);
-}
-[data-theme="light"]{
-  --bg:#f5f0e8;--text:#1F3D2B;--muted:#5a6e5a;
-  --card-bg:rgba(242,232,207,0.85);--glass:rgba(242,232,207,0.6);
-  --shadow:0 20px 60px rgba(31,61,43,0.15);
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{
-  font-family:'Lato',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  cursor:none;
-  transition:background 0.3s,color 0.3s;
-}
-h1,h2,h3{font-family:'Cormorant Garamond',serif;}
-
-/* CURSEUR */
-#cursor{
-  position:fixed;top:0;left:0;z-index:9999;pointer-events:none;
-  width:14px;height:14px;border-radius:50%;
-  background:var(--violet);
-  box-shadow:0 0 12px var(--violet),0 0 24px var(--blue);
-  transform:translate(-50%,-50%);
-  transition:width .2s,height .2s;
-  mix-blend-mode:screen;
-}
-#cursor.hover{width:28px;height:28px;background:var(--blue);}
-#cursor-trail{
-  position:fixed;top:0;left:0;z-index:9998;pointer-events:none;
-  width:36px;height:36px;border-radius:50%;
-  border:1.5px solid rgba(91,62,150,.5);
-  transform:translate(-50%,-50%);
+/* ============================================
+   VARIABLES & RESET
+   ============================================ */
+:root {
+  --green: #1F3D2B;
+  --sand: #F2E8CF;
+  --violet: #6B4E9E;
+  --violet-light: #8B6FC9;
+  --blue: #4A9FD8;
+  --blue-dark: #2E7AB6;
+  --gold: #D4AF37;
+  --bg-dark: #0A120E;
+  --bg-light: #F8F5ED;
+  --text-dark: #1A2E22;
+  --text-light: #F2E8CF;
+  --muted-dark: #8A9A82;
+  --muted-light: #6B7A63;
+  --card-bg-dark: rgba(15, 30, 20, 0.88);
+  --card-bg-light: rgba(248, 245, 237, 0.92);
+  --glass-dark: rgba(31, 61, 43, 0.4);
+  --glass-light: rgba(242, 232, 207, 0.5);
+  --shadow-dark: 0 25px 70px rgba(0, 0, 0, 0.6);
+  --shadow-light: 0 25px 70px rgba(31, 61, 43, 0.12);
+  --border-glow: rgba(107, 78, 158, 0.35);
+  --transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* PRELOADER */
-#preloader{
-  position:fixed;inset:0;z-index:10000;
-  background:#050e08;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:opacity .8s,visibility .8s;
-}
-#preloader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
-#pl-canvas{width:140px;height:140px;}
-#pl-text{
-  margin-top:20px;
-  font-family:'Cormorant Garamond',serif;
-  font-size:1.5rem;letter-spacing:.3em;color:var(--sand);
-  animation:pulse 1.5s ease-in-out infinite;
-}
-@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
-
-/* BACKGROUND 3D */
-#bg-canvas{
-  position:fixed;inset:0;width:100%;height:100%;z-index:0;
+[data-theme="light"] {
+  --bg: var(--bg-light);
+  --text: var(--text-dark);
+  --muted: var(--muted-light);
+  --card-bg: var(--card-bg-light);
+  --glass: var(--glass-light);
+  --shadow: var(--shadow-light);
 }
 
-/* CONTAINER */
-.container{
-  position:relative;z-index:2;
-  max-width:420px;width:90%;
-  background:var(--card-bg);
-  backdrop-filter:blur(20px) saturate(1.4);
-  -webkit-backdrop-filter:blur(20px) saturate(1.4);
-  border-radius:20px;
-  padding:40px 35px;
-  box-shadow:var(--shadow);
-  border:1px solid rgba(91,62,150,0.3);
-  animation:slideUp .8s ease;
-  margin-left:auto;
-  margin-right:10%;
-}
-@keyframes slideUp{
-  from{opacity:0;transform:translateY(40px);}
-  to{opacity:1;transform:translateY(0);}
+[data-theme="dark"] {
+  --bg: var(--bg-dark);
+  --text: var(--text-light);
+  --muted: var(--muted-dark);
+  --card-bg: var(--card-bg-dark);
+  --glass: var(--glass-dark);
+  --shadow: var(--shadow-dark);
 }
 
-/* LOGO */
-.logo{text-align:center;margin-bottom:28px;}
-.logo svg{width:50px;height:50px;margin-bottom:12px;}
-.logo h1{
-  font-size:2rem;
-  background:linear-gradient(135deg,var(--sand),var(--blue));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
-  margin-bottom:6px;
-}
-.logo p{
-  color:rgba(242,232,207,0.7);
-  font-size:0.85rem;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* FORM */
-.form-group{margin-bottom:20px;}
-.form-group label{
-  display:block;
-  margin-bottom:6px;
-  font-size:0.85rem;
-  color:var(--sand);
-  font-weight:600;
-}
-.form-group input{
-  width:100%;
-  padding:12px 14px;
-  background:rgba(31,61,43,0.4);
-  border:1px solid rgba(91,62,150,0.3);
-  border-radius:10px;
-  color:var(--sand);
-  font-size:0.95rem;
-  transition:all 0.3s;
-}
-.form-group input:focus{
-  outline:none;
-  border-color:var(--violet);
-  background:rgba(31,61,43,0.6);
-  box-shadow:0 0 20px rgba(91,62,150,0.3);
-}
-.form-group input::placeholder{
-  color:rgba(242,232,207,0.4);
+html {
+  scroll-behavior: smooth;
 }
 
-/* CHECKBOX */
-.remember{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-bottom:20px;
-}
-.remember input[type="checkbox"]{
-  width:16px;
-  height:16px;
-  cursor:pointer;
-}
-.remember label{
-  font-size:0.85rem;
-  color:var(--muted);
-  cursor:pointer;
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  cursor: none;
+  transition: var(--transition);
 }
 
-/* BUTTON */
-.btn-submit{
-  width:100%;
-  padding:12px;
-  background:linear-gradient(135deg,var(--violet),var(--blue));
-  border:none;
-  border-radius:10px;
-  color:#fff;
-  font-size:0.95rem;
-  font-weight:600;
-  cursor:none;
-  transition:transform 0.2s,box-shadow 0.3s;
-  position:relative;
-  overflow:hidden;
-}
-.btn-submit:hover{
-  transform:translateY(-2px);
-  box-shadow:0 10px 30px rgba(91,62,150,0.5);
-}
-.btn-submit::before{
-  content:'';
-  position:absolute;
-  top:50%;
-  left:50%;
-  width:0;
-  height:0;
-  border-radius:50%;
-  background:rgba(255,255,255,0.3);
-  transform:translate(-50%,-50%);
-  transition:width 0.6s,height 0.6s;
-}
-.btn-submit:active::before{
-  width:300px;
-  height:300px;
+h1, h2, h3, .logo-text {
+  font-family: 'Cormorant Garamond', serif;
 }
 
-/* LINKS */
-.links{
-  text-align:center;
-  margin-top:20px;
-}
-.links a{
-  color:var(--blue);
-  text-decoration:none;
-  font-size:0.85rem;
-  transition:color 0.3s;
-}
-.links a:hover{
-  color:var(--violet);
-  text-decoration:underline;
-}
-.divider{
-  margin:16px 0;
-  text-align:center;
-  color:rgba(242,232,207,0.5);
-  font-size:0.8rem;
-  position:relative;
-}
-.divider::before,
-.divider::after{
-  content:'';
-  position:absolute;
-  top:50%;
-  width:40%;
-  height:1px;
-  background:rgba(242,232,207,0.2);
-}
-.divider::before{left:0;}
-.divider::after{right:0;}
-
-/* SOCIAL */
-.social-login{
-  display:flex;
-  gap:10px;
-  margin-top:16px;
-}
-.social-btn{
-  flex:1;
-  padding:10px;
-  border:1px solid rgba(91,62,150,0.3);
-  border-radius:10px;
-  background:rgba(31,61,43,0.3);
-  color:var(--sand);
-  cursor:none;
-  transition:all 0.3s;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  font-size:0.85rem;
-}
-.social-btn:hover{
-  background:rgba(91,62,150,0.2);
-  border-color:var(--violet);
-  transform:translateY(-2px);
+/* ============================================
+   CUSTOM CURSOR
+   ============================================ */
+#cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--violet);
+  box-shadow: 0 0 15px var(--violet), 0 0 30px var(--blue);
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: screen;
 }
 
-/* PARTICLES */
-.particle{
-  position:fixed;
-  pointer-events:none;
-  z-index:1;
-  font-size:20px;
-  animation:float 3s ease-out forwards;
-}
-@keyframes float{
-  0%{opacity:1;transform:translateY(0) rotate(0deg);}
-  100%{opacity:0;transform:translateY(-100px) rotate(360deg);}
+#cursor.hover {
+  width: 32px;
+  height: 32px;
+  background: var(--blue);
+  box-shadow: 0 0 20px var(--blue), 0 0 40px var(--violet);
 }
 
-/* THEME TOGGLE BUTTON */
-#theme-toggle{
-  position:fixed;top:20px;right:20px;z-index:1000;
-  width:50px;height:50px;border-radius:50%;
-  border:2px solid rgba(91,62,150,0.4);
-  background:var(--glass);
-  backdrop-filter:blur(10px);
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all 0.3s;
-  box-shadow:0 4px 15px rgba(0,0,0,0.2);
-}
-#theme-toggle:hover{
-  transform:scale(1.1);
-  border-color:var(--violet);
-  box-shadow:0 6px 20px rgba(91,62,150,0.4);
-}
-#theme-toggle svg{
-  transition:transform 0.3s;
-}
-#theme-toggle:hover svg{
-  transform:rotate(20deg);
+#cursor-trail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9998;
+  pointer-events: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(107, 78, 158, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
 }
 
-/* AI TOGGLE BUTTON */
-#ai-toggle{
-  position:fixed;bottom:30px;left:30px;z-index:1000;
-  width:60px;height:60px;border-radius:50%;
-  border:none;
-  background:linear-gradient(135deg,var(--violet),var(--blue));
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all 0.3s;
-  box-shadow:0 8px 25px rgba(91,62,150,0.4);
-}
-#ai-toggle:hover{
-  transform:scale(1.1) translateY(-2px);
-  box-shadow:0 12px 35px rgba(91,62,150,0.6);
-}
-
-/* TOOLTIP */
-.tooltip{
-  position:absolute;
-  background:rgba(0,0,0,0.9);
-  color:#fff;
-  padding:8px 12px;
-  border-radius:8px;
-  font-size:0.85rem;
-  white-space:nowrap;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity 0.3s;
-  z-index:10001;
-}
-#theme-toggle:hover .tooltip,
-#ai-toggle:hover .tooltip{
-  opacity:1;
-}
-#theme-toggle .tooltip{
-  top:60px;right:0;
-}
-#ai-toggle .tooltip{
-  bottom:70px;left:0;
+/* ============================================
+   PRELOADER
+   ============================================ */
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #0A0E0C;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.8s, visibility 0.8s;
 }
 
-/* EARTH HINT */
-.earth-hint{
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(0,0,0,0.8);
-  color:#fff;
-  padding:12px 24px;
-  border-radius:30px;
-  font-size:0.9rem;
-  z-index:100;
-  animation:fadeInOut 4s ease-in-out;
-  pointer-events:none;
-}
-@keyframes fadeInOut{
-  0%,100%{opacity:0;}
-  10%,90%{opacity:1;}
+#preloader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
-@media(max-width:600px){
-  .container{
-    margin:20px auto;
-    padding:30px 25px;
-    max-width:95%;
+#pl-canvas {
+  width: 160px;
+  height: 160px;
+}
+
+#pl-text {
+  margin-top: 24px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.4em;
+  color: var(--sand);
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================
+   BACKGROUND 3D
+   ============================================ */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* ============================================
+   BACK BUTTON (TOP LEFT)
+   ============================================ */
+#back-home {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 1000;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(107, 78, 158, 0.4);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  text-decoration: none;
+}
+
+#back-home:hover {
+  transform: scale(1.1) translateX(-3px);
+  border-color: var(--violet);
+  box-shadow: 0 8px 25px rgba(107, 78, 158, 0.4);
+}
+
+#back-home svg {
+  stroke: var(--text);
+  transition: var(--transition);
+}
+
+#back-home:hover svg {
+  stroke: var(--violet-light);
+  transform: translateX(-2px);
+}
+
+/* ============================================
+   MAIN CONTAINER
+   ============================================ */
+.container {
+  position: relative;
+  z-index: 2;
+  max-width: 480px;
+  width: 90%;
+  background: var(--card-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 32px;
+  padding: 48px 40px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(107, 78, 158, 0.25);
+  animation: slideUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  margin: 0 8% 0 auto;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.96);
   }
-  #theme-toggle{
-    width:45px;height:45px;top:15px;right:15px;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
-  #ai-toggle{
-    width:55px;height:55px;bottom:20px;left:20px;
-  }
-  .tooltip{display:none;}
 }
-/* SOCIAL BUTTONS */
+
+/* ============================================
+   LOGO SECTION
+   ============================================ */
+.logo {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.logo svg {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 12px rgba(107, 78, 158, 0.5));
+  transition: var(--transition);
+}
+
+.logo:hover svg {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 20px rgba(107, 78, 158, 0.8));
+}
+
+.logo h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, var(--sand) 0%, var(--gold) 50%, var(--blue) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.logo p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  font-weight: 400;
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.85;
+  letter-spacing: 0.3px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(31, 61, 43, 0.3);
+  border: 1.5px solid rgba(107, 78, 158, 0.25);
+  border-radius: 16px;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+  transition: var(--transition);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--violet);
+  background: rgba(31, 61, 43, 0.5);
+  box-shadow: 0 0 20px rgba(107, 78, 158, 0.25);
+}
+
+.form-group input::placeholder {
+  color: rgba(242, 232, 207, 0.35);
+  font-weight: 400;
+}
+
+/* ============================================
+   CHECKBOX
+   ============================================ */
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.remember input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--violet);
+}
+
+.remember label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.remember label:hover {
+  color: var(--text);
+}
+
+/* ============================================
+   BUTTON
+   ============================================ */
+.btn-submit {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
+  border: none;
+  border-radius: 16px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: none;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(107, 78, 158, 0.5);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+.btn-submit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s, height 0.5s;
+}
+
+.btn-submit:active::before {
+  width: 400px;
+  height: 400px;
+}
+
+.btn-submit:disabled {
+  opacity: 0.7;
+  transform: none;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   ERROR MESSAGE
+   ============================================ */
+#login-error {
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(220, 53, 69, 0.12);
+  border: 1px solid rgba(220, 53, 69, 0.4);
+  color: #ff7b89;
+  font-size: 0.88rem;
+  text-align: center;
+  animation: shake 0.4s ease;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* ============================================
+   LINKS SECTION (sans lignes)
+   ============================================ */
+.links {
+  text-align: center;
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.links a {
+  color: var(--blue);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: var(--transition);
+  display: inline-block;
+}
+
+.links a:hover {
+  color: var(--violet-light);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   OAUTH BUTTONS (côte à côte)
+   ============================================ */
 .oauth-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
 }
 
 .social-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 12px 14px;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 8px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--transition);
+  cursor: none;
+  white-space: nowrap;
 }
 
 .social-btn.btn-google {
-    background: rgba(255, 255, 255, 0.95);
-    color: #333;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.96);
+  color: #2c3e2b;
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .social-btn.btn-google:hover {
-    background: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .social-btn.btn-twitter {
-    background: #000000;
-    color: white;
-    border: none;
+  background: #000000;
+  color: white;
+  border: none;
 }
 
 .social-btn.btn-twitter:hover {
-    background: #1a1a1a;
-    transform: translateY(-2px);
+  background: #1a1a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
-.social-btn img, 
+.social-btn img,
 .social-btn svg {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   PARTICLES
+   ============================================ */
+.particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  font-size: 22px;
+  animation: floatUp 3s ease-out forwards;
+  filter: drop-shadow(0 0 4px rgba(107, 78, 158, 0.5));
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) rotate(360deg) scale(0.5);
+  }
+}
+
+/* ============================================
+   THEME TOGGLE
+   ============================================ */
+#theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1000;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(107, 78, 158, 0.4);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+#theme-toggle:hover {
+  transform: scale(1.1) rotate(8deg);
+  border-color: var(--violet);
+  box-shadow: 0 8px 25px rgba(107, 78, 158, 0.4);
+}
+
+/* ============================================
+   AI ASSISTANT
+   ============================================ */
+#ai-toggle {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  z-index: 1000;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--violet), var(--blue));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  box-shadow: 0 10px 30px rgba(107, 78, 158, 0.4);
+}
+
+#ai-toggle:hover {
+  transform: scale(1.1) translateY(-3px);
+  box-shadow: 0 15px 40px rgba(107, 78, 158, 0.6);
+}
+
+#ai-toggle:active {
+  transform: scale(0.98);
+}
+
+/* AI Panel */
+#ai-panel {
+  position: fixed;
+  bottom: 110px;
+  left: 30px;
+  z-index: 999;
+  width: 380px;
+  height: 520px;
+  background: var(--card-bg);
+  backdrop-filter: blur(24px);
+  border-radius: 28px;
+  border: 1px solid rgba(107, 78, 158, 0.3);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideInLeft 0.3s ease;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ============================================
+   TOOLTIP
+   ============================================ */
+.tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 10001;
+  font-family: 'Inter', sans-serif;
+}
+
+#theme-toggle:hover .tooltip,
+#ai-toggle:hover .tooltip,
+#back-home:hover .tooltip {
+  opacity: 1;
+}
+
+#theme-toggle .tooltip {
+  top: 60px;
+  right: 0;
+}
+
+#ai-toggle .tooltip {
+  bottom: 75px;
+  left: 10px;
+}
+
+#back-home .tooltip {
+  top: 60px;
+  left: 0;
+}
+
+/* ============================================
+   EARTH HINT
+   ============================================ */
+.earth-hint {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 40px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 100;
+  animation: fadeInOut 4s ease-in-out infinite;
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; transform: translateX(-50%) translateY(5px); }
+  10%, 90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  body {
+    justify-content: center;
+  }
+  
+  .container {
+    margin: 20px auto;
+    padding: 36px 28px;
+    max-width: 95%;
+  }
+  
+  #back-home {
+    top: 16px;
+    left: 16px;
+    width: 45px;
+    height: 45px;
+  }
+  
+  #theme-toggle {
+    width: 45px;
+    height: 45px;
+    top: 16px;
+    right: 16px;
+  }
+  
+  #ai-toggle {
+    width: 56px;
+    height: 56px;
+    bottom: 20px;
+    left: 20px;
+  }
+  
+  #ai-panel {
+    width: calc(100% - 40px);
+    left: 20px;
+    bottom: 90px;
+    height: 480px;
+  }
+  
+  .tooltip {
+    display: none;
+  }
+  
+  .earth-hint {
+    font-size: 0.7rem;
+    padding: 8px 16px;
+    white-space: nowrap;
+    bottom: 15px;
+  }
+  
+  .logo h1 {
+    font-size: 1.8rem;
+  }
+  
+  .oauth-buttons {
+    gap: 8px;
+  }
+  
+  .social-btn {
+    padding: 10px 6px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+  
+  .social-btn span {
+    display: none;
+  }
+  
+  .social-btn img,
+  .social-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 30px 22px;
+  }
+  
+  .links {
+    gap: 16px;
+  }
+  
+  .links a {
+    font-size: 0.75rem;
+  }
+  
+  .earth-hint {
+    font-size: 0.65rem;
+    padding: 6px 12px;
+    white-space: nowrap;
+  }
 }
 </style>
 </head>
 <body>
 
-<!-- CURSEUR -->
+<!-- CURSOR -->
 <div id="cursor"></div>
 <div id="cursor-trail"></div>
 
@@ -439,15 +801,23 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
 <!-- EARTH HINT -->
 <div class="earth-hint">🌍 Cliquez et faites glisser pour faire tourner la Terre</div>
 
-<!-- BOUTON THEME -->
+<!-- BACK BUTTON (flèche en haut à gauche) -->
+<a href="index.html" id="back-home" aria-label="Retour à l'accueil">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+  </svg>
+  <span class="tooltip">Accueil</span>
+</a>
+
+<!-- THEME TOGGLE -->
 <button id="theme-toggle" aria-label="Changer le thème">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
   </svg>
   <span class="tooltip">Changer le thème</span>
 </button>
 
-<!-- BOUTON AI ASSISTANT -->
+<!-- AI ASSISTANT BUTTON -->
 <button id="ai-toggle" aria-label="Assistant AI">
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -455,32 +825,31 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
     <circle cx="15" cy="10" r="1" fill="#fff"/>
     <path d="M9 14c.5.5 1.5 1 3 1s2.5-.5 3-1"/>
   </svg>
+  <span class="tooltip">Assistant AI</span>
 </button>
 
 <!-- AI ASSISTANT PANEL -->
-<div id="ai-panel" style="position:fixed;bottom:100px;left:30px;z-index:999;width:350px;height:500px;background:var(--card-bg);backdrop-filter:blur(20px);border-radius:20px;border:1px solid rgba(91,62,150,0.3);box-shadow:0 20px 60px rgba(0,0,0,0.4);display:none;flex-direction:column;overflow:hidden;transition:all 0.3s;">
-  <div style="padding:20px;border-bottom:1px solid rgba(91,62,150,0.2);display:flex;justify-content:space-between;align-items:center;">
-    <h3 style="margin:0;font-size:1.2rem;color:var(--text);">🤖 Assistant GaiaLumen</h3>
-    <button id="ai-close" style="background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;padding:0;width:30px;height:30px;">×</button>
+<div id="ai-panel">
+  <div style="padding: 20px 24px; border-bottom: 1px solid rgba(107, 78, 158, 0.2); display: flex; justify-content: space-between; align-items: center;">
+    <h3 style="margin: 0; font-size: 1.2rem; color: var(--text); font-weight: 600;">✨ Assistant GaiaLumen</h3>
+    <button id="ai-close" style="background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; padding: 0; width: 32px; height: 32px; opacity: 0.7; transition: opacity 0.2s;">×</button>
   </div>
-  <div id="ai-messages" style="flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
-    <div style="background:rgba(91,62,150,0.2);padding:12px;border-radius:12px;font-size:0.9rem;">
-      👋 Bonjour! Je suis votre assistant GaiaLumen. Comment puis-je vous aider aujourd'hui?
+  <div id="ai-messages" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+    <div style="background: linear-gradient(135deg, rgba(107, 78, 158, 0.2), rgba(74, 159, 216, 0.1)); padding: 14px; border-radius: 18px; font-size: 0.9rem; border-left: 3px solid var(--violet);">
+      👋 Bonjour ! Je suis votre assistant GaiaLumen. Comment puis-je vous aider aujourd'hui ?
     </div>
   </div>
-  <div style="padding:15px;border-top:1px solid rgba(91,62,150,0.2);">
-    <div style="display:flex;gap:8px;">
-      <input id="ai-input" type="text" placeholder="Posez votre question..." style="flex:1;padding:12px;background:rgba(31,61,43,0.4);border:1px solid rgba(91,62,150,0.3);border-radius:12px;color:var(--text);font-size:0.9rem;">
-      <button id="ai-send" style="padding:12px 20px;background:linear-gradient(135deg,var(--violet),var(--blue));border:none;border-radius:12px;color:#fff;cursor:pointer;font-weight:600;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
+  <div style="padding: 18px 20px; border-top: 1px solid rgba(107, 78, 158, 0.2);">
+    <div style="display: flex; gap: 12px;">
+      <input id="ai-input" type="text" placeholder="Posez votre question..." style="flex: 1; padding: 12px 16px; background: rgba(31, 61, 43, 0.4); border: 1px solid rgba(107, 78, 158, 0.3); border-radius: 18px; color: var(--text); font-size: 0.9rem; font-family: 'Inter', sans-serif;">
+      <button id="ai-send" style="padding: 12px 22px; background: linear-gradient(135deg, var(--violet), var(--blue)); border: none; border-radius: 18px; color: #fff; cursor: pointer; font-weight: 600; transition: transform 0.2s;">
+        ✨
       </button>
     </div>
   </div>
 </div>
 
-<!-- CONTAINER -->
+<!-- MAIN CONTAINER -->
 <div class="container">
   <div class="logo">
     <svg viewBox="0 0 60 60" fill="none">
@@ -488,25 +857,25 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
       <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
       <defs>
         <radialGradient id="ag" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#3A86C4"/>
-          <stop offset="100%" stop-color="#5B3E96"/>
+          <stop offset="0%" stop-color="#4A9FD8"/>
+          <stop offset="100%" stop-color="#6B4E9E"/>
         </radialGradient>
         <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stop-color="#1F3D2B"/>
-          <stop offset="100%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#4A9FD8"/>
         </linearGradient>
       </defs>
       <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
       <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
     </svg>
-    <h1>🌿 GaiaLumen</h1>
+    <h1>GaiaLumen</h1>
     <p>Nutrition Écologique & Intelligente</p>
   </div>
   
   <form id="loginForm" novalidate>
     <div class="form-group">
-      <label for="email-input">Email</label>
-      <input type="text" id="email-input" placeholder="votre@email.com"/>
+      <label for="email-input">Adresse email</label>
+      <input type="text" id="email-input" placeholder="exemple@email.com"/>
     </div>
     
     <div class="form-group">
@@ -519,33 +888,28 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
       <label for="remember">Se souvenir de moi</label>
     </div>
     
-    <!-- Message d'erreur login -->
-    <div id="login-error" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;background:rgba(220,53,69,0.15);border:1px solid rgba(220,53,69,0.4);color:#ff6b7a;font-size:0.88rem;text-align:center;animation:slideUp .3s ease;"></div>
+    <div id="login-error" style="display: none;"></div>
 
     <button type="submit" class="btn-submit" id="btn-login">Se connecter</button>
   </form>
   
   <div class="links">
     <a href="register.html">Créer un compte</a>
-    <div class="divider">ou</div>
-    <a href="forgot.html">Mot de passe oublié?</a>
-    <div class="divider">ou</div>
-    <a href="index.html">← Retour à l'accueil</a>
+    <a href="forgot.html">Mot de passe oublié ?</a>
   </div>
   
- <!-- Section des boutons OAuth -->
-<div class="oauth-buttons">
+  <div class="oauth-buttons">
     <a href="../backend/auth/google-auth.php?action=login" class="social-btn btn-google">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:18px;height:18px;">
-        Continuer avec Google
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      <span>Google</span>
     </a>
     <a href="../backend/auth/twitter-auth.php?action=login" class="social-btn btn-twitter">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-        </svg>
-        Continuer avec X (Twitter)
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+      <span>X (Twitter)</span>
     </a>
-</div>
+  </div>
 </div>
 
 <script>
@@ -565,12 +929,12 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
     ctx.save();ctx.translate(70,70);ctx.rotate(a);
     for(let i=0;i<3;i++){
       ctx.beginPath();ctx.arc(0,0,48-i*10,0,Math.PI*2);
-      ctx.strokeStyle=`rgba(${i===0?'58,134,196':i===1?'91,62,150':'31,61,43'},${.6-i*.15})`;
+      ctx.strokeStyle=`rgba(${i===0?'74,159,216':i===1?'107,78,158':'31,61,43'},${.6-i*.15})`;
       ctx.lineWidth=1.5;ctx.stroke();
     }
     ctx.rotate(-a*.3);
     const g=ctx.createLinearGradient(-18,-26,18,26);
-    g.addColorStop(0,'#1F3D2B');g.addColorStop(1,'#3A86C4');
+    g.addColorStop(0,'#1F3D2B');g.addColorStop(1,'#4A9FD8');
     ctx.beginPath();ctx.fillStyle=g;
     ctx.moveTo(0,-26);ctx.bezierCurveTo(19,-12,22,7,0,26);
     ctx.bezierCurveTo(-22,7,-19,-12,0,-26);ctx.fill();
@@ -603,7 +967,7 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
     trail.style.left=tx+'px';trail.style.top=ty+'px';
     requestAnimationFrame(loop);
   })();
-  document.querySelectorAll('a,button,input').forEach(el=>{
+  document.querySelectorAll('a,button,input,.social-btn').forEach(el=>{
     el.addEventListener('mouseenter',()=>cur.classList.add('hover'));
     el.addEventListener('mouseleave',()=>cur.classList.remove('hover'));
   });
@@ -613,7 +977,7 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
    PARTICULES AU CLIC
    ═══════════════════════════════════════════════════════════ */
 document.addEventListener('click',e=>{
-  const emojis=['🍃','🌿','🍀','✨','🌱'];
+  const emojis=['🍃','🌿','🍀','✨','🌱','💫','🕊️'];
   for(let i=0;i<6;i++){
     const p=document.createElement('div');
     p.className='particle';
@@ -648,22 +1012,20 @@ window.addEventListener('load',function(){
   resize();
   window.addEventListener('resize',resize);
   
-  // Lumières
   scene.add(new THREE.AmbientLight(0xffffff,.3));
-  const dl=new THREE.DirectionalLight(0x3A86C4,1);
+  const dl=new THREE.DirectionalLight(0x4A9FD8,1);
   dl.position.set(5,3,5);
   scene.add(dl);
-  const pl=new THREE.PointLight(0x5B3E96,1.5,20);
+  const pl=new THREE.PointLight(0x6B4E9E,1.5,20);
   pl.position.set(-3,2,2);
   scene.add(pl);
   
-  // Globe Terre
   const loader=new THREE.TextureLoader();
   const earth=new THREE.Mesh(
     new THREE.SphereGeometry(2,64,64),
     new THREE.MeshPhongMaterial({
       map:loader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
-      specular:new THREE.Color(0x3A86C4),
+      specular:new THREE.Color(0x4A9FD8),
       shininess:28
     })
   );
@@ -684,7 +1046,7 @@ window.addEventListener('load',function(){
   const atm=new THREE.Mesh(
     new THREE.SphereGeometry(2.1,64,64),
     new THREE.MeshPhongMaterial({
-      color:0x3A86C4,
+      color:0x4A9FD8,
       transparent:true,
       opacity:.06,
       side:THREE.FrontSide
@@ -693,12 +1055,11 @@ window.addEventListener('load',function(){
   atm.position.copy(earth.position);
   scene.add(atm);
   
-  // Particules
   const PC=1200,pp=new Float32Array(PC*3),pc=new Float32Array(PC*3);
   const pal=[
     new THREE.Color(0x1F3D2B),
-    new THREE.Color(0x3A86C4),
-    new THREE.Color(0x5B3E96),
+    new THREE.Color(0x4A9FD8),
+    new THREE.Color(0x6B4E9E),
     new THREE.Color(0xF2E8CF)
   ];
   for(let i=0;i<PC;i++){
@@ -748,8 +1109,9 @@ window.addEventListener('load',function(){
   
   console.log('🔐 Scène 3D Login initialisée');
 });
+
 /* ═══════════════════════════════════════════════════════════
-   REMEMBER ME — Pré-remplir l'email au chargement
+   REMEMBER ME
    ═══════════════════════════════════════════════════════════ */
 (function() {
   const savedEmail = localStorage.getItem('gaialumen-remember-email');
@@ -758,8 +1120,9 @@ window.addEventListener('load',function(){
     document.getElementById('remember').checked = true;
   }
 })();
+
 /* ═══════════════════════════════════════════════════════════
-   CONTROLE DE SAISIE - FORMULAIRE LOGIN (sans HTML5)
+   FORMULAIRE LOGIN
    ═══════════════════════════════════════════════════════════ */
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
@@ -769,31 +1132,21 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   const email = document.getElementById('email-input').value.trim();
   const password = document.getElementById('password-input').value;
 
-  // Réinitialiser le message d'erreur
   errorDiv.style.display = 'none';
   errorDiv.textContent = '';
 
-  // ═══════════════════════════════════════════════════════════
-  // 1. Vérification des champs vides (les deux)
-  // ═══════════════════════════════════════════════════════════
   if (!email && !password) {
     errorDiv.textContent = "L'email et le mot de passe sont obligatoires";
     errorDiv.style.display = 'block';
     return;
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 2. Vérification de l'email (champ vide)
-  // ═══════════════════════════════════════════════════════════
   if (!email) {
     errorDiv.textContent = "L'email est obligatoire.";
     errorDiv.style.display = 'block';
     return;
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 3. Validation du format email (regex personnalisée)
-  // ═══════════════════════════════════════════════════════════
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     errorDiv.textContent = "Format d'email invalide. Exemple: nom@domaine.com";
@@ -801,28 +1154,20 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     return;
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 4. Vérification du mot de passe (champ vide)
-  // ═══════════════════════════════════════════════════════════
   if (!password) {
     errorDiv.textContent = "Le mot de passe est obligatoire.";
     errorDiv.style.display = 'block';
     return;
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // Tous les contrôles sont passés → appel API
-  // ═══════════════════════════════════════════════════════════
-  btn.textContent = 'Connexion en cours...';
+  btn.textContent = 'Connexion...';
   btn.disabled = true;
 
   try {
     const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/login.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, mdp: password,
-        remember_me: document.getElementById('remember').checked
-       })
+      body: JSON.stringify({ email, mdp: password, remember_me: document.getElementById('remember').checked })
     });
 
     const contentType = response.headers.get('content-type') || '';
@@ -837,18 +1182,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
     if (result.success) {
       const userData = result.data;
-      console.log('Données utilisateur:', userData);
-      
       const userId = userData.id_utilisateur || userData.id || userData.user_id;
       
       if (userId) {
         sessionStorage.setItem('user_id', userId);
         localStorage.setItem('user_id', userId);
-        console.log('✅ ID stocké:', userId);
-      } else {
-        console.error('❌ Aucun ID trouvé dans userData:', userData);
       }
-      
       
       sessionStorage.setItem('user_email', userData.email);
       sessionStorage.setItem('user_nom', userData.nom || '');
@@ -863,7 +1202,13 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       localStorage.setItem('gaialumen-user', JSON.stringify(userData));
       localStorage.setItem('gaialumen-token', 'session-' + Date.now());
 
-      btn.textContent = '✓ Connexion réussie !';
+      if (document.getElementById('remember').checked) {
+        localStorage.setItem('gaialumen-remember-email', email);
+      } else {
+        localStorage.removeItem('gaialumen-remember-email');
+      }
+
+      btn.textContent = '✓ Connecté !';
 
       setTimeout(() => {
         if (userData.role === 'admin') {
@@ -879,12 +1224,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       errorDiv.textContent = result.message || 'Identifiants incorrects.';
       errorDiv.style.display = 'block';
     }
-    // Remember Me — sauvegarder ou supprimer l'email
-if (document.getElementById('remember').checked) {
-  localStorage.setItem('gaialumen-remember-email', email);
-} else {
-  localStorage.removeItem('gaialumen-remember-email');
-}
 
   } catch (err) {
     console.error('Erreur login:', err);
@@ -895,7 +1234,6 @@ if (document.getElementById('remember').checked) {
   }
 });
 
-// Nettoyer toute session précédente à l'arrivée sur la page de login
 localStorage.removeItem('gaialumen-token');
 localStorage.removeItem('gaialumen-user');
 
@@ -937,7 +1275,7 @@ aiClose.addEventListener('click',()=>{
 
 function addMessage(text,isUser=false){
   const msg=document.createElement('div');
-  msg.style.cssText=`padding:12px;border-radius:12px;font-size:0.9rem;${isUser?'background:linear-gradient(135deg,var(--violet),var(--blue));color:#fff;align-self:flex-end;max-width:80%;':'background:rgba(91,62,150,0.2);'}`;
+  msg.style.cssText=`padding:12px 16px;border-radius:18px;font-size:0.9rem;line-height:1.4;${isUser?'background:linear-gradient(135deg,var(--violet),var(--blue));color:#fff;align-self:flex-end;max-width:80%;border-bottom-right-radius:4px;':'background:rgba(107,78,158,0.2);align-self:flex-start;max-width:80%;border-bottom-left-radius:4px;'}`;
   msg.textContent=text;
   aiMessages.appendChild(msg);
   aiMessages.scrollTop=aiMessages.scrollHeight;
@@ -946,15 +1284,17 @@ function addMessage(text,isUser=false){
 function aiRespond(question){
   const q=question.toLowerCase();
   if(q.includes('aide')||q.includes('help')){
-    return "Je peux vous aider avec la connexion, la récupération de mot de passe, ou répondre à vos questions sur GaiaLumen. 🌿";
+    return "Je peux vous aider avec la connexion, la récupération de mot de passe, ou répondre à vos questions sur GaiaLumen. 🌿 Que puis-je faire pour vous ?";
   }else if(q.includes('mot de passe')||q.includes('password')){
-    return "Pour réinitialiser votre mot de passe, cliquez sur 'Mot de passe oublié?' sous le formulaire. 🔑";
+    return "Pour réinitialiser votre mot de passe, cliquez sur 'Mot de passe oublié ?' sous le formulaire. 🔑 Un email vous sera envoyé pour créer un nouveau mot de passe.";
   }else if(q.includes('gaialumen')||q.includes('application')){
-    return "GaiaLumen est votre plateforme de nutrition écologique et intelligente. Nous vous aidons à manger sainement tout en respectant la planète! 🌍";
+    return "GaiaLumen est votre plateforme de nutrition écologique et intelligente. Nous vous aidons à manger sainement tout en respectant la planète ! 🌍 Découvrez nos recettes et conseils personnalisés.";
   }else if(q.includes('compte')||q.includes('inscription')){
-    return "Pour créer un compte, retournez à la page d'accueil et cliquez sur 'Commencer'. 📝";
+    return "Pour créer un compte, cliquez sur 'Créer un compte' sous le formulaire de connexion. L'inscription est gratuite et rapide ! 📝";
+  }else if(q.includes('connexion')||q.includes('login')){
+    return "Pour vous connecter, entrez votre email et mot de passe, puis cliquez sur 'Se connecter'. Vous pouvez aussi utiliser Google ou X (Twitter) ! 🔐";
   }else{
-    return "Je suis là pour vous aider! Posez-moi des questions sur la connexion, votre compte, ou GaiaLumen. 😊";
+    return "Je suis là pour vous aider ! Posez-moi des questions sur la connexion, votre compte, ou GaiaLumen. 😊 N'hésitez pas à me demander de l'aide !";
   }
 }
 
@@ -973,17 +1313,15 @@ aiInput.addEventListener('keypress',e=>{
     aiSend.click();
   }
 });
-// Google Login Button
+
 const googleLoginBtn = document.getElementById('google-login-btn');
 if (googleLoginBtn) {
     googleLoginBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        // Chemin vers le backend/auth/google-auth.php
         window.location.href = '../backend/auth/google-auth.php?action=login';
     });
 }
 
-// Gérer les erreurs de connexion Google
 const urlParams = new URLSearchParams(window.location.search);
 const error = urlParams.get('error');
 if (error === 'google_auth_failed') {

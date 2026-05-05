@@ -1,0 +1,193 @@
+{
+  "herbs": [
+    {
+      "name": "Gan Cao (Licorice Root)",
+      "pinyin": "Gan Cao",
+      "properties": "Sweet, neutral",
+      "meridians": ["Heart", "Lung", "Spleen", "Stomach"],
+      "functions": ["Tonify qi", "Harmonize herbs", "Moisten the lungs", "Stop cough"],
+      "indications": "Sore throat, cough, palpitations, stomach ulcers",
+      "safety": "Avoid in high doses with hypertension, pregnancy, kidney disease."
+    },
+    {
+      "name": "Dang Shen (Codonopsis Root)",
+      "pinyin": "Dang Shen",
+      "properties": "Sweet, neutral",
+      "meridians": ["Spleen", "Lung"],
+      "functions": ["Tonify qi", "Nourish fluids", "Support digestion"],
+      "indications": "Fatigue, poor appetite, shortness of breath, loose stools",
+      "safety": "Avoid in excess dampness or acute fever."
+    },
+    {
+      "name": "Huang Qi (Astragalus Root)",
+      "pinyin": "Huang Qi",
+      "properties": "Sweet, warm",
+      "meridians": ["Spleen", "Lung"],
+      "functions": ["Tonify qi", "Raise yang", "Support immune function", "Reduce edema"],
+      "indications": "Chronic fatigue, prolapse, night sweats, weak digestion",
+      "safety": "Avoid during acute infection with fever."
+    },
+    {
+      "name": "Ren Shen (Ginseng Root)",
+      "pinyin": "Ren Shen",
+      "properties": "Sweet, slightly warm",
+      "meridians": ["Spleen", "Lung", "Heart"],
+      "functions": ["Tonify yuan qi", "Strengthen digestion", "Calm the spirit", "Generate fluids"],
+      "indications": "Extreme fatigue, weakness after illness, shortness of breath",
+      "safety": "Avoid in hypertension, acute heat, and with stimulants."
+    },
+    {
+      "name": "Bai Zhu (Atractylodes Root)",
+      "pinyin": "Bai Zhu",
+      "properties": "Sweet, bitter, warm",
+      "meridians": ["Spleen", "Stomach"],
+      "functions": ["Tonify spleen qi", "Dry dampness", "Promote urination", "Stop sweating"],
+      "indications": "Poor appetite, bloating, loose stools, edema",
+      "safety": "Avoid deficiency of fluids with dry constipation."
+    },
+    {
+      "name": "Ju Hua (Chrysanthemum Flower)",
+      "pinyin": "Ju Hua",
+      "properties": "Sweet, bitter, slightly cold",
+      "meridians": ["Liver", "Lung"],
+      "functions": ["Clear heat and wind", "Benefit liver and eyes", "Remove toxins"],
+      "indications": "Red eyes, headache, hypertension, dizziness",
+      "safety": "Use with caution in deficient cold."
+    },
+    {
+      "name": "Bo He (Mint)",
+      "pinyin": "Bo He",
+      "properties": "Spicy, cool",
+      "meridians": ["Lung", "Liver"],
+      "functions": ["Clear wind-heat", "Soothe the throat", "Unblock liver qi"],
+      "indications": "Sore throat, common cold, stress, skin rash (topical)",
+      "safety": "Avoid in excessive sweating or qi deficiency."
+    },
+    {
+      "name": "Chai Hu (Bupleurum Root)",
+      "pinyin": "Chai Hu",
+      "properties": "Bitter, pungent, slightly cold",
+      "meridians": ["Gallbladder", "Liver", "Triple Burner"],
+      "functions": ["Harmonize liver qi", "Relieve depression", "Lift yang"],
+      "indications": "Stress, mood swings, chest tightness, menstrual pain",
+      "safety": "Avoid in yin deficiency with internal heat."
+    },
+    {
+      "name": "Sheng Jiang (Fresh Ginger)",
+      "pinyin": "Sheng Jiang",
+      "properties": "Spicy, warm",
+      "meridians": ["Lung", "Spleen", "Stomach"],
+      "functions": ["Warm the middle", "Relieve nausea", "Warm the lungs", "Stop cough"],
+      "indications": "Morning sickness, nausea, common cold, poor appetite",
+      "safety": "Avoid in hot conditions or yin deficiency."
+    },
+    {
+      "name": "Da Zao (Jujube Date)",
+      "pinyin": "Da Zao",
+      "properties": "Sweet, warm",
+      "meridians": ["Spleen", "Stomach", "Heart"],
+      "functions": ["Tonify spleen and stomach", "Nourish blood", "Calm the spirit"],
+      "indications": "Fatigue, palpitations, insomnia, dry skin",
+      "safety": "Safe for most, avoid in excess dampness."
+    },
+    {
+      "name": "Shan Zha (Hawthorn Berry)",
+      "pinyin": "Shan Zha",
+      "properties": "Sweet, sour, slightly warm",
+      "meridians": ["Spleen", "Stomach", "Liver"],
+      "functions": ["Transform food stagnation", "Promote blood circulation", "Lower lipids"],
+      "indications": "Bloating, indigestion, high cholesterol, meat stagnation",
+      "safety": "Avoid on an empty stomach; caution in pregnancy."
+    },
+    {
+      "name": "Yi Yi Ren (Coix Seed)",
+      "pinyin": "Yi Yi Ren",
+      "properties": "Sweet, bland, slightly cold",
+      "meridians": ["Spleen", "Stomach", "Lung"],
+      "functions": ["Drain dampness", "Strengthen spleen", "Reduce edema", "Clear heat"],
+      "indications": "Edema, arthritis, warts, loose stools",
+      "safety": "Avoid in pregnancy and severe spleen deficiency."
+
+    },
+    {
+      "name": "Pu Gong Ying (Dandelion)",
+      "pinyin": "Pu Gong Ying",
+      "properties": "Bitter, sweet, cold",
+      "meridians": ["Liver", "Stomach"],
+      "functions": ["Clear heat", "Reduce toxicity", "Dissolve abscess", "Promote urination"],
+      "indications": "Mastitis, acne, urinary infection, sore throat",
+      "safety": "Avoid in cold deficiency and with low blood pressure."
+
+    },
+    {
+      "name": "Huang Lian (Coptis Root)",
+      "pinyin": "Huang Lian",
+      "properties": "Bitter, cold",
+      "meridians": ["Heart", "Liver", "Stomach", "Large Intestine"],
+      "functions": ["Clear heart fire", "Dry dampness", "Relieve toxicity"],
+      "indications": "Diarrhea, insomnia, mouth ulcers, skin boils",
+      "safety": "Avoid in deficiency cold; short-term use only."
+
+    },
+    {
+      "name": "Chen Pi (Dried Tangerine Peel)",
+      "pinyin": "Chen Pi",
+      "properties": "Spicy, bitter, warm",
+      "meridians": ["Spleen", "Stomach", "Lung"],
+      "functions": ["Regulate qi", "Dry dampness", "Transform phlegm", "Improve digestion"],
+      "indications": "Bloating, chest tightness, nausea, phlegm cough",
+      "safety": "Avoid in yin deficiency with dry throat."
+
+    },
+    {
+      "name": "Fu Ling (Poria Mushroom)",
+      "pinyin": "Fu Ling",
+      "properties": "Sweet, bland, neutral",
+      "meridians": ["Heart", "Spleen", "Lung", "Kidney"],
+      "functions": ["Drain dampness", "Strengthen spleen", "Calm heart spirit"],
+      "indications": "Edema, loose stools, anxiety, insomnia",
+      "safety": "Avoid in yin deficiency with no dampness."
+
+    },
+    {
+      "name": "Bai Shao (White Peony Root)",
+      "pinyin": "Bai Shao",
+      "properties": "Bitter, sour, slightly cold",
+      "meridians": ["Liver", "Spleen"],
+      "functions": ["Nourish blood", "Regulate menstruation", "Preserve yin"],
+      "indications": "Menstrual pain, night sweats, muscle spasms",
+      "safety": "Avoid in diarrhea with deficiency cold."
+
+    },
+    {
+      "name": "Dan Shen (Red Sage Root)",
+      "pinyin": "Dan Shen",
+      "properties": "Bitter, slightly cold",
+      "meridians": ["Heart", "Liver"],
+      "functions": ["Invigorate blood", "Break stasis", "Clear heart fire", "Reduce swelling"],
+      "indications": "Chest pain, menstrual problems, insomnia",
+      "safety": "Avoid with blood thinners; caution in pregnancy."
+
+    },
+    {
+      "name": "Tian Ma (Gastrodia Tuber)",
+      "pinyin": "Tian Ma",
+      "properties": "Sweet, neutral",
+      "meridians": ["Liver"],
+      "functions": ["Extinguish wind", "Stop tremors", "Relieve pain", "Calm liver"],
+      "indications": "Headaches, dizziness, seizures, neuralgia",
+      "safety": "Use caution in pregnancy, minimal side effects."
+
+    },
+    {
+      "name": "Xia Ku Cao (Prunella Spike)",
+      "pinyin": "Xia Ku Cao",
+      "properties": "Spicy, bitter, cold",
+      "meridians": ["Liver", "Gallbladder"],
+      "functions": ["Clear liver fire", "Dissolve nodules", "Lower blood pressure"],
+      "indications": "Red eyes, hypertension, thyroid nodules, headache",
+      "safety": "Avoid in yin deficiency cold pattern."
+
+    }
+  ]
+}

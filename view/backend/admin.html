@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Dashboard - GaiaLumen</title>
+
+<!-- Polices -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+
+<!-- Styles -->
+<style>
+/* ═══════════════════════════════════════════════════════════
+   ROOT VARIABLES & RESET
+   ═══════════════════════════════════════════════════════════ */
+:root {
+    --green: #1F3D2B;
+    --sand: #F2E8CF;
+    --violet: #5B3E96;
+    --blue: #3A86C4;
+    --bg: #0a1a10;
+    --surface: #0f2318;
+    --text: #F2E8CF;
+    --muted: #a8b8a0;
+    --card-bg: rgba(15, 35, 24, 0.72);
+    --glass: rgba(31, 61, 43, 0.45);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --radius: 18px;
+    --tr: 0.4s cubic-bezier(.4, 0, .2, 1);
+    --success: #2ecc71;
+    --warning: #f1c40f;
+    --danger: #e74c3c;
+}
+
+[data-theme="light"] {
+    --bg: #f5f0e8;
+    --surface: #ede5d0;
+    --text: #1F3D2B;
+    --muted: #5a6e5a;
+    --card-bg: rgba(242, 232, 207, 0.75);
+    --glass: rgba(242, 232, 207, 0.6);
+    --shadow: 0 8px 32px rgba(31, 61, 43, 0.15);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Lato', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    transition: background var(--tr), color var(--tr);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CURSOR & PRELOADER
+   ═══════════════════════════════════════════════════════════ */
+#cursor {
+    position: fixed;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--violet);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    display: none;
+}
+
+#cursor.active {
+    display: block;
+}
+
+#cursor.hover {
+    width: 40px;
+    height: 40px;
+    border-color: var(--blue);
+    background: rgba(58, 134, 196, 0.1);
+}
+
+#cursor-trail {
+    position: fixed;
+    width: 12px;
+    height: 12px;
+    width: 8px;
+    height: 8px;
+    background: rgba(91, 62, 150, 0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    display: none;
+}
+
+#cursor-trail.active {
+    display: block;
+}
+
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: opacity 0.4s, visibility 0.4s;
+}
+
+#preloader.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+#pl-text {
+    color: var(--text);
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-top: 24px;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+#pl-bar {
+    width: 200px;
+    height: 3px;
+    background: rgba(91, 62, 150, 0.2);
+    border-radius: 3px;
+    margin-top: 16px;
+    overflow: hidden;
+}
+
+#pl-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--violet), var(--blue));
+    width: 0%;
+    transition: width 0.1s;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAVBAR
+   ═══════════════════════════════════════════════════════════ */
+nav#navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(15, 35, 24, 0.8);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+    padding: 16px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all var(--tr);
+}
+
+.nav-logo:hover {
+    transform: scale(1.05);
+}
+
+.nav-logo svg {
+    width: 40px;
+    height: 40px;
+}
+
+.nav-logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.nav-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+#menu-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transition: all var(--tr);
+}
+
+#menu-toggle span {
+    width: 24px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: all var(--tr);
+}
+
+#menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+}
+
+#menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+#menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(8px, -8px);
+}
+
+#theme-toggle,
+.btn-logout {
+    padding: 10px 18px;
+    background: var(--glass);
+    border: 1px solid rgba(91, 62, 150, 0.3);
+    border-radius: 8px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all var(--tr);
+    font-family: 'Lato', sans-serif;
+}
+
+#theme-toggle:hover,
+.btn-logout:hover {
+    background: rgba(91, 62, 150, 0.15);
+    border-color: var(--violet);
+}
+
+.btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR TOGGLE
+   ═══════════════════════════════════════════════════════════ */
+#sidebar-toggle {
+    position: fixed;
+    left: 20px;
+    bottom: 40px;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(91, 62, 150, 0.4);
+    transition: all var(--tr);
+}
+
+#sidebar-toggle:hover {
+    transform: scale(1.1);
+}
+
+#sidebar-toggle svg {
+    width: 24px;
+    height: 24px;
+}
+
+@media (max-width: 768px) {
+    #sidebar-toggle {
+        display: flex;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD CONTAINER & SIDEBAR
+   ═══════════════════════════════════════════════════════════ */
+.dashboard-container {
+    display: flex;
+    gap: 24px;
+    padding: 24px 5%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+aside.sidebar-menu {
+    flex: 0 0 250px;
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(91, 62, 150, 0.2);
+    border-radius: var(--radius);
+    padding: 24px;
+    height: fit-content;
+    position: sticky;
+    top: 80px;
+    transition: all var(--tr);
+}
+
+.menu-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all var(--tr);
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.menu-item:hover,
+.menu-item.active {
+    background: rgba(91, 62, 150, 0.15);
+    border: 1px solid rgba(91, 62, 150, 0.3);
+}
+
+.menu-item-icon {
+    font-size: 1.4rem;
+}
+
+.menu-item-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    aside.sidebar-menu {
+        position: fixed;
+        left: -300px;
+        top: 80px;
+        flex: 0 0 280px;
+        height: auto;
+        max-height: calc(100vh - 80px);
+        border-radius: 0;
+        z-index: 499;
+        transition: left var(--tr);
+    }
+
+    aside.sidebar-menu.visible {
+        left: 0;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN CONTENT AREA
+   ═══════════════════════════════════════════════════════════ */
+main.main-content {
+    flex: 1;
+    min-height: calc(100vh - 100px);
+}
+
+.section-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    gap: 20px;
+}
+
+.section-loader-spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(91, 62, 150, 0.2);
+    border-top-color: var(--violet);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROGRESS BAR
+   ═══════════════════════════════════════════════════════════ */
+.progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(91, 62, 150, 0.1);
+    width: 100%;
+    z-index: 10001;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--violet), var(--blue));
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column;
+        gap: 20px;
+        padding: 16px 4%;
+    }
+
+    aside.sidebar-menu {
+        flex: 0 0 auto;
+        position: static;
+        width: 100%;
+    }
+
+    main.main-content {
+        min-height: auto;
+    }
+}
+</style>
+
+<!-- Librairies externes -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<div id="preloader">
+  <canvas id="pl-canvas"></canvas>
+  <div id="pl-text">GAIALUMEN ADMIN</div>
+  <div id="pl-bar"><div id="pl-fill"></div></div>
+</div>
+
+<nav id="navbar">
+  <a href="admin.html" class="nav-logo">
+    <svg viewBox="0 0 60 60" fill="none">
+      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <defs>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#5B3E96"/>
+        </radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1F3D2B"/>
+          <stop offset="100%" stop-color="#3A86C4"/>
+        </linearGradient>
+      </defs>
+      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-logo-text">🛡️ Admin GaiaLumen</span>
+  </a>
+  <div class="nav-actions">
+    <button id="menu-toggle" title="Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
+    <button class="btn-logout" onclick="logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Déconnexion
+    </button>
+  </div>
+</nav>
+
+<button id="sidebar-toggle" title="Toggle sidebar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+</button>
+
+<div class="dashboard-container">
+  <aside class="sidebar-menu">
+    <div class="menu-title">📊 Modules Admin</div>
+    <a href="#" class="menu-item" data-module="dashboard">
+      <span class="menu-item-icon">🏠</span>
+      <span class="menu-item-text">Dashboard</span>
+    </a>
+    <a href="#" class="menu-item" data-module="users">
+      <span class="menu-item-icon">👥</span>
+      <span class="menu-item-text">GS Utilisateurs</span>
+    </a>
+    <a href="#" class="menu-item" data-module="planning">
+      <span class="menu-item-icon">📅</span>
+      <span class="menu-item-text">GS Planning</span>
+    </a>
+    <a href="#" class="menu-item" data-module="events">
+      <span class="menu-item-icon">🎯</span>
+      <span class="menu-item-text">GS Events</span>
+    </a>
+    <a href="#" class="menu-item" data-module="meals">
+      <span class="menu-item-icon">🍽️</span>
+      <span class="menu-item-text">GS Repas</span>
+    </a>
+    <a href="#" class="menu-item" data-module="health">
+      <span class="menu-item-icon">❤️</span>
+      <span class="menu-item-text">GS Santé</span>
+    </a>
+    <a href="#" class="menu-item" data-module="challenges">
+      <span class="menu-item-icon">🏆</span>
+      <span class="menu-item-text">GS Défis</span>
+    </a>
+    <a href="#" class="menu-item" data-module="activity">
+      <span class="menu-item-icon">📜</span>
+      <span class="menu-item-text">Logs Activité</span>
+    </a>
+  </aside>
+
+  <main class="main-content">
+      <div id="module-initial-loader" class="section-loader">
+        <div class="section-loader-spinner"></div>
+        <p style="color:var(--muted); font-size:1.1rem;">Initialisation du dashboard...</p>
+      </div>
+    </main>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-bar-fill" id="progressBar"></div>
+</div>
+
+<!-- Scripts -->
+<script src="js/admin.js"></script>
+<script src="js/admin-module-loader.js"></script>
+</body>
+</html>

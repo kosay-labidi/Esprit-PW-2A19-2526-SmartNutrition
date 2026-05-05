@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏥 GS Santé - Gestion Médicale</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+    <style>
+        /* ═══════════════════════════════════════════════════════════
+           VARIABLES & RESET
+           ═══════════════════════════════════════════════════════════ */
+        :root {
+            --green: #1F3D2B;
+            --sand: #F2E8CF;
+            --violet: #5B3E96;
+            --blue: #3A86C4;
+            --bg: #0a1a10;
+            --surface: #0f2318;
+            --text: #F2E8CF;
+            --muted: #a8b8a0;
+            --card-bg: rgba(15, 35, 24, 0.72);
+            --glass: rgba(31, 61, 43, 0.45);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --radius: 18px;
+            --tr: 0.4s cubic-bezier(.4, 0, .2, 1);
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+        }
+        
+        [data-theme="light"] {
+            --bg: #f5f0e8;
+            --surface: #ede5d0;
+            --text: #1F3D2B;
+            --muted: #5a6e5a;
+            --card-bg: rgba(242, 232, 207, 0.75);
+            --glass: rgba(242, 232, 207, 0.6);
+            --shadow: 0 8px 32px rgba(31, 61, 43, 0.15);
+        }
+        
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Lato', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            transition: background var(--tr), color var(--tr);
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════
+           CONTAINER & LAYOUT
+           ═══════════════════════════════════════════════════════════ */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 5%;
+        }
+        
+        h1 {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            margin-bottom: 30px;
+            color: var(--text);
+            letter-spacing: .05em;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════
+           BUTTONS
+           ═══════════════════════════════════════════════════════════ */
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all var(--tr);
+            letter-spacing: .04em;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--violet), var(--blue));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(91, 62, 150, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--glass);
+            color: var(--text);
+            border: 1.5px solid rgba(91, 62, 150, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(91, 62, 150, 0.15);
+            border-color: var(--violet);
+            transform: translateY(-2px);
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            border-radius: 12px;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+        
+        a.btn-small {
+            display: inline-flex;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════
+           STATS GRID
+           ═══════════════════════════════════════════════════════════ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(91, 62, 150, .2);
+            border-radius: var(--radius);
+            padding: 28px;
+            text-align: center;
+            transition: all var(--tr);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--violet), var(--blue));
+            opacity: 0;
+            transition: opacity var(--tr);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(91, 62, 150, .4);
+            box-shadow: var(--shadow);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-card h3 {
+            color: var(--text);
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--violet);
+            line-height: 1;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════
+           SECTIONS
+           ═══════════════════════════════════════════════════════════ */
+        .section {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(91, 62, 150, .2);
+            border-radius: var(--radius);
+            padding: 40px;
+            margin-bottom: 30px;
+            transition: all var(--tr);
+        }
+        
+        .section h2 {
+            color: var(--text);
+            font-size: 1.8rem;
+            margin-bottom: 28px;
+            letter-spacing: .04em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(91, 62, 150, .3), transparent);
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        input[type="text"],
+        select {
+            padding: 10px 16px;
+            background: rgba(31, 61, 43, 0.3);
+            border: 1px solid rgba(91, 62, 150, .3);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: var(--text);
+            font-family: 'Lato', sans-serif;
+            transition: all var(--tr);
+            flex: 0 1 auto;
+            min-width: 180px;
+        }
+        
+        input[type="text"]::placeholder {
+            color: rgba(242, 232, 207, 0.5);
+        }
+        
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            background: rgba(31, 61, 43, 0.5);
+            border-color: var(--violet);
+            box-shadow: 0 0 16px rgba(91, 62, 150, .2);
+        }
+        
+        /* ═══════════════════════════════════════════════════════════
+           TABLE
+           ═══════════════════════════════════════════════════════════ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+        
+        table thead {
+            background: rgba(91, 62, 150, .15);
+            border: 1px solid rgba(91, 62, 150, .2);
+        }
+        
+        table th {
+            color: var(--text);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            letter-spacing: .04em;
+            font-size: 0.9rem;
+        }
+        
+        table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(91, 62, 150, .1);
+            font-size: 0.95rem;
+        }
+        
+        table tbody tr:hover {
+            background: rgba(91, 62, 150, .08);
+        }
+        
+        table a {
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 500;
+            margin-right: 8px;
+            transition: color var(--tr);
+        }
+        
+        table a:hover {
+            color: var(--violet);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 40px;
+            color: var(--muted);
+            font-size: 1rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: var(--muted);
+            font-size: 1rem;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════
+           ALERTS
+           ═══════════════════════════════════════════════════════════ */
+        #alertContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            max-width: 400px;
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid;
+            animation: slideIn 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: rgba(46, 204, 113, 0.15);
+            color: var(--success);
+            border-color: rgba(46, 204, 113, 0.3);
+        }
+        
+        .alert-error {
+            background: rgba(231, 76, 60, 0.15);
+            color: var(--danger);
+            border-color: rgba(231, 76, 60, 0.3);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════
+           RESPONSIVE
+           ═══════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 3%;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .section {
+                padding: 24px;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+            }
+            
+            input[type="text"],
+            select {
+                width: 100%;
+            }
+            
+            table {
+                font-size: 0.85rem;
+            }
+            
+            table th,
+            table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<section class="content-section" id="health">
+    <div class="container">
+        <h1>❤️ Gestion de la Santé</h1>
+        
+        <div id="alertContainer"></div>
+        
+        <!-- Action Buttons -->
+        <div class="btn-group">
+            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/addDossier.php" class="btn btn-primary">
+                <span>➕</span> Nouveau Dossier
+            </a>
+            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/addRegime.php" class="btn btn-primary">
+                <span>➕</span> Nouveau Régime
+            </a>
+            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/exportDossiers.php" target="_blank" class="btn btn-secondary">
+                <span>📥</span> Export Dossiers
+            </a>
+            <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/exportRegimes.php" target="_blank" class="btn btn-secondary">
+                <span>📥</span> Export Régimes
+            </a>
+        </div>
+        
+        <!-- Statistics Section -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>📋 Dossiers Totaux</h3>
+                <div class="stat-value" id="stat-dossiers">—</div>
+                <p style="font-size:.8rem;color:var(--muted);margin-top:6px;">Dossiers médicaux enregistrés</p>
+            </div>
+            <div class="stat-card">
+                <h3>🥗 Régimes Totaux</h3>
+                <div class="stat-value" id="stat-regimes">—</div>
+                <p style="font-size:.8rem;color:var(--muted);margin-top:6px;">Plans alimentaires actifs</p>
+            </div>
+            <div class="stat-card">
+                <h3>⚖️ IMC Moyen</h3>
+                <div class="stat-value" id="stat-imc">—</div>
+                <p style="font-size:.8rem;color:var(--muted);margin-top:6px;" id="stat-imc-label">Indice de masse corporelle</p>
+            </div>
+            <div class="stat-card">
+                <h3>⚠️ Avec Allergies</h3>
+                <div class="stat-value" id="stat-allergies">—</div>
+                <p style="font-size:.8rem;color:var(--muted);margin-top:6px;">Patients avec allergies déclarées</p>
+            </div>
+        </div>
+        
+        <!-- Dossiers Section -->
+        <div class="section">
+            <h2>📋 Dossiers Médicaux</h2>
+            
+            <div class="filter-group">
+                <select id="searchDossierType" onchange="searchDossiers()" style="min-width:160px;">
+                    <option value="id_dossier">� ID Dossier</option>
+                    <option value="id_utilisateur">👤 ID Utilisateur</option>
+                    <option value="nom_regime">🥗 Nom Régime</option>
+                    <option value="allergie">⚠️ Allergie</option>
+                </select>
+                <input type="text" id="searchDossier" placeholder="Valeur à rechercher..." oninput="debounceDossier()" style="flex:1;min-width:160px;">
+                <select id="filterBloodType" onchange="searchDossiers()">
+                    <option value="">Tous groupes sanguins</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                </select>
+                <select id="sortDossierField" onchange="searchDossiers()">
+                    <option value="date_mise_a_jour">Trier par : Date</option>
+                    <option value="imc">Trier par : IMC</option>
+                    <option value="poids">Trier par : Poids</option>
+                    <option value="id_dossier">Trier par : ID</option>
+                </select>
+                <select id="sortDossierDir" onchange="searchDossiers()">
+                    <option value="DESC">↓ Décroissant</option>
+                    <option value="ASC">↑ Croissant</option>
+                </select>
+            </div>
+            
+            <div id="dossiersContainer" class="loading">Chargement des dossiers...</div>
+        </div>
+        
+        <!-- Regimes Section -->
+        <div class="section">
+            <h2>🥗 Régimes Alimentaires</h2>
+            
+            <div class="filter-group">
+                <select id="searchRegimeType" onchange="searchRegimes()" style="min-width:160px;">
+                    <option value="nom_regime">🥗 Nom Régime</option>
+                    <option value="type_regime">📂 Type</option>
+                    <option value="niveau_difficulte">⚙️ Niveau</option>
+                    <option value="id_regime">🔢 ID Régime</option>
+                </select>
+                <input type="text" id="searchRegime" placeholder="Valeur à rechercher..." oninput="debounceRegime()" style="flex:1;min-width:160px;">
+                <select id="filterType" onchange="searchRegimes()">
+                    <option value="">Tous types</option>
+                    <option value="alimentaire">Alimentaire</option>
+                    <option value="medical">Médical</option>
+                    <option value="sportif">Sportif</option>
+                    <option value="perte_de_poids">Perte de poids</option>
+                    <option value="prise_de_masse">Prise de masse</option>
+                </select>
+                <select id="sortRegimeField" onchange="searchRegimes()">
+                    <option value="nom_regime">Trier par : Nom</option>
+                    <option value="apport_calorique_moyen">Trier par : Calories</option>
+                    <option value="type_regime">Trier par : Type</option>
+                    <option value="id_regime">Trier par : ID</option>
+                </select>
+                <select id="sortRegimeDir" onchange="searchRegimes()">
+                    <option value="ASC">↑ Croissant</option>
+                    <option value="DESC">↓ Décroissant</option>
+                </select>
+            </div>
+            
+            <div id="regimesContainer" class="loading">Chargement des régimes...</div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/crud/Esprit-PW-2A19-2526-SmartNutrition/controller';
+
+        function healthAdminInit() {
+            loadStats();
+            loadDossiers();
+            loadRegimes();
+        }
+
+        // Debounce helpers for live search (300ms delay)
+        let _dossierTimer = null;
+        function debounceDossier() {
+            clearTimeout(_dossierTimer);
+            _dossierTimer = setTimeout(searchDossiers, 300);
+        }
+
+        let _regimeTimer = null;
+        function debounceRegime() {
+            clearTimeout(_regimeTimer);
+            _regimeTimer = setTimeout(searchRegimes, 300);
+        }
+        
+        // Load statistics
+        async function loadStats() {
+            try {
+                const dosRes = await fetch(`${API_BASE}/dossierMedical.controller.php?action=stats`);
+                const dosStat = await dosRes.json();
+                
+                const regRes = await fetch(`${API_BASE}/regime.controller.php?action=stats`);
+                const regStat = await regRes.json();
+                
+                document.getElementById('stat-dossiers').textContent = dosStat.total_dossiers || 0;
+                document.getElementById('stat-regimes').textContent = regStat.total_regimes || 0;
+                const avgImc = parseFloat(dosStat.avg_imc || 0);
+                document.getElementById('stat-imc').textContent = avgImc.toFixed(1);
+                // IMC category label
+                let imcLabel = 'Indice de masse corporelle';
+                if (avgImc > 0) {
+                    if (avgImc < 18.5)     imcLabel = '🔵 Sous-poids moyen';
+                    else if (avgImc < 25)  imcLabel = '🟢 Poids normal moyen';
+                    else if (avgImc < 30)  imcLabel = '🟡 Surpoids moyen';
+                    else                   imcLabel = '🔴 Obésité moyenne';
+                }
+                const imcLabelEl = document.getElementById('stat-imc-label');
+                if (imcLabelEl) imcLabelEl.textContent = imcLabel;
+                document.getElementById('stat-allergies').textContent = dosStat.allergies_count || 0;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                showAlert('Erreur lors du chargement des statistiques', 'error');
+            }
+        }
+        
+        // Load dossiers
+        async function loadDossiers() {
+            try {
+                const response = await fetch(`${API_BASE}/dossierMedical.controller.php?action=list`);
+                const data = await response.json();
+                _allDossiers = data.success ? data.data : [];
+                renderDossierTable(_allDossiers);
+            } catch (error) {
+                console.error('Error loading dossiers:', error);
+                document.getElementById('dossiersContainer').innerHTML = '<div class="empty-state">Erreur lors du chargement</div>';
+            }
+        }
+        
+        // Load regimes
+        // Shared helper to render regime rows
+        function renderRegimeTable(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('regimesContainer').innerHTML = '<div class="empty-state">Aucun régime trouvé</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>ID</th><th>Nom</th><th>Type</th><th>Niveau</th><th>Calories/j</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(r => {
+                html += `<tr>
+                    <td>${r.id_regime}</td>
+                    <td><strong>${r.nom_regime}</strong></td>
+                    <td>${r.type_regime || '—'}</td>
+                    <td>${r.niveau_difficulte || '—'}</td>
+                    <td>${r.apport_calorique_moyen ? r.apport_calorique_moyen + ' kcal' : '—'}</td>
+                    <td>
+                        <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/updateRegime.php?id=${r.id_regime}" class="btn btn-small btn-secondary">✏️ Éditer</a>
+                        <button class="btn btn-danger btn-small" onclick="deleteRegime(${r.id_regime})">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('regimesContainer').innerHTML = html;
+        }
+
+        async function loadRegimes() {
+            try {
+                const response = await fetch(`${API_BASE}/regime.controller.php?action=list`);
+                const data = await response.json();
+                _allRegimes = data.success ? data.data : [];
+                renderRegimeTable(_allRegimes);
+            } catch (error) {
+                console.error('Error loading regimes:', error);
+                document.getElementById('regimesContainer').innerHTML = '<div class="empty-state">Erreur lors du chargement</div>';
+            }
+        }
+        
+        // Delete dossier
+        async function deleteDossier(id) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/dossierMedical.controller.php?action=delete&id=${id}`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('✅ Dossier supprimé avec succès!', 'success');
+                    _allDossiers = []; // invalidate cache
+                    loadDossiers();
+                    loadStats();
+                } else {
+                    showAlert('❌ Erreur lors de la suppression', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting:', error);
+                showAlert('❌ Erreur', 'error');
+            }
+        }
+        
+        // Delete regime
+        async function deleteRegime(id) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce régime ?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/regime.controller.php?action=delete&id=${id}`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('✅ Régime supprimé avec succès!', 'success');
+                    _allRegimes = []; // invalidate cache
+                    loadRegimes();
+                    loadStats();
+                } else {
+                    showAlert('❌ Erreur lors de la suppression', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting:', error);
+                showAlert('❌ Erreur', 'error');
+            }
+        }
+        
+        // Shared helper to render dossier rows
+        function renderDossierTable(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('dossiersContainer').innerHTML = '<div class="empty-state">Aucun dossier trouvé</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>ID</th><th>Utilisateur</th><th>Groupe</th><th>Poids</th><th>Taille</th><th>IMC</th><th>Régime</th><th>Allergie</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(d => {
+                const imc = d.imc ? parseFloat(d.imc).toFixed(1) : '—';
+                const regime = d.nom_regime ? `<span style="background:rgba(91,62,150,.2);padding:2px 8px;border-radius:8px;font-size:.85rem;">${d.nom_regime}</span>` : '—';
+                html += `<tr>
+                    <td>${d.id_dossier}</td>
+                    <td>${d.id_utilisateur || 1}</td>
+                    <td>${d.groupe_sanguin || '—'}</td>
+                    <td>${d.poids ? d.poids + ' kg' : '—'}</td>
+                    <td>${d.taille ? d.taille + ' cm' : '—'}</td>
+                    <td>${imc}</td>
+                    <td>${regime}</td>
+                    <td>${d.allergie ? d.allergie.substring(0, 20) + '…' : '—'}</td>
+                    <td>
+                        <a href="/crud/Esprit-PW-2A19-2526-SmartNutrition/view/backend/health/updateDossier.php?id=${d.id_dossier}" class="btn btn-small btn-secondary">✏️ Éditer</a>
+                        <button class="btn btn-danger btn-small" onclick="deleteDossier(${d.id_dossier})">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('dossiersContainer').innerHTML = html;
+        }
+
+        // Cache all dossiers for client-side filtering
+        let _allDossiers = [];
+
+        // Search + filter + sort dossiers (all in one)
+        async function searchDossiers() {
+            const query      = document.getElementById('searchDossier').value.trim().toLowerCase();
+            const searchType = document.getElementById('searchDossierType').value;
+            const bloodType  = document.getElementById('filterBloodType').value;
+            const sortField  = document.getElementById('sortDossierField').value;
+            const sortDir    = document.getElementById('sortDossierDir').value;
+
+            // Load all dossiers if cache is empty
+            if (_allDossiers.length === 0) {
+                try {
+                    const res = await fetch(`${API_BASE}/dossierMedical.controller.php?action=list`);
+                    const d = await res.json();
+                    _allDossiers = d.success ? d.data : [];
+                } catch(e) {
+                    document.getElementById('dossiersContainer').innerHTML = '<div class="empty-state">Erreur lors du chargement</div>';
+                    return;
+                }
+            }
+
+            // Filter by selected search type
+            let filtered = _allDossiers.filter(d => {
+                const matchBlood = !bloodType || d.groupe_sanguin === bloodType;
+                if (!query) return matchBlood;
+                let fieldVal = '';
+                if (searchType === 'id_dossier')    fieldVal = String(d.id_dossier);
+                if (searchType === 'id_utilisateur') fieldVal = String(d.id_utilisateur);
+                if (searchType === 'nom_regime')     fieldVal = (d.nom_regime || '').toLowerCase();
+                if (searchType === 'allergie')       fieldVal = (d.allergie || '').toLowerCase();
+                // ID fields: exact match; text fields: substring
+                const isIdField = searchType === 'id_dossier' || searchType === 'id_utilisateur';
+                const match = isIdField ? fieldVal === query : fieldVal.includes(query);
+                return matchBlood && match;
+            });
+
+            // Sort
+            filtered.sort((a, b) => {
+                const va = a[sortField] ?? '';
+                const vb = b[sortField] ?? '';
+                if (sortDir === 'ASC') return va > vb ? 1 : -1;
+                return va < vb ? 1 : -1;
+            });
+
+            renderDossierTable(filtered);
+        }
+        
+        // Search regimes
+        // Cache all regimes for client-side filtering
+        let _allRegimes = [];
+
+        async function searchRegimes() {
+            const query      = document.getElementById('searchRegime').value.trim().toLowerCase();
+            const searchType = document.getElementById('searchRegimeType').value;
+            const typeFilter = document.getElementById('filterType').value;
+            const sortField  = document.getElementById('sortRegimeField').value;
+            const sortDir    = document.getElementById('sortRegimeDir').value;
+
+            // Load all regimes if cache is empty
+            if (_allRegimes.length === 0) {
+                try {
+                    const res = await fetch(`${API_BASE}/regime.controller.php?action=list`);
+                    const d = await res.json();
+                    _allRegimes = d.success ? d.data : [];
+                } catch(e) {
+                    document.getElementById('regimesContainer').innerHTML = '<div class="empty-state">Erreur lors du chargement</div>';
+                    return;
+                }
+            }
+
+            // Filter by selected search type + type dropdown
+            let filtered = _allRegimes.filter(r => {
+                const matchType = !typeFilter || r.type_regime === typeFilter;
+                if (!query) return matchType;
+                let fieldVal = '';
+                if (searchType === 'nom_regime')       fieldVal = (r.nom_regime || '').toLowerCase();
+                if (searchType === 'type_regime')      fieldVal = (r.type_regime || '').toLowerCase();
+                if (searchType === 'niveau_difficulte') fieldVal = (r.niveau_difficulte || '').toLowerCase();
+                if (searchType === 'id_regime')        fieldVal = String(r.id_regime);
+                const isIdField = searchType === 'id_regime';
+                const match = isIdField ? fieldVal === query : fieldVal.includes(query);
+                return matchType && match;
+            });
+
+            // Sort
+            filtered.sort((a, b) => {
+                const va = a[sortField] ?? '';
+                const vb = b[sortField] ?? '';
+                if (sortDir === 'ASC') return va > vb ? 1 : -1;
+                return va < vb ? 1 : -1;
+            });
+
+            renderRegimeTable(filtered);
+        }
+        
+        // Show alert
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            document.getElementById('alertContainer').appendChild(alertDiv);
+            
+            setTimeout(() => alertDiv.remove(), 4000);
+        }
+
+        // Call init after all functions are defined
+        healthAdminInit();
+    </script>
+</section>
+</body>
+</html>

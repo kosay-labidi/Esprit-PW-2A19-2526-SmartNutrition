@@ -6,9 +6,14 @@
 <title>GaiaLumen – Mon Profil</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-  /* ==================== VARIABLES DASHBOARD ==================== */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
   :root {
     --green: #1F3D2B;
     --sand: #F2E8CF;
@@ -17,61 +22,82 @@
     --bg: #0a1a10;
     --surface: #0f2318;
     --text: #F2E8CF;
-    --muted: #a8b8a0;
+    --text-secondary: #a8b8a0;
     --card-bg: rgba(15, 35, 24, 0.72);
     --glass: rgba(31, 61, 43, 0.45);
-    --glass-strong: rgba(31, 61, 43, 0.85);
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --border: rgba(91, 62, 150, 0.2);
     --radius: 18px;
-    --tr: 0.4s cubic-bezier(.4, 0, .2, 1);
+    --transition: 0.2s ease;
+    --success: #2ecc71;
+    --warning: #e67e22;
+    --danger: #e74c3c;
+    --scrollbar-track: rgba(91, 62, 150, 0.1);
+    --scrollbar-thumb: #5B3E96;
+    --scrollbar-thumb-hover: #3A86C4;
   }
 
   [data-theme="light"] {
     --bg: #f5f0e8;
     --surface: #ede5d0;
     --text: #1F3D2B;
-    --muted: #5a6e5a;
+    --text-secondary: #5a6e5a;
     --card-bg: rgba(242, 232, 207, 0.75);
     --glass: rgba(242, 232, 207, 0.6);
-    --glass-strong: rgba(242, 232, 207, 0.9);
-    --shadow: 0 8px 32px rgba(31, 61, 43, 0.15);
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    --border: rgba(91, 62, 150, 0.15);
+    --scrollbar-track: rgba(91, 62, 150, 0.08);
+    --scrollbar-thumb: #5B3E96;
+    --scrollbar-thumb-hover: #3A86C4;
   }
 
   body {
     background: var(--bg);
-    font-family: 'Lato', sans-serif;
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
     min-height: 100vh;
-    transition: background var(--tr), color var(--tr);
-    overflow-x: hidden;
+    transition: background var(--transition);
   }
 
-  /* ==================== NAVBAR DASHBOARD ==================== */
+  /* ========== SCROLLBAR STYLISÉE ========== */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 10px;
+    transition: background 0.2s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  /* Navbar */
   .navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.8rem 2rem;
+    z-index: 100;
     background: var(--glass);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(91, 62, 150, .2);
-    transition: all 0.3s ease;
-  }
-
-  .navbar.scrolled {
-    padding: 0.5rem 2rem;
-    background: var(--glass-strong);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .nav-logo {
@@ -79,391 +105,424 @@
     align-items: center;
     gap: 10px;
     text-decoration: none;
+    font-weight: 700;
+    font-size: 1.25rem;
     color: var(--text);
+    font-family: 'Inter', sans-serif;
   }
 
   .nav-logo svg {
-    width: 38px;
-    height: 38px;
-  }
-
-  .nav-logo-text {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    letter-spacing: .05em;
+    width: 32px;
+    height: 32px;
   }
 
   .nav-actions {
     display: flex;
-    align-items: center;
     gap: 12px;
   }
 
-  #theme-toggle {
+  .btn-icon {
     background: var(--glass);
-    border: 1.5px solid rgba(91, 62, 150, .5);
+    border: 1px solid var(--border);
     border-radius: 50px;
-    padding: 6px 14px;
+    padding: 8px 16px;
     color: var(--text);
     cursor: pointer;
-    font-size: .82rem;
-    transition: all .3s;
-    backdrop-filter: blur(10px);
+    font-size: 0.85rem;
+    transition: all var(--transition);
   }
 
-  #theme-toggle:hover {
-    background: rgba(91, 62, 150, .2);
-    transform: scale(1.05);
+  .btn-icon:hover {
     border-color: var(--violet);
+    background: rgba(91, 62, 150, 0.2);
   }
 
-  .btn-back {
-    background: var(--glass);
-    border: 1.5px solid rgba(91, 62, 150, .5);
-    border-radius: 50px;
-    padding: 6px 16px;
-    color: var(--text);
-    cursor: pointer;
-    text-decoration: none;
-    font-size: .85rem;
-    transition: all .3s;
-    display: inline-flex;
+  /* Layout 2 colonnes */
+  .profile-dashboard {
+    display: flex;
+    min-height: 100vh;
+    padding-top: 72px;
+  }
+
+  /* Colonne gauche - avec scroll stylisé */
+  .profile-sidebar {
+    width: 360px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
-  }
-
-  .btn-back:hover {
-    background: rgba(91, 62, 150, .2);
-    transform: translateY(-2px);
-  }
-
-  /* ==================== CURSEUR PERSONNALISÉ ==================== */
-  #cursor {
+    padding: 2rem 1.5rem;
     position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 9999;
-    pointer-events: none;
-    width: 14px;
-    height: 14px;
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Colonne droite - avec scroll stylisé */
+  .profile-main {
+    flex: 1;
+    margin-left: 360px;
+    padding: 2rem;
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+  }
+
+  /* Avatar */
+  .avatar-wrapper {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .avatar {
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--violet);
+    background: var(--surface);
+    box-shadow: 0 8px 25px rgba(91, 62, 150, 0.3);
+  }
+
+  .avatar-upload {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
     background: var(--violet);
-    box-shadow: 0 0 12px var(--violet), 0 0 24px var(--blue);
-    transform: translate(-50%, -50%);
-    transition: width .2s, height .2s, background .3s;
-    mix-blend-mode: screen;
-  }
-
-  #cursor.hover {
-    width: 28px;
-    height: 28px;
-    background: var(--blue);
-  }
-
-  #cursor-trail {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 9998;
-    pointer-events: none;
+    border-radius: 50%;
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(91, 62, 150, .5);
-    transform: translate(-50%, -50%);
-  }
-
-  /* ==================== CONTAINER PRINCIPAL ==================== */
-  .profile-container {
-    padding-top: 90px;
-    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-bottom: 60px;
+    cursor: pointer;
+    transition: transform var(--transition);
+    border: 2px solid var(--text);
   }
 
-  .profile-wrapper {
-    max-width: 900px;
-    width: 90%;
-    margin: 0 auto;
-    animation: fadeInUp 0.6s ease-out;
+  .avatar-upload:hover {
+    background: var(--blue);
+    transform: scale(1.1);
   }
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* ==================== GLASS CARD ==================== */
-  .profile-card {
-    background: var(--card-bg);
-    backdrop-filter: blur(16px);
-    border-radius: var(--radius);
-    border: 1px solid rgba(91, 62, 150, 0.2);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    transition: all 0.3s ease;
-  }
-
-  .profile-card:hover {
-    border-color: rgba(91, 62, 150, 0.5);
-    box-shadow: 0 12px 40px rgba(91, 62, 150, 0.3);
-  }
-
-  /* ==================== HEADER ==================== */
-  .profile-header {
-    padding: 1.5rem 2rem;
-    border-bottom: 1px solid rgba(91, 62, 150, 0.2);
-    background: linear-gradient(135deg, rgba(31, 61, 43, 0.3), rgba(58, 134, 196, 0.1));
-  }
-
-  .profile-header h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.8rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--text), var(--blue));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  /* Image section */
+  .image-section {
+    width: 100%;
     text-align: center;
+    margin-bottom: 1.5rem;
   }
 
-  /* ==================== FORMULAIRE ==================== */
-  .profile-form {
-    padding: 2rem;
+  .image-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .image-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .profile-photo {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--blue);
+    background: var(--surface);
+  }
+
+  .avatar-photo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--violet);
+    background: var(--surface);
+  }
+
+  .badge-note {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+  }
+
+  /* Status badge */
+  .status-badge {
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 1rem 0;
+  }
+
+  .status-active {
+    background: rgba(46, 204, 113, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+  }
+
+  .status-inactive {
+    background: rgba(231, 76, 60, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+  }
+
+  /* Sidebar buttons */
+  .sidebar-buttons {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .btn-sidebar {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--glass);
+    color: var(--text);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-sidebar:hover {
+    background: rgba(91, 62, 150, 0.2);
+    border-color: var(--violet);
+  }
+
+  .btn-sidebar.danger:hover {
+    background: rgba(231, 76, 60, 0.15);
+    border-color: var(--danger);
+  }
+
+  /* Prompt section - ESPACE D'ÉCRITURE PLUS GRAND */
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin: 1rem 0 0.8rem;
+    width: 100%;
+  }
+
+  .prompt-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin: 10px 0;
+  }
+
+  .prompt-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(91, 62, 150, 0.1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .prompt-input:focus {
+    outline: none;
+    border-color: var(--violet);
+    box-shadow: 0 0 0 3px rgba(91, 62, 150, 0.2);
+  }
+
+  .btn-prompt {
+    width: 100%;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    border: none;
+    border-radius: 14px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+  }
+
+  .btn-prompt:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(91, 62, 150, 0.4);
+  }
+
+  .btn-prompt.loading {
+    opacity: 0.7;
+    cursor: wait;
+    transform: none;
+  }
+
+  .avatar-styles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    width: 100%;
+  }
+
+  .avatar-style-btn {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 8px 14px;
+    font-size: 0.75rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .avatar-style-btn:hover {
+    background: rgba(91, 62, 150, 0.2);
+    border-color: var(--violet);
+    transform: translateY(-1px);
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+    width: 100%;
+  }
+
+  /* Formulaires */
+  .form-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    margin-bottom: 1rem;
   }
 
   .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
   }
 
   label {
     display: block;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
+    text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--muted);
-    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.6rem;
   }
 
   input {
     width: 100%;
-    padding: 0.9rem 1.2rem;
+    padding: 14px 16px;
     background: rgba(91, 62, 150, 0.1);
-    border: 1px solid rgba(91, 62, 150, 0.3);
-    border-radius: 12px;
-    font-size: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-size: 0.95rem;
     color: var(--text);
-    transition: all 0.3s ease;
-    font-family: 'Lato', sans-serif;
+    transition: all var(--transition);
   }
 
   input:focus {
     outline: none;
     border-color: var(--blue);
     box-shadow: 0 0 0 3px rgba(58, 134, 196, 0.2);
-    background: rgba(91, 62, 150, 0.15);
   }
 
-  input::placeholder {
-    color: rgba(156, 163, 175, 0.5);
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
-
-  small {
-    display: block;
-    margin-top: 0.4rem;
-    font-size: 0.7rem;
-    color: var(--muted);
-  }
-
-  /* ==================== INDICATEUR FORCE MOT DE PASSE (6 BARRES) ==================== */
-  .password-strength {
-    margin-top: 8px;
-    width: 100%;
-  }
-
+  /* Password strength */
   .strength-bars {
     display: flex;
     gap: 8px;
-    margin-bottom: 6px;
+    margin-top: 10px;
   }
 
-  .bar {
+  .strength-bar {
     flex: 1;
-    height: 6px;
+    height: 5px;
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    transition: background 0.2s ease, box-shadow 0.2s;
+    border-radius: 5px;
+    transition: all var(--transition);
   }
 
-  .bar.active.weak {
-    background: #e74c3c;
-    box-shadow: 0 0 6px #e74c3c;
-  }
+  .strength-bar.weak { background: var(--danger); }
+  .strength-bar.medium { background: var(--warning); }
+  .strength-bar.strong { background: var(--success); }
 
-  .bar.active.medium {
-    background: #f39c12;
-    box-shadow: 0 0 6px #f39c12;
-  }
-
-  .bar.active.strong {
-    background: #2ecc71;
-    box-shadow: 0 0 6px #2ecc71;
-  }
-
-  .strength-text {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
-    color: var(--muted);
-    transition: color 0.3s;
-  }
-
-  .strength-text.weak { color: #e74c3c; }
-  .strength-text.medium { color: #f39c12; }
-  .strength-text.strong { color: #2ecc71; }
-
-  /* ==================== BOUTONS ==================== */
-  .btn-group {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-  }
-
-  .btn {
-    padding: 0.9rem 1.8rem;
-    border: none;
-    border-radius: 50px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-    letter-spacing: 0.5px;
-  }
-
-  .btn-primary {
+  .btn-submit {
     background: linear-gradient(135deg, var(--violet), var(--blue));
     color: white;
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
     width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
+    transition: all var(--transition);
+    font-size: 0.95rem;
   }
 
-  .btn-primary:hover::before {
-    left: 100%;
-  }
-
-  .btn-primary:hover {
+  .btn-submit:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(91, 62, 150, 0.5);
   }
 
-  .btn-primary:disabled {
+  .btn-submit:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
   }
 
-  .btn-danger {
-    background: linear-gradient(135deg, #7F1D1D, #991B1B);
-    color: white;
-  }
-
-  .btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(153, 27, 27, 0.4);
-  }
-
-  .btn-outline {
-    background: var(--glass);
-    border: 1.5px solid rgba(91, 62, 150, 0.5);
-    color: var(--text);
-  }
-
-  .btn-outline:hover {
-    background: rgba(91, 62, 150, 0.2);
-    border-color: var(--violet);
-  }
-
-  /* ==================== MESSAGES ==================== */
+  /* Messages */
   .message {
-    padding: 1rem 1.2rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
+    padding: 14px 18px;
+    border-radius: 14px;
+    margin-bottom: 1.2rem;
     display: none;
-    animation: slideDown 0.3s ease;
     font-size: 0.9rem;
   }
 
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   .message.success {
-    background: rgba(39, 174, 96, 0.15);
-    border-left: 3px solid #27ae60;
-    color: #27ae60;
+    background: rgba(46, 204, 113, 0.1);
+    border-left: 3px solid var(--success);
+    color: var(--success);
   }
 
   .message.error {
-    background: rgba(231, 76, 60, 0.15);
-    border-left: 3px solid #e74c3c;
-    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+    border-left: 3px solid var(--danger);
+    color: var(--danger);
   }
 
-  /* ==================== SÉPARATEUR ==================== */
-  .divider {
-    margin: 2rem 0 1.5rem;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(91, 62, 150, 0.4), transparent);
-  }
-
-  /* ==================== ZONE DANGEREUSE ==================== */
-  .danger-zone {
-    text-align: center;
-    padding: 1rem 0;
-  }
-
-  .danger-zone p {
-    color: var(--muted);
-    font-size: 0.85rem;
-    margin: 0.8rem 0;
-  }
-
-  /* ==================== MODALE DASHBOARD STYLE ==================== */
+  /* Modal */
   .modal {
     display: none;
     position: fixed;
@@ -471,21 +530,15 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: 1000;
   }
 
   .modal.active {
     display: flex;
-    animation: fadeIn 0.2s ease;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
   }
 
   .modal-content {
@@ -493,115 +546,56 @@
     backdrop-filter: blur(20px);
     border-radius: var(--radius);
     padding: 2rem;
-    max-width: 400px;
-    width: 90%;
+    width: 340px;
     text-align: center;
-    border: 1px solid rgba(231, 76, 60, 0.3);
-    animation: scaleIn 0.2s ease;
-    box-shadow: var(--shadow);
-  }
-
-  @keyframes scaleIn {
-    from {
-      transform: scale(0.9);
-      opacity: 0;
-    }
-    to {
-      transform: scale(1);
-      opacity: 1;
-    }
+    border: 1px solid var(--border);
   }
 
   .modal-content h3 {
-    color: #e74c3c;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.5rem;
+    color: var(--danger);
+    font-family: 'Inter', sans-serif;
     margin-bottom: 1rem;
-  }
-
-  .modal-content p {
-    color: var(--text);
-    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .modal-buttons {
     display: flex;
-    gap: 1rem;
-    justify-content: center;
+    gap: 12px;
+    margin-top: 1.5rem;
   }
 
-  /* ==================== FEATURE BADGE ==================== */
-  .feature-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(91, 62, 150, .2), rgba(58, 134, 196, .2));
-    border: 1px solid rgba(91, 62, 150, .3);
-    font-size: .75rem;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 1rem;
-  }
-
-  /* ==================== RESPONSIVE ==================== */
-  @media (max-width: 640px) {
-    .navbar {
-      padding: 0.5rem 1rem;
-    }
-
-    .nav-logo-text {
-      font-size: 1rem;
-    }
-
-    .nav-actions {
-      gap: 8px;
-    }
-
-    #theme-toggle, .btn-back {
-      padding: 4px 10px;
-      font-size: 0.75rem;
-    }
-
-    .profile-container {
-      padding-top: 80px;
-    }
-
-    .profile-wrapper {
-      width: 95%;
-    }
-
-    .form-row {
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-
-    .btn-group {
+  /* Responsive */
+  @media (max-width: 768px) {
+    .profile-dashboard {
       flex-direction: column;
     }
-
-    .profile-header {
-      padding: 1rem 1.5rem;
-    }
-
-    .profile-header h1 {
-      font-size: 1.3rem;
-    }
-
-    .profile-form {
+    .profile-sidebar {
+      position: relative;
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
       padding: 1.5rem;
     }
+    .profile-main {
+      margin-left: 0;
+      height: auto;
+    }
+    .prompt-input {
+      min-height: 60px;
+    }
   }
+
+  #real-photo-input, #avatar-image-input { display: none; }
+  #cursor, #cursor-trail { display: none; }
 </style>
 </head>
 <body>
 
-<div id="cursor"></div>
-<div id="cursor-trail"></div>
-
-<!-- ==================== NAVBAR DASHBOARD ==================== -->
+<!-- NAVBAR -->
 <nav class="navbar" id="navbar">
-  <a href="http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/frontend/dashboard.html" class="nav-logo">
-    <svg viewBox="0 0 60 60" fill="none">
+  <a href="dashboard.html" class="nav-logo">
+    <svg viewBox="0 0 60 60" fill="none" width="32" height="32">
       <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
       <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
       <defs>
@@ -615,496 +609,547 @@
         </linearGradient>
       </defs>
       <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
-      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1"/>
     </svg>
-    <span class="nav-logo-text">GaiaLumen</span>
+    <span>GaiaLumen</span>
   </a>
   <div class="nav-actions">
-    <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
-    <button class="btn-back" onclick="goBackToUsers()">← Retour au Dashboard</button>
+    <button id="theme-toggle" class="btn-icon">🌙</button>
+    <button class="btn-icon" onclick="goBackToDashboard()">← Retour</button>
   </div>
 </nav>
 
-<!-- ==================== CONTENU PRINCIPAL ==================== -->
-<div class="profile-container">
-  <div class="profile-wrapper">
-    <div class="profile-card">
-      <div class="profile-header">
-        <h1>👤 Mon Profil GaiaLumen</h1>
+<div class="profile-dashboard">
+  <!-- COLONNE GAUCHE -->
+  <div class="profile-sidebar">
+    <!-- PHOTO RÉELLE (Face ID) -->
+    <div class="image-section">
+      <div class="image-label">📸 PHOTO (Face ID)</div>
+      <div class="image-wrapper">
+        <img id="realPhoto" class="profile-photo" src="https://ui-avatars.com/api/?background=3A86C4&color=fff&bold=true&length=2" alt="Photo réelle">
+        <div class="avatar-upload" id="photoUploadBtn">📷</div>
       </div>
+      <div class="badge-note">Utilisée pour la connexion Face ID</div>
+    </div>
 
-      <div class="profile-form">
-        <div id="messageArea" class="message"></div>
+    <!-- AVATAR (affichage) -->
+    <div class="image-section">
+      <div class="image-label">✨ AVATAR (Affichage)</div>
+      <div class="image-wrapper">
+        <img id="avatarDisplay" class="avatar-photo" src="https://ui-avatars.com/api/?background=5B3E96&color=fff&bold=true&length=2" alt="Avatar">
+        <div class="avatar-upload" id="avatarUploadBtn" style="background: var(--blue);">🎨</div>
+      </div>
+      <div class="badge-note">Affiché dans votre dashboard</div>
+    </div>
 
-        <form id="profileForm" onsubmit="return updateProfile(event)">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="nom">Nom</label>
-              <input type="text" id="nom" name="nom" required placeholder="Votre nom">
-            </div>
-            <div class="form-group">
-              <label for="prenom">Prénom</label>
-              <input type="text" id="prenom" name="prenom" required placeholder="Votre prénom">
-            </div>
-          </div>
+    <div id="accountStatusBadge" class="status-badge status-active">✓ Compte actif</div>
 
+    <div class="sidebar-buttons">
+      <button id="toggleStatusBtn" class="btn-sidebar">🔒 Désactiver</button>
+      <button onclick="openDeleteModal()" class="btn-sidebar danger">🗑 Supprimer</button>
+    </div>
+
+    <hr>
+
+    <div class="section-label">🤖 GÉNÉRER AVATAR IA</div>
+
+    <div class="prompt-container">
+      <textarea id="avatarPrompt" class="prompt-input" placeholder="Décrivez l'avatar que vous voulez...&#10;Exemple: avatar mignon, style cartoon, cheveux bruns, sourire, fond vert"></textarea>
+      <button id="generatePromptBtn" class="btn-prompt">✨ Générer avatar</button>
+    </div>
+
+    <div class="avatar-styles">
+      <button class="avatar-style-btn" data-prompt="avatar anime mignon, cheveux courts, grand sourire, yeux brillants">🎨 Anime</button>
+      <button class="avatar-style-btn" data-prompt="avatar professionnel cartoon, lunettes, costume cravate, sérieux, élégant">😊 Pro</button>
+      <button class="avatar-style-btn" data-prompt="avatar minimaliste, traits épurés, design moderne, élégant, pastel">✨ Minimal</button>
+      <button class="avatar-style-btn" data-prompt="avatar pixel art, style jeu vidéo rétro, 8bit, coloré, nostalgique">👾 Pixel</button>
+      <button class="avatar-style-btn" data-prompt="avatar fantaisie, elfe, forêt enchantée, magique, lumineux, ailes">🧚 Fantaisie</button>
+    </div>
+  </div>
+
+  <!-- COLONNE DROITE -->
+  <div class="profile-main">
+    <div id="messageArea" class="message"></div>
+
+    <div class="form-card">
+      <div class="form-title">📋 INFORMATIONS</div>
+      <form id="profileForm" onsubmit="return updateProfile(event)">
+        <div class="form-row">
           <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required placeholder="exemple@gaialumen.com">
+            <label>NOM</label>
+            <input type="text" id="nom" required placeholder="Nom">
           </div>
-
           <div class="form-group">
-            <label for="old_password">🔐 Ancien mot de passe</label>
-            <input type="password" id="old_password" name="old_password" placeholder="Requis pour modifier le mot de passe">
-            <small>L'ancien mot de passe est obligatoire pour toute modification du mot de passe</small>
+            <label>PRÉNOM</label>
+            <input type="text" id="prenom" required placeholder="Prénom">
           </div>
-
-          <div class="form-group">
-            <label for="new_password">✨ Nouveau mot de passe <span style="font-weight: normal;">(optionnel)</span></label>
-            <input type="password" id="new_password" name="new_password" placeholder="Laissez vide pour ne pas changer">
-            <!-- Indicateur visuel 6 barres -->
-            <div class="password-strength" id="passwordStrength">
-              <div class="strength-bars" id="strengthBars">
-                <div class="bar" data-index="0"></div>
-                <div class="bar" data-index="1"></div>
-                <div class="bar" data-index="2"></div>
-                <div class="bar" data-index="3"></div>
-                <div class="bar" data-index="4"></div>
-                <div class="bar" data-index="5"></div>
-              </div>
-              <div class="strength-text" id="strengthText">Sécurité du mot de passe</div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="confirm_password">✓ Confirmer le nouveau mot de passe</label>
-            <input type="password" id="confirm_password" name="confirm_password" placeholder="Retapez le nouveau mot de passe">
-          </div>
-
-          <div class="btn-group">
-            <button type="submit" class="btn btn-primary" id="submitBtn">💾 Mettre à jour mon profil</button>
-          </div>
-        </form>
-
-        <div class="divider"></div>
-
-        <div class="danger-zone">
-          <span class="feature-badge">⚠️ Zone sensible</span>
-          <p>La suppression de votre compte est définitive et irréversible. Toutes vos données personnelles, vos repas, défis et objectifs seront supprimés.</p>
-          <button onclick="openDeleteModal()" class="btn btn-danger">🗑️ Supprimer définitivement mon compte</button>
         </div>
+        <div class="form-group">
+          <label>EMAIL</label>
+          <input type="email" id="email" required placeholder="exemple@gaialumen.com">
+        </div>
+        <button type="submit" class="btn-submit" id="submitBtn">💾 Enregistrer</button>
+      </form>
+    </div>
+
+    <div class="form-card">
+      <div class="form-title">🔐 SÉCURITÉ</div>
+      <div class="form-group">
+        <label>ANCIEN MOT DE PASSE</label>
+        <input type="password" id="old_password" autocomplete="new-password" placeholder="Requis pour changer le mot de passe">
+      </div>
+      <div class="form-group">
+        <label>NOUVEAU MOT DE PASSE</label>
+        <input type="password" id="new_password" autocomplete="new-password" placeholder="Laissez vide pour ne pas changer">
+        <div class="strength-bars" id="strengthBars">
+          <div class="strength-bar"></div><div class="strength-bar"></div>
+          <div class="strength-bar"></div><div class="strength-bar"></div>
+          <div class="strength-bar"></div><div class="strength-bar"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>CONFIRMER</label>
+        <input type="password" id="confirm_password" autocomplete="new-password" placeholder="Retapez le nouveau mot de passe">
       </div>
     </div>
   </div>
 </div>
 
-<!-- ==================== MODALE CONFIRMATION SUPPRESSION ==================== -->
+<!-- Inputs cachés pour upload -->
+<input type="file" id="real-photo-input" accept="image/jpeg,image/png,image/jpg,image/webp">
+<input type="file" id="avatar-image-input" accept="image/jpeg,image/png,image/jpg,image/webp,image/svg+xml">
+
+<!-- MODALE SUPPRESSION -->
 <div id="deleteModal" class="modal">
   <div class="modal-content">
-    <h3>⚠️ Suppression définitive</h3>
-    <p>Êtes-vous absolument sûr de vouloir supprimer votre compte GaiaLumen ?<br><br>Toutes vos données seront perdues pour toujours.</p>
+    <h3>⚠️ Supprimer le compte ?</h3>
+    <p>Action irréversible. Toutes vos données seront perdues.</p>
     <div class="modal-buttons">
-      <button onclick="closeDeleteModal()" class="btn btn-outline">Annuler</button>
-      <button onclick="deleteAccount()" class="btn btn-danger">Oui, supprimer</button>
+      <button onclick="closeDeleteModal()" style="flex:1; padding:10px; background:var(--glass); border:1px solid var(--border); border-radius:40px; cursor:pointer;">Annuler</button>
+      <button onclick="deleteAccount()" style="flex:1; padding:10px; background:var(--danger); border:none; border-radius:40px; color:white; cursor:pointer;">Supprimer</button>
     </div>
   </div>
 </div>
 
 <script>
-  /* ═══════════════════════════════════════════════════
-     ÉTAT GLOBAL
-     currentUserId est la SEULE source de vérité pour l'ID.
-     Il est alimenté par loadUserProfile() via auto_login.php.
-  ═══════════════════════════════════════════════════ */
+  // ========== ÉTAT GLOBAL ==========
   let currentUserId = null;
+  let currentUserStatus = 'actif';
+  let currentRealPhoto = null;
+  let currentAvatar = null;
 
-  /* ═══════════════════════════════════════════════════
-     UTILITAIRES
-  ═══════════════════════════════════════════════════ */
-  function getBaseUrl() {
-    return 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition';
-  }
+  const BASE_URL = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition';
 
+  // ========== UTILITAIRES ==========
   function showMessage(msg, type) {
-    const msgDiv = document.getElementById('messageArea');
-    msgDiv.textContent = msg;
-    msgDiv.className = `message ${type}`;
-    msgDiv.style.display = 'block';
-    msgDiv.style.opacity = '1';
-
-    setTimeout(() => {
-      msgDiv.style.opacity = '0';
-      setTimeout(() => {
-        msgDiv.style.display = 'none';
-        msgDiv.style.opacity = '1';
-      }, 300);
-    }, 5000);
+    const div = document.getElementById('messageArea');
+    div.textContent = msg;
+    div.className = `message ${type}`;
+    div.style.display = 'block';
+    setTimeout(() => { div.style.display = 'none'; }, 4000);
   }
 
-  function openDeleteModal() {
-    document.getElementById('deleteModal').classList.add('active');
+  function goBackToDashboard() { 
+    window.location.href = BASE_URL + '/view/frontend/dashboard.html'; 
+  }
+  
+  function openDeleteModal() { 
+    document.getElementById('deleteModal').classList.add('active'); 
+  }
+  
+  function closeDeleteModal() { 
+    document.getElementById('deleteModal').classList.remove('active'); 
   }
 
-  function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
+  // ========== INDICATEUR FORCE MOT DE PASSE ==========
+  function checkStrength(pw) {
+    if (!pw) return 0;
+    let s = 0;
+    if (pw.length >= 8) s += 2;
+    else if (pw.length >= 6) s += 1;
+    if (/[0-9]/.test(pw)) s += 1;
+    if (/[a-z]/.test(pw)) s += 1;
+    if (/[A-Z]/.test(pw)) s += 1;
+    if (/[^a-zA-Z0-9]/.test(pw)) s += 1;
+    return Math.min(s, 6);
   }
 
-  function goBackToUsers() {
-    window.location.href = getBaseUrl() + '/view/frontend/dashboard.html';
-  }
-
-  /* ═══════════════════════════════════════════════════
-     INDICATEUR DE FORCE DU MOT DE PASSE (6 BARRES)
-     Accepte uniquement les mots de passe forts (score >= 5)
-  ═══════════════════════════════════════════════════ */
-  function evaluatePasswordStrength(password) {
-    let score = 0;
-    if (!password) return 0;
-
-    if (password.length >= 8) score += 2;
-    else if (password.length >= 6) score += 1;
-
-    if (/[0-9]/.test(password))       score += 1; // chiffre
-    if (/[a-z]/.test(password))       score += 1; // minuscule
-    if (/[A-Z]/.test(password))       score += 1; // majuscule
-    if (/[^a-zA-Z0-9]/.test(password)) score += 1; // symbole spécial
-
-    return Math.min(score, 6);
-  }
-
-  function updateStrengthIndicator(password) {
-    const score = evaluatePasswordStrength(password);
-    const bars = document.querySelectorAll('#strengthBars .bar');
-    const strengthTextEl = document.getElementById('strengthText');
-
-    if (!bars.length) return score;
-
-    bars.forEach(bar => bar.classList.remove('active', 'weak', 'medium', 'strong'));
-
-    let strengthType = 'weak';
-    let label = 'TRÈS FAIBLE';
-
-    if (score >= 5) {
-      strengthType = 'strong';
-      label = 'FORT ✅ - Accepté';
-    } else if (score >= 3) {
-      strengthType = 'medium';
-      label = 'MOYEN ❌ - Non accepté';
-    } else if (score >= 1) {
-      strengthType = 'weak';
-      label = 'FAIBLE ❌ - Non accepté';
-    } else {
-      label = 'SAISIR UN MOT DE PASSE';
-    }
-
-    for (let i = 0; i < score; i++) {
-      if (bars[i]) bars[i].classList.add('active', strengthType);
-    }
-
-    strengthTextEl.textContent = label;
-    strengthTextEl.classList.remove('weak', 'medium', 'strong');
-    if (score >= 5)      strengthTextEl.classList.add('strong');
-    else if (score >= 3) strengthTextEl.classList.add('medium');
-    else if (score >= 1) strengthTextEl.classList.add('weak');
-
+  function updateStrength() {
+    const pw = document.getElementById('new_password').value;
+    const score = checkStrength(pw);
+    const bars = document.querySelectorAll('#strengthBars .strength-bar');
+    bars.forEach((bar, i) => {
+      bar.classList.remove('weak', 'medium', 'strong');
+      if (i < score) {
+        if (score >= 5) bar.classList.add('strong');
+        else if (score >= 3) bar.classList.add('medium');
+        else if (score >= 1) bar.classList.add('weak');
+      }
+    });
     return score;
   }
 
-  /* ═══════════════════════════════════════════════════
-     VALIDATION DU FORMULAIRE
-  ═══════════════════════════════════════════════════ */
   function isFormValid() {
-    const new_password     = document.getElementById('new_password').value;
-    const confirm_password = document.getElementById('confirm_password').value;
-    const old_password     = document.getElementById('old_password').value;
-
-    if (!new_password) return true;          // pas de nouveau mdp → ok
-    if (!old_password) return false;         // nouveau mdp sans ancien → ko
-    if (evaluatePasswordStrength(new_password) < 5) return false; // trop faible
-    if (new_password !== confirm_password)   return false;         // confirmation différente
-
+    const newPw = document.getElementById('new_password').value;
+    const oldPw = document.getElementById('old_password').value;
+    const confirm = document.getElementById('confirm_password').value;
+    if (!newPw) return true;
+    if (!oldPw) return false;
+    if (checkStrength(newPw) < 5) return false;
+    if (newPw !== confirm) return false;
     return true;
   }
 
-  function updateSubmitButtonState() {
-    const submitBtn = document.getElementById('submitBtn');
-    if (submitBtn) submitBtn.disabled = !isFormValid();
+  function updateSubmitBtn() {
+    const btn = document.getElementById('submitBtn');
+    if (btn) btn.disabled = !isFormValid();
   }
 
-  /* ═══════════════════════════════════════════════════
-     CHARGEMENT DU PROFIL
-     ✅ Remplit currentUserId depuis la session PHP.
-  ═══════════════════════════════════════════════════ */
+  // ========== CHARGEMENT DU PROFIL ==========
   async function loadUserProfile() {
     try {
-      const response = await fetch(getBaseUrl() + '/view/backend/users/auto_login.php', {
-        method: 'GET',
-        credentials: 'include',
+      const res = await fetch(BASE_URL + '/view/backend/users/auto_login.php', {
+        method: 'GET', 
+        credentials: 'include', 
         headers: { 'Content-Type': 'application/json' }
       });
-      const data = await response.json();
-
-      console.log('loadUserProfile - auto_login response:', data);
-
+      const data = await res.json();
+      
       if (data.success && data.data) {
-        // ✅ Stocker l'ID dans la variable globale (SEULE SOURCE DE VÉRITÉ)
         currentUserId = data.data.id_utilisateur;
-        console.log('✅ Profil chargé depuis session, ID:', currentUserId);
-
-        // Remplir le formulaire
-        document.getElementById('nom').value    = data.data.nom    || '';
+        currentUserStatus = data.data.status || 'actif';
+        currentRealPhoto = data.data.photo || null;
+        currentAvatar = data.data.avatar || null;
+        
+        document.getElementById('nom').value = data.data.nom || '';
         document.getElementById('prenom').value = data.data.prenom || '';
-        document.getElementById('email').value  = data.data.email  || '';
-        return;
+        document.getElementById('email').value = data.data.email || '';
+        
+        updateStatusUI();
+        updatePhotos();
+      } else {
+        showMessage("Non connecté", "error");
+        setTimeout(() => window.location.href = BASE_URL + '/view/frontend/login.html', 1500);
       }
-
-      showMessage("Vous n'êtes pas connecté. Redirection vers la page de connexion...", "error");
-      setTimeout(() => {
-        window.location.href = getBaseUrl() + '/view/frontend/login.html';
-      }, 2000);
-
-    } catch (error) {
-      console.error("Erreur chargement profil:", error);
-      showMessage("Impossible de charger le profil. Vérifiez que le serveur est accessible.", "error");
+    } catch(e) { 
+      console.error(e); 
+      showMessage("Erreur chargement", "error"); 
     }
   }
 
-  /* ═══════════════════════════════════════════════════
-     MISE À JOUR DU PROFIL
-     ✅ Utilise currentUserId directement (pas de fonction async).
-  ═══════════════════════════════════════════════════ */
-  async function updateProfile(event) {
-    event.preventDefault();
-
-    // ✅ FIX PRINCIPAL : utiliser directement currentUserId
-    if (!currentUserId) {
-      showMessage("Vous n'êtes pas connecté", "error");
-      return false;
+  function updateStatusUI() {
+    const badge = document.getElementById('accountStatusBadge');
+    const btn = document.getElementById('toggleStatusBtn');
+    if (currentUserStatus === 'actif') {
+      badge.className = 'status-badge status-active';
+      badge.innerHTML = '✓ Compte actif';
+      btn.innerHTML = '🔒 Désactiver';
+    } else {
+      badge.className = 'status-badge status-inactive';
+      badge.innerHTML = '✗ Compte inactif';
+      btn.innerHTML = '🔓 Réactiver';
     }
+  }
 
-    const nom             = document.getElementById('nom').value.trim();
-    const prenom          = document.getElementById('prenom').value.trim();
-    const email           = document.getElementById('email').value.trim();
-    const old_password    = document.getElementById('old_password').value;
-    const new_password    = document.getElementById('new_password').value;
-    const confirm_password = document.getElementById('confirm_password').value;
-
-    if (!nom || !prenom || !email) {
-      showMessage("Tous les champs sont obligatoires", "error");
-      return false;
+  function updatePhotos() {
+    const realImg = document.getElementById('realPhoto');
+    const avatarImg = document.getElementById('avatarDisplay');
+    const nom = document.getElementById('nom').value || 'User';
+    const prenom = document.getElementById('prenom').value || '';
+    
+    if (currentRealPhoto && currentRealPhoto !== 'null') {
+      const url = currentRealPhoto.startsWith('http') ? currentRealPhoto : BASE_URL + '/' + currentRealPhoto;
+      realImg.src = url;
+    } else {
+      realImg.src = `https://ui-avatars.com/api/?background=3A86C4&color=fff&bold=true&length=2&name=${encodeURIComponent(prenom)}+${encodeURIComponent(nom)}`;
     }
-
-    if (!email.includes('@')) {
-      showMessage("Email invalide", "error");
-      return false;
+    
+    if (currentAvatar && currentAvatar !== 'null') {
+      const url = currentAvatar.startsWith('http') ? currentAvatar : BASE_URL + '/' + currentAvatar;
+      avatarImg.src = url;
+    } else {
+      avatarImg.src = `https://ui-avatars.com/api/?background=5B3E96&color=fff&bold=true&length=2&name=${encodeURIComponent(prenom)}+${encodeURIComponent(nom)}`;
     }
+  }
 
-    if (new_password && !old_password) {
-      showMessage("L'ancien mot de passe est requis pour modifier le mot de passe", "error");
-      return false;
-    }
-
-    if (new_password && new_password !== confirm_password) {
-      showMessage("Les nouveaux mots de passe ne correspondent pas", "error");
-      return false;
-    }
-
-    if (new_password) {
-      const score = evaluatePasswordStrength(new_password);
-      if (score < 5) {
-        showMessage("❌ MOT DE PASSE REFUSÉ ! Un mot de passe FORT est requis : 8+ caractères, une majuscule, une minuscule, un chiffre ET un symbole spécial (@#$%!&*).", "error");
-        return false;
-      }
-    }
-
-    const formData = {
-      id: currentUserId,   // ✅ FIX : valeur numérique directe, jamais NaN
-      nom,
-      prenom,
-      email,
-      old_password,
-      new_password
-    };
-
-    console.log('📤 Envoi updateprofil avec ID:', currentUserId);
-
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Mise à jour...";
-
+  // ========== UPLOAD PHOTO RÉELLE ==========
+  async function uploadRealPhoto(file) {
+    const fd = new FormData();
+    fd.append('profile_image', file);
+    fd.append('user_id', currentUserId);
+    
     try {
-      const response = await fetch(getBaseUrl() + '/view/backend/users/updateprofil.php', {
-        method: 'POST',
-        credentials: 'include',   // ✅ FIX : envoyer le cookie de session PHP
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+      const res = await fetch(BASE_URL + '/view/backend/users/update_profile_picture.php', {
+        method: 'POST', 
+        credentials: 'include', 
+        body: fd
       });
-
-      if (!response.ok) {
-        throw new Error('HTTP error ' + response.status);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        showMessage("✅ " + result.message, "success");
-        document.getElementById('old_password').value     = '';
-        document.getElementById('new_password').value     = '';
-        document.getElementById('confirm_password').value = '';
-        updateStrengthIndicator('');
-        updateSubmitButtonState();
+      const data = await res.json();
+      if (data.success) {
+        currentRealPhoto = data.photo_url;
+        updatePhotos();
+        showMessage('Photo Face ID mise à jour', 'success');
       } else {
-        showMessage(result.message || "Erreur lors de la mise à jour", "error");
+        showMessage(data.message || 'Erreur', 'error');
+      }
+    } catch(e) { 
+      showMessage('Erreur upload', 'error'); 
+    }
+  }
+
+  // ========== UPLOAD AVATAR PERSONNALISÉ ==========
+  async function uploadCustomAvatar(file) {
+    const fd = new FormData();
+    fd.append('avatar_image', file);
+    fd.append('user_id', currentUserId);
+    
+    try {
+      const res = await fetch(BASE_URL + '/view/backend/users/update_avatar.php', {
+        method: 'POST', 
+        credentials: 'include', 
+        body: fd
+      });
+      const data = await res.json();
+      if (data.success) {
+        currentAvatar = data.avatar_url;
+        updatePhotos();
+        showMessage('Avatar mis à jour', 'success');
+      } else {
+        showMessage(data.message || 'Erreur', 'error');
+      }
+    } catch(e) { 
+      showMessage('Erreur upload', 'error'); 
+    }
+  }
+
+  // ========== GÉNÉRATION AVATAR PAR PROMPT ==========
+  async function generateAvatarByPrompt() {
+    const promptInput = document.getElementById('avatarPrompt');
+    const prompt = promptInput.value.trim();
+    const generateBtn = document.getElementById('generatePromptBtn');
+    
+    if (!prompt) {
+      showMessage('Veuillez décrire l\'avatar que vous souhaitez', 'error');
+      return;
+    }
+    
+    const originalText = generateBtn.innerHTML;
+    generateBtn.innerHTML = '⏳ Génération...';
+    generateBtn.classList.add('loading');
+    
+    try {
+      const response = await fetch(BASE_URL + '/view/backend/users/generate_avatar.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          user_id: currentUserId, 
+          prompt: prompt 
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        currentAvatar = result.avatar_url;
+        updatePhotos();
+        showMessage(`✅ Avatar généré !`, 'success');
+      } else {
+        showMessage(result.message || 'Erreur génération', 'error');
       }
     } catch (error) {
-      console.error("Erreur update:", error);
-      showMessage("Erreur de connexion au serveur: " + error.message, "error");
+      console.error('Erreur:', error);
+      showMessage('Erreur lors de la génération', 'error');
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "💾 Mettre à jour mon profil";
+      generateBtn.innerHTML = originalText;
+      generateBtn.classList.remove('loading');
     }
+  }
 
+  async function generateAvatarWithPrompt(prompt) {
+    const promptInput = document.getElementById('avatarPrompt');
+    promptInput.value = prompt;
+    await generateAvatarByPrompt();
+  }
+
+  // ========== ACTIVATION/DÉSACTIVATION ==========
+  async function toggleStatus() {
+    if (!currentUserId) return;
+    const action = currentUserStatus === 'actif' ? 'désactiver' : 'réactiver';
+    if (!confirm(`Confirmer la ${action} du compte ?`)) return;
+    
+    try {
+      const res = await fetch(BASE_URL + '/view/backend/users/toggle_account_status.php', {
+        method: 'POST', 
+        credentials: 'include', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        showMessage(data.message, 'success');
+        if (data.redirect) {
+          setTimeout(() => window.location.href = BASE_URL + '/view/frontend/login.html', 1500);
+        } else { 
+          currentUserStatus = data.status; 
+          updateStatusUI(); 
+        }
+      } else {
+        showMessage(data.message || 'Erreur', 'error');
+      }
+    } catch(e) { 
+      showMessage('Erreur', 'error'); 
+    }
+  }
+
+  // ========== MISE À JOUR PROFIL ==========
+  async function updateProfile(e) {
+    e.preventDefault();
+    if (!currentUserId) { 
+      showMessage("Non connecté", "error"); 
+      return false; 
+    }
+    
+    const nom = document.getElementById('nom').value.trim();
+    const prenom = document.getElementById('prenom').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const oldPw = document.getElementById('old_password').value;
+    const newPw = document.getElementById('new_password').value;
+    const confirm = document.getElementById('confirm_password').value;
+    
+    if (!nom || !prenom || !email) { 
+      showMessage("Champs requis", "error"); 
+      return false; 
+    }
+    if (newPw && !oldPw) { 
+      showMessage("Ancien mot de passe requis", "error"); 
+      return false; 
+    }
+    if (newPw && newPw !== confirm) { 
+      showMessage("Mots de passe différents", "error"); 
+      return false; 
+    }
+    if (newPw && checkStrength(newPw) < 5) { 
+      showMessage("Mot de passe trop faible (8+ car, maj, min, chiffre, symbole)", "error"); 
+      return false; 
+    }
+    
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = "Enregistrement...";
+    
+    try {
+      const res = await fetch(BASE_URL + '/view/backend/users/updateprofil.php', {
+        method: 'POST', 
+        credentials: 'include', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id: currentUserId, 
+          nom, 
+          prenom, 
+          email, 
+          old_password: oldPw, 
+          new_password: newPw 
+        })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        showMessage(data.message, 'success');
+        document.getElementById('old_password').value = '';
+        document.getElementById('new_password').value = '';
+        document.getElementById('confirm_password').value = '';
+        updateStrength();
+        updatePhotos();
+      } else {
+        showMessage(data.message || 'Erreur', 'error');
+      }
+    } catch(e) { 
+      showMessage('Erreur serveur', 'error'); 
+    } finally { 
+      btn.disabled = false; 
+      btn.textContent = "💾 Enregistrer"; 
+    }
     return false;
   }
 
-  /* ═══════════════════════════════════════════════════
-     SUPPRESSION DU COMPTE
-     ✅ Utilise currentUserId directement.
-  ═══════════════════════════════════════════════════ */
+  // ========== SUPPRESSION COMPTE ==========
   async function deleteAccount() {
-    // ✅ FIX : utiliser directement currentUserId
-    if (!currentUserId) {
-      showMessage("Vous n'êtes pas connecté", "error");
-      closeDeleteModal();
-      return;
-    }
-
+    if (!currentUserId) return;
+    
     try {
-      const response = await fetch(getBaseUrl() + '/view/backend/users/deleteprofil.php', {
-        method: 'POST',
-        credentials: 'include',   // ✅ FIX : envoyer le cookie de session PHP
+      const res = await fetch(BASE_URL + '/view/backend/users/deleteprofil.php', {
+        method: 'POST', 
+        credentials: 'include', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: currentUserId })
       });
-
-      if (!response.ok) {
-        throw new Error('HTTP error ' + response.status);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        showMessage("Votre compte a été supprimé. Redirection...", "success");
-        sessionStorage.clear();
-        localStorage.removeItem('user_id');
-        localStorage.removeItem('user_email');
-        setTimeout(() => {
-          window.location.href = getBaseUrl() + '/view/frontend/register.html';
-        }, 2000);
+      const data = await res.json();
+      
+      if (data.success) {
+        showMessage("Compte supprimé", "success");
+        setTimeout(() => window.location.href = BASE_URL + '/view/frontend/register.html', 1500);
       } else {
-        showMessage(result.message || "Erreur lors de la suppression", "error");
-        closeDeleteModal();
+        showMessage(data.message || 'Erreur', 'error');
       }
-    } catch (error) {
-      console.error("Erreur delete:", error);
-      showMessage("Erreur de connexion au serveur: " + error.message, "error");
       closeDeleteModal();
+    } catch(e) { 
+      showMessage('Erreur', 'error'); 
+      closeDeleteModal(); 
     }
   }
 
-  /* ═══════════════════════════════════════════════════
-     SCROLL NAVBAR
-  ═══════════════════════════════════════════════════ */
-  window.addEventListener('scroll', () => {
-    const navbar = document.getElementById('navbar');
-    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 40);
-  });
-
-  /* ═══════════════════════════════════════════════════
-     CURSEUR PERSONNALISÉ
-  ═══════════════════════════════════════════════════ */
-  (function () {
-    const cur   = document.getElementById('cursor');
-    const trail = document.getElementById('cursor-trail');
-    if (!cur || !trail) return;
-
-    let mx = 0, my = 0, tx = 0, ty = 0;
-
-    document.addEventListener('mousemove', e => {
-      mx = e.clientX;
-      my = e.clientY;
-      cur.style.left = mx + 'px';
-      cur.style.top  = my + 'px';
-    });
-
-    (function loop() {
-      tx += (mx - tx) * 0.12;
-      ty += (my - ty) * 0.12;
-      trail.style.left = tx + 'px';
-      trail.style.top  = ty + 'px';
-      requestAnimationFrame(loop);
-    })();
-
-    document.querySelectorAll('button, .btn-back, .btn, input, select').forEach(el => {
-      el.addEventListener('mouseenter', () => cur.classList.add('hover'));
-      el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
-    });
-  })();
-
-  /* ═══════════════════════════════════════════════════
-     GESTION DU THÈME
-  ═══════════════════════════════════════════════════ */
+  // ========== THÈME ==========
   function initTheme() {
-    const btn  = document.getElementById('theme-toggle');
+    const btn = document.getElementById('theme-toggle');
     const html = document.documentElement;
     const saved = localStorage.getItem('gaialumen-theme') || 'dark';
-
     html.setAttribute('data-theme', saved);
-    if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
-
-    if (btn) {
-      btn.addEventListener('click', () => {
-        const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', n);
-        localStorage.setItem('gaialumen-theme', n);
-        btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
-      });
-    }
+    btn.textContent = saved === 'dark' ? '☀️' : '🌙';
+    btn.onclick = () => {
+      const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', n);
+      localStorage.setItem('gaialumen-theme', n);
+      btn.textContent = n === 'dark' ? '☀️' : '🌙';
+    };
   }
 
-  /* ═══════════════════════════════════════════════════
-     INITIALISATION
-  ═══════════════════════════════════════════════════ */
-  document.addEventListener('DOMContentLoaded', () => {
+  // ========== INITIALISATION ==========
+  document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
-    loadUserProfile();
+    await loadUserProfile();
 
-    // Écouteurs mot de passe
-    const newPasswordInput     = document.getElementById('new_password');
-    const confirmPasswordInput = document.getElementById('confirm_password');
-    const oldPasswordInput     = document.getElementById('old_password');
+    document.getElementById('photoUploadBtn').onclick = () => document.getElementById('real-photo-input').click();
+    document.getElementById('real-photo-input').onchange = (e) => { 
+      if (e.target.files && e.target.files[0]) uploadRealPhoto(e.target.files[0]); 
+    };
+    
+    document.getElementById('avatarUploadBtn').onclick = () => document.getElementById('avatar-image-input').click();
+    document.getElementById('avatar-image-input').onchange = (e) => { 
+      if (e.target.files && e.target.files[0]) uploadCustomAvatar(e.target.files[0]); 
+    };
+    
+    document.getElementById('generatePromptBtn').onclick = generateAvatarByPrompt;
+    
+    document.querySelectorAll('.avatar-style-btn').forEach(btn => {
+      const prompt = btn.getAttribute('data-prompt');
+      btn.onclick = () => generateAvatarWithPrompt(prompt);
+    });
+    
+    document.getElementById('toggleStatusBtn').onclick = toggleStatus;
 
-    if (newPasswordInput) {
-      newPasswordInput.addEventListener('input', function () {
-        updateStrengthIndicator(this.value);
-        updateSubmitButtonState();
-      });
-    }
+    const newPw = document.getElementById('new_password');
+    const confirm = document.getElementById('confirm_password');
+    const oldPw = document.getElementById('old_password');
+    
+    if (newPw) newPw.oninput = () => { updateStrength(); updateSubmitBtn(); };
+    if (confirm) confirm.oninput = updateSubmitBtn;
+    if (oldPw) oldPw.oninput = updateSubmitBtn;
+    updateSubmitBtn();
 
-    if (confirmPasswordInput) {
-      confirmPasswordInput.addEventListener('input', updateSubmitButtonState);
-    }
-
-    if (oldPasswordInput) {
-      oldPasswordInput.addEventListener('input', updateSubmitButtonState);
-    }
-
-    updateSubmitButtonState();
-
-    // Fermer la modale en cliquant dehors
-    window.onclick = function (event) {
-      const modal = document.getElementById('deleteModal');
-      if (event.target === modal) closeDeleteModal();
+    window.onclick = (e) => { 
+      if (e.target === document.getElementById('deleteModal')) closeDeleteModal(); 
     };
   });
 </script>

@@ -271,6 +271,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (userRoleElement) {
             userRoleElement.textContent = user.role;
         }
+
+        // Afficher l'avatar dans la navbar
+        const avatarWrapper  = document.getElementById('nav-user-avatar');
+        const avatarImg      = document.getElementById('nav-avatar-img');
+        const avatarInitials = document.getElementById('nav-avatar-initials');
+
+        if (avatarWrapper) {
+            const fullName = `${user.prenom || ''} ${user.nom || ''}`.trim();
+            avatarWrapper.title = fullName || user.email || '';
+
+            const avatarUrl = user.avatar
+                ? `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/${user.avatar}`
+                : (user.photo_url || user.photo || null);
+
+            if (avatarUrl && avatarImg) {
+                avatarImg.src = avatarUrl;
+                avatarImg.style.display = 'block';
+                avatarImg.onerror = () => {
+                    avatarImg.style.display = 'none';
+                    if (avatarInitials) {
+                        const p = (user.prenom || '').charAt(0).toUpperCase();
+                        const n = (user.nom    || '').charAt(0).toUpperCase();
+                        avatarInitials.textContent = (p + n) || '?';
+                        avatarInitials.style.display = 'flex';
+                    }
+                };
+            } else if (avatarInitials) {
+                const p = (user.prenom || '').charAt(0).toUpperCase();
+                const n = (user.nom    || '').charAt(0).toUpperCase();
+                avatarInitials.textContent = (p + n) || '?';
+                avatarInitials.style.display = 'flex';
+            }
+
+            avatarWrapper.style.display = 'flex';
+        }
     }
     
     // Initialiser tous les composants

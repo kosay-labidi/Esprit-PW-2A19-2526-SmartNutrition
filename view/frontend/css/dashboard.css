@@ -1119,4 +1119,48 @@ h1, h2, h3, h4 {
   .info-card {
     padding: 18px;
   }
+  
+}
+/* ═══════════════════════════════════════════════════════════
+   AVATAR UTILISATEUR – NAVBAR
+   ═══════════════════════════════════════════════════════════ */
+.nav-user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(91, 62, 150, .6);
+  flex-shrink: 0;
+  transition: border-color .3s, box-shadow .3s;
+  cursor: default;
+}
+
+.nav-user-avatar:hover {
+  border-color: rgba(91, 62, 150, 1);
+  box-shadow: 0 0 12px rgba(91, 62, 150, .4);
+}
+
+.nav-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.nav-avatar-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #5b3e96, #3A86C4);
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  font-family: 'Lato', sans-serif;
+  border-radius: 50%;
 }

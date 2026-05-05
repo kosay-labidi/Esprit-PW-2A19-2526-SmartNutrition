@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reloadBtn.id = 'reload-module-btn';
     reloadBtn.title = 'Recharger le module actuel';
     reloadBtn.style.cssText = 'background:var(--glass);border:1.5px solid rgba(91,62,150,.5);border-radius:50px;padding:6px 14px;color:var(--text);cursor:pointer;font-size:.82rem;transition:all .3s;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:4px;margin-right:8px;';
-    reloadBtn.innerHTML = '🔄 Recharger';
+    reloadBtn.innerHTML = '🔄';
     reloadBtn.addEventListener('click', () => {
       const activeModule = localStorage.getItem('activeModule');
       if (activeModule) {

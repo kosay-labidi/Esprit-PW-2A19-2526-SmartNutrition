@@ -69,6 +69,9 @@ switch ($result['status']) {
     case 'account_not_found':
         echo json_encode(['success' => false, 'message' => 'Aucun compte trouvé']);
         break;
+        case 'account_inactive':
+    echo json_encode(['success' => false, 'message' => 'account_inactive']);
+    break;
 
     default:
         echo json_encode(['success' => false, 'message' => 'Erreur serveur']);

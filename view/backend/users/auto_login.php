@@ -15,10 +15,65 @@ header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../../../Controller/user.controller.php';
+require_once __DIR__ . '/../../../config.php';
+
+/**
+ * Récupère l'utilisateur complet depuis la BDD (avec photo et status)
+ */
+function getUserFullData($userId) {
+    try {
+        $db = config::getConnexion();
+        $stmt = $db->prepare("
+            SELECT id_utilisateur, nom, prenom, email, role, photo, avatar, status, date_creation
+            FROM utilisateurs 
+            WHERE id_utilisateur = :id
+        ");
+        $stmt->execute([':id' => $userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($user) {
+            // Ajouter un libellé pour le statut
+            $user['status_label'] = $user['status'] === 'actif' ? 'Actif' : 'Inactif';
+            // S'assurer que l'URL de la photo est complète si besoin
+            if (!empty($user['photo']) && !preg_match('/^https?:\/\//', $user['photo'])) {
+                $user['photo_url'] = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/' . $user['photo'];
+            } else {
+                $user['photo_url'] = $user['photo'] ?? null;
+            }
+        }
+        return $user;
+    } catch (PDOException $e) {
+        error_log("auto_login.php - Erreur BDD: " . $e->getMessage());
+        return null;
+    }
+}
 
 // Si déjà connecté via session → OK
-if (!empty($_SESSION['user'])) {
-    echo json_encode(['success' => true, 'data' => $_SESSION['user']]);
+if (!empty($_SESSION['user']) && !empty($_SESSION['user']['id_utilisateur'])) {
+    // Recharger les données fraîches depuis la BDD (pour avoir photo et status à jour)
+    $freshUser = getUserFullData($_SESSION['user']['id_utilisateur']);
+    
+    if ($freshUser) {
+        // Vérifier si le compte est inactif
+        if ($freshUser['status'] === 'inactif') {
+            // Détruire la session et rediriger vers login
+            session_destroy();
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Votre compte a été désactivé. Veuillez contacter l\'administrateur.',
+                'status' => 'inactif'
+            ]);
+            exit();
+        }
+        
+        // Mettre à jour la session avec les données fraîches
+        $_SESSION['user'] = $freshUser;
+        echo json_encode(['success' => true, 'data' => $freshUser]);
+    } else {
+        // Utilisateur introuvable en BDD
+        session_destroy();
+        echo json_encode(['success' => false, 'message' => 'Utilisateur non trouvé']);
+    }
     exit();
 }
 
@@ -31,12 +86,32 @@ if ($token === '') {
 }
 
 $userC = new UserController();
-$user  = $userC->getUserByRememberToken($token);
+$userBasic = $userC->getUserByRememberToken($token);
 
-if ($user) {
-    $_SESSION['user'] = $user;
-    echo json_encode(['success' => true, 'data' => $user]);
+if ($userBasic && !empty($userBasic['id_utilisateur'])) {
+    // Récupérer les données complètes depuis la BDD
+    $fullUser = getUserFullData($userBasic['id_utilisateur']);
+    
+    if ($fullUser) {
+        // Vérifier si le compte est inactif
+        if ($fullUser['status'] === 'inactif') {
+            setcookie('remember_token', '', ['expires' => time() - 3600, 'path' => '/']);
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Votre compte a été désactivé.',
+                'status' => 'inactif'
+            ]);
+            exit();
+        }
+        
+        $_SESSION['user'] = $fullUser;
+        echo json_encode(['success' => true, 'data' => $fullUser]);
+    } else {
+        setcookie('remember_token', '', ['expires' => time() - 3600, 'path' => '/']);
+        echo json_encode(['success' => false, 'message' => 'Utilisateur non trouvé']);
+    }
 } else {
     setcookie('remember_token', '', ['expires' => time() - 3600, 'path' => '/']);
     echo json_encode(['success' => false, 'message' => 'Session expirée']);
 }
+?>

@@ -64,7 +64,7 @@ body {
   align-items: center;
   justify-content: flex-end;
   overflow: hidden;
-  cursor: none;
+  cursor: default; /* Curseur normal par défaut */
   transition: var(--transition);
 }
 
@@ -72,6 +72,7 @@ h1, h2, h3, .logo-text {
   font-family: 'Cormorant Garamond', serif;
 }
 
+/* Curseur personnalisé - optionnel, on le garde mais on garde aussi le curseur normal */
 #cursor {
   position: fixed;
   top: 0;
@@ -282,7 +283,7 @@ h1, h2, h3, .logo-text {
   color: #fff;
   font-size: 1rem;
   font-weight: 600;
-  cursor: none;
+  cursor: pointer;
   transition: var(--transition);
 }
 
@@ -347,7 +348,7 @@ h1, h2, h3, .logo-text {
   font-weight: 500;
   text-decoration: none;
   transition: var(--transition);
-  cursor: none;
+  cursor: pointer;
 }
 
 .social-btn.btn-google {
@@ -358,6 +359,143 @@ h1, h2, h3, .logo-text {
 .social-btn.btn-twitter {
   background: #000000;
   color: white;
+}
+
+/* FaceID Section Styles */
+.face-login-section {
+    margin-top: 28px;
+    text-align: center;
+    border-top: 1px solid rgba(107, 78, 158, 0.2);
+    padding-top: 24px;
+}
+
+.face-btn {
+    background: linear-gradient(135deg, #1F3D2B, #4A9FD8);
+    border: none;
+    border-radius: 50px;
+    padding: 12px 24px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+}
+
+.face-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(31, 61, 43, 0.3);
+}
+
+/* FaceID Modal */
+#faceCameraModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10001;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+}
+
+#faceCameraModal.active {
+    display: flex;
+}
+
+.camera-container {
+    background: var(--card-bg);
+    backdrop-filter: blur(24px);
+    border-radius: 32px;
+    padding: 28px;
+    max-width: 550px;
+    width: 90%;
+    text-align: center;
+    border: 1px solid rgba(107, 78, 158, 0.3);
+    animation: slideUp 0.4s ease;
+}
+
+.camera-container h3 {
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+#video {
+    width: 100%;
+    max-width: 450px;
+    border-radius: 20px;
+    background: #000;
+    margin: 15px 0;
+    transform: scaleX(-1);
+    border: 2px solid rgba(107, 78, 158, 0.5);
+}
+
+#canvas {
+    display: none;
+}
+
+.face-status {
+    margin: 15px 0;
+    padding: 12px;
+    border-radius: 16px;
+    font-size: 0.9rem;
+}
+
+.face-status.loading {
+    background: rgba(74, 159, 216, 0.2);
+    color: #4A9FD8;
+}
+
+.face-status.success {
+    background: rgba(31, 61, 43, 0.2);
+    color: #4CAF50;
+}
+
+.face-status.error {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ff6b6b;
+}
+
+.camera-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.camera-btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.camera-btn.primary {
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    color: white;
+}
+
+.camera-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(107, 78, 158, 0.4);
+}
+
+.camera-btn.secondary {
+    background: rgba(107, 78, 158, 0.2);
+    color: var(--text);
+    border: 1px solid rgba(107, 78, 158, 0.3);
+}
+
+.camera-btn.secondary:hover {
+    background: rgba(107, 78, 158, 0.4);
 }
 
 #theme-toggle {
@@ -478,6 +616,9 @@ h1, h2, h3, .logo-text {
   body { justify-content: center; }
   .container { margin: 20px auto; padding: 36px 28px; max-width: 95%; }
   #ai-panel { width: calc(100% - 40px); left: 20px; height: 480px; }
+  .camera-container { padding: 20px; }
+  #video { max-width: 100%; }
+  .camera-btn { padding: 10px 20px; }
 }
 </style>
 </head>
@@ -526,6 +667,27 @@ h1, h2, h3, .logo-text {
     <input id="ai-input" type="text" placeholder="Posez votre question...">
     <button id="ai-send">✨</button>
   </div>
+</div>
+
+<!-- FaceID Modal -->
+<div id="faceCameraModal">
+    <div class="camera-container">
+        <h3>📸 Reconnaissance Faciale</h3>
+        <p style="color: var(--muted); margin-bottom: 10px;">Placez votre visage devant la caméra</p>
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+        <div id="faceStatus" class="face-status"></div>
+        <div class="camera-buttons">
+            <button class="camera-btn primary" id="captureFace">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Capturer
+            </button>
+            <button class="camera-btn secondary" id="closeCamera">Fermer</button>
+        </div>
+    </div>
 </div>
 
 <div class="container">
@@ -585,8 +747,19 @@ h1, h2, h3, .logo-text {
       <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231z"/>
       </svg>
-      <span>X (Twitter) </span>
+      <span>X (Twitter)</span>
     </a>
+  </div>
+
+  <!-- FaceID Button -->
+  <div class="face-login-section">
+    <button id="faceLoginBtn" class="face-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2a9 9 0 0 0-9 9c0 4.5 3 8 9 12 6-4 9-7.5 9-12a9 9 0 0 0-9-9z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Connexion par reconnaissance faciale
+    </button>
   </div>
 </div>
 
@@ -626,7 +799,7 @@ h1, h2, h3, .logo-text {
 })();
 
 /* ═══════════════════════════════════════════════════════════
-   CURSEUR
+   CURSEUR PERSONNALISÉ (optionnel - ne cache pas le curseur normal)
    ═══════════════════════════════════════════════════════════ */
 (function() {
   const cur = document.getElementById('cursor');
@@ -642,9 +815,11 @@ h1, h2, h3, .logo-text {
     trail.style.left = tx + 'px'; trail.style.top = ty + 'px';
     requestAnimationFrame(loop);
   })();
-  document.querySelectorAll('a, button, input, .social-btn').forEach(el => {
-    el.addEventListener('mouseenter', () => cur.classList.add('hover'));
-    el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+  document.querySelectorAll('a, button, input, .social-btn, .face-btn').forEach(el => {
+    if(el) {
+      el.addEventListener('mouseenter', () => cur.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+    }
   });
 })();
 
@@ -735,7 +910,7 @@ window.addEventListener('load', function() {
     document.getElementById('remember').checked = true;
   }
   
-  // ✅ FORCER L'EFFACEMENT DU CHAMP MOT DE PASSE (anti-autofill)
+  // FORCER L'EFFACEMENT DU CHAMP MOT DE PASSE (anti-autofill)
   const pwdField = document.getElementById('password-input');
   if(pwdField) {
     pwdField.value = '';
@@ -891,6 +1066,8 @@ function aiRespond(question) {
     return "Pour réinitialiser votre mot de passe, cliquez sur 'Mot de passe oublié ?' sous le formulaire. 🔑";
   if(q.includes('compte') || q.includes('inscription'))
     return "Pour créer un compte, cliquez sur 'Créer un compte' sous le formulaire. 📝";
+  if(q.includes('visage') || q.includes('face') || q.includes('reconnaissance'))
+    return "Vous pouvez utiliser la reconnaissance faciale en cliquant sur le bouton 'Connexion par reconnaissance faciale' ! 📸";
   return "Je suis là pour vous aider ! Posez-moi des questions sur la connexion, votre compte, ou GaiaLumen. 😊";
 }
 
@@ -906,6 +1083,197 @@ aiSend.addEventListener('click', () => {
 aiInput.addEventListener('keypress', (e) => {
   if(e.key === 'Enter') aiSend.click();
 });
+
+/* ═══════════════════════════════════════════════════════════
+   FACEID - RECONNAISSANCE FACIALE
+   ═══════════════════════════════════════════════════════════ */
+(function() {
+    const faceBtn = document.getElementById('faceLoginBtn');
+    const modal = document.getElementById('faceCameraModal');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureFace');
+    const closeBtn = document.getElementById('closeCamera');
+    const faceStatus = document.getElementById('faceStatus');
+    
+    let stream = null;
+    
+    // Vérifier si le navigateur supporte la caméra
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if(faceBtn) {
+            faceBtn.style.opacity = '0.5';
+            faceBtn.style.cursor = 'not-allowed';
+            faceBtn.title = 'Votre navigateur ne supporte pas la caméra';
+            faceBtn.disabled = true;
+        }
+        return;
+    }
+    
+    // Ouvrir la caméra
+    async function openCamera() {
+        try {
+            faceStatus.className = 'face-status loading';
+            faceStatus.textContent = '📷 Accès à la caméra...';
+            
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                } 
+            });
+            video.srcObject = stream;
+            modal.classList.add('active');
+            faceStatus.className = 'face-status';
+            faceStatus.textContent = '✅ Placez votre visage devant la caméra';
+        } catch (err) {
+            console.error('Erreur caméra:', err);
+            faceStatus.className = 'face-status error';
+            if(err.name === 'NotAllowedError') {
+                faceStatus.textContent = '❌ Accès à la caméra refusé. Veuillez autoriser l\'accès.';
+            } else if(err.name === 'NotFoundError') {
+                faceStatus.textContent = '❌ Aucune caméra trouvée sur votre appareil.';
+            } else {
+                faceStatus.textContent = '❌ Impossible d\'accéder à la caméra';
+            }
+            setTimeout(() => {
+                modal.classList.remove('active');
+            }, 3000);
+        }
+    }
+    
+    // Fermer la caméra
+    function closeCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        video.srcObject = null;
+        modal.classList.remove('active');
+        faceStatus.className = 'face-status';
+        faceStatus.textContent = '';
+    }
+    
+    // Capturer et envoyer pour reconnaissance
+    async function captureAndRecognize() {
+        if (!video.videoWidth || !video.videoHeight) {
+            faceStatus.className = 'face-status error';
+            faceStatus.textContent = '❌ Attendez que la caméra soit prête';
+            return;
+        }
+        
+        faceStatus.className = 'face-status loading';
+        faceStatus.textContent = '🔍 Analyse du visage en cours...';
+        
+        // Capturer l'image
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+        ctx.restore();
+        
+        // Convertir en base64
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        // Envoyer au serveur avec fetch
+        const formData = new FormData();
+        formData.append('action', 'login');
+        formData.append('image_base64', imageData);
+        
+        try {
+            const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/face_login.php?action=login', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            const text = await response.text();
+            console.log('Réponse brute:', text);
+            
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch(e) {
+                console.error('Erreur JSON:', e);
+                faceStatus.className = 'face-status error';
+                faceStatus.textContent = '❌ Erreur de réponse du serveur';
+                return;
+            }
+            
+            if (result.success) {
+                faceStatus.className = 'face-status success';
+                const confidencePercent = Math.round((result.confidence || 0.85) * 100);
+                faceStatus.textContent = `✅ Bienvenue ${result.data.prenom} ${result.data.nom} ! (${confidencePercent}% correspondance)`;
+                
+                // Sauvegarder les données utilisateur
+                if(result.data.id_utilisateur) {
+                    sessionStorage.setItem('user_id', result.data.id_utilisateur);
+                    localStorage.setItem('user_id', result.data.id_utilisateur);
+                }
+                sessionStorage.setItem('user_email', result.data.email);
+                sessionStorage.setItem('user_nom', result.data.nom || '');
+                sessionStorage.setItem('user_prenom', result.data.prenom || '');
+                sessionStorage.setItem('user_role', result.data.role || '');
+                localStorage.setItem('gaialumen-user', JSON.stringify(result.data));
+                localStorage.setItem('gaialumen-token', 'face-' + Date.now());
+                
+                // Fermer la caméra et rediriger
+                setTimeout(() => {
+                    closeCamera();
+                    if(result.data.role === 'admin') {
+                        window.location.href = '../backend/admin.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
+                }, 1500);
+            } else {
+                faceStatus.className = 'face-status error';
+                faceStatus.textContent = `❌ ${result.message || 'Reconnaissance échouée'}`;
+                setTimeout(() => {
+                    faceStatus.className = 'face-status';
+                    faceStatus.textContent = '✅ Placez votre visage devant la caméra';
+                }, 2000);
+            }
+        } catch (err) {
+            console.error('Erreur fetch:', err);
+            faceStatus.className = 'face-status error';
+            faceStatus.textContent = '❌ Erreur de connexion au serveur';
+            setTimeout(() => {
+                faceStatus.className = 'face-status';
+                faceStatus.textContent = '✅ Placez votre visage devant la caméra';
+            }, 3000);
+        }
+    }
+    
+    // Événements
+    if(faceBtn) {
+        faceBtn.addEventListener('click', openCamera);
+    }
+    if(closeBtn) {
+        closeBtn.addEventListener('click', closeCamera);
+    }
+    if(captureBtn) {
+        captureBtn.addEventListener('click', captureAndRecognize);
+    }
+    
+    // Fermer avec Échap
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+            closeCamera();
+        }
+    });
+    
+    // Empêcher la fermeture en cliquant sur le fond
+    if(modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeCamera();
+            }
+        });
+    }
+})();
 </script>
 </body>
 </html>

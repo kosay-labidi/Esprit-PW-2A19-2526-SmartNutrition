@@ -12,7 +12,6 @@ $isAjax = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest' ||
 
 $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'application/json')) {
-    requireAdmin();
 
     header('Content-Type: application/json');
     header('Access-Control-Allow-Origin: *');

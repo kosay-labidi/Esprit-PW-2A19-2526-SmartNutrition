@@ -199,6 +199,26 @@ h1, h2, h3, .logo-text {
   animation: slideUp 0.7s ease;
   margin: 80px 8% 20px auto;
 }
+/* largeur du scroll */
+body::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* fond */
+body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* barre (la partie qu’on glisse) */
+body::-webkit-scrollbar-thumb {
+  background: #6B4E9E; /* ta couleur */
+  border-radius: 10px;
+}
+
+/* hover */
+body::-webkit-scrollbar-thumb:hover {
+  background: #8B6FC9;
+}
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(50px); }

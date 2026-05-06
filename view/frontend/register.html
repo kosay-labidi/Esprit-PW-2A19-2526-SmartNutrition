@@ -124,20 +124,16 @@ body::-webkit-scrollbar-thumb{background:var(--violet);border-radius:4px;}
 #back-home:hover svg{stroke:var(--violet-light);transform:translateX(-2px);}
 
 /* CONTAINER */
-.container{
-  position:relative;z-index:2;
-  max-width:520px;width:90%;
-  background:var(--card-bg);
-  backdrop-filter:blur(24px) saturate(180%);
-  -webkit-backdrop-filter:blur(24px) saturate(180%);
-  border-radius:32px;
-  padding:48px 40px;
-  box-shadow:var(--shadow);
-  border:1px solid rgba(107,78,158,0.25);
-  animation:slideUp 0.7s cubic-bezier(0.2,0.8,0.2,1);
-  margin:40px 8% 40px auto;
-  max-height:calc(100vh - 80px);
-  overflow-y:auto;
+.container {
+  position: relative;
+  z-index: 2;
+  max-width: 520px;
+  width: 90%;
+  background: var(--card-bg);
+  border-radius: 32px;
+  padding: 48px 40px;
+  box-shadow: var(--shadow);
+  margin: 40px 8% 40px auto;
 }
 .container::-webkit-scrollbar{width:5px;}
 .container::-webkit-scrollbar-track{background:rgba(107,78,158,0.1);border-radius:10px;}
@@ -329,6 +325,26 @@ input.invalid, select.invalid{border-color:#e74c3c !important;}
   #ai-panel{width:calc(100% - 40px);left:20px;bottom:90px;height:480px;}
   .tooltip{display:none;}
   .earth-hint{font-size:0.7rem;padding:8px 16px;bottom:15px;}
+}
+/* Styles pour reCAPTCHA */
+.recaptcha-container {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
+[data-theme="dark"] .g-recaptcha {
+  filter: brightness(0.9) contrast(1.1);
+}
+
+[data-theme="light"] .g-recaptcha {
+  filter: brightness(1);
+}
+
+@media (max-width: 768px) {
+  .recaptcha-container {
+    transform: scale(0.9);
+  }
 }
 </style>
 </head>

@@ -347,6 +347,26 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
   .tooltip{display:none;}
   .earth-hint{font-size:0.7rem;padding:8px 16px;bottom:15px;}
 }
+/* Styles pour reCAPTCHA */
+.recaptcha-container {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
+[data-theme="dark"] .g-recaptcha {
+  filter: brightness(0.9) contrast(1.1);
+}
+
+[data-theme="light"] .g-recaptcha {
+  filter: brightness(1);
+}
+
+@media (max-width: 768px) {
+  .recaptcha-container {
+    transform: scale(0.9);
+  }
+}
 </style>
 </head>
 <body>

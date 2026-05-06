@@ -11,7 +11,6 @@ require_once __DIR__ . '/../../../Model/User.php';
 require_once __DIR__ . '/../../../controller/user.controller.php';
 
 try {
-    // Correction: utiliser config::getConnexion() au lieu de getConnexion()
     $pdo = config::getConnexion();
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => 'Erreur de connexion à la base de données: ' . $e->getMessage()]);
@@ -33,8 +32,8 @@ $sqlOrder = ($order === 'asc') ? 'ASC' : 'DESC';
 $_SESSION['user_sort_order'] = $order;
 
 try {
-    // Requête avec tri par date_creation
-    $query = "SELECT id_utilisateur, nom, prenom, email, role, date_creation, date_mise_a_jour 
+    // 🔴 CORRECTION : Ajouter la colonne 'status' dans la requête !
+    $query = "SELECT id_utilisateur, nom, prenom, email, role, status, date_creation, date_mise_a_jour 
               FROM utilisateurs 
               ORDER BY date_creation $sqlOrder";
     
@@ -45,12 +44,21 @@ try {
     // Formater les données pour le frontend
     $formattedUsers = [];
     foreach ($users as $user) {
+        // 🔴 S'assurer que le statut est bien présent et normalisé
+        $status = $user['status'] ?? 'actif';
+        
+        // Convertir les valeurs anglaises en français si nécessaire
+        if ($status === 'active') $status = 'actif';
+        if ($status === 'inactive') $status = 'inactif';
+        if ($status === 'suspended') $status = 'suspendu';
+        
         $formattedUsers[] = [
             'id' => $user['id_utilisateur'],
             'nom' => htmlspecialchars($user['nom']),
             'prenom' => htmlspecialchars($user['prenom']),
             'email' => htmlspecialchars($user['email']),
             'role' => htmlspecialchars($user['role']),
+            'status' => $status,  // 🔴 AJOUTER LE STATUT !
             'date_creation' => date('d/m/Y H:i', strtotime($user['date_creation'])),
             'date_mise_a_jour' => date('d/m/Y H:i', strtotime($user['date_mise_a_jour']))
         ];

@@ -1,4 +1,4 @@
-// admin-translations.js - Système de traduction global unique
+// admin-translations.js - Système de traduction global unique avec traductions complètes pour les statistiques
 
 // Langue actuelle
 let currentAdminLang = localStorage.getItem('adminLanguage') || 'fr';
@@ -34,6 +34,7 @@ const adminTranslations = {
         all: 'Tous',
         active: '✅ Actifs',
         inactive: '⭕ Inactifs',
+        suspended: '🚫 Suspendus',
         admins: '🛡️ Admins',
         users: '👤 Utilisateurs',
         
@@ -59,14 +60,30 @@ const adminTranslations = {
         email: 'Email',
         role: 'Rôle',
         registrationDate: "Date d'inscription",
+        status: 'Statut',
         actions: 'Actions',
         
-        // Statistiques
+        // Statuts
+        statusActive: 'Actif',
+        statusInactive: 'Inactif',
+        statusSuspended: 'Suspendu',
+        
+        // Statistiques - Rôles
         userStats: '📊 Répartition des utilisateurs par rôle',
+        summaryRoles: '📈 Résumé par rôle',
         pieChart: '🥧 Camembert',
         barChart: '📊 Barres',
-        summary: '📈 Résumé',
         totalUsers: '📊 Total utilisateurs',
+        
+        // Statistiques - Statuts
+        statusStats: '🔵 Répartition par statut',
+        summaryStatus: '📈 Résumé par statut',
+        
+        // Libellés rôles
+        roleAdmin: 'Administrateurs',
+        roleNutritionist: 'Nutritionnistes',
+        roleEcologist: 'Écologistes',
+        roleUser: 'Utilisateurs',
         
         // Messages
         loading: 'Chargement...',
@@ -82,23 +99,38 @@ const adminTranslations = {
         // Actions
         edit: 'Modifier',
         delete: 'Supprimer',
+        suspend: '🚫 Suspendre',
+        unsuspend: '✅ Réactiver',
         
         // Toasts
         refreshSuccess: 'Liste mise à jour',
         exportSuccess: 'Export réussi',
         exportError: 'Erreur lors de l\'export',
         
-        // Rôles
-        roleAdmin: 'Admin',
-        roleNutritionist: 'Nutritionniste',
-        roleEcologist: 'Écologiste',
-        roleUser: 'Utilisateur',
-        roleAdminPlural: 'Administrateurs',
-        roleNutritionistPlural: 'Nutritionnistes',
-        roleEcologistPlural: 'Écologistes',
-        roleUserPlural: 'Utilisateurs',
         chartUserCount: 'utilisateur(s)',
-        chartUsersDataset: 'Nombre d\'utilisateurs'
+        chartUsersDataset: "Nombre d'utilisateurs",
+        // Dans l'objet fr, ajoutez :
+pieChartRole: '🥧 Répartition par rôle',
+barChartRole: '📊 Répartition par rôle (barres)',
+pieChartStatus: '🥧 Répartition par statut',
+barChartStatus: '📊 Répartition par statut (barres)',
+noData: '📭 Aucune donnée disponible',
+total: 'Total',
+usersCount: 'utilisateurs',
+roleAdminShort: 'Admins',
+roleNutritionistShort: 'Nutri.',
+roleEcologistShort: 'Écolo.',
+roleUserShort: 'Users',
+statusActiveShort: 'Actif',
+statusInactiveShort: 'Inactif',
+statusSuspendedShort: 'Suspendu',
+// Dans l'objet fr
+roleAdmin: 'Administrateurs',
+roleNutritionist: 'Nutritionnistes',
+roleEcologist: 'Écologistes',
+roleUser: 'Utilisateurs',
+totalUsers: '📊 Total utilisateurs',
+noData: '📭 Aucune donnée disponible'
     },
     en: {
         // Navigation
@@ -129,6 +161,7 @@ const adminTranslations = {
         all: 'All',
         active: '✅ Active',
         inactive: '⭕ Inactive',
+        suspended: '🚫 Suspended',
         admins: '🛡️ Admins',
         users: '👤 Users',
         
@@ -154,14 +187,30 @@ const adminTranslations = {
         email: 'Email',
         role: 'Role',
         registrationDate: 'Registration Date',
+        status: 'Status',
         actions: 'Actions',
         
-        // Statistics
+        // Statuses
+        statusActive: 'Active',
+        statusInactive: 'Inactive',
+        statusSuspended: 'Suspended',
+        
+        // Statistics - Roles
         userStats: '📊 User Distribution by Role',
+        summaryRoles: '📈 Summary by Role',
         pieChart: '🥧 Pie Chart',
         barChart: '📊 Bar Chart',
-        summary: '📈 Summary',
         totalUsers: '📊 Total users',
+        
+        // Statistics - Status
+        statusStats: '🔵 Distribution by Status',
+        summaryStatus: '📈 Summary by Status',
+        
+        // Role labels
+        roleAdmin: 'Administrators',
+        roleNutritionist: 'Nutritionists',
+        roleEcologist: 'Ecologists',
+        roleUser: 'Users',
         
         // Messages
         loading: 'Loading...',
@@ -177,23 +226,38 @@ const adminTranslations = {
         // Actions
         edit: 'Edit',
         delete: 'Delete',
+        suspend: '🚫 Suspend',
+        unsuspend: '✅ Reactivate',
         
         // Toasts
         refreshSuccess: 'List updated',
         exportSuccess: 'Export successful',
         exportError: 'Export error',
         
-        // Roles
-        roleAdmin: 'Admin',
-        roleNutritionist: 'Nutritionist',
-        roleEcologist: 'Ecologist',
-        roleUser: 'User',
-        roleAdminPlural: 'Administrators',
-        roleNutritionistPlural: 'Nutritionists',
-        roleEcologistPlural: 'Ecologists',
-        roleUserPlural: 'Users',
         chartUserCount: 'user(s)',
-        chartUsersDataset: 'Number of users'
+        chartUsersDataset: 'Number of users',
+        // Dans l'objet en, ajoutez :
+pieChartRole: '🥧 Role Distribution',
+barChartRole: '📊 Role Distribution (bars)',
+pieChartStatus: '🥧 Status Distribution',
+barChartStatus: '📊 Status Distribution (bars)',
+noData: '📭 No data available',
+total: 'Total',
+usersCount: 'users',
+roleAdminShort: 'Admins',
+roleNutritionistShort: 'Nutri.',
+roleEcologistShort: 'Ecolo.',
+roleUserShort: 'Users',
+statusActiveShort: 'Active',
+statusInactiveShort: 'Inactive',
+statusSuspendedShort: 'Suspended',
+// Dans l'objet en
+roleAdmin: 'Administrators',
+roleNutritionist: 'Nutritionists',
+roleEcologist: 'Ecologists',
+roleUser: 'Users',
+totalUsers: '📊 Total users',
+noData: '📭 No data available'
     }
 };
 
@@ -278,7 +342,7 @@ function switchLanguage() {
     }
 }
 
-// Mettre à jour la langue du module users (appelé par le module loader)
+// Mettre à jour la langue du module users
 function setModuleLanguage(lang) {
     currentAdminLang = lang;
     updateAdminUI();
@@ -292,7 +356,6 @@ function initAdminLanguage() {
     // Configurer le bouton de langue
     const langBtn = document.getElementById('lang-toggle');
     if (langBtn) {
-        // Éviter les doublons d'écouteurs
         langBtn.removeEventListener('click', switchLanguage);
         langBtn.addEventListener('click', switchLanguage);
     }

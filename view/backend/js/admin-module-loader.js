@@ -1,8 +1,9 @@
 console.log('🛡️ Admin Module Loader initialisé');
+
 // Variables de pagination
 let currentPage = 1;
 let rowsPerPage = 5;
-let currentUsersData = []; // Stocke les données actuelles des utilisateurs
+let currentUsersData = [];
 let totalPages = 1;
 
 // Configuration des modules admin
@@ -21,17 +22,30 @@ const adminModules = {
 // Cache des modules chargés
 const adminModuleCache = {};
 
-// Fonction pour charger un module admin (avec option de forcer le rechargement)
+// Normalise le statut (gère les cas anglais/français)
+function normalizeStatus(status) {
+    if (!status) return 'actif';
+    
+    const statusMap = {
+        'actif': 'actif',
+        'active': 'actif',
+        'inactif': 'inactif',
+        'inactive': 'inactif',
+        'suspendu': 'suspendu',
+        'suspended': 'suspendu'
+    };
+    
+    return statusMap[status.toLowerCase()] || 'actif';
+}
+
 async function loadAdminModule(moduleName, forceReload = false) {
   console.log(`📥 Chargement du module admin: ${moduleName}`);
   
-  // Vérifier si le module est en cache (sauf si forceReload)
   if (adminModuleCache[moduleName] && !forceReload) {
     console.log(`✅ Module ${moduleName} chargé depuis le cache`);
     return adminModuleCache[moduleName];
   }
   
-  // Charger le module depuis le fichier
   const modulePath = adminModules[moduleName];
   if (!modulePath) {
     console.error(`❌ Module admin ${moduleName} non trouvé`);
@@ -39,7 +53,6 @@ async function loadAdminModule(moduleName, forceReload = false) {
   }
   
   try {
-    // Ajouter un timestamp pour éviter le cache du navigateur
     const timestamp = new Date().getTime();
     const response = await fetch(`${modulePath}?t=${timestamp}`);
     if (!response.ok) {
@@ -47,7 +60,6 @@ async function loadAdminModule(moduleName, forceReload = false) {
     }
     const html = await response.text();
     
-    // Mettre en cache
     adminModuleCache[moduleName] = html;
     console.log(`✅ Module admin ${moduleName} chargé avec succès`);
     
@@ -58,35 +70,28 @@ async function loadAdminModule(moduleName, forceReload = false) {
   }
 }
 
-// Fonction pour recharger un module admin (vider le cache et recharger)
 async function reloadAdminModule(moduleName) {
   console.log(`🔄 Rechargement du module admin: ${moduleName}`);
   
-  // Supprimer du cache
   delete adminModuleCache[moduleName];
   
-  // Supprimer la section existante
   const existingSection = document.getElementById(moduleName);
   if (existingSection) {
     existingSection.remove();
   }
   
-  // Recharger le module
   await showAdminModule(moduleName);
 }
 
-// Fonction pour injecter les styles d'un module admin
 function injectAdminModuleStyles(moduleName, container) {
   const styles = container.querySelectorAll('style, link[rel="stylesheet"]');
   const styleId = `style-admin-${moduleName}`;
   
-  // Supprimer les anciens styles s'ils existent (pour forcer la mise à jour)
   const existingStyle = document.getElementById(styleId);
   if (existingStyle) {
     existingStyle.remove();
   }
 
-  // Ajouter les nouveaux styles
   styles.forEach((style, index) => {
     const clonedStyle = style.cloneNode(true);
     clonedStyle.id = index === 0 ? styleId : `${styleId}-${index}`;
@@ -94,9 +99,7 @@ function injectAdminModuleStyles(moduleName, container) {
   });
 }
 
-// Fonction pour afficher un module admin
 async function showAdminModule(moduleName) {
-  // Détection du protocole file:// (CORS bloqué par les navigateurs)
   if (window.location.protocol === 'file:') {
     const mainContent = document.querySelector('.main-content');
     if (mainContent && mainContent.innerHTML.trim() === '') {
@@ -116,24 +119,19 @@ async function showAdminModule(moduleName) {
     return;
   }
 
-  // Sauvegarder le module actif
   localStorage.setItem('activeAdminModule', moduleName);
   
-  // Cacher toutes les sections existantes
   const allSections = document.querySelectorAll('.content-section');
   allSections.forEach(section => {
     section.classList.remove('active');
     section.style.display = 'none';
   });
   
-  // Chercher si la section existe déjà
   let targetSection = document.getElementById(moduleName);
   
   if (!targetSection) {
-    // La section n'existe pas, charger le module
     console.log(`📥 Chargement du module admin externe: ${moduleName}`);
     
-    // Afficher un loader temporaire dans la zone de contenu
     const mainContent = document.querySelector('.main-content');
     if (mainContent && mainContent.innerHTML.trim() === '') {
       mainContent.innerHTML = `
@@ -147,21 +145,16 @@ async function showAdminModule(moduleName) {
     const moduleHTML = await loadAdminModule(moduleName);
     
     if (moduleHTML) {
-      // Nettoyer le loader
       if (mainContent) mainContent.innerHTML = '';
       
-      // Créer un conteneur temporaire
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = moduleHTML;
       
-      // Injecter les styles
       injectAdminModuleStyles(moduleName, tempDiv);
       
-      // Extraire la section
       const newSection = tempDiv.querySelector('.content-section');
       
       if (newSection) {
-        // Ajouter la section au main-content
         if (mainContent) {
           mainContent.appendChild(newSection);
           targetSection = newSection;
@@ -182,12 +175,10 @@ async function showAdminModule(moduleName) {
     }
   }
   
-  // Afficher la section
   if (targetSection) {
     targetSection.style.display = 'block';
     targetSection.classList.add('active');
     
-    // Déclencher l'événement de chargement du module
     const event = new CustomEvent('adminModuleLoaded', { detail: { moduleName } });
     document.dispatchEvent(event);
     
@@ -195,7 +186,6 @@ async function showAdminModule(moduleName) {
   }
 }
 
-// Gestion des clics sur les items du menu
 document.addEventListener('DOMContentLoaded', () => {
   const menuItems = document.querySelectorAll('.menu-item');
   
@@ -204,14 +194,11 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const moduleName = item.dataset.module;
       
-      // Mettre à jour l'état actif du menu
       menuItems.forEach(mi => mi.classList.remove('active'));
       item.classList.add('active');
       
-      // Charger et afficher le module
       await showAdminModule(moduleName);
       
-      // Fermer le menu mobile si ouvert
       if (window.innerWidth <= 768) {
         document.querySelector('.sidebar-menu')?.classList.remove('mobile-open');
         document.getElementById('menu-toggle')?.classList.remove('active');
@@ -219,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   
-  // Charger le module dashboard par défaut ou celui en mémoire
   const activeModule = localStorage.getItem('activeAdminModule') || 'dashboard';
   const targetItem = document.querySelector(`.menu-item[data-module="${activeModule}"]`);
   
@@ -234,12 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Exposer les fonctions globalement
 window.loadAdminModule = loadAdminModule;
 window.showAdminModule = showAdminModule;
 window.reloadAdminModule = reloadAdminModule;
 
-// Auto-reload: Recharger automatiquement le module actif toutes les 2 secondes
 let autoReloadInterval = null;
 let lastModuleContent = {};
 
@@ -253,7 +237,6 @@ function startAutoReload() {
     const moduleName = activeMenuItem.dataset.module;
     if (!moduleName) return;
     
-    // Charger le module avec un timestamp pour éviter le cache
     const timestamp = new Date().getTime();
     const modulePath = adminModules[moduleName];
     if (!modulePath) return;
@@ -264,47 +247,39 @@ function startAutoReload() {
       
       const newContent = await response.text();
       
-      // Vérifier si le contenu a changé
       if (lastModuleContent[moduleName] && lastModuleContent[moduleName] !== newContent) {
         console.log(`🔄 Module ${moduleName} mis à jour automatiquement`);
         
-        // Supprimer l'ancienne section
         const existingSection = document.getElementById(moduleName);
         if (existingSection) {
           existingSection.remove();
         }
         
-        // Créer un conteneur temporaire
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = newContent;
         
-        // Injecter les nouveaux styles
         injectAdminModuleStyles(moduleName, tempDiv);
         
-        // Extraire la nouvelle section
         const newSection = tempDiv.querySelector('.content-section');
         
         if (newSection) {
-          // Ajouter la nouvelle section au main-content
           const mainContent = document.querySelector('.main-content');
           if (mainContent) {
             mainContent.appendChild(newSection);
             newSection.style.display = 'block';
             newSection.classList.add('active');
             
-            // Déclencher l'événement de chargement du module
             const event = new CustomEvent('adminModuleLoaded', { detail: { moduleName } });
             document.dispatchEvent(event);
           }
         }
       }
       
-      // Sauvegarder le contenu actuel
       lastModuleContent[moduleName] = newContent;
     } catch (error) {
       // Ignorer les erreurs silencieusement
     }
-  }, 2000); // Vérifier toutes les 2 secondes
+  }, 2000);
 }
 
 function stopAutoReload() {
@@ -314,19 +289,15 @@ function stopAutoReload() {
   }
 }
 
-// Démarrer l'auto-reload au chargement
 window.addEventListener('load', () => {
   startAutoReload();
   console.log('✅ Auto-reload activé - Les modifications s\'affichent automatiquement dans la zone principale');
 });
 
-// Exposer les fonctions d'auto-reload
 window.startAutoReload = startAutoReload;
 window.stopAutoReload = stopAutoReload;
 
-// Ajouter un bouton de rechargement dans la navbar (optionnel)
 document.addEventListener('DOMContentLoaded', () => {
-  // Ajouter un bouton de rechargement rapide
   const navActions = document.querySelector('.nav-actions');
   if (navActions) {
     const reloadBtn = document.createElement('button');
@@ -339,7 +310,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (activeMenuItem) {
         const moduleName = activeMenuItem.dataset.module;
         reloadAdminModule(moduleName);
-        showToast('Module rechargé!', 'Module actualisé avec succès', 'success');
+        if (typeof showToast === 'function') {
+          showToast('Module rechargé!', 'Module actualisé avec succès', 'success');
+        }
       }
     });
     reloadBtn.addEventListener('mouseenter', () => {
@@ -356,24 +329,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Événement personnalisé pour les modules admin
 document.addEventListener('adminModuleLoaded', (e) => {
   const { moduleName } = e.detail;
   console.log(`🎉 Événement adminModuleLoaded déclenché pour: ${moduleName}`);
   
-  // Animation séquentielle des éléments du module
   animateModuleElements(moduleName);
   
-  // Initialiser les fonctionnalités spécifiques au module
   switch (moduleName) {
     case 'dashboard':
-      // Charger les statistiques
       if (typeof loadAdminStats === 'function') {
         setTimeout(() => loadAdminStats(), 100);
       }
       break;
     case 'users':
-      // Attendre que le DOM du module soit bien rendu avant de charger
       const waitForTable = setInterval(() => {
         if (document.getElementById('usersTableBody')) {
           clearInterval(waitForTable);
@@ -381,534 +349,112 @@ document.addEventListener('adminModuleLoaded', (e) => {
           initUserModuleLanguage();
         }
       }, 50);
-      // Timeout de sécurité après 3 secondes
       setTimeout(() => clearInterval(waitForTable), 3000);
       break;
   }
 });
 
-// Fonctions utilitaires admin
-function refreshUsers() {
-    // Effacer le terme de recherche
-    localStorage.removeItem('userSearchTerm');
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.value = '';
-    }
-    loadUsers();
-    if (typeof showToast === 'function') {
-        showToast('Actualisé', 'Liste mise à jour', 'success');
-    }
+// ==================== FONCTIONS UTILITAIRES ====================
+
+function animateModuleElements(moduleName) {
+  const container = document.getElementById(moduleName);
+  if (!container) return;
+
+  const selectors = '.stat-card, .section, .quick-stat, .data-card, tbody tr, .info-card';
+  const elements = container.querySelectorAll(selectors);
+  
+  elements.forEach((el, index) => {
+    const delay = index * 50;
+    setTimeout(() => {
+      el.classList.add('animate-in');
+    }, delay);
+  });
 }
 
-// Exportation des données en CSV
-async function exportData(type) {
-    console.log(`📥 Export des données ${type} en cours...`);
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ==================== GESTION DES UTILISATEURS ====================
+
+async function loadUsers() {
+    console.log("📡 Chargement des utilisateurs...");
+
+    const tableBody = document.getElementById("usersTableBody");
     
-    if (type === 'users') {
-        await exportUsersToCSV();
-    } else {
-        showToast('Export', `Export des données ${type} en cours...`, 'info');
+    if (!tableBody) {
+        console.error("❌ usersTableBody introuvable !");
+        setTimeout(loadUsers, 100);
+        return;
     }
-}
 
-// Fonction d'exportation des utilisateurs en CSV
-async function exportUsersToCSV() {
     try {
-        showToast('Export', 'Préparation de l\'export...', 'info');
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">⏳ Chargement...<\/td><\/tr>';
         
-        // Récupérer les données actuelles (avec les filtres appliqués)
-        const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
-        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${savedOrder}&t=${Date.now()}`;
+        const timestamp = Date.now();
+        let url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?t=${timestamp}`;
         
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        if (!result.success || !result.data) {
-            throw new Error('Impossible de récupérer les données');
+        const savedOrder = localStorage.getItem('userSortOrder');
+        if (savedOrder && savedOrder !== '') {
+            url += `&order=${savedOrder}`;
+        } else {
+            url += `&order=desc`;
         }
         
-        let users = result.data;
+        console.log("📡 Appel API:", url);
         
-        // Appliquer les filtres actifs (recherche + rôle)
-        const savedSearchTerm = localStorage.getItem('userSearchTerm');
-        if (savedSearchTerm && savedSearchTerm !== '') {
-            const searchLower = savedSearchTerm.toLowerCase();
-            users = users.filter(user => {
-                const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
-                const email = (user.email || '').toLowerCase();
-                return fullName.includes(searchLower) || email.includes(searchLower);
-            });
-        }
-        
-        const savedRoleFilter = localStorage.getItem('userRoleFilter');
-        if (savedRoleFilter && savedRoleFilter !== '') {
-            users = users.filter(user => user.role === savedRoleFilter);
-        }
-        
-        if (users.length === 0) {
-            showToast('Export', 'Aucune donnée à exporter', 'warning');
-            return;
-        }
-        
-        // Générer le CSV
-        const csvData = convertUsersToCSV(users);
-        
-        // Télécharger le fichier
-        downloadCSV(csvData, `utilisateurs_${formatDateForFilename()}.csv`);
-        
-        showToast('Export réussi', `${users.length} utilisateur(s) exporté(s)`, 'success');
-        
-    } catch (error) {
-        console.error('❌ Erreur export:', error);
-        showToast('Erreur', 'Impossible d\'exporter les données', 'error');
-    }
-}
-
-// Convertir les utilisateurs en format CSV
-// Convertir les utilisateurs en format CSV
-function convertUsersToCSV(users) {
-    // Définir les en-têtes
-    const headers = [
-        'ID',
-        'Nom',
-        'Prénom',
-        'Email',
-        'Rôle',
-        'Date inscription',
-        'Statut'
-    ];
-    
-    // Créer les lignes de données
-    const rows = users.map(user => {
-        // Formater la date plus court (YYYY-MM-DD)
-        let formattedDate = '';
-        if (user.date_creation) {
-            // Si la date est au format "2024-01-15 14:30:00" ou similaire
-            formattedDate = user.date_creation.split(' ')[0]; // Ne garde que YYYY-MM-DD
-        }
-        
-        // Traduire le rôle en français
-        let roleFrench = '';
-        switch(user.role) {
-            case 'admin':
-                roleFrench = 'Administrateur';
-                break;
-            case 'nutritionniste':
-                roleFrench = 'Nutritionniste';
-                break;
-            case 'ecologiste':
-                roleFrench = 'Écologiste';
-                break;
-            default:
-                roleFrench = 'Utilisateur';
-        }
-        
-        // Statut (par défaut "Actif" si non spécifié)
-        const status = user.status === 'inactif' ? 'Inactif' : 'Actif';
-        
-        return [
-            escapeCSVField(user.id || ''),
-            escapeCSVField(user.nom || ''),
-            escapeCSVField(user.prenom || ''),
-            escapeCSVField(user.email || ''),
-            escapeCSVField(roleFrench),
-            escapeCSVField(formattedDate), // Date au format YYYY-MM-DD
-            escapeCSVField(status)
-        ];
-    });
-    
-    // Combiner en-têtes et lignes
-    const csvContent = [
-        headers.join(';'),
-        ...rows.map(row => row.join(';'))
-    ].join('\n');
-    
-    return '\uFEFF' + csvContent;
-}
-// Échapper les caractères spéciaux pour le CSV
-function escapeCSVField(field) {
-    if (field === undefined || field === null) return '';
-    
-    // Convertir en string
-    let stringField = String(field);
-    
-    // Si le champ contient des guillemets, points-virgules ou retours à la ligne
-    if (stringField.includes('"') || stringField.includes(';') || stringField.includes('\n') || stringField.includes(',')) {
-        // Remplacer les guillemets par des guillemets doubles
-        stringField = stringField.replace(/"/g, '""');
-        // Entourer le champ de guillemets
-        return `"${stringField}"`;
-    }
-    
-    return stringField;
-}
-
-// Formater la date pour le nom de fichier
-function formatDateForFilename() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
-}
-
-// Télécharger le fichier CSV
-function downloadCSV(csvContent, filename) {
-    // Créer un blob avec le contenu CSV
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    
-    // Créer un lien de téléchargement
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Nettoyer l'URL
-    URL.revokeObjectURL(url);
-}
-
-// Exporter également pour les autres modules
-function exportLogs() {
-    showToast('Export', 'Export des logs en cours...', 'info');
-}
-
-function exportAll() {
-    showToast('Export', 'Export complet en cours...', 'info');
-}
-
-function addUser() {
-  window.showAddUserModal();
-}
-
-window.editUser = function(id) {
-  showEditUserModal(id);
-};
-
-window.closeEditModal = function() {
-    document.getElementById('editUserModal').style.display = 'none';
-};
-
-// Intercepter la soumission du formulaire
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('editUserForm');
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(form);
-            
-            try {
-                const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php', {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    closeEditModal();
-                    await loadUsers();
-                    showToast('Succès', result.message || 'Utilisateur modifié avec succès', 'success');
-                } else {
-                    showToast('Erreur', result.message || 'Échec de la mise à jour', 'error');
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-                showToast('Erreur', 'Erreur lors de la modification', 'error');
+        const response = await fetch(url, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             }
         });
-    }
-});
-
-function deleteUser(id) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur?')) {
-    showToast('Supprimé', `Utilisateur ${id} supprimé avec succès`, 'success');
-  }
-}
-
-function refreshEvents() {
-  console.log('🔄 Actualisation des événements...');
-  showToast('Événements actualisés', 'success');
-}
-
-function addEvent() {
-  console.log('➕ Ajout d\'un événement');
-  showToast('Fonctionnalité à implémenter', 'info');
-}
-
-function editEvent(id) {
-  console.log(`✏️ Modification événement ${id}`);
-  showToast(`Modification événement ${id}`, 'info');
-}
-window.deleteUser = async function(id) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-    try {
-      // Afficher un toast de chargement
-      showToast('Suppression', 'Suppression en cours...', 'info');
-      
-      // Appeler deleteUser.php en arrière-plan
-      const response = await fetch(`http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/deleteUser.php?id=${id}`);
-      
-      // Recharger la liste des utilisateurs sans quitter la page
-      await loadUsers();
-      
-      // Afficher un message de succès
-      showToast('Succès', 'Utilisateur supprimé avec succès', 'success');
-      
-    } catch (error) {
-      console.error('❌ Erreur:', error);
-      showToast('Erreur', 'Impossible de supprimer l\'utilisateur', 'error');
-    }
-  }
-};
-
-function refreshActivity() {
-  console.log('🔄 Actualisation des logs...');
-  showToast('Logs actualisés', 'success');
-}
-
-function exportLogs() {
-  console.log('📥 Export des logs');
-  showToast('Export des logs en cours...', 'info');
-}
-
-function exportAll() {
-  console.log('📥 Export de toutes les données');
-  showToast('Export complet en cours...', 'info');
-}
-
-function filterByChip(chip, filter) {
-  // Retirer la classe active de tous les chips
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  // Ajouter la classe active au chip cliqué
-  chip.classList.add('active');
-  console.log(`🔍 Filtre appliqué: ${filter}`);
-}
-
-// Fonction de recherche en temps réel par nom
-// Version CLIENT-SIDE - Pas besoin de nouveau fichier PHP
-async function searchUsers() {
-    console.log("🔍 Recherche en temps réel...");
-    
-    const searchTerm = document.getElementById('searchInput')?.value.trim().toLowerCase() || '';
-    
-    try {
-        const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
-        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${savedOrder}&t=${Date.now()}`;
         
-        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
+        console.log("📄 Données reçues:", result);
         
         if (result.success && result.data) {
-            let filteredUsers = result.data;
+            let users = result.data;
             
-            if (searchTerm !== '') {
-                filteredUsers = filteredUsers.filter(user => {
+            const savedSearchTerm = localStorage.getItem('userSearchTerm');
+            if (savedSearchTerm && savedSearchTerm !== '') {
+                const searchLower = savedSearchTerm.toLowerCase();
+                users = users.filter(user => {
                     const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
                     const email = (user.email || '').toLowerCase();
-                    return fullName.includes(searchTerm) || email.includes(searchTerm);
+                    return fullName.includes(searchLower) || email.includes(searchLower);
                 });
             }
             
-            const roleFilter = document.getElementById('roleFilter');
-            if (roleFilter && roleFilter.value !== '') {
-                filteredUsers = filteredUsers.filter(user => user.role === roleFilter.value);
+            const savedRoleFilter = localStorage.getItem('userRoleFilter');
+            if (savedRoleFilter && savedRoleFilter !== '') {
+                users = users.filter(user => user.role === savedRoleFilter);
+                const roleFilter = document.getElementById('roleFilter');
+                if (roleFilter) roleFilter.value = savedRoleFilter;
             }
             
-            // Réinitialiser à la première page
-            currentPage = 1;
+            updateUsersTableFromData(users);
+            refreshUserStats();
+            refreshStatusStats(users);
             
-            // Mettre à jour l'affichage
-            updateUsersTableFromData(filteredUsers);
-            
-            if (filteredUsers.length === 0 && searchTerm !== '') {
-                const tableBody = document.getElementById('usersTableBody');
-                if (tableBody) {
-                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px;">🔍 Aucun utilisateur trouvé pour "${searchTerm}"</td></tr>`;
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Erreur recherche:', error);
-    }
-}
-// Version debounced pour optimiser les performances
-let searchTimeout;
-function debouncedSearch() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        searchUsers();
-    }, 300); // Délai de 300ms après la dernière frappe
-}
-
-// Fonction de filtre par rôle
-async function filterUsers() {
-    console.log("🔄 Function filterUsers() appelée");
-    
-    const roleFilter = document.getElementById('roleFilter');
-    if (!roleFilter) {
-        console.error("❌ Élément roleFilter non trouvé");
-        return;
-    }
-    
-    const role = roleFilter.value;
-    console.log("📊 Rôle sélectionné:", role || 'Tous');
-    
-    // Afficher un indicateur de chargement
-    const tableBody = document.getElementById('usersTableBody');
-    if (tableBody) {
-        tableBody.innerHTML = '</tr><td colspan="6" style="text-align:center;">⏳ Filtrage en cours...<\/td><\/tr>';
-    }
-    
-    try {
-        // Appeler triRole.php avec le paramètre role
-        let url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/triRole.php?t=${Date.now()}`;
-        if (role) {
-            url += `&role=${encodeURIComponent(role)}`;
-        }
-        
-        console.log("📡 Appel API:", url);
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log("📄 Réponse JSON reçue:", result);
-        
-        if (result.success && result.data) {
-            // Mettre à jour le tableau
-            currentPage = 1;
-            updateUsersTableFromData(result.data);
-            
-            // Sauvegarder le filtre
-            if (role) {
-                localStorage.setItem('userRoleFilter', role);
-            } else {
-                localStorage.removeItem('userRoleFilter');
-            }
-            
-            // Afficher un toast
-            if (typeof showToast === 'function') {
-                const message = role ? `Filtre: ${getRoleLabel(role)}` : 'Affichage de tous les utilisateurs';
-                showToast('Filtre', message, 'success');
-            }
-            
-            console.log(`✅ ${result.data.length} utilisateurs filtrés par rôle: ${role || 'tous'}`);
         } else {
-            throw new Error(result.error || 'Erreur lors du filtrage');
+            tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#e74c3c;">❌ Erreur: ${result.error || 'Données invalides'}<\/td><\/tr>`;
         }
         
     } catch (error) {
-        console.error('❌ Erreur lors du filtrage:', error);
-        if (typeof showToast === 'function') {
-            showToast('Erreur', 'Impossible de filtrer les utilisateurs', 'error');
-        }
-        // Recharger la liste normale
-        loadUsers();
+        console.error("❌ Erreur:", error);
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#e74c3c;">❌ Erreur: ${error.message}<\/td><\/tr>`;
     }
 }
 
-// Fonction utilitaire pour obtenir le libellé du rôle
-function getRoleLabel(role) {
-    const roles = {
-        'user': 'Utilisateur',
-        'admin': 'Administrateur',
-        'nutritionniste': 'Nutritionniste',
-        'ecologiste': 'Écologiste'
-    };
-    return roles[role] || role;
-}
-// Fonction de tri par date
-// Fonction de tri par date
-// Fonction de tri par date
-// Fonction de tri par date
-async function tri() {
-    console.log("🔄 Function tri() appelée");
-    
-    const selectTri = document.getElementById('triDate');
-    if (!selectTri) {
-        console.error("❌ Élément triDate non trouvé");
-        return;
-    }
-    
-    const order = selectTri.value;
-    console.log("📊 Ordre sélectionné:", order);
-    
-    // Si aucune option sélectionnée, ne rien faire
-    if (order === '') {
-        console.log("ℹ️ Aucun tri sélectionné");
-        return;
-    }
-    
-    // Afficher un indicateur de chargement
-    const tableBody = document.getElementById('usersTableBody');
-    if (tableBody) {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">⏳ Tri en cours...</td></tr>';
-    }
-    
-    try {
-        // Appeler tri.php avec le paramètre order (API JSON)
-        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${order}&t=${Date.now()}`;
-        console.log("📡 Appel API:", url);
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log("📄 Réponse JSON reçue:", result);
-        
-        if (result.success && result.data) {
-          currentPage = 1;
-            // Mettre à jour le tableau avec les données JSON
-            updateUsersTableFromData(result.data);
-            
-            // Sauvegarder l'ordre
-            localStorage.setItem('userSortOrder', order);
-            
-            // Afficher un toast
-            if (typeof showToast === 'function') {
-                const message = order === 'asc' ? 'Tri : plus ancien → plus récent' : 'Tri : plus récent → plus ancien';
-                showToast('Tri', message, 'success');
-            }
-            
-            console.log(`✅ Utilisateurs triés par date (${order === 'asc' ? 'croissant' : 'décroissant'}) - ${result.data.length} utilisateurs`);
-        } else {
-            throw new Error(result.error || 'Erreur lors du tri');
-        }
-        
-    } catch (error) {
-        console.error('❌ Erreur lors du tri:', error);
-        if (typeof showToast === 'function') {
-            showToast('Erreur', 'Impossible de trier les utilisateurs', 'error');
-        }
-        // Recharger la liste normale
-        loadUsers();
-    }
-}
-
-// Nouvelle fonction pour mettre à jour le tableau à partir des données JSON
-// Nouvelle fonction pour mettre à jour le tableau avec pagination
 function updateUsersTableFromData(users) {
     console.log("📊 Mise à jour du tableau avec", users.length, "utilisateurs");
     
@@ -918,14 +464,11 @@ function updateUsersTableFromData(users) {
         return;
     }
     
-    // Stocker les données actuelles
     currentUsersData = users;
     
-    // Calculer le nombre total de pages
     totalPages = Math.ceil(users.length / rowsPerPage);
     if (totalPages === 0) totalPages = 1;
     
-    // S'assurer que la page courante est valide
     if (currentPage > totalPages) {
         currentPage = totalPages;
     }
@@ -933,21 +476,18 @@ function updateUsersTableFromData(users) {
         currentPage = 1;
     }
     
-    // Calculer les indices de début et fin
     const startIndex = (currentPage - 1) * rowsPerPage;
     const endIndex = Math.min(startIndex + rowsPerPage, users.length);
     const pageUsers = users.slice(startIndex, endIndex);
     
     if (pageUsers.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucun utilisateur trouvé</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Aucun utilisateur trouvé</td></tr>';
         updatePaginationButtons();
         return;
     }
     
-    // Générer le HTML du tableau pour la page courante
     let html = '';
     pageUsers.forEach((user) => {
-        // Déterminer la classe et l'icône du rôle
         let roleClass = '';
         let roleIcon = '👤';
         let roleLabel = '';
@@ -976,18 +516,57 @@ function updateUsersTableFromData(users) {
         
         const fullName = `${user.prenom || ''} ${user.nom || ''}`.trim();
         
+        // ========== CORRECTION CRITIQUE : GESTION DES STATUTS ==========
+        const rawStatus = user.status || 'actif';
+        const status = normalizeStatus(rawStatus);
+        
+        let statusClass = '';
+        let statusIcon = '';
+        let statusLabel = '';
+        
+        switch(status) {
+            case 'actif':
+                statusClass = 'status-actif';
+                statusIcon = '✅';
+                statusLabel = typeof t === 'function' ? t('statusActive') : 'Actif';
+                break;
+            case 'inactif':
+                statusClass = 'status-inactif';
+                statusIcon = '⭕';
+                statusLabel = typeof t === 'function' ? t('statusInactive') : 'Inactif';
+                break;
+            case 'suspendu':
+                statusClass = 'status-suspendu';
+                statusIcon = '🚫';
+                statusLabel = typeof t === 'function' ? t('statusSuspended') : 'Suspendu';
+                break;
+            default:
+                statusClass = 'status-actif';
+                statusIcon = '✅';
+                statusLabel = 'Actif';
+                console.warn(`⚠️ Statut inconnu pour l'utilisateur ${user.id}: "${status}"`);
+        }
+        // ========== FIN CORRECTION ==========
+        
         html += `
             <tr style="opacity: 1; animation: fadeIn 0.3s ease-in;">
-                <td>${user.id || ''}</td>
+                <td>${user.id || user.id_utilisateur || ''}</td>
                 <td>${escapeHtml(fullName)}</td>
                 <td>${escapeHtml(user.email || '')}</td>
                 <td><span class="role-badge ${roleClass}">${roleIcon} ${roleLabel}</span></td>
                 <td>${user.date_creation || ''}</td>
+                <td><span class="status-badge ${statusClass}">${statusIcon} ${statusLabel}</span></td>
                 <td class="actions-cell">
-                    <button class="action-btn edit" onclick="editUser(${user.id})" title="Modifier">
+                    <button class="action-btn edit" onclick="editUser(${user.id || user.id_utilisateur})" title="Modifier">
                         ✏️
                     </button>
-                    <button class="action-btn delete" onclick="deleteUser(${user.id})" title="Supprimer">
+                    ${user.role !== 'admin' ? `
+                    <button class="action-btn suspend ${status === 'suspendu' ? 'unsuspend' : ''}" 
+                            onclick="suspendUser(${user.id || user.id_utilisateur}, '${status}')" 
+                            title="${status === 'suspendu' ? 'Réactiver' : 'Suspendre'}">
+                        ${status === 'suspendu' ? '✅' : '🚫'}
+                    </button>` : ''}
+                    <button class="action-btn delete" onclick="deleteUser(${user.id || user.id_utilisateur})" title="Supprimer">
                         🗑️
                     </button>
                 </td>
@@ -996,15 +575,12 @@ function updateUsersTableFromData(users) {
     });
     
     tableBody.innerHTML = html;
-    
-    // Mettre à jour les boutons de pagination
     updatePaginationButtons();
+    refreshStatusStats(users);
     
-    // Afficher un message si aucun résultat
     if (users.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;">📭 Aucun utilisateur trouvé</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px;">📭 Aucun utilisateur trouvé</td></tr>';
     } else {
-        // Afficher un petit indicateur du nombre d'utilisateurs
         const infoSpan = document.getElementById('paginationInfo');
         if (infoSpan) {
             const start = startIndex + 1;
@@ -1016,33 +592,23 @@ function updateUsersTableFromData(users) {
     console.log(`✅ Page ${currentPage}/${totalPages} - Affichage de ${pageUsers.length} utilisateurs`);
 }
 
-// Fonction utilitaire pour échapper le HTML
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-// Mettre à jour les boutons de pagination
-// Mettre à jour les boutons de pagination (version traduite)
 function updatePaginationButtons() {
     const paginationContainer = document.querySelector('.pagination');
     if (!paginationContainer) return;
     
-    // Mettre à jour l'info de pagination
     const infoSpan = document.getElementById('paginationInfo');
     if (infoSpan && currentUsersData) {
         const startIndex = (currentPage - 1) * rowsPerPage;
         const endIndex = Math.min(startIndex + rowsPerPage, currentUsersData.length);
         const start = startIndex + 1;
         const end = endIndex;
-        infoSpan.innerHTML = `${start}-${end} ${t('of')} ${currentUsersData.length} ${t('usersLabel')}`;
+        infoSpan.innerHTML = `${start}-${end} sur ${currentUsersData.length} utilisateurs`;
     }
     
     let html = '';
     
     html += `<button class="page-btn" onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''}>
-        ${t('previous')}
+        Précédent
     </button>`;
     
     const maxButtons = 5;
@@ -1074,20 +640,18 @@ function updatePaginationButtons() {
     }
     
     html += `<button class="page-btn" onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}>
-        ${t('next')}
+        Suivant
     </button>`;
     
     paginationContainer.innerHTML = html;
 }
 
-// Naviguer vers une page spécifique
 function goToPage(page) {
     if (page < 1 || page > totalPages) return;
     currentPage = page;
     updateUsersTableFromData(currentUsersData);
 }
 
-// Page précédente
 function previousPage() {
     if (currentPage > 1) {
         currentPage--;
@@ -1095,7 +659,6 @@ function previousPage() {
     }
 }
 
-// Page suivante
 function nextPage() {
     if (currentPage < totalPages) {
         currentPage++;
@@ -1103,77 +666,350 @@ function nextPage() {
     }
 }
 
-// Changer le nombre d'éléments par page
 function setRowsPerPage(rows) {
     rowsPerPage = rows;
-    currentPage = 1; // Retour à la première page
+    currentPage = 1;
     updateUsersTableFromData(currentUsersData);
 }
-// Fonction pour ajouter les styles CSS du tableau trié
-function addTriTableStyles() {
-}
 
-// Fonction pour animer les éléments d'un module de manière séquentielle
-function animateModuleElements(moduleName) {
-  const container = document.getElementById(moduleName);
-  if (!container) return;
-
-  // Sélectionner tous les éléments à animer
-  const selectors = '.stat-card, .section, .quick-stat, .data-card, tbody tr, .info-card';
-  const elements = container.querySelectorAll(selectors);
-  
-  elements.forEach((el, index) => {
-    // Délai progressif pour l'effet de cascade
-    const delay = index * 50; 
-    setTimeout(() => {
-      el.classList.add('animate-in');
-    }, delay);
-  });
-}
-async function loadUsers() {
-    console.log("📡 Chargement des utilisateurs...");
-
-    const tableBody = document.getElementById("usersTableBody");
-    
-    if (!tableBody) {
-        console.error("❌ usersTableBody introuvable !");
-        setTimeout(loadUsers, 100);
-        return;
+function refreshUsers() {
+    localStorage.removeItem('userSearchTerm');
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = '';
     }
+    loadUsers();
+    if (typeof showToast === 'function') {
+        showToast('Actualisé', 'Liste mise à jour', 'success');
+    }
+}
+
+async function exportData(type) {
+    console.log(`📥 Export des données ${type} en cours...`);
+    
+    if (type === 'users') {
+        await exportUsersToCSV();
+    } else {
+        if (typeof showToast === 'function') {
+            showToast('Export', `Export des données ${type} en cours...`, 'info');
+        }
+    }
+}
+
+async function exportUsersToCSV() {
+    try {
+        if (typeof showToast === 'function') {
+            showToast('Export', 'Préparation de l\'export...', 'info');
+        }
+        
+        const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
+        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${savedOrder}&t=${Date.now()}`;
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            throw new Error('Impossible de récupérer les données');
+        }
+        
+        let users = result.data;
+        
+        const savedSearchTerm = localStorage.getItem('userSearchTerm');
+        if (savedSearchTerm && savedSearchTerm !== '') {
+            const searchLower = savedSearchTerm.toLowerCase();
+            users = users.filter(user => {
+                const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
+                const email = (user.email || '').toLowerCase();
+                return fullName.includes(searchLower) || email.includes(searchLower);
+            });
+        }
+        
+        const savedRoleFilter = localStorage.getItem('userRoleFilter');
+        if (savedRoleFilter && savedRoleFilter !== '') {
+            users = users.filter(user => user.role === savedRoleFilter);
+        }
+        
+        if (users.length === 0) {
+            if (typeof showToast === 'function') {
+                showToast('Export', 'Aucune donnée à exporter', 'warning');
+            }
+            return;
+        }
+        
+        const csvData = convertUsersToCSV(users);
+        downloadCSV(csvData, `utilisateurs_${formatDateForFilename()}.csv`);
+        
+        if (typeof showToast === 'function') {
+            showToast('Export réussi', `${users.length} utilisateur(s) exporté(s)`, 'success');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur export:', error);
+        if (typeof showToast === 'function') {
+            showToast('Erreur', 'Impossible d\'exporter les données', 'error');
+        }
+    }
+}
+
+function convertUsersToCSV(users) {
+    const headers = [
+        'ID', 'Nom', 'Prénom', 'Email', 'Rôle', 'Date inscription', 'Statut'
+    ];
+    
+    const rows = users.map(user => {
+        let formattedDate = '';
+        if (user.date_creation) {
+            formattedDate = user.date_creation.split(' ')[0];
+        }
+        
+        let roleFrench = '';
+        switch(user.role) {
+            case 'admin':
+                roleFrench = 'Administrateur';
+                break;
+            case 'nutritionniste':
+                roleFrench = 'Nutritionniste';
+                break;
+            case 'ecologiste':
+                roleFrench = 'Écologiste';
+                break;
+            default:
+                roleFrench = 'Utilisateur';
+        }
+        
+        const status = user.status === 'suspendu' ? 'Suspendu' : (user.status === 'inactif' ? 'Inactif' : 'Actif');
+        
+        return [
+            escapeCSVField(user.id || user.id_utilisateur || ''),
+            escapeCSVField(user.nom || ''),
+            escapeCSVField(user.prenom || ''),
+            escapeCSVField(user.email || ''),
+            escapeCSVField(roleFrench),
+            escapeCSVField(formattedDate),
+            escapeCSVField(status)
+        ];
+    });
+    
+    const csvContent = [
+        headers.join(';'),
+        ...rows.map(row => row.join(';'))
+    ].join('\n');
+    
+    return '\uFEFF' + csvContent;
+}
+
+function escapeCSVField(field) {
+    if (field === undefined || field === null) return '';
+    
+    let stringField = String(field);
+    
+    if (stringField.includes('"') || stringField.includes(';') || stringField.includes('\n') || stringField.includes(',')) {
+        stringField = stringField.replace(/"/g, '""');
+        return `"${stringField}"`;
+    }
+    
+    return stringField;
+}
+
+function formatDateForFilename() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+}
+
+function downloadCSV(csvContent, filename) {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+}
+
+function addUser() {
+    if (typeof window.showAddUserModal === 'function') {
+        window.showAddUserModal();
+    }
+}
+
+function editUser(id) {
+    if (typeof window.showEditUserModal === 'function') {
+        window.showEditUserModal(id);
+    }
+}
+
+// ==================== SUSPENSION / RÉACTIVATION (CORRIGÉ) ====================
+window.suspendUser = async function(id, currentStatus) {
+    console.log(`🔍 suspendUser appelé - id: ${id}, currentStatus: ${currentStatus}`);
+    
+    const isSuspended = currentStatus === 'suspendu';
+    const action = isSuspended ? 'réactiver' : 'suspendre';
+    const newStatus = isSuspended ? 'actif' : 'suspendu';
+
+    if (!confirm(`Êtes-vous sûr de vouloir ${action} cet utilisateur ?`)) return;
 
     try {
-        tableBody.innerHTML = '<table><td colspan="6" style="text-align:center;">⏳ Chargement...<\/td><\/tr>';
-        
-        // Récupérer les paramètres sauvegardés
-        const savedOrder = localStorage.getItem('userSortOrder');
-        const savedRoleFilter = localStorage.getItem('userRoleFilter');
-        const savedSearchTerm = localStorage.getItem('userSearchTerm');
-        
-        const selectTri = document.getElementById('triDate');
-        const roleFilter = document.getElementById('roleFilter');
-        const searchInput = document.getElementById('searchInput');
-        
-        // Restaurer le terme de recherche si présent
-        if (savedSearchTerm && searchInput) {
-            searchInput.value = savedSearchTerm;
+        if (typeof showToast === 'function') {
+            showToast(isSuspended ? 'Réactivation' : 'Suspension', 'En cours...', 'info');
         }
-        
-        // Construire l'URL de base
-        let url = "http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php";
-        
-        // Appliquer le tri sauvegardé
-        if (savedOrder && savedOrder !== '') {
-            url += `?order=${savedOrder}`;
-            if (selectTri) {
-                selectTri.value = savedOrder;
+
+        const response = await fetch(
+            'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/suspendUser.php',
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ id: parseInt(id), status: newStatus })
             }
-            console.log(`📊 Application du tri sauvegardé: ${savedOrder}`);
+        );
+
+        const result = await response.json();
+        console.log("📡 Réponse suspendUser:", result);
+
+        if (result.success) {
+            await loadUsers();
+            if (typeof showToast === 'function') {
+                showToast(
+                    'Succès',
+                    result.message || (isSuspended ? 'Utilisateur réactivé avec succès' : 'Utilisateur suspendu avec succès'),
+                    'success'
+                );
+            }
         } else {
-            url += `?order=desc`;
-            if (selectTri) {
-                selectTri.value = 'desc';
+            if (typeof showToast === 'function') {
+                showToast('Erreur', result.message || 'Impossible de modifier le statut', 'error');
             }
         }
+    } catch (error) {
+        console.error('❌ Erreur suspend:', error);
+        if (typeof showToast === 'function') {
+            showToast('Erreur réseau', 'Impossible de contacter le serveur', 'error');
+        }
+    }
+};
+
+// ==================== SUPPRESSION ====================
+window.deleteUser = async function(id) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+        try {
+            if (typeof showToast === 'function') {
+                showToast('Suppression', 'Suppression en cours...', 'info');
+            }
+            const response = await fetch(`http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/deleteUser.php?id=${id}`);
+            await loadUsers();
+            if (typeof showToast === 'function') {
+                showToast('Succès', 'Utilisateur supprimé avec succès', 'success');
+            }
+        } catch (error) {
+            console.error('❌ Erreur:', error);
+            if (typeof showToast === 'function') {
+                showToast('Erreur', 'Impossible de supprimer l\'utilisateur', 'error');
+            }
+        }
+    }
+};
+
+// ==================== FILTRES ET RECHERCHE ====================
+
+
+async function searchUsers() {
+    console.log("🔍 Recherche en temps réel...");
+    
+    const searchTerm = document.getElementById('searchInput')?.value.trim().toLowerCase() || '';
+    localStorage.setItem('userSearchTerm', searchTerm);
+    
+    try {
+        const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
+        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${savedOrder}&t=${Date.now()}`;
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            let filteredUsers = result.data;
+            
+            if (searchTerm !== '') {
+                filteredUsers = filteredUsers.filter(user => {
+                    const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
+                    const email = (user.email || '').toLowerCase();
+                    return fullName.includes(searchTerm) || email.includes(searchTerm);
+                });
+            }
+            
+            const roleFilter = document.getElementById('roleFilter');
+            if (roleFilter && roleFilter.value !== '') {
+                filteredUsers = filteredUsers.filter(user => user.role === roleFilter.value);
+                localStorage.setItem('userRoleFilter', roleFilter.value);
+            } else {
+                localStorage.removeItem('userRoleFilter');
+            }
+            
+            currentPage = 1;
+            updateUsersTableFromData(filteredUsers);
+            
+            if (filteredUsers.length === 0 && searchTerm !== '') {
+                const tableBody = document.getElementById('usersTableBody');
+                if (tableBody) {
+                    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 40px;">🔍 Aucun utilisateur trouvé pour "${searchTerm}"</td></tr>`;
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Erreur recherche:', error);
+    }
+}
+
+let searchTimeout;
+function debouncedSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchUsers();
+    }, 300);
+}
+
+async function filterUsers() {
+    console.log("🔄 Function filterUsers() appelée");
+    
+    const roleFilter = document.getElementById('roleFilter');
+    if (!roleFilter) {
+        console.error("❌ Élément roleFilter non trouvé");
+        return;
+    }
+    
+    const role = roleFilter.value;
+    console.log("📊 Rôle sélectionné:", role || 'Tous');
+    
+    if (role) {
+        localStorage.setItem('userRoleFilter', role);
+    } else {
+        localStorage.removeItem('userRoleFilter');
+    }
+    
+    const tableBody = document.getElementById('usersTableBody');
+    if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">⏳ Filtrage en cours...<\/td><\/tr>';
+    }
+    
+    try {
+        let url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/triRole.php?t=${Date.now()}`;
+        if (role) {
+            url += `&role=${encodeURIComponent(role)}`;
+        }
+        
+        console.log("📡 Appel API:", url);
         
         const response = await fetch(url);
         
@@ -1182,77 +1018,124 @@ async function loadUsers() {
         }
         
         const result = await response.json();
+        console.log("📄 Réponse JSON reçue:", result);
         
         if (result.success && result.data) {
-            let users = result.data;
+            currentPage = 1;
+            updateUsersTableFromData(result.data);
             
-            // Appliquer la recherche si présente
-            if (savedSearchTerm && savedSearchTerm !== '') {
-                const searchLower = savedSearchTerm.toLowerCase();
-                users = users.filter(user => {
-                    const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
-                    const email = (user.email || '').toLowerCase();
-                    return fullName.includes(searchLower) || email.includes(searchLower);
-                });
-                console.log(`📊 Application de la recherche sauvegardée: "${savedSearchTerm}" -> ${users.length} résultats`);
+            if (typeof showToast === 'function') {
+                const message = role ? `Filtre: ${getRoleLabel(role)}` : 'Affichage de tous les utilisateurs';
+                showToast('Filtre', message, 'success');
             }
             
-            // Appliquer le filtre par rôle si présent
-            if (savedRoleFilter && savedRoleFilter !== '') {
-                users = users.filter(user => user.role === savedRoleFilter);
-                if (roleFilter) {
-                    roleFilter.value = savedRoleFilter;
-                }
-                console.log(`📊 Application du filtre sauvegardé: ${savedRoleFilter}`);
-            } else {
-                if (roleFilter) {
-                    roleFilter.value = '';
-                }
-            }
-            
-            updateUsersTableFromData(users);
-            refreshUserStats();
-            
-            // Afficher un message si aucun résultat avec recherche
-            if (users.length === 0 && savedSearchTerm) {
-                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px;">🔍 Aucun utilisateur trouvé pour "${savedSearchTerm}"<\/td><\/tr>`;
-            }
+            console.log(`✅ ${result.data.length} utilisateurs filtrés par rôle: ${role || 'tous'}`);
         } else {
-            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${result.error || 'Données invalides'}<\/td><\/tr>`;
+            throw new Error(result.error || 'Erreur lors du filtrage');
         }
         
     } catch (error) {
-        console.error("❌ Erreur:", error);
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e74c3c;">❌ Erreur: ${error.message}<\/td><\/tr>`;
+        console.error('❌ Erreur lors du filtrage:', error);
+        if (typeof showToast === 'function') {
+            showToast('Erreur', 'Impossible de filtrer les utilisateurs', 'error');
+        }
+        loadUsers();
     }
 }
-// ===== STATISTIQUES DYNAMIQUES =====
-let currentChart = null; // Pour stocker l'instance du graphique actuel
-let currentChartType = 'pie'; // Type de graphique actuel ('pie' ou 'bar')
 
-// Fonction pour calculer les statistiques des utilisateurs par rôle
+function getRoleLabel(role) {
+    const roles = {
+        'user': 'Utilisateur',
+        'admin': 'Administrateur',
+        'nutritionniste': 'Nutritionniste',
+        'ecologiste': 'Écologiste'
+    };
+    return roles[role] || role;
+}
+
+async function tri() {
+    console.log("🔄 Function tri() appelée");
+    
+    const selectTri = document.getElementById('triDate');
+    if (!selectTri) {
+        console.error("❌ Élément triDate non trouvé");
+        return;
+    }
+    
+    const order = selectTri.value;
+    console.log("📊 Ordre sélectionné:", order);
+    
+    if (order === '') {
+        console.log("ℹ️ Aucun tri sélectionné");
+        return;
+    }
+    
+    localStorage.setItem('userSortOrder', order);
+    
+    const tableBody = document.getElementById('usersTableBody');
+    if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">⏳ Tri en cours...<\/td><\/tr>';
+    }
+    
+    try {
+        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${order}&t=${Date.now()}`;
+        console.log("📡 Appel API:", url);
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("📄 Réponse JSON reçue:", result);
+        
+        if (result.success && result.data) {
+            currentPage = 1;
+            updateUsersTableFromData(result.data);
+            
+            if (typeof showToast === 'function') {
+                const message = order === 'asc' ? 'Tri : plus ancien → plus récent' : 'Tri : plus récent → plus ancien';
+                showToast('Tri', message, 'success');
+            }
+            
+            console.log(`✅ Utilisateurs triés par date (${order === 'asc' ? 'croissant' : 'décroissant'}) - ${result.data.length} utilisateurs`);
+        } else {
+            throw new Error(result.error || 'Erreur lors du tri');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur lors du tri:', error);
+        if (typeof showToast === 'function') {
+            showToast('Erreur', 'Impossible de trier les utilisateurs', 'error');
+        }
+        loadUsers();
+    }
+}
+
+// ==================== STATISTIQUES PAR RÔLE ====================
+let currentChart = null;
+let currentChartType = 'pie';
+
 function calculateUserStats(users) {
     const stats = {
-        admin:          { count: 0, label: t('roleAdminPlural'),         icon: '🛡️', color: '#e74c3c' },
-        nutritionniste: { count: 0, label: t('roleNutritionistPlural'),  icon: '🥗', color: '#2ecc71' },
-        ecologiste:     { count: 0, label: t('roleEcologistPlural'),     icon: '🌱', color: '#3498db' },
-        user:           { count: 0, label: t('roleUserPlural'),          icon: '👤', color: '#9b59b6' }
+        admin:          { count: 0, label: 'Administrateurs', icon: '🛡️', color: '#e74c3c' },
+        nutritionniste: { count: 0, label: 'Nutritionnistes', icon: '🥗', color: '#2ecc71' },
+        ecologiste:     { count: 0, label: 'Écologistes',     icon: '🌱', color: '#3498db' },
+        user:           { count: 0, label: 'Utilisateurs',    icon: '👤', color: '#9b59b6' }
     };
     
-    // Compter les utilisateurs par rôle
     users.forEach(user => {
         const role = user.role;
         if (stats[role]) {
             stats[role].count++;
         } else {
-            // Si rôle non reconnu, compter comme utilisateur standard
             stats.user.count++;
         }
     });
     
     const total = users.length;
     
-    // Calculer les pourcentages
     const statsArray = [];
     for (const [key, value] of Object.entries(stats)) {
         if (value.count > 0) {
@@ -1267,16 +1150,11 @@ function calculateUserStats(users) {
         }
     }
     
-    // Trier par nombre décroissant
     statsArray.sort((a, b) => b.count - a.count);
     
     return { stats: statsArray, total };
 }
 
-// Fonction pour mettre à jour la légende des statistiques
-// Fonction pour mettre à jour la légende des statistiques
-// Fonction pour mettre à jour la légende des statistiques (version améliorée)
-// Fonction pour mettre à jour la légende des statistiques (version traduite)
 function updateStatsLegend(users) {
     const { stats, total } = calculateUserStats(users);
     const legendContainer = document.getElementById('userStatsLegend');
@@ -1284,26 +1162,19 @@ function updateStatsLegend(users) {
     if (!legendContainer) return;
     
     if (stats.length === 0) {
-        legendContainer.innerHTML = '<div class="stat-item">Aucune donnée disponible</div>';
+        legendContainer.innerHTML = `<div class="stat-item">${t('noData')}</div>`;
         return;
     }
     
     let html = '';
     stats.forEach(stat => {
-        // Traduire le label du rôle
-        let translatedLabel = stat.label;
+        // Traduction du libellé complet pour l'affichage
+        let fullLabel = '';
         switch(stat.role) {
-            case 'admin':
-                translatedLabel = t('administrator');
-                break;
-            case 'nutritionniste':
-                translatedLabel = t('nutritionist');
-                break;
-            case 'ecologiste':
-                translatedLabel = t('ecologist');
-                break;
-            default:
-                translatedLabel = t('standardUser');
+            case 'admin': fullLabel = t('roleAdmin'); break;
+            case 'nutritionniste': fullLabel = t('roleNutritionist'); break;
+            case 'ecologiste': fullLabel = t('roleEcologist'); break;
+            default: fullLabel = t('roleUser');
         }
         
         html += `
@@ -1311,7 +1182,7 @@ function updateStatsLegend(users) {
                 <div class="stat-role-enhanced">
                     <div class="stat-icon-enhanced" style="background: ${stat.color}20; border-left: 3px solid ${stat.color};">
                         <span>${stat.icon}</span>
-                        <span class="stat-label-enhanced">${translatedLabel}</span>
+                        <span class="stat-label-enhanced">${fullLabel}</span>
                     </div>
                 </div>
                 <div class="stat-percent-enhanced">
@@ -1334,7 +1205,6 @@ function updateStatsLegend(users) {
     legendContainer.innerHTML = html;
 }
 
-// Fonction pour créer/détruire un graphique Chart.js
 function destroyChart() {
     if (currentChart) {
         currentChart.destroy();
@@ -1342,7 +1212,6 @@ function destroyChart() {
     }
 }
 
-// Fonction pour créer un graphique camembert (pie chart)
 function createPieChart(users) {
     const { stats, total } = calculateUserStats(users);
     const ctx = document.getElementById('userPieChart')?.getContext('2d');
@@ -1351,7 +1220,18 @@ function createPieChart(users) {
     
     destroyChart();
     
-    const labels = stats.map(s => `${s.label} (${s.percent}%)`);
+    // Labels traduits avec noms courts
+    const labels = stats.map(s => {
+        let shortLabel = '';
+        switch(s.role) {
+            case 'admin': shortLabel = t('roleAdminShort'); break;
+            case 'nutritionniste': shortLabel = t('roleNutritionistShort'); break;
+            case 'ecologiste': shortLabel = t('roleEcologistShort'); break;
+            default: shortLabel = t('roleUserShort');
+        }
+        return `${shortLabel} (${s.percent}%)`;
+    });
+    
     const data = stats.map(s => s.count);
     const colors = stats.map(s => s.color);
     
@@ -1363,8 +1243,8 @@ function createPieChart(users) {
                 data: data,
                 backgroundColor: colors,
                 borderColor: 'rgba(15, 35, 24, 0.5)',
-                borderWidth: 2,
-                hoverOffset: 15
+                borderWidth: 1.5,
+                hoverOffset: 10
             }]
         },
         options: {
@@ -1375,26 +1255,28 @@ function createPieChart(users) {
                     position: 'bottom',
                     labels: {
                         color: getComputedStyle(document.body).getPropertyValue('--text'),
-                        font: { size: 11 },
-                        padding: 10
+                        font: { size: 10 },
+                        padding: 8,
+                        boxWidth: 10,
+                        boxHeight: 10
                     }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const label = stats[context.dataIndex].label;
-                            const value = context.raw;
-                            const percent = stats[context.dataIndex].percent;
-                            return `${label}: ${value} ${t('chartUserCount')} (${percent}%)`;
+                            const s = stats[context.dataIndex];
+                            return `${s.label}: ${s.count} ${t('usersCount')} (${s.percent}%)`;
                         }
                     }
                 }
+            },
+            layout: {
+                padding: { top: 5, bottom: 5, left: 5, right: 5 }
             },
             onClick: (event, activeElements) => {
                 if (activeElements.length > 0) {
                     const index = activeElements[0].index;
                     const role = stats[index].role;
-                    // Filtrer le tableau par ce rôle
                     const roleFilter = document.getElementById('roleFilter');
                     if (roleFilter) {
                         roleFilter.value = role;
@@ -1406,20 +1288,27 @@ function createPieChart(users) {
     });
 }
 
-// Fonction pour créer un graphique à barres
 function createBarChart(users) {
     const { stats, total } = calculateUserStats(users);
     const ctx = document.getElementById('userBarChart')?.getContext('2d');
     
     if (!ctx) return;
     
-    // Si le graphique existe déjà, le détruire
     if (currentChart) {
         currentChart.destroy();
         currentChart = null;
     }
     
-    const labels = stats.map(s => s.label);
+    // Labels courts pour les barres
+    const labels = stats.map(s => {
+        switch(s.role) {
+            case 'admin': return t('roleAdminShort');
+            case 'nutritionniste': return t('roleNutritionistShort');
+            case 'ecologiste': return t('roleEcologistShort');
+            default: return t('roleUserShort');
+        }
+    });
+    
     const data = stats.map(s => s.count);
     const colors = stats.map(s => s.color);
     
@@ -1433,8 +1322,8 @@ function createBarChart(users) {
                 backgroundColor: colors,
                 borderColor: 'rgba(15, 35, 24, 0.8)',
                 borderWidth: 1,
-                borderRadius: 8,
-                barPercentage: 0.7,
+                borderRadius: 6,
+                barPercentage: 0.65,
                 categoryPercentage: 0.8
             }]
         },
@@ -1442,15 +1331,12 @@ function createBarChart(users) {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const value = context.raw;
-                            const percent = stats[context.dataIndex].percent;
-                            return `${value} ${t('chartUserCount')} (${percent}%)`;
+                            const s = stats[context.dataIndex];
+                            return `${s.label}: ${context.raw} ${t('usersCount')} (${s.percent}%)`;
                         }
                     }
                 }
@@ -1458,23 +1344,29 @@ function createBarChart(users) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: {
-                        color: 'rgba(91, 62, 150, 0.1)'
-                    },
+                    grid: { color: 'rgba(91, 62, 150, 0.08)' },
                     ticks: {
                         color: getComputedStyle(document.body).getPropertyValue('--muted'),
-                        stepSize: 1
+                        stepSize: 1,
+                        font: { size: 10 }
+                    },
+                    title: {
+                        display: true,
+                        text: t('chartUsersDataset'),
+                        color: getComputedStyle(document.body).getPropertyValue('--muted'),
+                        font: { size: 10 }
                     }
                 },
                 x: {
-                    grid: {
-                        display: false
-                    },
+                    grid: { display: false },
                     ticks: {
                         color: getComputedStyle(document.body).getPropertyValue('--text'),
-                        font: { size: 12 }
+                        font: { size: 11 }
                     }
                 }
+            },
+            layout: {
+                padding: { top: 5, bottom: 5, left: 5, right: 5 }
             },
             onClick: (event, activeElements) => {
                 if (activeElements.length > 0) {
@@ -1491,11 +1383,9 @@ function createBarChart(users) {
     });
 }
 
-// Fonction pour basculer entre les types de graphiques
 function switchChartType(type) {
     currentChartType = type;
     
-    // Mettre à jour l'état des boutons
     const pieBtn = document.querySelector('.toggle-btn[onclick="switchChartType(\'pie\')"]');
     const barBtn = document.querySelector('.toggle-btn[onclick="switchChartType(\'bar\')"]');
     
@@ -1507,20 +1397,17 @@ function switchChartType(type) {
     
     if (type === 'pie') {
         if (pieBtn) pieBtn.classList.add('active');
-        pieContainer.style.display = 'block';
-        barContainer.style.display = 'none';
-        // Recharger les données actuelles pour le camembert
+        if (pieContainer) pieContainer.style.display = 'block';
+        if (barContainer) barContainer.style.display = 'none';
         loadUserStatsForCurrentData();
     } else {
         if (barBtn) barBtn.classList.add('active');
-        pieContainer.style.display = 'none';
-        barContainer.style.display = 'block';
-        // Recharger les données actuelles pour les barres
+        if (pieContainer) pieContainer.style.display = 'none';
+        if (barContainer) barContainer.style.display = 'block';
         loadUserStatsForCurrentData();
     }
 }
 
-// Fonction pour charger les statistiques basées sur les données actuelles du tableau
 async function loadUserStatsForCurrentData() {
     try {
         const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
@@ -1532,7 +1419,6 @@ async function loadUserStatsForCurrentData() {
         if (result.success && result.data) {
             let users = result.data;
             
-            // Appliquer le filtre de recherche si présent
             const savedSearchTerm = localStorage.getItem('userSearchTerm');
             if (savedSearchTerm && savedSearchTerm !== '') {
                 const searchLower = savedSearchTerm.toLowerCase();
@@ -1543,16 +1429,13 @@ async function loadUserStatsForCurrentData() {
                 });
             }
             
-            // Appliquer le filtre de rôle si présent
             const savedRoleFilter = localStorage.getItem('userRoleFilter');
             if (savedRoleFilter && savedRoleFilter !== '') {
                 users = users.filter(user => user.role === savedRoleFilter);
             }
             
-            // Mettre à jour les statistiques
             updateStatsLegend(users);
             
-            // Créer le graphique selon le type actuel
             if (currentChartType === 'pie') {
                 createPieChart(users);
             } else {
@@ -1564,93 +1447,305 @@ async function loadUserStatsForCurrentData() {
     }
 }
 
-// Fonction pour rafraîchir les statistiques (appelée après modification des données)
 function refreshUserStats() {
     loadUserStatsForCurrentData();
 }
 
-// Exposer les fonctions globalement
-window.switchChartType = switchChartType;
-window.refreshUserStats = refreshUserStats;
-// Fonction toast pour les notifications
-// Fonction toast simplifiée (sans création dynamique de styles)
-function showToast(title, message, type = 'info') {
-    let toastContainer = document.getElementById('toast-container');
-    
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        document.body.appendChild(toastContainer);
-    }
-    
-    const toast = document.createElement('div');
-    const colors = {
-        success: '#2ecc71',
-        error: '#e74c3c',
-        info: '#3498db',
-        warning: '#f39c12'
+// ==================== STATISTIQUES PAR STATUT (CORRIGÉ) ====================
+let currentStatusChart = null;
+let currentStatusChartType = 'pie';
+
+function calculateStatusStats(users) {
+    const stats = {
+        actif:    { count: 0, label: 'Actif',    icon: '✅', color: '#2ecc71' },
+        inactif:  { count: 0, label: 'Inactif',  icon: '⭕', color: '#95a5a6' },
+        suspendu: { count: 0, label: 'Suspendu', icon: '🚫', color: '#e74c3c' }
     };
-    
-    toast.style.cssText = `
-        background: ${colors[type] || colors.info};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        animation: slideIn 0.3s ease-out;
-        cursor: pointer;
-        min-width: 250px;
-        max-width: 350px;
-    `;
-    
-    toast.innerHTML = `<strong>${title}</strong><br><small>${message}</small>`;
-    toast.onclick = () => toast.remove();
-    
-    toastContainer.appendChild(toast);
-    
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => toast.remove(), 300);
-        }
-    }, 3000);
+
+    users.forEach(user => {
+        const s = user.status || 'actif';
+        if (stats[s]) stats[s].count++;
+        else stats.actif.count++;
+    });
+
+    const total = users.length;
+    const statsArray = Object.entries(stats)
+        .filter(([, v]) => v.count > 0)
+        .map(([key, v]) => ({
+            status: key,
+            label: v.label,
+            icon: v.icon,
+            count: v.count,
+            percent: total > 0 ? ((v.count / total) * 100).toFixed(1) : 0,
+            color: v.color
+        }))
+        .sort((a, b) => b.count - a.count);
+
+    return { stats: statsArray, total };
 }
 
-// Ajouter les animations CSS pour les toasts
+function updateStatusStatsLegend(users) {
+    const { stats, total } = calculateStatusStats(users);
+    const container = document.getElementById('userStatusStatsLegend');
+    if (!container) return;
 
-// ===== TRADUCTION DU MODULE USERS =====
+    if (stats.length === 0) {
+        container.innerHTML = `<div class="stat-item">${t('noData')}</div>`;
+        return;
+    }
 
-// Applique toutes les traductions aux éléments statiques de users-admin.html
+    let html = stats.map(s => {
+        // Traduction du libellé complet du statut
+        let fullLabel = '';
+        switch(s.status) {
+            case 'actif': fullLabel = t('statusActive'); break;
+            case 'inactif': fullLabel = t('statusInactive'); break;
+            case 'suspendu': fullLabel = t('statusSuspended'); break;
+            default: fullLabel = s.label;
+        }
+        
+        return `
+            <div class="stat-item-enhanced">
+                <div class="stat-role-enhanced">
+                    <div class="stat-icon-enhanced" style="background:${s.color}20;border-left:3px solid ${s.color};">
+                        <span>${s.icon}</span>
+                        <span class="stat-label-enhanced">${fullLabel}</span>
+                    </div>
+                </div>
+                <div class="stat-percent-enhanced"><span class="percent-value">${s.percent}%</span></div>
+                <div class="stat-bar-enhanced">
+                    <div class="stat-bar-fill-enhanced" style="width:${s.percent}%;background:${s.color};"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    html += `<div class="stats-total-enhanced"><span>${t('totalUsers')}</span><strong>${total}</strong></div>`;
+    container.innerHTML = html;
+}
+function destroyStatusChart() {
+    if (currentStatusChart) {
+        currentStatusChart.destroy();
+        currentStatusChart = null;
+    }
+}
+
+function createStatusPieChart(users) {
+    const { stats } = calculateStatusStats(users);
+    const ctx = document.getElementById('userStatusPieChart')?.getContext('2d');
+    if (!ctx) return;
+    destroyStatusChart();
+
+    // Labels courts pour les statuts
+    const labels = stats.map(s => {
+        let shortLabel = '';
+        switch(s.status) {
+            case 'actif': shortLabel = t('statusActiveShort'); break;
+            case 'inactif': shortLabel = t('statusInactiveShort'); break;
+            case 'suspendu': shortLabel = t('statusSuspendedShort'); break;
+            default: shortLabel = s.label;
+        }
+        return `${shortLabel} (${s.percent}%)`;
+    });
+
+    currentStatusChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: stats.map(s => s.count),
+                backgroundColor: stats.map(s => s.color),
+                borderColor: 'rgba(15,35,24,0.5)',
+                borderWidth: 1.5,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: getComputedStyle(document.body).getPropertyValue('--text'),
+                        font: { size: 10 },
+                        padding: 8,
+                        boxWidth: 10,
+                        boxHeight: 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx2 => {
+                            const s = stats[ctx2.dataIndex];
+                            return `${s.label}: ${ctx2.raw} ${t('usersCount')} (${s.percent}%)`;
+                        }
+                    }
+                }
+            },
+            layout: {
+                padding: { top: 5, bottom: 5, left: 5, right: 5 }
+            },
+            onClick: (event, activeElements) => {
+                if (activeElements.length > 0) {
+                    const s = stats[activeElements[0].index].status;
+                    const chipMap = { actif: 'active', inactif: 'inactive', suspendu: 'suspended' };
+                    const chip = document.querySelector(`.chip[onclick*="'${chipMap[s]}'"]`);
+                    if (chip) filterByChip(chip, chipMap[s]);
+                }
+            }
+        }
+    });
+}
+
+function createStatusBarChart(users) {
+    const { stats } = calculateStatusStats(users);
+    const ctx = document.getElementById('userStatusBarChart')?.getContext('2d');
+    if (!ctx) return;
+    destroyStatusChart();
+
+    // Labels courts pour les barres
+    const labels = stats.map(s => {
+        switch(s.status) {
+            case 'actif': return t('statusActiveShort');
+            case 'inactif': return t('statusInactiveShort');
+            case 'suspendu': return t('statusSuspendedShort');
+            default: return s.label;
+        }
+    });
+
+    currentStatusChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: t('chartUsersDataset'),
+                data: stats.map(s => s.count),
+                backgroundColor: stats.map(s => s.color),
+                borderColor: 'rgba(15,35,24,0.8)',
+                borderWidth: 1,
+                borderRadius: 6,
+                barPercentage: 0.65,
+                categoryPercentage: 0.8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx2 => {
+                            const s = stats[ctx2.dataIndex];
+                            return `${s.label}: ${ctx2.raw} ${t('usersCount')} (${s.percent}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(91,62,150,0.08)' },
+                    ticks: {
+                        color: getComputedStyle(document.body).getPropertyValue('--muted'),
+                        stepSize: 1,
+                        font: { size: 10 }
+                    },
+                    title: {
+                        display: true,
+                        text: t('chartUsersDataset'),
+                        color: getComputedStyle(document.body).getPropertyValue('--muted'),
+                        font: { size: 10 }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        color: getComputedStyle(document.body).getPropertyValue('--text'),
+                        font: { size: 11 }
+                    }
+                }
+            },
+            layout: {
+                padding: { top: 5, bottom: 5, left: 5, right: 5 }
+            },
+            onClick: (event, activeElements) => {
+                if (activeElements.length > 0) {
+                    const s = stats[activeElements[0].index].status;
+                    const chipMap = { actif: 'active', inactif: 'inactive', suspendu: 'suspended' };
+                    const chip = document.querySelector(`.chip[onclick*="'${chipMap[s]}'"]`);
+                    if (chip) filterByChip(chip, chipMap[s]);
+                }
+            }
+        }
+    });
+}
+
+function switchStatusChartType(type) {
+    currentStatusChartType = type;
+    const pieBtn = document.querySelector('.toggle-btn[onclick="switchStatusChartType(\'pie\')"]');
+    const barBtn = document.querySelector('.toggle-btn[onclick="switchStatusChartType(\'bar\')"]');
+    const pieC = document.getElementById('statusPieChartContainer');
+    const barC = document.getElementById('statusBarChartContainer');
+
+    if (pieBtn) pieBtn.classList.remove('active');
+    if (barBtn) barBtn.classList.remove('active');
+
+    if (type === 'pie') {
+        if (pieBtn) pieBtn.classList.add('active');
+        if (pieC) pieC.style.display = 'block';
+        if (barC) barC.style.display = 'none';
+        if (currentUsersData.length > 0) createStatusPieChart(currentUsersData);
+    } else {
+        if (barBtn) barBtn.classList.add('active');
+        if (pieC) pieC.style.display = 'none';
+        if (barC) barC.style.display = 'block';
+        if (currentUsersData.length > 0) createStatusBarChart(currentUsersData);
+    }
+}
+
+function refreshStatusStats(users) {
+    const data = users || currentUsersData;
+    if (!data || data.length === 0) return;
+    updateStatusStatsLegend(data);
+    if (currentStatusChartType === 'pie') createStatusPieChart(data);
+    else createStatusBarChart(data);
+}
+
+// ==================== TRADUCTION ====================
+
 function applyUsersTranslations() {
-    // Titre du module
+    if (typeof t !== 'function') return;
+    
+    // Titre principal
     const moduleTitle = document.querySelector('#users .module-title');
     if (moduleTitle) moduleTitle.innerHTML = t('userManagement');
 
-    // Boutons d'action — itération pour éviter les problèmes d'échappement CSS
+    // Boutons
     document.querySelectorAll('#users .btn').forEach(btn => {
         const oc = btn.getAttribute('onclick') || '';
         if (oc.includes('refreshUsers')) btn.innerHTML = t('refresh');
         else if (oc.includes('exportData')) btn.innerHTML = t('exportCSV');
-        else if (oc.includes('addUser'))   btn.innerHTML = t('addUser');
+        else if (oc.includes('addUser')) btn.innerHTML = t('addUser');
     });
 
-    // Filter chips
+    // Chips
     const chips = document.querySelectorAll('#users .filter-chips .chip');
-    if (chips.length >= 5) {
+    if (chips.length >= 6) {
         chips[0].textContent = t('all');
         chips[1].innerHTML = t('active');
         chips[2].innerHTML = t('inactive');
-        chips[3].innerHTML = t('admins');
-        chips[4].innerHTML = t('users');
+        chips[3].innerHTML = t('suspended');
+        chips[4].innerHTML = t('admins');
+        chips[5].innerHTML = t('users');
     }
 
-    // Search placeholder
+    // Barre de recherche
     const searchInput = document.getElementById('searchInput');
     if (searchInput) searchInput.placeholder = t('searchPlaceholder');
 
-    // Select rôles
+    // Filtre rôle
     const roleFilter = document.getElementById('roleFilter');
     if (roleFilter && roleFilter.options.length >= 5) {
         roleFilter.options[0].text = t('allRoles');
@@ -1660,7 +1755,7 @@ function applyUsersTranslations() {
         roleFilter.options[4].text = '🌱 ' + t('ecologist');
     }
 
-    // Select tri date
+    // Tri date
     const triDate = document.getElementById('triDate');
     if (triDate && triDate.options.length >= 3) {
         triDate.options[0].text = t('sortByDate');
@@ -1668,7 +1763,7 @@ function applyUsersTranslations() {
         triDate.options[2].text = t('oldestFirst');
     }
 
-    // Select rows per page
+    // Lignes par page
     const rowsSelect = document.getElementById('rowsPerPageSelect');
     if (rowsSelect) {
         Array.from(rowsSelect.options).forEach(opt => {
@@ -1676,58 +1771,82 @@ function applyUsersTranslations() {
         });
     }
 
-    // En-têtes du tableau
+    // En-têtes tableau
     const ths = document.querySelectorAll('#users .data-table thead th');
-    if (ths.length >= 6) {
+    if (ths.length >= 7) {
         ths[0].textContent = t('id');
         ths[1].textContent = t('fullName');
         ths[2].textContent = t('email');
         ths[3].textContent = t('role');
         ths[4].textContent = t('registrationDate');
-        ths[5].textContent = t('actions');
+        ths[5].textContent = t('status');
+        ths[6].textContent = t('actions');
     }
 
-    // Titre section stats
-    const statsTitle = document.querySelector('#users .stats-header h3');
+    // Statistiques par rôle
+    const statsTitle = document.querySelector('#users .stats-section:first-of-type .stats-header h3');
     if (statsTitle) statsTitle.innerHTML = t('userStats');
 
-    // Boutons type graphique — itération
-    document.querySelectorAll('#users .toggle-btn').forEach(btn => {
-        const oc = btn.getAttribute('onclick') || '';
-        if (oc.includes("'pie'")) btn.innerHTML = t('pieChart');
-        else if (oc.includes("'bar'")) btn.innerHTML = t('barChart');
-    });
+    // Statistiques par statut
+    const statusStatsTitle = document.querySelector('#users .stats-section:last-of-type .stats-header h3');
+    if (statusStatsTitle) statusStatsTitle.innerHTML = t('statusStats');
 
-    // Titre légende
-    const legendTitle = document.querySelector('#users .legend-title');
-    if (legendTitle) legendTitle.innerHTML = t('summary');
+    // Légende
+    const legendTitles = document.querySelectorAll('#users .legend-title');
+    if (legendTitles.length >= 1) legendTitles[0].innerHTML = t('summaryRoles');
+    if (legendTitles.length >= 2) legendTitles[1].innerHTML = t('summaryStatus');
 
-    // Re-rendre la légende et les graphiques avec les labels traduits
+    // Mise à jour des graphiques existants
     if (currentUsersData && currentUsersData.length > 0) {
         updateStatsLegend(currentUsersData);
+        updateStatusStatsLegend(currentUsersData);
         updatePaginationButtons();
-        // Recréer le graphique pour mettre à jour les labels traduits
+        
         if (currentChartType === 'pie') {
             createPieChart(currentUsersData);
         } else {
             createBarChart(currentUsersData);
         }
+        
+        if (currentStatusChartType === 'pie') {
+            createStatusPieChart(currentUsersData);
+        } else {
+            createStatusBarChart(currentUsersData);
+        }
     }
 }
 
-// Appelée par adminModuleLoaded event (case 'users')
 function initUserModuleLanguage() {
-    applyUsersTranslations();
+    if (typeof t === 'function') {
+        applyUsersTranslations();
+    }
 
-    // Écouter les changements de langue (une seule fois par session de module)
     if (!window._usersLangListenerAttached) {
         document.addEventListener('languageChanged', () => {
-            applyUsersTranslations();
+            if (typeof t === 'function') {
+                applyUsersTranslations();
+            }
         });
         window._usersLangListenerAttached = true;
     }
 }
 
+// Exposer les fonctions globalement
+window.switchChartType = switchChartType;
+window.switchStatusChartType = switchStatusChartType;
+window.refreshUserStats = refreshUserStats;
+window.filterByChip = filterByChip;
+window.searchUsers = debouncedSearch;
+window.filterUsers = filterUsers;
+window.tri = tri;
+window.setRowsPerPage = setRowsPerPage;
+window.previousPage = previousPage;
+window.nextPage = nextPage;
+window.goToPage = goToPage;
+window.refreshUsers = refreshUsers;
+window.exportData = exportData;
+window.addUser = addUser;
+window.editUser = editUser;
 window.initUserModuleLanguage = initUserModuleLanguage;
 
-console.log('✅ Admin Module Loader prêt');
+console.log('✅ Admin Module Loader prêt (version corrigée avec statut suspendu)');

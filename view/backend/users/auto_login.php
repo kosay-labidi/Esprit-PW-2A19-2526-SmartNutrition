@@ -33,7 +33,13 @@ function getUserFullData($userId) {
         
         if ($user) {
             // Ajouter un libellé pour le statut
-            $user['status_label'] = $user['status'] === 'actif' ? 'Actif' : 'Inactif';
+            $statusLabels = [
+                'actif' => 'Actif',
+                'inactif' => 'Inactif',
+                'suspendu' => 'Suspendu'
+            ];
+            $user['status_label'] = $statusLabels[$user['status']] ?? $user['status'];
+            
             // S'assurer que l'URL de la photo est complète si besoin
             if (!empty($user['photo']) && !preg_match('/^https?:\/\//', $user['photo'])) {
                 $user['photo_url'] = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/' . $user['photo'];
@@ -54,7 +60,7 @@ if (!empty($_SESSION['user']) && !empty($_SESSION['user']['id_utilisateur'])) {
     $freshUser = getUserFullData($_SESSION['user']['id_utilisateur']);
     
     if ($freshUser) {
-        // Vérifier si le compte est inactif
+        // Vérifier si le compte est inactif ou suspendu
         if ($freshUser['status'] === 'inactif') {
             // Détruire la session et rediriger vers login
             session_destroy();
@@ -62,6 +68,18 @@ if (!empty($_SESSION['user']) && !empty($_SESSION['user']['id_utilisateur'])) {
                 'success' => false, 
                 'message' => 'Votre compte a été désactivé. Veuillez contacter l\'administrateur.',
                 'status' => 'inactif'
+            ]);
+            exit();
+        }
+        
+        // NOUVEAU: Vérifier si le compte est suspendu
+        if ($freshUser['status'] === 'suspendu') {
+            session_destroy();
+            echo json_encode([
+                'success' => false,
+                'message' => 'suspended',
+                'status' => 'suspendu',
+                'contact_email' => 'gaiaalumen@gmail.com'
             ]);
             exit();
         }
@@ -100,6 +118,18 @@ if ($userBasic && !empty($userBasic['id_utilisateur'])) {
                 'success' => false, 
                 'message' => 'Votre compte a été désactivé.',
                 'status' => 'inactif'
+            ]);
+            exit();
+        }
+        
+        // NOUVEAU: Vérifier si le compte est suspendu
+        if ($fullUser['status'] === 'suspendu') {
+            setcookie('remember_token', '', ['expires' => time() - 3600, 'path' => '/']);
+            echo json_encode([
+                'success' => false,
+                'message' => 'suspended',
+                'status' => 'suspendu',
+                'contact_email' => 'gaiaalumen@gmail.com'
             ]);
             exit();
         }

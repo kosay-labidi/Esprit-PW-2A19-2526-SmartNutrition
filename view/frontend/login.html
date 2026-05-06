@@ -64,7 +64,7 @@ body {
   align-items: center;
   justify-content: flex-end;
   overflow: hidden;
-  cursor: default; /* Curseur normal par défaut */
+  cursor: default;
   transition: var(--transition);
 }
 
@@ -72,7 +72,6 @@ h1, h2, h3, .logo-text {
   font-family: 'Cormorant Garamond', serif;
 }
 
-/* Curseur personnalisé - optionnel, on le garde mais on garde aussi le curseur normal */
 #cursor {
   position: fixed;
   top: 0;
@@ -361,7 +360,6 @@ h1, h2, h3, .logo-text {
   color: white;
 }
 
-/* FaceID Section Styles */
 .face-login-section {
     margin-top: 28px;
     text-align: center;
@@ -389,7 +387,6 @@ h1, h2, h3, .logo-text {
     box-shadow: 0 8px 25px rgba(31, 61, 43, 0.3);
 }
 
-/* FaceID Modal */
 #faceCameraModal {
     display: none;
     position: fixed;
@@ -669,7 +666,6 @@ h1, h2, h3, .logo-text {
   </div>
 </div>
 
-<!-- FaceID Modal -->
 <div id="faceCameraModal">
     <div class="camera-container">
         <h3>📸 Reconnaissance Faciale</h3>
@@ -751,7 +747,6 @@ h1, h2, h3, .logo-text {
     </a>
   </div>
 
-  <!-- FaceID Button -->
   <div class="face-login-section">
     <button id="faceLoginBtn" class="face-btn">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -764,9 +759,7 @@ h1, h2, h3, .logo-text {
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════
-   PRELOADER
-   ═══════════════════════════════════════════════════════════ */
+/* PRELOADER */
 (function(){
   const c = document.getElementById('pl-canvas');
   if(!c) return;
@@ -798,9 +791,7 @@ h1, h2, h3, .logo-text {
   requestAnimationFrame(draw);
 })();
 
-/* ═══════════════════════════════════════════════════════════
-   CURSEUR PERSONNALISÉ (optionnel - ne cache pas le curseur normal)
-   ═══════════════════════════════════════════════════════════ */
+/* CURSEUR PERSONNALISÉ */
 (function() {
   const cur = document.getElementById('cursor');
   const trail = document.getElementById('cursor-trail');
@@ -823,9 +814,7 @@ h1, h2, h3, .logo-text {
   });
 })();
 
-/* ═══════════════════════════════════════════════════════════
-   THREE.JS - BACKGROUND 3D
-   ═══════════════════════════════════════════════════════════ */
+/* THREE.JS - BACKGROUND 3D */
 window.addEventListener('load', function() {
   const canvas = document.getElementById('bg-canvas');
   if(!canvas || typeof THREE === 'undefined') return;
@@ -900,9 +889,7 @@ window.addEventListener('load', function() {
   })();
 });
 
-/* ═══════════════════════════════════════════════════════════
-   REMEMBER ME & FORCE CLEAR PASSWORD FIELD
-   ═══════════════════════════════════════════════════════════ */
+/* REMEMBER ME & FORCE CLEAR PASSWORD FIELD */
 (function() {
   const savedEmail = localStorage.getItem('gaialumen-remember-email');
   if(savedEmail) {
@@ -910,11 +897,9 @@ window.addEventListener('load', function() {
     document.getElementById('remember').checked = true;
   }
   
-  // FORCER L'EFFACEMENT DU CHAMP MOT DE PASSE (anti-autofill)
   const pwdField = document.getElementById('password-input');
   if(pwdField) {
     pwdField.value = '';
-    // Technique anti-autofill pour Chrome
     pwdField.readOnly = true;
     setTimeout(() => {
       pwdField.readOnly = false;
@@ -923,9 +908,168 @@ window.addEventListener('load', function() {
   }
 })();
 
-/* ═══════════════════════════════════════════════════════════
-   FORMULAIRE LOGIN - AVEC REDIRECTION COMPTE INACTIF
-   ═══════════════════════════════════════════════════════════ */
+/* POPUP COMPTE SUSPENDU */
+function showSuspendedPopup(contactEmail) {
+  const existingModal = document.querySelector('.suspended-modal');
+  if(existingModal) existingModal.remove();
+  
+  const modal = document.createElement('div');
+  modal.className = 'suspended-modal';
+  modal.innerHTML = `
+    <div class="suspended-modal-overlay">
+      <div class="suspended-modal-content">
+        <div class="suspended-modal-header">
+          <div class="suspended-icon">⚠️</div>
+          <h2>Compte Suspendu</h2>
+        </div>
+        <div class="suspended-modal-body">
+          <p>Votre compte a été suspendu par l'administrateur.</p>
+          <p>Vous ne pouvez pas accéder à votre compte pour le moment.</p>
+          <div class="contact-info">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="m22 7-10 7L2 7"/>
+            </svg>
+            <span>Contactez-nous :</span>
+            <strong>${contactEmail}</strong>
+          </div>
+          <p class="small-text">Notre équipe vous répondra dans les plus brefs délais.</p>
+        </div>
+        <div class="suspended-modal-footer">
+          <button class="suspended-close-btn">Compris</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const style = document.createElement('style');
+  style.textContent = `
+    .suspended-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10002;
+      animation: fadeIn 0.3s ease;
+    }
+    .suspended-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .suspended-modal-content {
+      background: var(--card-bg);
+      border-radius: 28px;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(107, 78, 158, 0.3);
+      animation: slideUp 0.4s ease;
+      overflow: hidden;
+    }
+    .suspended-modal-header {
+      background: linear-gradient(135deg, #dc3545, #ff6b6b);
+      padding: 28px 24px;
+      text-align: center;
+      color: white;
+    }
+    .suspended-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .suspended-modal-header h2 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    .suspended-modal-body {
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .suspended-modal-body p {
+      margin-bottom: 16px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .contact-info {
+      background: rgba(107, 78, 158, 0.15);
+      border-radius: 16px;
+      padding: 16px;
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      border: 1px solid rgba(107, 78, 158, 0.3);
+    }
+    .contact-info svg {
+      stroke: var(--blue);
+    }
+    .contact-info strong {
+      color: var(--blue);
+      font-size: 1.1rem;
+    }
+    .small-text {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 16px;
+    }
+    .suspended-modal-footer {
+      padding: 20px 24px;
+      border-top: 1px solid rgba(107, 78, 158, 0.2);
+      text-align: center;
+    }
+    .suspended-close-btn {
+      background: linear-gradient(135deg, var(--violet), var(--blue));
+      border: none;
+      border-radius: 50px;
+      padding: 12px 32px;
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .suspended-close-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(107, 78, 158, 0.4);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  `;
+  
+  document.head.appendChild(style);
+  document.body.appendChild(modal);
+  
+  const closeBtn = modal.querySelector('.suspended-close-btn');
+  const overlay = modal.querySelector('.suspended-modal-overlay');
+  
+  closeBtn.addEventListener('click', () => modal.remove());
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) modal.remove();
+  });
+  
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      modal.remove();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+/* FORMULAIRE LOGIN - AVEC GESTION COMPTE SUSPENDU */
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
 
@@ -957,6 +1101,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/login.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ 
         email: email, 
         mdp: password, 
@@ -966,6 +1111,22 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
     const result = await response.json();
     console.log('Résultat login:', result);
+
+    // Vérification du compte suspendu
+    const isSuspended = 
+      result.message === 'suspended' ||
+      (result.message && result.message.toLowerCase() === 'suspendu') ||
+      result.status === 'suspendu' ||
+      (result.data && result.data.status === 'suspendu');
+    
+    if (isSuspended) {
+      console.log('Compte suspendu détecté');
+      showSuspendedPopup('gaiaalumen@gmail.com');
+      btn.textContent = 'Se connecter';
+      btn.disabled = false;
+      document.getElementById('password-input').value = '';
+      return;
+    }
 
     if(result.success) {
       const userData = result.data;
@@ -999,18 +1160,18 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
           window.location.href = 'dashboard.html';
         }
       }, 800);
-
-    } else {
-      if(result.message === 'account_inactive') {
-        window.location.href = 'reactivate.html?email=' + encodeURIComponent(email);
-        return;
-      }
-      
-      btn.textContent = 'Se connecter';
-      btn.disabled = false;
-      errorDiv.textContent = result.message || 'Identifiants incorrects.';
-      errorDiv.style.display = 'block';
+      return;
     }
+    
+    if(result.message === 'account_inactive') {
+      window.location.href = 'reactivate.html?email=' + encodeURIComponent(email);
+      return;
+    }
+    
+    btn.textContent = 'Se connecter';
+    btn.disabled = false;
+    errorDiv.textContent = result.message || 'Identifiants incorrects.';
+    errorDiv.style.display = 'block';
 
   } catch(err) {
     console.error('Erreur login:', err);
@@ -1021,9 +1182,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   }
 });
 
-/* ═══════════════════════════════════════════════════════════
-   THEME TOGGLE
-   ═══════════════════════════════════════════════════════════ */
+/* THEME TOGGLE */
 const themeToggle = document.getElementById('theme-toggle');
 const html = document.documentElement;
 let isDark = localStorage.getItem('gaialumen-theme') !== 'light';
@@ -1034,9 +1193,7 @@ themeToggle.addEventListener('click', () => {
   localStorage.setItem('gaialumen-theme', isDark ? 'dark' : 'light');
 });
 
-/* ═══════════════════════════════════════════════════════════
-   AI ASSISTANT
-   ═══════════════════════════════════════════════════════════ */
+/* AI ASSISTANT */
 const aiToggle = document.getElementById('ai-toggle');
 const aiPanel = document.getElementById('ai-panel');
 const aiClose = document.getElementById('ai-close');
@@ -1084,9 +1241,7 @@ aiInput.addEventListener('keypress', (e) => {
   if(e.key === 'Enter') aiSend.click();
 });
 
-/* ═══════════════════════════════════════════════════════════
-   FACEID - RECONNAISSANCE FACIALE
-   ═══════════════════════════════════════════════════════════ */
+/* FACEID - RECONNAISSANCE FACIALE */
 (function() {
     const faceBtn = document.getElementById('faceLoginBtn');
     const modal = document.getElementById('faceCameraModal');
@@ -1098,7 +1253,6 @@ aiInput.addEventListener('keypress', (e) => {
     
     let stream = null;
     
-    // Vérifier si le navigateur supporte la caméra
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         if(faceBtn) {
             faceBtn.style.opacity = '0.5';
@@ -1109,7 +1263,6 @@ aiInput.addEventListener('keypress', (e) => {
         return;
     }
     
-    // Ouvrir la caméra
     async function openCamera() {
         try {
             faceStatus.className = 'face-status loading';
@@ -1142,7 +1295,6 @@ aiInput.addEventListener('keypress', (e) => {
         }
     }
     
-    // Fermer la caméra
     function closeCamera() {
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
@@ -1154,7 +1306,6 @@ aiInput.addEventListener('keypress', (e) => {
         faceStatus.textContent = '';
     }
     
-    // Capturer et envoyer pour reconnaissance
     async function captureAndRecognize() {
         if (!video.videoWidth || !video.videoHeight) {
             faceStatus.className = 'face-status error';
@@ -1165,7 +1316,6 @@ aiInput.addEventListener('keypress', (e) => {
         faceStatus.className = 'face-status loading';
         faceStatus.textContent = '🔍 Analyse du visage en cours...';
         
-        // Capturer l'image
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
@@ -1174,10 +1324,8 @@ aiInput.addEventListener('keypress', (e) => {
         ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
         ctx.restore();
         
-        // Convertir en base64
         const imageData = canvas.toDataURL('image/jpeg', 0.8);
         
-        // Envoyer au serveur avec fetch
         const formData = new FormData();
         formData.append('action', 'login');
         formData.append('image_base64', imageData);
@@ -1202,12 +1350,27 @@ aiInput.addEventListener('keypress', (e) => {
                 return;
             }
             
+            // Vérification du compte suspendu pour FaceID
+            const isSuspended = 
+                (result.message === 'suspended') ||
+                (result.status === 'suspendu') ||
+                (result.data && result.data.status === 'suspendu');
+            
+            if (isSuspended) {
+                faceStatus.className = 'face-status error';
+                faceStatus.textContent = '❌ Votre compte a été suspendu';
+                closeCamera();
+                setTimeout(() => {
+                    showSuspendedPopup('gaiaalumen@gmail.com');
+                }, 500);
+                return;
+            }
+            
             if (result.success) {
                 faceStatus.className = 'face-status success';
                 const confidencePercent = Math.round((result.confidence || 0.85) * 100);
                 faceStatus.textContent = `✅ Bienvenue ${result.data.prenom} ${result.data.nom} ! (${confidencePercent}% correspondance)`;
                 
-                // Sauvegarder les données utilisateur
                 if(result.data.id_utilisateur) {
                     sessionStorage.setItem('user_id', result.data.id_utilisateur);
                     localStorage.setItem('user_id', result.data.id_utilisateur);
@@ -1219,7 +1382,6 @@ aiInput.addEventListener('keypress', (e) => {
                 localStorage.setItem('gaialumen-user', JSON.stringify(result.data));
                 localStorage.setItem('gaialumen-token', 'face-' + Date.now());
                 
-                // Fermer la caméra et rediriger
                 setTimeout(() => {
                     closeCamera();
                     if(result.data.role === 'admin') {
@@ -1247,7 +1409,6 @@ aiInput.addEventListener('keypress', (e) => {
         }
     }
     
-    // Événements
     if(faceBtn) {
         faceBtn.addEventListener('click', openCamera);
     }
@@ -1258,14 +1419,12 @@ aiInput.addEventListener('keypress', (e) => {
         captureBtn.addEventListener('click', captureAndRecognize);
     }
     
-    // Fermer avec Échap
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
             closeCamera();
         }
     });
     
-    // Empêcher la fermeture en cliquant sur le fond
     if(modal) {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -1274,6 +1433,38 @@ aiInput.addEventListener('keypress', (e) => {
         });
     }
 })();
+
+/* VÉRIFICATION DE SESSION AU CHARGEMENT */
+async function checkSession() {
+  try {
+    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/verify_session.php', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success && result.status === 'suspendu') {
+      showSuspendedPopup(result.contact_email || 'gaiaalumen@gmail.com');
+      localStorage.removeItem('gaialumen-user');
+      localStorage.removeItem('gaialumen-token');
+      sessionStorage.clear();
+    }
+    else if (result.success && result.data && result.data.status === 'actif') {
+      if (result.data.role === 'admin') {
+        window.location.href = '../backend/admin.html';
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+    }
+  } catch (err) {
+    console.error('Erreur vérification session:', err);
+  }
+}
+
+// Désactivée pour éviter les redirections intempestives
+// checkSession();
 </script>
 </body>
 </html>

@@ -29,9 +29,21 @@ if ($email === '' || $mdp === '') {
 $userC  = new UserController();
 $result = $userC->login($email, $mdp);
 
+// Ajout de la vérification du statut "suspendu"
+if ($result['status'] === 'ok' && isset($result['data']['status'])) {
+    if ($result['data']['status'] === 'suspendu') {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'suspended',
+            'status' => 'suspendu',
+            'contact_email' => 'gaiaalumen@gmail.com'
+        ]);
+        exit();
+    }
+}
+
 switch ($result['status']) {
     case 'ok':
-        // ✅ CRÉER LA SESSION ICI
         $_SESSION['user'] = [
             'id_utilisateur' => $result['data']['id_utilisateur'],
             'nom' => $result['data']['nom'],
@@ -69,9 +81,10 @@ switch ($result['status']) {
     case 'account_not_found':
         echo json_encode(['success' => false, 'message' => 'Aucun compte trouvé']);
         break;
-        case 'account_inactive':
-    echo json_encode(['success' => false, 'message' => 'account_inactive']);
-    break;
+        
+    case 'account_inactive':
+        echo json_encode(['success' => false, 'message' => 'account_inactive']);
+        break;
 
     default:
         echo json_encode(['success' => false, 'message' => 'Erreur serveur']);

@@ -31,6 +31,18 @@ if ($user['status'] === 'inactif') {
     exit();
 }
 
+// NOUVEAU: Vérifier si le compte est suspendu
+if ($user['status'] === 'suspendu') {
+    session_destroy();
+    echo json_encode([
+        'success' => false, 
+        'message' => 'suspended', 
+        'status' => 'suspendu',
+        'contact_email' => 'gaiaalumen@gmail.com'
+    ]);
+    exit();
+}
+
 echo json_encode([
     'success' => true,
     'data' => [

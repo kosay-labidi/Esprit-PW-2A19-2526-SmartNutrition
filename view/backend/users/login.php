@@ -16,17 +16,51 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-$body      = json_decode(file_get_contents('php://input'), true);
-$email     = trim($body['email'] ?? '');
-$mdp       = $body['mdp'] ?? '';
+$body = json_decode(file_get_contents('php://input'), true);
+$email = trim($body['email'] ?? '');
+$mdp = $body['mdp'] ?? '';
 $rememberMe = !empty($body['remember_me']);
+$recaptchaToken = $body['recaptcha_token'] ?? '';
+
+// ========== VÉRIFICATION RECAPTCHA ==========
+if (empty($recaptchaToken)) {
+    echo json_encode(['success' => false, 'message' => 'CAPTCHA requis']);
+    exit();
+}
+
+// VOTRE NOUVELLE CLÉ SECRÈTE
+$secretKey = '6LeZW9wsAAAAAD70RL10eJdvwNFGrWpgwoioZ8ER';
+$verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
+
+// Utiliser cURL pour plus de fiabilité
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $verifyUrl);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+    'secret' => $secretKey,
+    'response' => $recaptchaToken
+]));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Désactiver pour localhost uniquement
+$verifyResponse = curl_exec($ch);
+curl_close($ch);
+
+$verifyData = json_decode($verifyResponse, true);
+
+if (!$verifyData['success']) {
+    // Log l'erreur pour debug
+    error_log('reCAPTCHA échec: ' . print_r($verifyData, true));
+    echo json_encode(['success' => false, 'message' => 'CAPTCHA invalide, veuillez réessayer']);
+    exit();
+}
+// ========== FIN VÉRIFICATION RECAPTCHA ==========
 
 if ($email === '' || $mdp === '') {
     echo json_encode(['success' => false, 'message' => 'Email et mot de passe requis']);
     exit();
 }
 
-$userC  = new UserController();
+$userC = new UserController();
 $result = $userC->login($email, $mdp);
 
 // Ajout de la vérification du statut "suspendu"
@@ -53,9 +87,9 @@ switch ($result['status']) {
         ];
 
         if ($rememberMe) {
-            $token   = bin2hex(random_bytes(32));
+            $token = bin2hex(random_bytes(32));
             $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
-            $userId  = $result['data']['id_utilisateur'];
+            $userId = $result['data']['id_utilisateur'];
 
             $userC->saveRememberToken($userId, $token, $expires);
 
@@ -63,8 +97,8 @@ switch ($result['status']) {
                 'remember_token',
                 $token,
                 [
-                    'expires'  => time() + 60 * 60 * 24 * 30,
-                    'path'     => '/',
+                    'expires' => time() + 60 * 60 * 24 * 30,
+                    'path' => '/',
                     'httponly' => true,
                     'samesite' => 'Lax',
                 ]

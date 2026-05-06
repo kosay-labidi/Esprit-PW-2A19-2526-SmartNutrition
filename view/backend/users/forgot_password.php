@@ -23,7 +23,36 @@ require_once __DIR__ . '/../../../controller/user.controller.php';
 require_once __DIR__ . '/../../../controller/Passwordreset.controller.php';
 $body  = json_decode(file_get_contents('php://input'), true);
 $email = trim($body['email'] ?? '');
+$recaptchaToken = $body['recaptcha_token'] ?? '';
 
+
+if (empty($recaptchaToken)) {
+    echo json_encode(['success' => false, 'message' => 'CAPTCHA requis']);
+    exit();
+}
+
+$secretKey = '6LeZW9wsAAAAAD70RL10eJdvwNFGrWpgwoioZ8ER';
+$verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $verifyUrl);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+    'secret' => $secretKey,
+    'response' => $recaptchaToken
+]));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+$verifyResponse = curl_exec($ch);
+curl_close($ch);
+
+$verifyData = json_decode($verifyResponse, true);
+
+if (!$verifyData['success']) {
+    error_log('reCAPTCHA échec forgot: ' . print_r($verifyData, true));
+    echo json_encode(['success' => false, 'message' => 'CAPTCHA invalide']);
+    exit();
+}
 if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     echo json_encode(['success' => false, 'message' => 'Adresse email invalide.']);
     exit();

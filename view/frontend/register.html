@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <title>Inscription - GaiaLumen</title>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
@@ -443,6 +444,11 @@ input.invalid, select.invalid{border-color:#e74c3c !important;}
     
     <button type="submit" class="btn-submit" id="btn-submit" disabled>S'inscrire</button>
   </form>
+  <div class="form-group">
+  <div class="recaptcha-container" style="display: flex; justify-content: center; margin: 20px 0;">
+    <div class="g-recaptcha" data-sitekey="6LeZW9wsAAAAAKELGv3xyzmXROZZGcVxcbGxoiPg" data-theme="dark"></div>
+  </div>
+</div>
 
   <div id="msg" class="msg"></div>
 
@@ -668,51 +674,120 @@ function clearErrors() {
 }
 
 function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function getRecaptchaToken() {
+  return new Promise((resolve, reject) => {
+    if (typeof grecaptcha !== 'undefined') {
+      const response = grecaptcha.getResponse();
+      if (response) {
+        resolve(response);
+      } else {
+        reject('Veuillez compléter le CAPTCHA');
+      }
+    } else {
+      reject('reCAPTCHA non chargé');
+    }
+  });
+}
 
 form.addEventListener('submit', async function(e) {
   e.preventDefault();
   clearErrors();
+  
   const nom = document.getElementById('nom').value.trim();
   const prenom = document.getElementById('prenom').value.trim();
   const email = document.getElementById('email').value.trim();
   const mdp = document.getElementById('mdp').value;
   const mdp2 = document.getElementById('mdp2').value;
   const role = document.getElementById('role').value;
+  
   let valid = true;
+  
   if (!nom) { fieldError('nom','Le nom est obligatoire.'); valid = false; }
   else if (/\d/.test(nom)) { fieldError('nom','Le nom ne doit pas contenir de chiffres.'); valid = false; }
+  
   if (!prenom) { fieldError('prenom','Le prénom est obligatoire.'); valid = false; }
   else if (/\d/.test(prenom)) { fieldError('prenom','Le prénom ne doit pas contenir de chiffres.'); valid = false; }
+  
   if (!email) { fieldError('email',"L'email est obligatoire."); valid = false; }
   else if (!validateEmail(email)) { fieldError('email',"Format d'email invalide."); valid = false; }
+  
   const score = evaluatePasswordStrength(mdp);
   if (!mdp) { fieldError('mdp','Le mot de passe est obligatoire.'); valid = false; }
   else if (mdp.length < 6) { fieldError('mdp','Minimum 6 caractères.'); valid = false; }
   else if (score < 5) { fieldError('mdp','❌ Mot de passe REFUSÉ ! Utilisez : 8+ caractères, Maj, Min, Chiffre ET Symbole.'); valid = false; }
+  
   if (!mdp2) { fieldError('mdp2','Veuillez confirmer le mot de passe.'); valid = false; }
   else if (mdp !== mdp2) { fieldError('mdp2','Les mots de passe ne correspondent pas.'); valid = false; }
+  
   if (!valid) { checkFormValidity(); return; }
-  btn.disabled = true; btn.textContent = 'Inscription...';
+  
+  // Vérification du reCAPTCHA
+  let recaptchaToken;
+  try {
+    recaptchaToken = await getRecaptchaToken();
+  } catch (err) {
+    showMsg(err, false);
+    return;
+  }
+  
+  btn.disabled = true; 
+  btn.textContent = 'Inscription...';
+  
   try {
     const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/addUser.php', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nom, prenom, email, mdp, role })
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        nom, prenom, email, mdp, role,
+        recaptcha_token: recaptchaToken
+      })
     });
+    
     const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) { throw new Error('Le serveur ne renvoie pas du JSON.'); }
+    if (!contentType.includes('application/json')) { 
+      throw new Error('Le serveur ne renvoie pas du JSON.'); 
+    }
+    
     const result = await response.json();
+    
     if (result.success) {
       showMsg('✅ Inscription réussie ! Redirection...', true);
-      form.reset(); updateStrengthIndicator(''); btn.disabled = true;
-      setTimeout(() => { window.location.href = 'login.html'; }, 2000);
-    } else { showMsg(result.message || "Erreur lors de l'inscription.", false); btn.disabled = false; btn.textContent = "S'inscrire"; checkFormValidity(); }
+      form.reset(); 
+      updateStrengthIndicator(''); 
+      btn.disabled = true;
+      
+      // Réinitialiser le reCAPTCHA
+      if (typeof grecaptcha !== 'undefined') {
+        grecaptcha.reset();
+      }
+      
+      setTimeout(() => { 
+        window.location.href = 'login.html'; 
+      }, 2000);
+    } else { 
+      showMsg(result.message || "Erreur lors de l'inscription.", false); 
+      btn.disabled = false; 
+      btn.textContent = "S'inscrire"; 
+      checkFormValidity();
+      
+      // Réinitialiser le reCAPTCHA en cas d'erreur
+      if (typeof grecaptcha !== 'undefined') {
+        grecaptcha.reset();
+      }
+    }
   } catch (err) {
     console.error('Erreur inscription:', err);
     showMsg('Impossible de contacter le serveur.', false);
-    btn.disabled = false; btn.textContent = "S'inscrire"; checkFormValidity();
+    btn.disabled = false; 
+    btn.textContent = "S'inscrire"; 
+    checkFormValidity();
+    
+    // Réinitialiser le reCAPTCHA
+    if (typeof grecaptcha !== 'undefined') {
+      grecaptcha.reset();
+    }
   }
 });
-
 /* AI ASSISTANT */
 const aiToggle=document.getElementById('ai-toggle');
 const aiPanel=document.getElementById('ai-panel');

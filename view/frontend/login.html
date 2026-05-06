@@ -6,6 +6,8 @@
 <title>Connexion - GaiaLumen</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Google reCAPTCHA -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <style>
 :root {
   --green: #1F3D2B;
@@ -61,11 +63,13 @@ body {
   color: var(--text);
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   cursor: default;
   transition: var(--transition);
+  padding: 20px 0;
 }
 
 h1, h2, h3, .logo-text {
@@ -189,11 +193,11 @@ h1, h2, h3, .logo-text {
   background: var(--card-bg);
   backdrop-filter: blur(24px);
   border-radius: 32px;
-  padding: 48px 40px;
+  padding: 36px 40px;
   box-shadow: var(--shadow);
   border: 1px solid rgba(107, 78, 158, 0.25);
   animation: slideUp 0.7s ease;
-  margin: 0 8% 0 auto;
+  margin: 80px 8% 20px auto;
 }
 
 @keyframes slideUp {
@@ -203,7 +207,7 @@ h1, h2, h3, .logo-text {
 
 .logo {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 24px;
 }
 
 .logo svg {
@@ -228,7 +232,7 @@ h1, h2, h3, .logo-text {
 }
 
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .form-group label {
@@ -259,11 +263,29 @@ h1, h2, h3, .logo-text {
   box-shadow: 0 0 20px rgba(107, 78, 158, 0.25);
 }
 
+/* reCAPTCHA Container Styles */
+.recaptcha-container {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+  transform: scale(0.95);
+  transform-origin: center;
+}
+
+/* Forcer le thème sombre/clair du reCAPTCHA */
+[data-theme="dark"] .g-recaptcha {
+  filter: brightness(0.9) contrast(1.1);
+}
+
+[data-theme="light"] .g-recaptcha {
+  filter: brightness(1);
+}
+
 .remember {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 28px;
+  margin-bottom: 18px;
 }
 
 .remember input[type="checkbox"] {
@@ -310,7 +332,7 @@ h1, h2, h3, .logo-text {
 
 .links {
   text-align: center;
-  margin-top: 28px;
+  margin-top: 18px;
   display: flex;
   justify-content: center;
   gap: 24px;
@@ -332,7 +354,7 @@ h1, h2, h3, .logo-text {
 .oauth-buttons {
   display: flex;
   gap: 12px;
-  margin-top: 28px;
+  margin-top: 18px;
 }
 
 .social-btn {
@@ -361,10 +383,10 @@ h1, h2, h3, .logo-text {
 }
 
 .face-login-section {
-    margin-top: 28px;
+    margin-top: 18px;
     text-align: center;
     border-top: 1px solid rgba(107, 78, 158, 0.2);
-    padding-top: 24px;
+    padding-top: 18px;
 }
 
 .face-btn {
@@ -611,11 +633,12 @@ h1, h2, h3, .logo-text {
 
 @media (max-width: 768px) {
   body { justify-content: center; }
-  .container { margin: 20px auto; padding: 36px 28px; max-width: 95%; }
+  .container { margin: 80px auto 20px; padding: 28px 24px; max-width: 95%; }
   #ai-panel { width: calc(100% - 40px); left: 20px; height: 480px; }
   .camera-container { padding: 20px; }
   #video { max-width: 100%; }
   .camera-btn { padding: 10px 20px; }
+  .recaptcha-container { transform: scale(0.85); }
 }
 </style>
 </head>
@@ -652,6 +675,7 @@ h1, h2, h3, .logo-text {
   </svg>
 </button>
 
+
 <div id="ai-panel">
   <div style="padding: 20px 24px; border-bottom: 1px solid rgba(107, 78, 158, 0.2); display: flex; justify-content: space-between; align-items: center;">
     <h3 style="margin: 0; font-size: 1.2rem; color: var(--text);">✨ Assistant GaiaLumen</h3>
@@ -665,6 +689,7 @@ h1, h2, h3, .logo-text {
     <button id="ai-send">✨</button>
   </div>
 </div>
+
 
 <div id="faceCameraModal">
     <div class="camera-container">
@@ -708,6 +733,7 @@ h1, h2, h3, .logo-text {
     <p>Nutrition Écologique &amp; Intelligente</p>
   </div>
   
+  
   <form id="loginForm" novalidate>
     <div class="form-group">
       <label for="email-input">Adresse email</label>
@@ -717,6 +743,11 @@ h1, h2, h3, .logo-text {
     <div class="form-group">
       <label for="password-input">Mot de passe</label>
       <input type="password" id="password-input" placeholder="••••••••" autocomplete="new-password" value="">
+    </div>
+    
+    <!-- Google reCAPTCHA v2 -->
+    <div class="recaptcha-container">
+      <div class="g-recaptcha" data-sitekey="6LeZW9wsAAAAAKELGv3xyzmXROZZGcVxcbGxoiPg" data-theme="dark"></div>
     </div>
     
     <div class="remember">
@@ -746,16 +777,16 @@ h1, h2, h3, .logo-text {
       <span>X (Twitter)</span>
     </a>
   </div>
-
-  <div class="face-login-section">
-    <button id="faceLoginBtn" class="face-btn">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2a9 9 0 0 0-9 9c0 4.5 3 8 9 12 6-4 9-7.5 9-12a9 9 0 0 0-9-9z"/>
-        <circle cx="12" cy="10" r="3"/>
-      </svg>
-      Connexion par reconnaissance faciale
-    </button>
-  </div>
+<div class="face-login-section">
+  <button id="faceLoginBtn" class="face-btn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 2a9 9 0 0 0-9 9c0 4.5 3 8 9 12 6-4 9-7.5 9-12a9 9 0 0 0-9-9z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    Face ID
+  </button>
+</div>
+  
 </div>
 
 <script>
@@ -888,6 +919,22 @@ window.addEventListener('load', function() {
     renderer.render(scene, camera);
   })();
 });
+
+/* Fonction pour obtenir le token reCAPTCHA */
+function getRecaptchaToken() {
+  return new Promise((resolve, reject) => {
+    if (typeof grecaptcha !== 'undefined') {
+      const response = grecaptcha.getResponse();
+      if (response) {
+        resolve(response);
+      } else {
+        reject('Veuillez compléter le CAPTCHA');
+      }
+    } else {
+      reject('reCAPTCHA non chargé');
+    }
+  });
+}
 
 /* REMEMBER ME & FORCE CLEAR PASSWORD FIELD */
 (function() {
@@ -1069,7 +1116,7 @@ function showSuspendedPopup(contactEmail) {
   document.addEventListener('keydown', escHandler);
 }
 
-/* FORMULAIRE LOGIN - AVEC GESTION COMPTE SUSPENDU */
+/* FORMULAIRE LOGIN - AVEC VALIDATION reCAPTCHA */
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
 
@@ -1094,6 +1141,22 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     return;
   }
 
+  // Vérification du reCAPTCHA
+  let recaptchaToken;
+  try {
+    recaptchaToken = await getRecaptchaToken();
+  } catch (err) {
+    errorDiv.textContent = err;
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (!recaptchaToken) {
+    errorDiv.textContent = "Veuillez valider le CAPTCHA";
+    errorDiv.style.display = 'block';
+    return;
+  }
+
   btn.textContent = 'Connexion...';
   btn.disabled = true;
 
@@ -1105,7 +1168,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       body: JSON.stringify({ 
         email: email, 
         mdp: password, 
-        remember_me: document.getElementById('remember').checked 
+        remember_me: document.getElementById('remember').checked,
+        recaptcha_token: recaptchaToken  // Envoi du token au backend
       })
     });
 
@@ -1125,6 +1189,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       btn.textContent = 'Se connecter';
       btn.disabled = false;
       document.getElementById('password-input').value = '';
+      // Réinitialiser le reCAPTCHA
+      if (typeof grecaptcha !== 'undefined') {
+        grecaptcha.reset();
+      }
       return;
     }
 
@@ -1172,6 +1240,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     btn.disabled = false;
     errorDiv.textContent = result.message || 'Identifiants incorrects.';
     errorDiv.style.display = 'block';
+    
+    // Réinitialiser le reCAPTCHA en cas d'erreur
+    if (typeof grecaptcha !== 'undefined') {
+      grecaptcha.reset();
+    }
 
   } catch(err) {
     console.error('Erreur login:', err);
@@ -1179,6 +1252,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     btn.disabled = false;
     errorDiv.textContent = 'Impossible de contacter le serveur.';
     errorDiv.style.display = 'block';
+    
+    // Réinitialiser le reCAPTCHA
+    if (typeof grecaptcha !== 'undefined') {
+      grecaptcha.reset();
+    }
   }
 });
 
@@ -1187,10 +1265,25 @@ const themeToggle = document.getElementById('theme-toggle');
 const html = document.documentElement;
 let isDark = localStorage.getItem('gaialumen-theme') !== 'light';
 html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+
+// Mettre à jour le thème du reCAPTCHA
+function updateRecaptchaTheme() {
+  const recaptchaContainer = document.querySelector('.g-recaptcha');
+  if (recaptchaContainer && typeof grecaptcha !== 'undefined') {
+    const currentTheme = html.getAttribute('data-theme');
+    recaptchaContainer.setAttribute('data-theme', currentTheme);
+  }
+}
+
 themeToggle.addEventListener('click', () => {
   isDark = !isDark;
   html.setAttribute('data-theme', isDark ? 'dark' : 'light');
   localStorage.setItem('gaialumen-theme', isDark ? 'dark' : 'light');
+  updateRecaptchaTheme();
+  // Recharger reCAPTCHA si nécessaire
+  if (typeof grecaptcha !== 'undefined') {
+    grecaptcha.reset();
+  }
 });
 
 /* AI ASSISTANT */
@@ -1225,6 +1318,8 @@ function aiRespond(question) {
     return "Pour créer un compte, cliquez sur 'Créer un compte' sous le formulaire. 📝";
   if(q.includes('visage') || q.includes('face') || q.includes('reconnaissance'))
     return "Vous pouvez utiliser la reconnaissance faciale en cliquant sur le bouton 'Connexion par reconnaissance faciale' ! 📸";
+  if(q.includes('captcha') || q.includes('recaptcha') || q.includes('vérification'))
+    return "Le reCAPTCHA est une vérification de sécurité. Cochez la case 'Je ne suis pas un robot' pour prouver que vous êtes un humain. 🤖✅";
   return "Je suis là pour vous aider ! Posez-moi des questions sur la connexion, votre compte, ou GaiaLumen. 😊";
 }
 
@@ -1350,7 +1445,6 @@ aiInput.addEventListener('keypress', (e) => {
                 return;
             }
             
-            // Vérification du compte suspendu pour FaceID
             const isSuspended = 
                 (result.message === 'suspended') ||
                 (result.status === 'suspendu') ||

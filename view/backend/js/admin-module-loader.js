@@ -3,8 +3,10 @@ console.log('🛡️ Admin Module Loader initialisé');
 // Variables de pagination
 let currentPage = 1;
 let rowsPerPage = 5;
-let currentUsersData = [];
+let currentUsersData = [];   // SOURCE COMPLÈTE — jamais écrasée par les filtres
+let currentFilteredData = []; // VUE COURANTE filtrée — utilisée par la pagination
 let totalPages = 1;
+let activeChipFilter = 'all'; // Chip actif courant
 
 // Configuration des modules admin
 const adminModules = {
@@ -422,8 +424,18 @@ async function loadUsers() {
         console.log("📄 Données reçues:", result);
         
         if (result.success && result.data) {
-            let users = result.data;
-            
+            // ── SOURCE COMPLÈTE : ne jamais filtrer avant de stocker ──
+            currentUsersData = result.data.slice();
+
+            // Réinitialiser le chip actif à "Tous" lors d'un rechargement API complet
+            activeChipFilter = 'all';
+            document.querySelectorAll('#users .filter-chips .chip').forEach((c, i) => {
+                c.classList.toggle('active', i === 0);
+            });
+
+            // Construire la vue initiale en appliquant les filtres éventuellement sauvegardés
+            let users = currentUsersData.slice();
+
             const savedSearchTerm = localStorage.getItem('userSearchTerm');
             if (savedSearchTerm && savedSearchTerm !== '') {
                 const searchLower = savedSearchTerm.toLowerCase();
@@ -443,7 +455,7 @@ async function loadUsers() {
             
             updateUsersTableFromData(users);
             refreshUserStats();
-            refreshStatusStats(users);
+            refreshStatusStats(currentUsersData);
             
         } else {
             tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#e74c3c;">❌ Erreur: ${result.error || 'Données invalides'}<\/td><\/tr>`;
@@ -464,8 +476,10 @@ function updateUsersTableFromData(users) {
         return;
     }
     
-    currentUsersData = users;
-    
+    // Ne PAS écraser currentUsersData ici : c'est la source complète.
+    // On stocke la vue filtrée courante pour la pagination.
+    currentFilteredData = users;
+
     totalPages = Math.ceil(users.length / rowsPerPage);
     if (totalPages === 0) totalPages = 1;
     
@@ -597,12 +611,12 @@ function updatePaginationButtons() {
     if (!paginationContainer) return;
     
     const infoSpan = document.getElementById('paginationInfo');
-    if (infoSpan && currentUsersData) {
+    if (infoSpan && currentFilteredData) {
         const startIndex = (currentPage - 1) * rowsPerPage;
-        const endIndex = Math.min(startIndex + rowsPerPage, currentUsersData.length);
+        const endIndex = Math.min(startIndex + rowsPerPage, currentFilteredData.length);
         const start = startIndex + 1;
         const end = endIndex;
-        infoSpan.innerHTML = `${start}-${end} sur ${currentUsersData.length} utilisateurs`;
+        infoSpan.innerHTML = `${start}-${end} sur ${currentFilteredData.length} utilisateurs`;
     }
     
     let html = '';
@@ -649,27 +663,27 @@ function updatePaginationButtons() {
 function goToPage(page) {
     if (page < 1 || page > totalPages) return;
     currentPage = page;
-    updateUsersTableFromData(currentUsersData);
+    updateUsersTableFromData(currentFilteredData);
 }
 
 function previousPage() {
     if (currentPage > 1) {
         currentPage--;
-        updateUsersTableFromData(currentUsersData);
+        updateUsersTableFromData(currentFilteredData);
     }
 }
 
 function nextPage() {
     if (currentPage < totalPages) {
         currentPage++;
-        updateUsersTableFromData(currentUsersData);
+        updateUsersTableFromData(currentFilteredData);
     }
 }
 
 function setRowsPerPage(rows) {
     rowsPerPage = rows;
     currentPage = 1;
-    updateUsersTableFromData(currentUsersData);
+    updateUsersTableFromData(currentFilteredData);
 }
 
 function refreshUsers() {
@@ -924,51 +938,142 @@ window.deleteUser = async function(id) {
 
 // ==================== FILTRES ET RECHERCHE ====================
 
+// État courant du chip sélectionné (déclaré en haut du fichier)
+
+/**
+ * Filtre le tableau par chip (statut ou rôle) en opérant sur currentUsersData côté client.
+ * Ne touche pas la recherche dynamique (searchUsers).
+ *
+ * @param {HTMLElement} chipEl  - L'élément chip cliqué
+ * @param {string}      filter  - 'all' | 'active' | 'inactive' | 'suspended' | 'admin' | 'user'
+ */
+function filterByChip(chipEl, filter) {
+    // 1. Mettre à jour l'état actif visuel
+    document.querySelectorAll('#users .filter-chips .chip').forEach(c => c.classList.remove('active'));
+    if (chipEl) chipEl.classList.add('active');
+    activeChipFilter = filter || 'all';
+
+    // 2. Toujours partir de la SOURCE COMPLÈTE (jamais de la vue filtrée)
+    if (!currentUsersData || currentUsersData.length === 0) return;
+    let filtered = currentUsersData.slice();
+
+    // 3. Filtrer par chip
+    switch (activeChipFilter) {
+        case 'active':
+            filtered = filtered.filter(u => normalizeStatus(u.status) === 'actif');
+            break;
+        case 'inactive':
+            filtered = filtered.filter(u => normalizeStatus(u.status) === 'inactif');
+            break;
+        case 'suspended':
+            filtered = filtered.filter(u => normalizeStatus(u.status) === 'suspendu');
+            break;
+        case 'admin':
+            filtered = filtered.filter(u => u.role === 'admin');
+            break;
+        case 'user':
+            filtered = filtered.filter(u => !u.role || u.role === 'utilisateur' || u.role === 'user');
+            break;
+        case 'all':
+        default:
+            // pas de filtre supplémentaire
+            break;
+    }
+
+    // 4. Appliquer le filtre rôle du <select> si actif
+    const roleSelect = document.getElementById('roleFilter');
+    if (roleSelect && roleSelect.value !== '') {
+        filtered = filtered.filter(u => u.role === roleSelect.value);
+    }
+
+    // 5. Appliquer la recherche texte si active (sans toucher à searchUsers)
+    const searchTerm = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+    if (searchTerm !== '') {
+        filtered = filtered.filter(u => {
+            const fullName = `${u.prenom || ''} ${u.nom || ''}`.toLowerCase();
+            const email = (u.email || '').toLowerCase();
+            return fullName.includes(searchTerm) || email.includes(searchTerm);
+        });
+    }
+
+    // 6. Remettre en page 1 et afficher
+    currentPage = 1;
+    updateUsersTableFromData(filtered);
+
+    if (typeof showToast === 'function') {
+        const labels = {
+            all: 'Tous les utilisateurs',
+            active: 'Utilisateurs actifs',
+            inactive: 'Utilisateurs inactifs',
+            suspended: 'Utilisateurs suspendus',
+            admin: 'Administrateurs',
+            user: 'Utilisateurs standard'
+        };
+        showToast('Filtre chip', labels[activeChipFilter] || activeChipFilter, 'info');
+    }
+}
 
 async function searchUsers() {
     console.log("🔍 Recherche en temps réel...");
-    
+
     const searchTerm = document.getElementById('searchInput')?.value.trim().toLowerCase() || '';
     localStorage.setItem('userSearchTerm', searchTerm);
-    
-    try {
-        const savedOrder = localStorage.getItem('userSortOrder') || 'desc';
-        const url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/tri.php?order=${savedOrder}&t=${Date.now()}`;
-        
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            let filteredUsers = result.data;
-            
-            if (searchTerm !== '') {
-                filteredUsers = filteredUsers.filter(user => {
-                    const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
-                    const email = (user.email || '').toLowerCase();
-                    return fullName.includes(searchTerm) || email.includes(searchTerm);
-                });
-            }
-            
-            const roleFilter = document.getElementById('roleFilter');
-            if (roleFilter && roleFilter.value !== '') {
-                filteredUsers = filteredUsers.filter(user => user.role === roleFilter.value);
-                localStorage.setItem('userRoleFilter', roleFilter.value);
-            } else {
-                localStorage.removeItem('userRoleFilter');
-            }
-            
-            currentPage = 1;
-            updateUsersTableFromData(filteredUsers);
-            
-            if (filteredUsers.length === 0 && searchTerm !== '') {
-                const tableBody = document.getElementById('usersTableBody');
-                if (tableBody) {
-                    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 40px;">🔍 Aucun utilisateur trouvé pour "${searchTerm}"</td></tr>`;
-                }
-            }
+
+    // Si la source complète n'est pas encore chargée, faire un fetch initial
+    if (!currentUsersData || currentUsersData.length === 0) {
+        await loadUsers();
+        return;
+    }
+
+    // Partir toujours de la SOURCE COMPLÈTE
+    let filtered = currentUsersData.slice();
+
+    // Appliquer le chip actif
+    switch (activeChipFilter) {
+        case 'active':
+            filtered = filtered.filter(u => normalizeStatus(u.status) === 'actif');
+            break;
+        case 'inactive':
+            filtered = filtered.filter(u => normalizeStatus(u.status) === 'inactif');
+            break;
+        case 'suspended':
+            filtered = filtered.filter(u => normalizeStatus(u.status) === 'suspendu');
+            break;
+        case 'admin':
+            filtered = filtered.filter(u => u.role === 'admin');
+            break;
+        case 'user':
+            filtered = filtered.filter(u => !u.role || u.role === 'utilisateur' || u.role === 'user');
+            break;
+        // 'all' : pas de filtre supplémentaire
+    }
+
+    // Appliquer le filtre rôle du <select>
+    const roleFilter = document.getElementById('roleFilter');
+    if (roleFilter && roleFilter.value !== '') {
+        filtered = filtered.filter(u => u.role === roleFilter.value);
+        localStorage.setItem('userRoleFilter', roleFilter.value);
+    } else {
+        localStorage.removeItem('userRoleFilter');
+    }
+
+    // Appliquer la recherche texte
+    if (searchTerm !== '') {
+        filtered = filtered.filter(user => {
+            const fullName = `${user.prenom || ''} ${user.nom || ''}`.toLowerCase();
+            const email = (user.email || '').toLowerCase();
+            return fullName.includes(searchTerm) || email.includes(searchTerm);
+        });
+    }
+
+    currentPage = 1;
+    updateUsersTableFromData(filtered);
+
+    if (filtered.length === 0 && searchTerm !== '') {
+        const tableBody = document.getElementById('usersTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 40px;">🔍 Aucun utilisateur trouvé pour "${escapeHtml(searchTerm)}"</td></tr>`;
         }
-    } catch (error) {
-        console.error('Erreur recherche:', error);
     }
 }
 
@@ -980,67 +1085,68 @@ function debouncedSearch() {
     }, 300);
 }
 
-async function filterUsers() {
+// searchUsers est exposé directement (le HTML appelle searchUsers() via onkeyup)
+// debouncedSearch est disponible si besoin mais n'est plus l'alias principal
+
+function filterUsers() {
     console.log("🔄 Function filterUsers() appelée");
-    
+
     const roleFilter = document.getElementById('roleFilter');
     if (!roleFilter) {
         console.error("❌ Élément roleFilter non trouvé");
         return;
     }
-    
+
     const role = roleFilter.value;
     console.log("📊 Rôle sélectionné:", role || 'Tous');
-    
+
     if (role) {
         localStorage.setItem('userRoleFilter', role);
     } else {
         localStorage.removeItem('userRoleFilter');
     }
-    
-    const tableBody = document.getElementById('usersTableBody');
-    if (tableBody) {
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">⏳ Filtrage en cours...<\/td><\/tr>';
-    }
-    
-    try {
-        let url = `http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/triRole.php?t=${Date.now()}`;
-        if (role) {
-            url += `&role=${encodeURIComponent(role)}`;
-        }
-        
-        console.log("📡 Appel API:", url);
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log("📄 Réponse JSON reçue:", result);
-        
-        if (result.success && result.data) {
-            currentPage = 1;
-            updateUsersTableFromData(result.data);
-            
-            if (typeof showToast === 'function') {
-                const message = role ? `Filtre: ${getRoleLabel(role)}` : 'Affichage de tous les utilisateurs';
-                showToast('Filtre', message, 'success');
-            }
-            
-            console.log(`✅ ${result.data.length} utilisateurs filtrés par rôle: ${role || 'tous'}`);
-        } else {
-            throw new Error(result.error || 'Erreur lors du filtrage');
-        }
-        
-    } catch (error) {
-        console.error('❌ Erreur lors du filtrage:', error);
-        if (typeof showToast === 'function') {
-            showToast('Erreur', 'Impossible de filtrer les utilisateurs', 'error');
-        }
+
+    if (!currentUsersData || currentUsersData.length === 0) {
         loadUsers();
+        return;
     }
+
+    // Partir de la SOURCE COMPLÈTE
+    let filtered = currentUsersData.slice();
+
+    // Appliquer le chip actif
+    switch (activeChipFilter) {
+        case 'active':    filtered = filtered.filter(u => normalizeStatus(u.status) === 'actif');    break;
+        case 'inactive':  filtered = filtered.filter(u => normalizeStatus(u.status) === 'inactif');  break;
+        case 'suspended': filtered = filtered.filter(u => normalizeStatus(u.status) === 'suspendu'); break;
+        case 'admin':     filtered = filtered.filter(u => u.role === 'admin');                       break;
+        case 'user':      filtered = filtered.filter(u => !u.role || u.role === 'utilisateur' || u.role === 'user'); break;
+    }
+
+    // Appliquer le filtre rôle du <select>
+    if (role !== '') {
+        filtered = filtered.filter(u => u.role === role);
+    }
+
+    // Appliquer la recherche texte
+    const searchTerm = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+    if (searchTerm !== '') {
+        filtered = filtered.filter(u => {
+            const fullName = `${u.prenom || ''} ${u.nom || ''}`.toLowerCase();
+            const email = (u.email || '').toLowerCase();
+            return fullName.includes(searchTerm) || email.includes(searchTerm);
+        });
+    }
+
+    currentPage = 1;
+    updateUsersTableFromData(filtered);
+
+    if (typeof showToast === 'function') {
+        const message = role ? `Filtre: ${getRoleLabel(role)}` : 'Affichage de tous les utilisateurs';
+        showToast('Filtre', message, 'success');
+    }
+
+    console.log(`✅ ${filtered.length} utilisateurs filtrés par rôle: ${role || 'tous'}`);
 }
 
 function getRoleLabel(role) {
@@ -1091,8 +1197,10 @@ async function tri() {
         console.log("📄 Réponse JSON reçue:", result);
         
         if (result.success && result.data) {
+            // Mettre à jour la source complète avec les données triées
+            currentUsersData = result.data.slice();
             currentPage = 1;
-            updateUsersTableFromData(result.data);
+            updateUsersTableFromData(currentUsersData);
             
             if (typeof showToast === 'function') {
                 const message = order === 'asc' ? 'Tri : plus ancien → plus récent' : 'Tri : plus récent → plus ancien';
@@ -1836,7 +1944,8 @@ window.switchChartType = switchChartType;
 window.switchStatusChartType = switchStatusChartType;
 window.refreshUserStats = refreshUserStats;
 window.filterByChip = filterByChip;
-window.searchUsers = debouncedSearch;
+window.searchUsers = searchUsers;   // ← directement la vraie fonction
+window.debouncedSearch = debouncedSearch;
 window.filterUsers = filterUsers;
 window.tri = tri;
 window.setRowsPerPage = setRowsPerPage;

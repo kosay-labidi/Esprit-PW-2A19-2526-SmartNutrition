@@ -221,7 +221,6 @@ window.showToast = function(title, message, type = 'info') {
 
 // Modale Ajouter Utilisateur
 window.showAddUserModal = function() {
-  // Supprimer une ancienne modale si elle existe
   document.getElementById('modal-add-user')?.remove();
 
   const modal = document.createElement('div');
@@ -258,23 +257,23 @@ window.showAddUserModal = function() {
         </div>
         <div>
           <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Email</label>
-          <input id="au-email" type="email" placeholder="Farhani.Ahmed@email.com" style="${inputStyle()}">
+          <input id="au-email" type="email" placeholder="exemple@email.com" style="${inputStyle()}">
         </div>
         <div>
           <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Mot de passe (min. 6 caractères)</label>
-          <input id="au-mdp" type="password" placeholder="••••••••" style="${inputStyle()}">
+          <input id="au-mdp" type="password" placeholder="Entrez un mot de passe" autocomplete="new-password" style="${inputStyle()}">
         </div>
         <div>
           <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Confirmer le mot de passe</label>
-          <input id="au-mdp2" type="password" placeholder="••••••••" style="${inputStyle()}">
+          <input id="au-mdp2" type="password" placeholder="Confirmez le mot de passe" autocomplete="new-password" style="${inputStyle()}">
         </div>
         <div>
           <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Rôle</label>
           <select id="au-role" style="${inputStyle()}">
-            <option value="utilisateur"style="color: #000000;">Utilisateur</option>
-            <option value="nutritionniste" style="color: #000000;">Nutritionniste</option>
-            <option value="ecologiste" style="color: #000000;">Écologiste</option>
-            <option value="admin" style="color: #000000;" >Admin</option>
+            <option value="utilisateur">Utilisateur</option>
+            <option value="nutritionniste">Nutritionniste</option>
+            <option value="ecologiste">Écologiste</option>
+            <option value="admin">Admin</option>
           </select>
         </div>
       </div>
@@ -298,8 +297,6 @@ window.showAddUserModal = function() {
     modal.style.opacity = '1';
     document.getElementById('modal-add-user-box').style.transform = 'translateY(0)';
   }, 10);
-
-  // Fermer en cliquant sur le fond
   modal.addEventListener('click', e => {
     if (e.target === modal) modal.remove();
   });
@@ -492,27 +489,27 @@ window.submitAddUser = async function() {
   const prenom = document.getElementById('au-prenom')?.value.trim();
   const email  = document.getElementById('au-email')?.value.trim();
   const mdp    = document.getElementById('au-mdp')?.value;
-  const mdp2 = document.getElementById('au-mdp2')?.value;
+  const mdp2   = document.getElementById('au-mdp2')?.value;
   const role   = document.getElementById('au-role')?.value;
   const errDiv = document.getElementById('modal-add-user-errors');
   const errors = [];
 
-if (!nom || !prenom || !email || !mdp) {
-  errors.push('Tous les champs sont requis');
-}
+  if (!nom || !prenom || !email || !mdp) {
+    errors.push('Tous les champs sont requis');
+  }
 
-if (errors.length === 0) {
-  if (/\d/.test(nom) || /\d/.test(prenom))
-    errors.push('Le nom et le prénom ne doivent pas contenir de chiffres');
+  if (errors.length === 0) {
+    if (/\d/.test(nom) || /\d/.test(prenom))
+      errors.push('Le nom et le prénom ne doivent pas contenir de chiffres');
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    errors.push('Email invalide');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      errors.push('Email invalide');
 
-  if (mdp.length < 6)
-    errors.push('Le mot de passe doit contenir au moins 6 caractères');
-  if (mdp !== mdp2)
-  errors.push('Les mots de passe ne correspondent pas');
-}
+    if (mdp.length < 6)
+      errors.push('Le mot de passe doit contenir au moins 6 caractères');
+    if (mdp !== mdp2)
+      errors.push('Les mots de passe ne correspondent pas');
+  }
 
   if (errors.length > 0) {
     errDiv.style.display = 'block';
@@ -522,27 +519,39 @@ if (errors.length === 0) {
 
   errDiv.style.display = 'none';
 
-  // Envoi vers addUser.php via fetch
-  const formData = new FormData();
-  formData.append('nom', nom);
-  formData.append('prenom', prenom);
-  formData.append('email', email);
-  formData.append('mdp', mdp);
-  formData.append('role', role);
-
+  // Envoi vers addUser.php - PAS DE CAPTCHA pour l'admin !
   try {
-    const response = await fetch('users/addUser.php', { method: 'POST', body: formData,credentials: 'include'});
+    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/addUser.php', { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ 
+        nom: nom, 
+        prenom: prenom, 
+        email: email, 
+        mdp: mdp, 
+        role: role,
+        is_admin: true  // ← Flag pour indiquer que ça vient de l'admin !
+      })
+    });
 
-    const text = await response.text();
+    const result = await response.json();
+    console.log('📡 Réponse addUser:', result);
 
-    if (response.ok) {
-  document.getElementById('modal-add-user')?.remove();
-  showToast('Succès', 'Utilisateur ajouté avec succès !', 'success');
-} else {
-  errDiv.style.display = 'block';
-  errDiv.innerHTML = '• Email déjà utilisé ou erreur serveur';
-}
+    if (result.success) {
+      document.getElementById('modal-add-user')?.remove();
+      if (typeof showToast === 'function') {
+        showToast('Succès', 'Utilisateur ajouté avec succès !', 'success');
+      }
+      if (typeof loadUsers === 'function') {
+        loadUsers();
+      }
+    } else {
+      errDiv.style.display = 'block';
+      errDiv.innerHTML = `• ${result.message || 'Email déjà utilisé ou erreur serveur'}`;
+    }
   } catch (err) {
+    console.error('❌ Erreur réseau:', err);
     errDiv.style.display = 'block';
     errDiv.innerHTML = '• Erreur réseau, veuillez réessayer';
   }

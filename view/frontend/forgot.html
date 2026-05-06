@@ -4,6 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
 <title>Mot de passe oublié - GaiaLumen</title>
+<!-- Google reCAPTCHA -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
@@ -439,7 +441,13 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
     
     <button type="submit" class="btn-submit" id="btn-submit">Envoyer le lien</button>
   </form>
-  
+  <!-- Dans forgot.html, après le champ email et avant le bouton submit -->
+
+<div class="form-group">
+  <div class="recaptcha-container" style="display: flex; justify-content: center; margin: 20px 0;">
+    <div class="g-recaptcha" data-sitekey="6LeZW9wsAAAAAKELGv3xyzmXROZZGcVxcbGxoiPg" data-theme="dark"></div>
+  </div>
+</div>
   <div class="success" id="success">
     <strong>✓ Email envoyé !</strong><br/>
     Vérifiez votre boîte de réception. Le lien expire dans 1 heure.
@@ -633,6 +641,23 @@ emailInput.addEventListener('input', validateEmailOnChange);
 emailInput.addEventListener('blur', validateEmailOnChange);
 
 // FORGOT PASSWORD HANDLER
+// Fonction pour obtenir le token reCAPTCHA
+function getRecaptchaToken() {
+  return new Promise((resolve, reject) => {
+    if (typeof grecaptcha !== 'undefined') {
+      const response = grecaptcha.getResponse();
+      if (response) {
+        resolve(response);
+      } else {
+        reject('Veuillez compléter le CAPTCHA');
+      }
+    } else {
+      reject('reCAPTCHA non chargé');
+    }
+  });
+}
+
+// FORGOT PASSWORD HANDLER avec CAPTCHA
 async function handleReset(e){
   e.preventDefault();
   
@@ -642,6 +667,20 @@ async function handleReset(e){
   if (!isValidEmail(email)) {
     emailInput.classList.add('error');
     emailError.classList.add('show');
+    return;
+  }
+  
+  // Vérification du reCAPTCHA
+  let recaptchaToken;
+  try {
+    recaptchaToken = await getRecaptchaToken();
+  } catch (err) {
+    const errDiv = document.createElement('div');
+    errDiv.id = 'err-msg';
+    errDiv.style.cssText = 'background:rgba(231,76,60,.15);border-left:4px solid #e74c3c;padding:12px 16px;border-radius:12px;margin-top:16px;font-size:.87rem;color:#e74c3c;';
+    errDiv.textContent = '⚠️ ' + err;
+    form.appendChild(errDiv);
+    setTimeout(() => errDiv.remove(), 3000);
     return;
   }
   
@@ -657,7 +696,10 @@ async function handleReset(e){
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ 
+        email: email,
+        recaptcha_token: recaptchaToken
+      })
     });
 
     const data = await res.json();
@@ -665,6 +707,12 @@ async function handleReset(e){
     if(data.success){
       successDiv.classList.add('show');
       submitBtn.textContent = '✓ Email envoyé !';
+      
+      // Réinitialiser le reCAPTCHA
+      if (typeof grecaptcha !== 'undefined') {
+        grecaptcha.reset();
+      }
+      
       setTimeout(()=>{
         submitBtn.textContent = 'Envoyer le lien';
         submitBtn.disabled = false;
@@ -677,6 +725,11 @@ async function handleReset(e){
       form.appendChild(errDiv);
       submitBtn.textContent = 'Envoyer le lien';
       submitBtn.disabled = false;
+      
+      // Réinitialiser le reCAPTCHA en cas d'erreur
+      if (typeof grecaptcha !== 'undefined') {
+        grecaptcha.reset();
+      }
     }
   } catch(err){
     console.error('Erreur réseau:', err);
@@ -687,9 +740,13 @@ async function handleReset(e){
     form.appendChild(errDiv);
     submitBtn.textContent = 'Envoyer le lien';
     submitBtn.disabled = false;
+    
+    // Réinitialiser le reCAPTCHA
+    if (typeof grecaptcha !== 'undefined') {
+      grecaptcha.reset();
+    }
   }
 }
-
 form.addEventListener('submit', handleReset);
 
 /* THEME TOGGLE */

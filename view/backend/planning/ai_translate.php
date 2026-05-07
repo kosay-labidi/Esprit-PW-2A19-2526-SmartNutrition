@@ -8,11 +8,7 @@ require_once(__DIR__ . '/../../../config.php');
 ob_end_clean();
 header('Content-Type: application/json; charset=utf-8');
 
-// ── Clé API Groq ──────────────────────────────────────────────────────────
-define('GROQ_API_KEY', 'apikey');
-define('GROQ_API_URL', 'https://api.groq.com/openai/v1/chat/completions');
-define('GROQ_MODEL',   'llama-3.3-70b-versatile');
-
+// Clé Groq chargée depuis config.php
 // ── Langues supportées ────────────────────────────────────────────────────
 $LANGUES = [
     'ar' => 'arabe',

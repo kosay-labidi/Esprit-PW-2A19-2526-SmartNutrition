@@ -35,4 +35,11 @@ if (!class_exists('config', false)) {
         }
     }
 }
+
+// ── Groq AI ────────────────────────────────────
+if (!defined('GROQ_API_KEY')) {
+    define('GROQ_API_KEY', 'CLE API');
+    define('GROQ_API_URL', 'https://api.groq.com/openai/v1/chat/completions');
+    define('GROQ_MODEL',   'llama-3.3-70b-versatile');
+}
 ?>

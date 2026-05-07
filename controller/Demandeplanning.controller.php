@@ -157,6 +157,75 @@ class DemandeplanningController {
             return true;
         } catch (PDOException $e) { $db->rollBack(); return false; }
     }
+    // ── EXPORT CSV ────────────────────────────────────────────────────────
+    public function exportCSV(?string $statut = null): void {
+        try {
+            $db  = config::getConnexion();
+            $sel = $this->hasStatutColumn() ? 'd.statut' : "'en_attente' AS statut";
+
+            $where = '';
+            $params = [];
+            if ($statut && in_array($statut, ['en_attente','approuve','rejete'], true)) {
+                $where = 'WHERE d.statut = :statut';
+                $params[':statut'] = $statut;
+            }
+
+            $stmt = $db->prepare("
+                SELECT
+                    d.id,
+                    d.id_utilisateur,
+                    d.calories,
+                    d.budget,
+                    d.type_budget,
+                    d.duree,
+                    d.type_duree,
+                    d.date_demande,
+                    {$sel},
+                    COUNT(p.id)               AS nb_lignes_planning,
+                    MAX(ss.activite_sportive) AS activite_sport
+                FROM demandeplanning d
+                LEFT JOIN planning     p  ON p.id_demande  = d.id
+                LEFT JOIN sportsommeil ss ON ss.id_demande = d.id
+                {$where}
+                GROUP BY d.id
+                ORDER BY d.date_demande DESC
+            ");
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $filename = 'planning_demandes_' . date('Ymd_His') . '.csv';
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            $out = fopen('php://output', 'w');
+            // BOM UTF-8 pour compatibilité Excel
+            fwrite($out, "\xEF\xBB\xBF");
+            // En-têtes
+            fputcsv($out, ['ID','Utilisateur','Calories (kcal)','Budget','Type budget','Durée','Type durée','Statut','Nb lignes planning','Activité sport','Date demande'], ';');
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $r['id'],
+                    $r['id_utilisateur'],
+                    $r['calories'],
+                    number_format((float)$r['budget'], 2, '.', ''),
+                    $r['type_budget'],
+                    $r['duree'],
+                    $r['type_duree'],
+                    $r['statut'] ?? 'en_attente',
+                    $r['nb_lignes_planning'] ?? 0,
+                    $r['activite_sport'] ?? '',
+                    $r['date_demande'] ?? '',
+                ], ';');
+            }
+            fclose($out);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo 'Erreur export CSV : ' . $e->getMessage();
+        }
+    }
+
     public function listDemandesByUser(int $userId): array {
         try {
             $db  = config::getConnexion();

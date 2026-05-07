@@ -8,12 +8,7 @@ require_once __DIR__ . '/../../../config.php';
 ob_end_clean();
 header('Content-Type: application/json; charset=utf-8');
 
-// ── Config Groq ──────────────────────────────────────────────────────────
-define('GROQ_API_KEY', 'apikey');  // ← Remplacez par votre vraie clé
-define('GROQ_API_URL', 'https://api.groq.com/openai/v1/chat/completions');
-define('GROQ_MODEL',   'llama-3.3-70b-versatile');
 
-// ── Construire le system prompt avec données réelles ─────────────────────
 function buildCoachSystemPrompt(array $d): string {
     $cal = (int)($d['calories'] ?? 2000);
     if ($cal < 1600)     $obj = 'perte de poids (déficit calorique)';
@@ -62,7 +57,6 @@ RÈGLES DE FORME :
 - Si hors sujet : répondre brièvement, puis recentrer sur nutrition/sport";
 }
 
-// ── Appel API Groq avec historique ───────────────────────────────────────
 function callGroqChat(string $systemPrompt, array $history, int $maxTokens = 1500): array {
     $messages = [['role' => 'system', 'content' => $systemPrompt]];
     foreach ($history as $msg) {
@@ -102,7 +96,6 @@ function callGroqChat(string $systemPrompt, array $history, int $maxTokens = 150
     return ['ok' => true, 'text' => trim($text)];
 }
 
-// ── Récupérer la demande avec sport/sommeil ──────────────────────────────
 function getDemandeAvecProfil(int $id): ?array {
     try {
         $db   = config::getConnexion();
@@ -119,7 +112,6 @@ function getDemandeAvecProfil(int $id): ?array {
     } catch (PDOException $e) { return null; }
 }
 
-// ── MAIN ─────────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);
     exit;

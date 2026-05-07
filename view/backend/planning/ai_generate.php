@@ -9,59 +9,8 @@ require_once(__DIR__ . '/../../../controller/Demandeplanning.controller.php');
 ob_end_clean();
 header('Content-Type: application/json; charset=utf-8');
 
-// ── Clé API Groq ───────────────────────────────────────────────────────────
-define('GROQ_API_KEY', 'apikey');
-define('GROQ_API_URL', 'https://api.groq.com/openai/v1/chat/completions');
-define('GROQ_MODEL',   'llama-3.3-70b-versatile');
-
-// ══════════════════════════════════════════════════════════════════════════
-// PROMPT COACH IA — construit depuis les données réelles de la demande
-// ══════════════════════════════════════════════════════════════════════════
-function buildCoachSystemPrompt(array $d): string {
-    $cal = (int)($d['calories'] ?? 2000);
-    if ($cal < 1600)      $objectif = 'perte de poids (déficit calorique)';
-    elseif ($cal > 2800)  $objectif = 'prise de masse (surplus calorique)';
-    else                  $objectif = 'maintien du poids';
-
-    $budget      = ($d['budget'] ?? '?') . ' / ' . ($d['type_budget'] ?? 'jour');
-    $sport       = $d['activite_sportive']  ?? 'non renseignée';
-    $durSport    = ($d['duree_sport_hebdo'] ?? 0) . ' min/semaine';
-    $coucher     = $d['heure_coucher']   ?? '22:00';
-    $reveil      = $d['heure_reveil']    ?? '07:00';
-    $qualSommeil = $d['qualite_sommeil'] ?? 'normale';
-
-    // Calcul durée de sommeil
-    $h1 = (int)explode(':', $coucher)[0];
-    $m1 = (int)(explode(':', $coucher)[1] ?? 0);
-    $h2 = (int)explode(':', $reveil)[0];
-    $m2 = (int)(explode(':', $reveil)[1] ?? 0);
-    $minSommeil = ($h2 * 60 + $m2) - ($h1 * 60 + $m1);
-    if ($minSommeil < 0) $minSommeil += 1440;
-    $hSommeil = round($minSommeil / 60, 1);
-
-    return "Tu es un Coach Nutritionnel IA professionnel intégré dans SmartNutrition.
-Tu génères des plannings nutritionnels COMPLETS et PERSONNALISÉS.
-
-═══════════ PROFIL UTILISATEUR ═══════════
-• Objectif déduit    : {$objectif}
-• Calories cibles    : {$cal} kcal/jour
-• Budget alimentaire : {$budget}
-• Sport pratiqué     : {$sport}
-• Volume sportif     : {$durSport}
-• Coucher / Réveil   : {$coucher} → {$reveil} ({$hSommeil}h de sommeil)
-• Qualité du sommeil : {$qualSommeil}
-══════════════════════════════════════════
-
-RÈGLES ABSOLUES :
-1. Adapter chaque repas aux calories ({$cal} kcal/jour) et au budget ({$budget})
-2. Les séances de sport doivent correspondre à : {$sport}
-3. Les conseils sommeil doivent tenir compte de {$hSommeil}h et qualité '{$qualSommeil}'
-4. Varier les repas et les activités d'un jour à l'autre
-5. Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown, sans backticks.
-   Le JSON doit être directement parseable par json_decode().";
-}
-
-// ── Appel API Groq ─────────────────────────────────────────────────────────
+// Clé Groq chargée depuis config.php
+// ── Appel API Groq ────────────────────────────────────────────────────────
 function callGroq(string $systemPrompt, string $userMessage, int $maxTokens = 4000): array {
     $payload = json_encode([
         'model'       => GROQ_MODEL,
@@ -98,7 +47,7 @@ function callGroq(string $systemPrompt, string $userMessage, int $maxTokens = 40
     return ['ok' => true, 'text' => $text];
 }
 
-// ── Récupérer la demande + sport/sommeil ───────────────────────────────────
+// ── Récupérer la demande + sport/sommeil ──────────────────────────────────
 function getDemande(int $id): ?array {
     try {
         $db   = config::getConnexion();
@@ -118,7 +67,9 @@ function getDemande(int $id): ?array {
     } catch (PDOException $e) { return null; }
 }
 
-// ── DISPATCH ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────
+// DISPATCH
+// ─────────────────────────────────────────────────────────────────────────
 $action = trim($_GET['action'] ?? 'generer');
 $id     = (int)($_GET['id'] ?? 0);
 
@@ -127,9 +78,7 @@ if ($id <= 0) {
     exit;
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// ACTION : GENERER — Génère le planning IA (aperçu, sans sauvegarder en DB)
-// ══════════════════════════════════════════════════════════════════════════
+
 if ($action === 'generer') {
 
     $d = getDemande($id);
@@ -148,47 +97,49 @@ if ($action === 'generer') {
     if ($d['type_duree'] === 'mois')     $nbJours *= 30;
     $nbJours = min(max($nbJours, 1), 14);
 
-    // Déduire l'objectif pour le message utilisateur
-    $cal = (int)($d['calories'] ?? 2000);
-    if ($cal < 1600)      $objectif = 'perte de poids';
-    elseif ($cal > 2800)  $objectif = 'prise de masse';
-    else                  $objectif = 'maintien du poids';
+    $system = "Tu es un expert nutritionniste et coach sportif professionnel. "
+            . "Tu génères des plannings nutritionnels complets et personnalisés. "
+            . "Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans markdown, sans backticks. "
+            . "Le JSON doit être directement parseable par json_decode().";
 
-    $system = buildCoachSystemPrompt($d);
+    $user = "Génère un planning nutritionnel complet pour $nbJours jours avec ces données :
+- Objectif calorique : {$d['calories']} kcal/jour
+- Budget : {$d['budget']} € / {$d['type_budget']}
+- Durée totale : {$d['duree']} {$d['type_duree']}
+- Activité sportive : " . ($d['activite_sportive'] ?? 'non renseignée') . "
+- Sport par semaine : " . ($d['duree_sport_hebdo'] ?? 0) . " minutes
+- Heure coucher : " . ($d['heure_coucher'] ?? '22:00') . "
+- Heure réveil : " . ($d['heure_reveil'] ?? '07:00') . "
+- Qualité sommeil : " . ($d['qualite_sommeil'] ?? 'normale') . "
 
-    $user = "Génère un planning nutritionnel complet pour {$nbJours} jours.
-Objectif : {$objectif} — {$cal} kcal/jour — Budget : {$d['budget']} / {$d['type_budget']}
-Sport : " . ($d['activite_sportive'] ?? 'non renseigné') . " | " . ($d['duree_sport_hebdo'] ?? 0) . " min/semaine
-Sommeil : " . ($d['heure_coucher'] ?? '22:00') . " → " . ($d['heure_reveil'] ?? '07:00') . " | Qualité : " . ($d['qualite_sommeil'] ?? 'normale') . "
-
-Réponds avec ce JSON exact :
+Réponds avec ce JSON exact (remplace les valeurs) :
 {
   \"jours\": [
     {
       \"jour\": 1,
       \"repas\": {
-        \"petit_dejeuner\": \"description adaptée aux calories et au budget\",
-        \"dejeuner\": \"description déjeuner équilibré\",
-        \"diner\": \"description dîner léger\",
-        \"collation\": \"snack protéiné optionnel\"
+        \"petit_dejeuner\": \"description du petit-déjeuner adapté au budget et calories\",
+        \"dejeuner\": \"description du déjeuner\",
+        \"diner\": \"description du dîner\",
+        \"collation\": \"collation optionnelle\"
       },
       \"sport\": {
-        \"activite\": \"nom précis de l'activité\",
-        \"duree_min\": 45,
-        \"description\": \"détails de la séance adaptée au profil\"
+        \"activite\": \"nom de l'activité\",
+        \"duree_min\": 30,
+        \"description\": \"détails de la séance\"
       },
       \"sommeil\": {
         \"heure_coucher\": \"22:00\",
         \"heure_reveil\": \"07:00\",
-        \"conseil\": \"conseil personnalisé pour améliorer la qualité du sommeil\"
+        \"conseil\": \"conseil pour améliorer le sommeil ce jour\"
       },
-      \"calories_estimees\": {$cal},
-      \"conseil_jour\": \"motivation ou astuce nutritionnelle du jour\"
+      \"calories_estimees\": 2000,
+      \"conseil_jour\": \"conseil ou motivation du jour\"
     }
   ],
-  \"bilan\": \"résumé global du planning en 2 phrases avec les points clés\"
+  \"bilan\": \"résumé global du planning en 2 phrases\"
 }
-Génère exactement {$nbJours} jours. Varie les repas et les activités chaque jour.";
+Génère exactement $nbJours jours. Adapte chaque jour progressivement.";
 
     $res = callGroq($system, $user, 4000);
     if (!$res['ok']) {
@@ -208,6 +159,7 @@ Génère exactement {$nbJours} jours. Varie les repas et les activités chaque j
         exit;
     }
 
+    // Compter le nombre d'activités estimé (pour l'affichage)
     $nbEstime = 0;
     foreach ($planning['jours'] as $j) {
         if (!empty($j['repas']['petit_dejeuner'])) $nbEstime++;
@@ -219,6 +171,7 @@ Génère exactement {$nbJours} jours. Varie les repas et les activités chaque j
         if (!empty($j['conseil_jour']))            $nbEstime++;
     }
 
+    // ⚠️ ON NE SAUVEGARDE PAS EN DB ICI — l'admin doit valider via action=publier
     echo json_encode([
         'success'   => true,
         'message'   => '✨ Planning IA généré — en attente de validation',
@@ -226,7 +179,7 @@ Génère exactement {$nbJours} jours. Varie les repas et les activités chaque j
         'nb_jours'  => count($planning['jours']),
         'bilan'     => $planning['bilan'] ?? '',
         'planning'  => $planning,
-        'pending'   => true,
+        'pending'   => true, // flag pour le frontend
     ]);
     exit;
 }
@@ -247,6 +200,8 @@ if ($action === 'publier') {
 
     try {
         $db = config::getConnexion();
+
+        // Supprimer l'ancien planning
         $db->prepare("DELETE FROM planning WHERE id_demande = ?")->execute([$id]);
 
         $insert = $db->prepare("
@@ -277,21 +232,18 @@ if ($action === 'publier') {
 
             $sport = $j['sport'] ?? [];
             if (!empty($sport['activite'])) {
-                $insert->execute([':id_demande'=>$id, ':date'=>$date, ':type_activite'=>'sport',
-                    ':description'=>"🏃 {$sport['activite']} — " . ($sport['duree_min']??0) . " min : " . ($sport['description']??'')]);
+                $insert->execute([':id_demande'=>$id, ':date'=>$date, ':type_activite'=>'sport', ':description'=>"🏃 {$sport['activite']} — " . ($sport['duree_min']??0) . " min : " . ($sport['description']??'')]);
                 $nbInserts++;
             }
 
             $sommeil = $j['sommeil'] ?? [];
             if (!empty($sommeil['conseil'])) {
-                $insert->execute([':id_demande'=>$id, ':date'=>$date, ':type_activite'=>'sommeil',
-                    ':description'=>"🌙 Coucher : " . ($sommeil['heure_coucher']??'') . " | Réveil : " . ($sommeil['heure_reveil']??'') . " — {$sommeil['conseil']}"]);
+                $insert->execute([':id_demande'=>$id, ':date'=>$date, ':type_activite'=>'sommeil', ':description'=>"🌙 Coucher : " . ($sommeil['heure_coucher']??'') . " | Réveil : " . ($sommeil['heure_reveil']??'') . " — {$sommeil['conseil']}"]);
                 $nbInserts++;
             }
 
             if (!empty($j['conseil_jour'])) {
-                $insert->execute([':id_demande'=>$id, ':date'=>$date, ':type_activite'=>'conseil',
-                    ':description'=>"💡 {$j['conseil_jour']}"]);
+                $insert->execute([':id_demande'=>$id, ':date'=>$date, ':type_activite'=>'conseil', ':description'=>"💡 {$j['conseil_jour']}"]);
                 $nbInserts++;
             }
         }
@@ -310,7 +262,7 @@ if ($action === 'publier') {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// ACTION : REJETER
+// ACTION : REJETER — L'admin rejette : on supprime de la DB si inséré
 // ══════════════════════════════════════════════════════════════════════════
 if ($action === 'rejeter') {
     try {

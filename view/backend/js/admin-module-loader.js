@@ -871,6 +871,7 @@ function renderPlanningRows(data) {
         <button class="btn-statut-sm btn-rejeter"   onclick="planningChangerStatut(${d.id},'rejete',this)"  title="Rejeter">❌</button>`;
     } else if (statut === 'approuve') {
       actionBtns += `
+        <button class="btn-statut-sm btn-ai-sm" onclick="detailGenererIA(${d.id})" title="Générer par IA">✨</button>
         <button class="btn-statut-sm btn-regen"   onclick="planningRegen(${d.id},this)"                        title="Régénérer">🔄</button>
         <button class="btn-statut-sm btn-rejeter" onclick="planningChangerStatut(${d.id},'rejete',this)"        title="Rejeter">❌</button>`;
     } else if (statut === 'rejete') {
@@ -890,6 +891,9 @@ function renderPlanningRows(data) {
       <td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${actionBtns}</div></td>
     </tr>`;
   }).join('');
+  if (window._scanAnomalies && window._scanAnomalies.length > 0) {
+    _marquerLignesAnomalies(window._scanAnomalies);
+  }
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────
@@ -949,7 +953,9 @@ function _renderDetail(res, id) {
     actBtns = `<button class="btn-detail btn-detail-ok"  onclick="detailChangerStatut(${d.id},'approuve')">✅ Approuver</button>
                <button class="btn-detail btn-detail-err" onclick="detailChangerStatut(${d.id},'rejete')">❌ Rejeter</button>`;
   } else if (statut === 'approuve') {
-    actBtns = `<button class="btn-detail btn-detail-blue" onclick="detailRegen(${d.id})">🔄 Régénérer</button>
+    const _hasSS = !!(ss && ss.activite_sportive);
+    actBtns = `<button class="btn-detail btn-detail-ai" id="detailAiBtn-${d.id}" onclick="detailGenererIA(${d.id})" ${!_hasSS ? 'disabled title="Sport &amp; Sommeil non rempli"' : ''}>✨ Générer par IA</button>
+               <button class="btn-detail btn-detail-blue" onclick="detailRegen(${d.id})">🔄 Régénérer</button>
                <button class="btn-detail btn-detail-err"  onclick="detailChangerStatut(${d.id},'rejete')">❌ Rejeter</button>`;
   } else if (statut === 'rejete') {
     actBtns = `<button class="btn-detail btn-detail-warn" onclick="detailChangerStatut(${d.id},'en_attente')">↩️ Remettre en attente</button>`;
@@ -1113,6 +1119,250 @@ window.detailRegen = function(id) {
   }).catch(err=>planningToast('Erreur : '+err.message,'err'));
 };
 
+// ══════════════════════════════════════════════════════════════════════════
+// ✨ GÉNÉRATION IA — planning/ai_generate.php
+// ══════════════════════════════════════════════════════════════════════════
+window.detailGenererIA = function(id) {
+  const btn     = document.getElementById('detailAiBtn-' + id);
+  const contenu = document.getElementById('detailContenu');
+  if (!contenu) return;
+
+  if (!confirm('Générer le planning IA pour la demande #' + id + ' ?\n\nCela peut prendre 10–20 secondes.')) return;
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ai-btn-spin"></span> Génération…'; }
+
+  // Panneau progression
+  const pid = 'ai-prog-' + id;
+  let prog = document.getElementById(pid);
+  if (prog) prog.remove();
+  prog = document.createElement('div');
+  prog.id = pid;
+  prog.className = 'ai-progress-panel';
+  prog.innerHTML =
+    '<div class="ai-progress-inner">' +
+      '<div class="ai-prog-ico">🤖</div>' +
+      '<div class="ai-prog-text">' +
+        '<strong>Intelligence Artificielle au travail…</strong>' +
+        '<span id="ai-step-' + id + '">Connexion à Groq LLaMA 3 70B…</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ai-prog-bar-wrap"><div class="ai-prog-bar" id="ai-bar-' + id + '"></div></div>';
+  contenu.insertAdjacentElement('afterbegin', prog);
+
+  const steps = [
+    [12,'Analyse du profil utilisateur…'],
+    [28,'Construction du prompt nutritionnel…'],
+    [45,'Appel API Groq LLaMA 3 70B…'],
+    [62,'Génération du planning jour par jour…'],
+    [78,'Traitement de la réponse IA…'],
+    [90,'Sauvegarde en base de données…']
+  ];
+  let si = 0;
+  const tick = setInterval(function() {
+    if (si >= steps.length) return;
+    const b = document.getElementById('ai-bar-' + id);
+    const s = document.getElementById('ai-step-' + id);
+    if (b) b.style.width = steps[si][0] + '%';
+    if (s) s.textContent = steps[si][1];
+    si++;
+  }, 1700);
+
+  fetch('planning/ai_generate.php?action=generer&id=' + id, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(res) {
+    clearInterval(tick);
+    if (!res.success) throw new Error(res.error || 'Erreur IA');
+    const b = document.getElementById('ai-bar-' + id);
+    if (b) b.style.width = '100%';
+    setTimeout(function() { _renderAIResult(prog, res, id); }, 400);
+    const row = planningDataCache.find(function(x) { return x.id == id; });
+    if (row) row.nb_lignes_planning = res.nb_lignes;
+    renderPlanningRows(planningDataCache);
+    planningToast('✨ Planning IA généré ! Vérifiez et publiez ou rejetez.', 'ok');
+    if (btn) { btn.disabled = false; btn.innerHTML = '✨ Régénérer IA'; }
+  })
+  .catch(function(err) {
+    clearInterval(tick);
+    prog.outerHTML =
+      '<div class="ai-error-panel">' +
+        '<span style="font-size:1.4rem">❌</span>' +
+        '<div style="flex:1">' +
+          '<strong style="display:block;color:#e74c3c;font-size:.87rem">Erreur de génération</strong>' +
+          '<span style="font-size:.76rem;color:var(--muted)">' + err.message + '</span>' +
+        '</div>' +
+        '<button onclick="detailGenererIA(' + id + ')" class="btn-detail btn-detail-ai">Réessayer</button>' +
+      '</div>';
+    planningToast('Erreur IA : ' + err.message, 'err');
+    if (btn) { btn.disabled = false; btn.innerHTML = '✨ Générer par IA'; }
+  });
+};
+
+function _renderAIResult(container, res, id) {
+  var jours = (res.planning && res.planning.jours) ? res.planning.jours : [];
+  var bilan = (res.planning && res.planning.bilan) ? res.planning.bilan : '';
+  if (!jours.length) { container.remove(); return; }
+
+  // Stocker le planning IA en attente de validation (pas encore en DB)
+  window._iaPendingData = window._iaPendingData || {};
+  window._iaPendingData[id] = res;
+
+  var thJours = jours.map(function(j) {
+    return '<th class="ai-th-jour">Jour ' + j.jour + '</th>';
+  }).join('');
+
+  function mkRow(cls, ico, lbl, fn) {
+    return '<tr class="' + cls + '">' +
+      '<td class="ai-td-type"><span>' + ico + '</span>' + lbl + '</td>' +
+      jours.map(function(j) {
+        var v = fn(j);
+        return '<td>' + (v || '<span style="opacity:.35">—</span>') + '</td>';
+      }).join('') +
+    '</tr>';
+  }
+
+  var html =
+    '<div class="ai-result-panel" id="ai-result-panel-' + id + '">' +
+      // ── Header avec badge + actions validation ──
+      '<div class="ai-result-hd">' +
+        '<div style="display:flex;align-items:center;gap:10px">' +
+          '<span class="ai-result-badge">✨ Planning IA — ' + jours.length + ' jours · ' + res.nb_lignes + ' activités</span>' +
+          '<span class="ai-pending-badge">⏳ En attente de validation</span>' +
+        '</div>' +
+        '<button onclick="planningVoir(' + id + ')" class="ai-result-refresh">🔄 Recharger</button>' +
+      '</div>' +
+
+      // ── Bilan ──
+      (bilan ? '<div class="ai-bilan"><span>📊</span><p>' + bilan + '</p></div>' : '') +
+
+      // ── Barre de validation ──
+      '<div class="ai-validation-bar">' +
+        '<div class="ai-validation-msg">' +
+          '<span style="font-size:1.1rem">🔍</span>' +
+          '<div>' +
+            '<strong>Vérifiez le planning généré par l\'IA</strong>' +
+            '<span>Ce planning n\'est pas encore visible par l\'utilisateur. Publiez-le pour le rendre accessible.</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ai-validation-actions">' +
+          '<button class="ai-btn-rejeter" onclick="iaRejeterPlanning(' + id + ')">❌ Rejeter</button>' +
+          '<button class="ai-btn-publier" onclick="iaPublierPlanning(' + id + ')">✅ Publier le planning</button>' +
+        '</div>' +
+      '</div>' +
+
+      // ── Tableau ──
+      '<div class="ai-table-scroll">' +
+        '<table class="ai-planning-table">' +
+          '<thead><tr><th class="ai-th-act">Activité</th>' + thJours + '</tr></thead>' +
+          '<tbody>' +
+            mkRow('ai-row-repas','🌅','Petit-déj', function(j){ return j.repas&&j.repas.petit_dejeuner||''; }) +
+            mkRow('ai-row-repas','🍽️','Déjeuner',  function(j){ return j.repas&&j.repas.dejeuner||''; }) +
+            mkRow('ai-row-repas','🌙','Dîner',     function(j){ return j.repas&&j.repas.diner||''; }) +
+            mkRow('ai-row-repas','🍎','Collation',  function(j){ return j.repas&&j.repas.collation||''; }) +
+            mkRow('ai-row-sport','🏃','Sport', function(j){
+              var s=j.sport; if(!s||!s.activite) return '';
+              return '<strong>'+s.activite+'</strong><br><small>'+(s.duree_min||0)+' min</small>'+(s.description?'<br><small style="color:var(--muted)">'+s.description+'</small>':'');
+            }) +
+            mkRow('ai-row-sommeil','🌙','Sommeil', function(j){
+              var s=j.sommeil; if(!s) return '';
+              return '<small>🛌 '+(s.heure_coucher||'')+'</small><br><small>☀️ '+(s.heure_reveil||'')+'</small>'+(s.conseil?'<br><small style="color:var(--muted)">'+s.conseil+'</small>':'');
+            }) +
+            mkRow('ai-row-cal','🔥','Calories', function(j){
+              return j.calories_estimees?'<strong>'+parseInt(j.calories_estimees).toLocaleString('fr')+' kcal</strong>':'';
+            }) +
+            mkRow('ai-row-conseil','💡','Conseil', function(j){
+              return j.conseil_jour?'<em>'+j.conseil_jour+'</em>':'';
+            }) +
+          '</tbody>' +
+        '</table>' +
+      '</div>' +
+    '</div>';
+
+  container.outerHTML = html;
+}
+
+// ── Publier le planning IA (sauvegarde en DB) ─────────────────────────────
+window.iaPublierPlanning = function(id) {
+  var pending = window._iaPendingData && window._iaPendingData[id];
+  if (!pending) {
+    planningToast('Aucun planning IA en attente pour cette demande.', 'err');
+    return;
+  }
+  if (!confirm('Publier ce planning IA ?\n\nIl sera immédiatement visible par l\'utilisateur.')) return;
+
+  var panel = document.getElementById('ai-result-panel-' + id);
+  var bar   = panel ? panel.querySelector('.ai-validation-bar') : null;
+  if (bar) bar.innerHTML = '<div class="ai-validation-saving"><span class="ai-btn-spin"></span> Publication en cours…</div>';
+
+  fetch('planning/ai_generate.php?action=publier&id=' + id, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    body: JSON.stringify({ planning: pending.planning })
+  })
+  .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(res) {
+    if (!res.success) throw new Error(res.error || 'Erreur');
+
+    // Mettre à jour le header du panel
+    if (panel) {
+      var badge = panel.querySelector('.ai-pending-badge');
+      if (badge) { badge.textContent = '✅ Publié'; badge.className = 'ai-published-badge'; }
+      if (bar)   bar.innerHTML = '<div class="ai-validation-done">✅ Planning publié et visible par l\'utilisateur.</div>';
+    }
+
+    // Mettre à jour le cache local
+    var row = planningDataCache.find(function(x) { return x.id == id; });
+    if (row) row.nb_lignes_planning = res.nb_lignes;
+    renderPlanningRows(planningDataCache);
+    updatePlanningStats(planningDataCache);
+
+    // Nettoyer le pending
+    delete window._iaPendingData[id];
+
+    planningToast('✅ Planning IA publié avec succès !', 'ok');
+  })
+  .catch(function(err) {
+    if (bar) bar.innerHTML =
+      '<div class="ai-validation-bar" style="flex-wrap:wrap">' +
+        '<span style="color:#e74c3c">❌ ' + err.message + '</span>' +
+        '<div class="ai-validation-actions">' +
+          '<button class="ai-btn-rejeter" onclick="iaRejeterPlanning(' + id + ')">❌ Rejeter</button>' +
+          '<button class="ai-btn-publier" onclick="iaPublierPlanning(' + id + ')">🔄 Réessayer</button>' +
+        '</div>' +
+      '</div>';
+    planningToast('Erreur publication : ' + err.message, 'err');
+  });
+};
+
+// ── Rejeter le planning IA (supprime de la DB si déjà inséré) ────────────
+window.iaRejeterPlanning = function(id) {
+  if (!confirm('Rejeter ce planning IA ?\n\nIl ne sera pas visible par l\'utilisateur.')) return;
+
+  // Supprimer de la DB si déjà inséré (nettoyage)
+  fetch('planning/ai_generate.php?action=rejeter&id=' + id, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  }).catch(function() {}); // silencieux si endpoint absent
+
+  // Fermer le panel
+  var panel = document.getElementById('ai-result-panel-' + id);
+  if (panel) {
+    panel.style.opacity = '0';
+    panel.style.transform = 'translateY(-8px)';
+    panel.style.transition = 'all .3s ease';
+    setTimeout(function() { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 300);
+  }
+
+  // Nettoyer le pending
+  if (window._iaPendingData) delete window._iaPendingData[id];
+
+  // Remettre le bouton IA en état initial
+  var btn = document.getElementById('detailAiBtn-' + id);
+  if (btn) { btn.disabled = false; btn.innerHTML = '✨ Générer par IA'; }
+
+  planningToast('Planning IA rejeté. Aucune modification effectuée.', 'warn');
+};
+
 
 function planningChangerStatut(id, val, btn) {
   const labels = { approuve:'approuver', rejete:'rejeter', en_attente:'remettre en attente' };
@@ -1207,6 +1457,233 @@ function planningToast(msg, type) {
   t._t = setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.style.display='none',350); }, 3200);
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// 🔍 SCAN IA ANOMALIES — Groq + règles métier
+// ══════════════════════════════════════════════════════════════════════════
+
+window._scanAnomalies = [];
+
+function _detecterAnomaliesLocales(data) {
+  const out = [];
+  data.forEach(function(d) {
+    var id  = d.id;
+    var cal = parseInt(d.calories)  || 0;
+    var bud = parseFloat(d.budget)  || 0;
+    var dur = parseInt(d.duree)     || 0;
+    var durJ = d.type_duree === 'semaines' ? dur * 7 : dur;
+    var tb  = d.type_budget || '';
+
+    if (cal > 0 && cal < 800)
+      out.push({ id:id, icon:'🥵', message:'Calories dangereusement basses',
+        details: cal.toLocaleString('fr') + ' kcal/j — min recommandé : 800 kcal' });
+
+    if (cal > 5000)
+      out.push({ id:id, icon:'🔥', message:'Apport calorique excessif',
+        details: cal.toLocaleString('fr') + ' kcal/j — dépasse 5 000 kcal' });
+
+    if (bud <= 0)
+      out.push({ id:id, icon:'🚫', message:'Budget nul ou invalide',
+        details: 'Budget = ' + bud + ' €' });
+
+    if (cal >= 1500 && bud > 0) {
+      if (tb === 'quotidien' && bud < 2)
+        out.push({ id:id, icon:'💸', message:'Budget quotidien insuffisant pour ces calories',
+          details: cal.toLocaleString('fr') + ' kcal/j avec ' + bud.toFixed(2) + ' €/j' });
+      if (tb === 'hebdomadaire' && bud < 10)
+        out.push({ id:id, icon:'💸', message:'Budget hebdomadaire insuffisant vs calories',
+          details: cal.toLocaleString('fr') + ' kcal/j avec ' + bud.toFixed(2) + ' €/sem' });
+    }
+
+    if (durJ > 0 && durJ < 3 && cal > 3000)
+      out.push({ id:id, icon:'⏱️', message:'Durée très courte avec calories élevées',
+        details: durJ + ' jour(s) pour ' + cal.toLocaleString('fr') + ' kcal/j' });
+
+    if (dur <= 0)
+      out.push({ id:id, icon:'📅', message:'Durée invalide ou manquante',
+        details: 'Durée = ' + (d.duree || '—') + ' ' + (d.type_duree || '') });
+  });
+  return out;
+}
+
+async function _analyserAvecGroq(suspects) {
+  if (!suspects.length) return [];
+  var lignes = suspects.map(function(d) {
+    return 'ID#' + d.id + ': ' + d.calories + ' kcal/j | budget ' + d.budget + '€ ' + d.type_budget + ' | durée ' + d.duree + ' ' + d.type_duree;
+  }).join('\n');
+
+  var prompt = 'Tu es expert en nutrition. Analyse ces demandes et identifie les anomalies.\n'
+    + 'Réponds UNIQUEMENT en JSON valide : tableau d\'objets avec id(number), icon(emoji), message(string), details(string).\n'
+    + 'Si aucune anomalie, réponds []\n\nDemandes:\n' + lignes;
+
+  var resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer CLEAPI' },
+    body: JSON.stringify({
+      model: 'llama3-8b-8192', max_tokens: 800, temperature: 0.1,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!resp.ok) throw new Error('Groq HTTP ' + resp.status);
+  var data = await resp.json();
+  var text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '[]';
+  var clean = text.replace(/```json|```/gi, '').trim();
+  var parsed = JSON.parse(clean);
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+function _marquerLignesAnomalies(anomalies) {
+  var byId = {};
+  anomalies.forEach(function(a) {
+    if (!byId[a.id]) byId[a.id] = [];
+    byId[a.id].push(a.message);
+  });
+  var tb = document.getElementById('planningTableBody');
+  if (!tb) return;
+  tb.querySelectorAll('tr').forEach(function(tr) {
+    var td = tr.querySelector('td:first-child');
+    if (!td) return;
+    var m = td.textContent.match(/#(\d+)/);
+    if (!m) return;
+    var id = parseInt(m[1]);
+    if (!byId[id]) return;
+    var old = td.querySelector('.badge-anomalie');
+    if (old) old.remove();
+    var badge = document.createElement('span');
+    badge.className = 'badge-anomalie';
+    badge.title = byId[id].join('\n');
+    badge.textContent = '⚠️ Anomalie IA';
+    td.appendChild(badge);
+  });
+}
+
+function _afficherAnomaliesPanel(anomalies, total) {
+  var panel = document.getElementById('anomaliesPanel');
+  if (!panel) return;
+  if (!anomalies.length) { panel.style.display = 'none'; panel.innerHTML = ''; return; }
+
+  var idsUniq = [...new Set(anomalies.map(function(a) { return a.id; }))];
+  var items = anomalies.map(function(a) {
+    return '<div class="anomaly-item" onclick="planningVoir(' + a.id + ')" title="Ouvrir #' + a.id + '">'
+      + '<span style="font-size:1rem;flex-shrink:0">' + (a.icon || '⚠️') + '</span>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:.7rem;font-weight:700;color:rgba(248,113,113,.8);margin-bottom:2px">Demande #' + a.id + '</div>'
+      + '<div style="font-size:.79rem;color:#fca5a5;line-height:1.4">' + a.message + '</div>'
+      + '<div style="font-size:.69rem;color:rgba(167,139,250,.65);margin-top:2px">' + (a.details || '') + '</div>'
+      + '</div>'
+      + '<span style="color:rgba(248,113,113,.35);font-size:.8rem;margin-left:auto">›</span>'
+      + '</div>';
+  }).join('');
+
+  panel.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:11px 18px;background:linear-gradient(135deg,rgba(239,68,68,.13),rgba(220,38,38,.18));border-bottom:1px solid rgba(239,68,68,.18)">'
+    + '<div style="font-size:.8rem;font-weight:800;color:#fca5a5;text-transform:uppercase;letter-spacing:.08em">⚠️ Anomalies IA détectées</div>'
+    + '<button onclick="fermerAnomaliesPanel()" style="background:none;border:1px solid rgba(239,68,68,.3);color:rgba(239,68,68,.7);border-radius:6px;padding:3px 10px;font-size:.74rem;cursor:pointer">✕ Fermer</button>'
+    + '</div>'
+    + '<div style="display:flex;gap:18px;flex-wrap:wrap;padding:13px 18px;border-bottom:1px solid rgba(239,68,68,.1)">'
+    + '<div style="display:flex;flex-direction:column;gap:2px"><strong style="font-size:1.3rem;font-weight:800;color:#f87171;line-height:1">' + anomalies.length + '</strong><span style="font-size:.67rem;color:rgba(248,113,113,.55);text-transform:uppercase">anomalie' + (anomalies.length > 1 ? 's' : '') + '</span></div>'
+    + '<div style="display:flex;flex-direction:column;gap:2px"><strong style="font-size:1.3rem;font-weight:800;color:#f87171;line-height:1">' + idsUniq.length + '</strong><span style="font-size:.67rem;color:rgba(248,113,113,.55);text-transform:uppercase">demande' + (idsUniq.length > 1 ? 's' : '') + '</span></div>'
+    + '<div style="display:flex;flex-direction:column;gap:2px"><strong style="font-size:1.3rem;font-weight:800;color:#f87171;line-height:1">' + total + '</strong><span style="font-size:.67rem;color:rgba(248,113,113,.55);text-transform:uppercase">analysées</span></div>'
+    + '</div>'
+    + '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto">' + items + '</div>';
+
+  panel.style.display = 'block';
+}
+
+window.fermerAnomaliesPanel = function() {
+  var panel = document.getElementById('anomaliesPanel');
+  if (panel) { panel.style.display = 'none'; panel.innerHTML = ''; }
+  window._scanAnomalies = [];
+  document.querySelectorAll('.badge-anomalie').forEach(function(b) { b.remove(); });
+};
+
+window.lancerScanAnomalies = async function() {
+  var data = planningDataCache;
+  if (!Array.isArray(data) || data.length === 0) {
+    planningToast('Aucune donnée — chargez d\'abord les demandes', 'err');
+    return;
+  }
+
+  var overlay   = document.getElementById('siriScanOverlay');
+  var statusEl  = document.getElementById('siriStatusText');
+  var subEl     = document.getElementById('siriSubText');
+  var fillEl    = document.getElementById('siriProgressFill');
+  var counterEl = document.getElementById('siriCounter');
+  var btn       = document.getElementById('btnScanAnomalies');
+
+  if (!overlay) { planningToast('Overlay Siri introuvable — vérifiez planning-admin.html', 'err'); return; }
+
+  if (btn) { btn.disabled = true; btn.style.opacity = '.5'; }
+  overlay.classList.add('visible');
+
+  function setS(s, sub, pct) {
+    if (statusEl)  statusEl.textContent = s;
+    if (subEl)     subEl.textContent    = sub;
+    if (fillEl)    fillEl.style.width   = pct + '%';
+    if (counterEl) counterEl.textContent = pct + '% — ' + data.length + ' demandes';
+  }
+
+  setS('INITIALISATION…', 'Démarrage du scanner IA…', 0);
+  await new Promise(function(r) { setTimeout(r, 400); });
+
+  setS('ANALYSE EN COURS', 'Vérification des règles métier…', 20);
+  await new Promise(function(r) { setTimeout(r, 500); });
+  var locales = _detecterAnomaliesLocales(data);
+
+  setS('ANALYSE EN COURS', locales.length + ' anomalie(s) locale(s) trouvée(s)…', 45);
+  await new Promise(function(r) { setTimeout(r, 400); });
+
+  setS('GROQ IA…', 'Envoi vers LLaMA 3…', 58);
+  var groq = [];
+  try {
+    var cibles = data.filter(function(d) { return d.statut === 'en_attente'; }).slice(0, 12);
+    if (!cibles.length) cibles = data.slice(0, 12);
+    setS('GROQ IA…', 'Analyse de ' + cibles.length + ' demandes…', 65);
+    groq = await _analyserAvecGroq(cibles);
+    setS('GROQ IA…', 'Groq : ' + groq.length + ' anomalie(s)', 82);
+    await new Promise(function(r) { setTimeout(r, 400); });
+  } catch (e) {
+    console.warn('Groq indisponible :', e.message);
+    setS('GROQ IA…', 'Groq indisponible — résultats locaux uniquement', 82);
+    await new Promise(function(r) { setTimeout(r, 500); });
+  }
+
+  setS('FINALISATION…', 'Compilation du rapport…', 92);
+  await new Promise(function(r) { setTimeout(r, 350); });
+
+  var seen = new Set();
+  var toutes = locales.concat(groq).filter(function(a) {
+    var k = a.id + '|' + a.message;
+    if (seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+
+  fillEl.style.width = '100%';
+  statusEl.textContent = toutes.length > 0
+    ? '⚠️ ' + toutes.length + ' ANOMALIE' + (toutes.length > 1 ? 'S' : '') + ' TROUVÉE' + (toutes.length > 1 ? 'S' : '')
+    : '✅ AUCUNE ANOMALIE';
+  subEl.textContent = toutes.length > 0 ? 'Rapport disponible ci-dessous.' : 'Toutes les demandes sont cohérentes.';
+  counterEl.textContent = 'Analyse terminée — ' + data.length + ' demandes traitées';
+  await new Promise(function(r) { setTimeout(r, 1100); });
+
+  overlay.style.transition = 'opacity .5s ease';
+  overlay.style.opacity = '0';
+  setTimeout(function() {
+    overlay.classList.remove('visible');
+    overlay.style.opacity = '';
+    overlay.style.transition = '';
+  }, 500);
+
+  window._scanAnomalies = toutes;
+  _afficherAnomaliesPanel(toutes, data.length);
+  _marquerLignesAnomalies(toutes);
+
+  if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+  planningToast(
+    toutes.length > 0 ? '⚠️ ' + toutes.length + ' anomalie(s) détectée(s)' : '✅ Aucune anomalie détectée',
+    toutes.length > 0 ? 'err' : 'ok'
+  );
+};
+
 // ── Exposition globale ────────────────────────────────────────────────────
 window.loadPlanningData      = loadPlanningData;
 window.filterPlanningTable   = filterPlanningTable;
@@ -1219,6 +1696,15 @@ window.planningRegen         = planningRegen;
 window.planningRetourListe   = planningRetourListe;
 window.detailChangerStatut   = detailChangerStatut;
 window.detailRegen           = detailRegen;
+window.detailGenererIA       = detailGenererIA;
+window.iaPublierPlanning     = iaPublierPlanning;
+window.iaRejeterPlanning     = iaRejeterPlanning;
+window.exportPlanningCSV     = function() {
+  var statut = planningFiltreML !== 'all' ? planningFiltreML : '';
+  var url = 'planning/listDemandeplanning.php?action=export_csv'
+          + (statut ? '&statut=' + encodeURIComponent(statut) : '');
+  window.location.href = url;
+};
 
 function filterByChip(chip, filter) {
   // Retirer la classe active de tous les chips

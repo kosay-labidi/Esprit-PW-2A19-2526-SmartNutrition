@@ -8,6 +8,15 @@ require_once(__DIR__ . '/../../../controller/Demandeplanning.controller.php');
 
 $demandeC = new DemandeplanningController();
 
+// ── EXPORT CSV : téléchargement direct, AVANT tout header JSON ──────────
+if (isset($_GET['action']) && $_GET['action'] === 'export_csv') {
+    ob_end_clean();
+    $statut = isset($_GET['statut']) && in_array($_GET['statut'], ['en_attente','approuve','rejete'], true)
+        ? $_GET['statut'] : null;
+    $demandeC->exportCSV($statut);
+    exit;
+}
+
 // ── MODE JSON : appelé par le SPA admin (planning-admin.js) ──────────────
 // Détection : header X-Requested-With ou paramètre ?json=1
 $isAjax = (
@@ -209,6 +218,10 @@ ob_end_clean();
                 <option value="rejete">❌ Rejetés</option>
               </select>
               <button onclick="location.reload()" class="btn-sm" title="Actualiser">🔄</button>
+              <button onclick="exportCSV()" class="btn-sm" title="Exporter en CSV"
+                style="background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.3);padding:7px 14px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer">
+                ⬇️ Export CSV
+              </button>
             </div>
           </div>
 
@@ -339,6 +352,12 @@ ob_end_clean();
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../js/admin.js"></script>
 <script>
+function exportCSV() {
+  const statut = document.getElementById('filterStatut').value;
+  const url = 'listDemandeplanning.php?action=export_csv' + (statut ? '&statut=' + encodeURIComponent(statut) : '');
+  window.location.href = url;
+}
+
 function filterTable() {
   const val    = document.getElementById('searchInput').value.toLowerCase();
   const statut = document.getElementById('filterStatut').value;

@@ -16,6 +16,8 @@
           <button class="pill-btn active" data-view="home">🏠 Accueil</button>
           <button class="pill-btn" data-view="add">➕ Nouvelle Demande</button>
           <button class="pill-btn" data-view="list">📋 Mes Demandes</button>
+          <button class="pill-btn" data-view="coach">🤖 Coach IA</button>
+          <button class="pill-btn" data-view="restaurants">🗺️ Restaurants</button>
         </div>
       </div>
       <!-- Notification Bell -->
@@ -530,6 +532,134 @@
     #notifBellBtn,#notifBellBtn *,
     #notifDropdown button,#notifDropdown [onclick],
     .notif-dismiss,.notif-dd-clear,.notif-dd-see-all{cursor:pointer!important}
+
+    /* ══ COACH IA CHAT ══ */
+    .coach-wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:0}
+    .coach-header{background:linear-gradient(135deg,var(--violet),var(--blue));border-radius:16px 16px 0 0;padding:20px 24px;display:flex;align-items:center;gap:14px}
+    .coach-avatar{width:44px;height:44px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+    .coach-header-info h3{color:#fff;font-size:1rem;font-weight:700;margin:0 0 3px}
+    .coach-header-info p{color:rgba(255,255,255,.75);font-size:.78rem;margin:0}
+    .coach-selector{background:var(--card-bg);border:1px solid rgba(91,62,150,.2);border-radius:0;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .coach-selector label{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+    .coach-selector select{flex:1;min-width:180px;padding:7px 12px;border:1.5px solid rgba(91,62,150,.25);border-radius:9px;background:var(--card-bg);color:var(--text);font-size:.85rem;outline:none;cursor:pointer}
+    .coach-messages{background:var(--card-bg);border-left:1px solid rgba(91,62,150,.2);border-right:1px solid rgba(91,62,150,.2);min-height:340px;max-height:480px;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+    .coach-msg{display:flex;gap:10px;align-items:flex-start;animation:slideIn .25s ease}
+    .coach-msg.user{flex-direction:row-reverse}
+    .coach-msg-bubble{max-width:75%;padding:12px 16px;border-radius:16px;font-size:.87rem;line-height:1.65}
+    .coach-msg.bot .coach-msg-bubble{background:rgba(91,62,150,.1);border:1px solid rgba(91,62,150,.2);border-bottom-left-radius:4px;color:var(--text);white-space:pre-wrap}
+    .coach-msg.user .coach-msg-bubble{background:linear-gradient(135deg,var(--violet),var(--blue));color:#fff;border-bottom-right-radius:4px}
+    .coach-msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(91,62,150,.12)}
+    .coach-typing{display:flex;align-items:center;gap:6px;padding:10px 14px;background:rgba(91,62,150,.07);border-radius:12px;width:fit-content}
+    .coach-typing span{width:7px;height:7px;background:var(--violet);border-radius:50%;animation:typing 1.2s ease-in-out infinite}
+    .coach-typing span:nth-child(2){animation-delay:.2s}
+    .coach-typing span:nth-child(3){animation-delay:.4s}
+    @keyframes typing{0%,80%,100%{transform:scale(1);opacity:.5}40%{transform:scale(1.2);opacity:1}}
+    .coach-input-bar{background:var(--card-bg);border:1px solid rgba(91,62,150,.2);border-top:none;border-radius:0 0 16px 16px;padding:14px 16px;display:flex;gap:10px;align-items:flex-end}
+    .coach-input{flex:1;padding:11px 16px;border:1.5px solid rgba(91,62,150,.25);border-radius:12px;background:rgba(91,62,150,.05);color:var(--text);font-family:'Lato',sans-serif;font-size:.9rem;resize:none;outline:none;min-height:44px;max-height:120px;transition:border-color .2s}
+    .coach-input:focus{border-color:var(--violet)}
+    .coach-send{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--violet),var(--blue));border:none;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s;flex-shrink:0}
+    .coach-send:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(91,62,150,.4)}
+    .coach-send:disabled{opacity:.5;cursor:not-allowed}
+    .coach-quick-btns{display:flex;flex-wrap:wrap;gap:7px;padding:10px 16px 4px;background:var(--card-bg);border-left:1px solid rgba(91,62,150,.2);border-right:1px solid rgba(91,62,150,.2)}
+    .coach-quick-btn{padding:5px 13px;border-radius:16px;border:1.5px solid rgba(91,62,150,.3);background:rgba(91,62,150,.06);color:var(--violet);font-size:.75rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Lato',sans-serif}
+    .coach-quick-btn:hover{background:rgba(91,62,150,.15)}
+    .coach-empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+    .coach-empty-state .big-icon{font-size:3rem;margin-bottom:12px}
+    .coach-empty-state h3{font-size:1rem;color:var(--text);margin:0 0 6px}
+    .coach-empty-state p{font-size:.83rem;margin:0}
+
+    /* ══ LECTURE VOCALE ══ */
+    .tts-bar{display:flex;align-items:center;gap:10px;padding:10px 0 4px;flex-wrap:wrap}
+    .tts-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:20px;border:1.5px solid rgba(91,62,150,.35);background:rgba(91,62,150,.08);color:var(--violet);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Lato',sans-serif}
+    .tts-btn:hover{background:rgba(91,62,150,.18);transform:translateY(-1px)}
+    .tts-btn.speaking{background:linear-gradient(135deg,var(--violet),var(--blue));color:#fff;border-color:transparent;animation:ttsPulse 1.5s ease-in-out infinite}
+    .tts-btn.speaking:hover{transform:none}
+    @keyframes ttsPulse{0%,100%{box-shadow:0 0 0 0 rgba(91,62,150,.4)}50%{box-shadow:0 0 0 8px rgba(91,62,150,0)}}
+    /* ══ MÉTÉO SPORT ══ */
+.meteo-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.meteo-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;border:1.5px solid rgba(74,168,216,.4);background:rgba(74,168,216,.08);color:#4aa8d8;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Lato',sans-serif}
+.meteo-btn:hover{background:rgba(74,168,216,.18);transform:translateY(-1px)}
+.meteo-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.meteo-panel{border-radius:14px;overflow:hidden;margin-bottom:14px;animation:slideIn .3s ease}
+.meteo-panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;font-weight:700;font-size:.85rem}
+.meteo-panel-header.good{background:linear-gradient(135deg,#1a73e8,#0d47a1);color:#fff}
+.meteo-panel-header.rain{background:linear-gradient(135deg,#546e7a,#37474f);color:#fff}
+.meteo-panel-header.wind{background:linear-gradient(135deg,#7b6eea,#5c4fbf);color:#fff}
+.meteo-panel-body{background:var(--card-bg);border:1.5px solid rgba(74,168,216,.25);border-top:none;border-radius:0 0 14px 14px;padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.meteo-kv{display:flex;flex-direction:column;gap:2px}
+.meteo-kv-lbl{font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.meteo-kv-val{font-size:.92rem;color:var(--text);font-weight:700}
+.meteo-conseil{grid-column:1/-1;padding:10px 14px;border-radius:9px;font-size:.83rem;line-height:1.5;font-weight:600}
+.meteo-conseil.good{background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.25);color:#2ecc71}
+.meteo-conseil.rain{background:rgba(84,110,122,.1);border:1px solid rgba(84,110,122,.3);color:#90a4ae}
+.meteo-conseil.alerte{background:rgba(231,76,60,.07);border:1px solid rgba(231,76,60,.25);color:#e74c3c}
+@media(max-width:600px){.meteo-panel-body{grid-template-columns:1fr}}
+
+/* ══ QR CODE ══ */
+.qr-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:18px;border:1.5px solid rgba(46,204,113,.5);background:rgba(46,204,113,.08);color:#2ecc71;font-size:.77rem;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;transition:all .2s}
+.qr-btn:hover{background:rgba(46,204,113,.18);transform:translateY(-1px)}
+.qr-panel{background:var(--card-bg);border:1.5px solid rgba(46,204,113,.3);border-radius:14px;padding:18px 20px;margin-bottom:14px;animation:slideIn .3s ease;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.qr-panel canvas,.qr-panel img{border-radius:8px;background:#fff;padding:8px}
+.qr-info{flex:1;min-width:180px}
+.qr-info-title{font-weight:700;font-size:.9rem;color:var(--text);margin-bottom:4px}
+.qr-info-sub{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:10px}
+.qr-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;border:1.5px solid rgba(46,204,113,.4);background:rgba(46,204,113,.1);color:#2ecc71;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif}
+.qr-dl-btn:hover{background:rgba(46,204,113,.22)}
+@media(max-width:500px){.qr-panel{flex-direction:column;align-items:flex-start}}
+
+    /* ══ RESTAURANTS VIEW ══ */
+    .resto-wrap{animation:slideIn .35s cubic-bezier(.4,0,.2,1)}
+    .resto-map-box{position:relative;width:100%;height:400px;border-radius:16px;overflow:hidden;border:1.5px solid rgba(91,62,150,.22);margin-bottom:18px;background:#0f2318}
+    #restoMap{width:100%;height:100%}
+    .resto-map-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(10,20,15,.82);backdrop-filter:blur(8px);z-index:50;border-radius:16px;transition:opacity .4s}
+    .resto-map-overlay.hidden{opacity:0;pointer-events:none}
+    .resto-map-overlay-icon{font-size:3.2rem;animation:bounceIn .5s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes bounceIn{from{transform:scale(0) rotate(-15deg)}to{transform:scale(1) rotate(0)}}
+    .resto-map-overlay h3{color:#fff;font-size:1.1rem;font-weight:700;margin:0;text-align:center}
+    .resto-map-overlay p{color:rgba(255,255,255,.65);font-size:.82rem;margin:0;text-align:center;max-width:270px}
+    .btn-geoloc{padding:11px 26px;background:linear-gradient(135deg,var(--violet),var(--blue));border:none;border-radius:50px;color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:transform .2s,box-shadow .3s;font-family:'Lato',sans-serif;box-shadow:0 6px 20px rgba(91,62,150,.4)}
+    .btn-geoloc:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px rgba(91,62,150,.5)}
+    .btn-geoloc:disabled{opacity:.6;cursor:not-allowed}
+    .resto-select-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--card-bg);border:1.5px solid rgba(91,62,150,.18);border-radius:12px}
+    .resto-select-label{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+    .resto-select{background:rgba(91,62,150,.08);border:1.5px solid rgba(91,62,150,.22);border-radius:10px;padding:8px 14px;color:var(--text);font-family:'Lato',sans-serif;font-size:.88rem;outline:none;cursor:pointer}
+    .btn-resto-search{padding:8px 18px;background:linear-gradient(135deg,var(--violet),var(--blue));border:none;border-radius:10px;color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;transition:opacity .2s}
+    .btn-resto-search:disabled{opacity:.5;cursor:not-allowed}
+    .resto-ia-banner{background:linear-gradient(135deg,rgba(91,62,150,.12),rgba(58,134,196,.08));border:1.5px solid rgba(91,62,150,.2);border-radius:14px;padding:18px 20px;margin-bottom:18px;position:relative;overflow:hidden}
+    .resto-ia-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--violet),var(--blue))}
+    .resto-ia-banner-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .resto-ia-banner-icon{font-size:1.6rem}
+    .resto-ia-banner-title{font-size:.95rem;font-weight:700;color:var(--text)}
+    .resto-ia-banner-sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+    .resto-ia-tips{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px;margin-top:4px}
+    .resto-ia-tip{background:rgba(91,62,150,.07);border:1px solid rgba(91,62,150,.15);border-radius:10px;padding:11px 13px}
+    .resto-ia-tip strong{display:block;font-size:.8rem;color:var(--text);margin-bottom:3px}
+    .resto-ia-tip span{font-size:.77rem;color:var(--muted);line-height:1.5}
+    .resto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-bottom:20px}
+    .resto-card{background:var(--card-bg);border:1.5px solid rgba(91,62,150,.18);border-radius:14px;padding:18px;cursor:pointer;transition:transform .22s,border-color .22s,box-shadow .22s;position:relative;overflow:hidden}
+    .resto-card:hover{transform:translateY(-3px);border-color:rgba(91,62,150,.5);box-shadow:0 10px 28px rgba(91,62,150,.18)}
+    .resto-card-accent{position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity .22s;background:linear-gradient(90deg,var(--violet),var(--blue))}
+    .resto-card:hover .resto-card-accent{opacity:1}
+    .resto-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+    .resto-card-name{font-size:.97rem;font-weight:700;color:var(--text);margin:0 0 3px;line-height:1.3}
+    .resto-card-type{font-size:.73rem;color:var(--muted)}
+    .resto-card-dist{font-size:.73rem;color:var(--blue);font-weight:700;white-space:nowrap}
+    .resto-compat-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:50px;font-size:.72rem;font-weight:700;margin-bottom:9px}
+    .compat-ok{background:rgba(46,204,113,.14);color:#2ecc71;border:1px solid rgba(46,204,113,.3)}
+    .compat-partiel{background:rgba(243,156,18,.12);color:#f1a208;border:1px solid rgba(243,156,18,.3)}
+    .compat-non{background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.3)}
+    .resto-card-ia{background:rgba(91,62,150,.07);border-radius:9px;padding:9px 11px;font-size:.78rem;color:var(--muted);line-height:1.55;margin-bottom:9px}
+    .resto-card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+    .resto-tag{padding:2px 8px;border-radius:50px;background:rgba(91,62,150,.1);color:var(--muted);font-size:.69rem;border:1px solid rgba(91,62,150,.18)}
+    .resto-card-footer{display:flex;align-items:center;justify-content:space-between}
+    .resto-stars{color:#f1c40f;font-size:.8rem}
+    .resto-open-badge{font-size:.72rem;font-weight:700}
+    .resto-open-badge.open{color:#2ecc71}
+    .resto-open-badge.closed{color:#e74c3c}
+    .resto-loading{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:60px 20px;text-align:center;color:var(--muted)}
+    .resto-loader-spin{width:36px;height:36px;border:3px solid rgba(91,62,150,.2);border-top-color:var(--violet);border-radius:50%;animation:spin .8s linear infinite}
+    .resto-empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
+    .resto-empty-state .big-icon{font-size:3rem;display:block;margin-bottom:12px}
   </style>
 
   <script>
@@ -1859,6 +1989,7 @@
             '<div><h2 style="font-size:1.3rem;font-weight:700;color:var(--text);margin:0 0 2px">📅 Planning #' + idDemande + '</h2>' +
             '<p style="color:var(--muted);font-size:.8rem;margin:0">Planning nutritionnel personnalisé</p></div>' +
             '<span class="badge-approuve">✅ Approuvé</span>' +
+            '<div class="tts-bar"><button class="tts-btn" id="ttsBtnMain" onclick="planningApp.ttsLire('+idDemande+')">🔊 Écouter le planning</button><button class="qr-btn" onclick="planningApp.pwOuvrirQR('+idDemande+')">📱 QR Code</button></div>' +
           '</div>' +
           '<div id="pwStats" style="margin-top:14px"></div>' +
           '<div id="pwToolbar"></div>' +
@@ -1901,8 +2032,9 @@
           var semaines=[];for(var si=0;si<dates.length;si+=7)semaines.push({key:dates[si],dates7:dates.slice(si,si+7)});
           var currentSem=0,vis={'petit-dejeuner':true,dejeuner:true,diner:true,sport:true,sommeil:true};
           var DNs=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'],todayStr=new Date().toISOString().slice(0,10);
+          
           function renderToolbar(){if(!elToolbar)return;var sh='<div class="pw-wtabs">';semaines.forEach(function(s,i){sh+='<button class="pw-sem-btn'+(i===currentSem?' active':'')+'" onclick="planningApp._pwW('+i+')">Sem. '+(i+1)+'</button>';});sh+='</div>';var chips='<button class="pw-chip cp'+(!vis['petit-dejeuner']?' off':'')+'" onclick="planningApp._pwF(\'petit-dejeuner\')"><span class="pw-chip-dot" style="background:#e8a838"></span>Petit-déj</button><button class="pw-chip cd'+(!vis['dejeuner']?' off':'')+'" onclick="planningApp._pwF(\'dejeuner\')"><span class="pw-chip-dot" style="background:#3db87a"></span>Déjeuner</button><button class="pw-chip cn'+(!vis['diner']?' off':'')+'" onclick="planningApp._pwF(\'diner\')"><span class="pw-chip-dot" style="background:#7b6eea"></span>Dîner</button><button class="pw-chip cs'+(!vis['sport']?' off':'')+'" onclick="planningApp._pwF(\'sport\')"><span class="pw-chip-dot" style="background:#e85757"></span>Sport</button><button class="pw-chip cl'+(!vis['sommeil']?' off':'')+'" onclick="planningApp._pwF(\'sommeil\')"><span class="pw-chip-dot" style="background:#4aa8d8"></span>Sommeil</button>';
-          elToolbar.innerHTML='<div class="pw-toolbar">'+sh+'<div class="pw-chips">'+chips+'</div><span class="pw-kcal-inf">Objectif : <strong>'+(moyK?moyK.toLocaleString('fr-FR')+' kcal/j':'—')+'</strong></span></div>';}
+          elToolbar.innerHTML='<div class="pw-toolbar">'+sh+'<div class="pw-chips">'+chips+'</div><span class="pw-kcal-inf">Objectif : <strong>'+(moyK?moyK.toLocaleString('fr-FR')+' kcal/j':'—')+'</strong></span><div style="margin-left:auto;display:flex;gap:7px;align-items:center;"><button class="meteo-btn" id="pw-meteo-btn" onclick="planningApp.pwOuvrirMeteo('+idDemande+',window._pwGroupes,window._pwTodayStr)">🌤️ Météo & Sport</button><button style="padding:5px 13px;border-radius:18px;border:1.5px solid rgba(26,115,232,.5);background:rgba(26,115,232,.1);color:#1a73e8;font-size:.77rem;font-weight:700;cursor:pointer;" onclick="pwOuvrirTraduction('+idDemande+')">🌐 Traduire</button></div></div>';}
           function renderGrid(){if(!elGrid)return;var sem=semaines[currentSem];if(!sem){elGrid.innerHTML='';return;}var w7=sem.dates7;function kcalJ(ds){var g=groupes[ds];if(!g)return 0;var t=0;ORDRE.forEach(function(k){(g[k]||[]).forEach(function(d){t+=parseKcal(d);});});return t;}
           var html='<div class="pw-grid-wrap"><div class="pw-grid"><div class="pw-gh-corner"></div>';
           w7.forEach(function(ds){var d=new Date(ds+'T00:00:00'),isT=ds===todayStr,dn=isNaN(d)?'?':DNs[d.getDay()],dd=isNaN(d)?'':d.getDate(),mo=isNaN(d)?'':'/'+(d.getMonth()+1),kj=kcalJ(ds);html+='<div class="pw-gh-day'+(isT?' today':'')+'"><div class="pw-gh-day-name">'+dn+'</div><div class="pw-gh-day-num">'+dd+mo+'</div>'+(kj?'<div class="pw-gh-day-kcal">'+kj.toLocaleString('fr-FR')+' kcal</div>':'')+'</div>';});
@@ -1915,8 +2047,68 @@
           html+='</div></div>';elGrid.innerHTML=html;}
           function renderSummary(){if(!elSummary)return;var sem=semaines[currentSem];if(!sem){elSummary.innerHTML='';return;}var w7=sem.dates7,semK=0,semE=0,semPdj=0,semSp=0;w7.forEach(function(ds){var g=groupes[ds];if(!g)return;ORDRE.forEach(function(k){(g[k]||[]).forEach(function(d){semK+=parseKcal(d);semE+=parseEur(d);});});if(g['petit-dejeuner'].length)semPdj++;semSp+=g.sport.length;});elSummary.innerHTML='<div class="pw-footer"><div class="pw-fc"><div class="pw-fc-lbl">🥗 Calories sem.</div><div class="pw-fc-val">'+(semK?semK.toLocaleString('fr-FR')+' kcal':'—')+'</div></div><div class="pw-fc"><div class="pw-fc-lbl">💰 Budget sem.</div><div class="pw-fc-val">'+(semE?semE.toFixed(2)+' €':'—')+'</div></div><div class="pw-fc"><div class="pw-fc-lbl">🍳 Petit-déjeuners</div><div class="pw-fc-val">'+semPdj+' repas</div></div><div class="pw-fc"><div class="pw-fc-lbl">🏃 Séances sport</div><div class="pw-fc-val">'+semSp+' séances</div></div></div>';}
           function doRender(){renderToolbar();renderGrid();renderSummary();}
+          // Expose groupes + todayStr pour onclick inline du bouton météo
+          window._pwGroupes  = groupes;
+          window._pwTodayStr = todayStr;
           window.planningApp._pwW=function(idx){currentSem=idx;doRender();window.scrollTo({top:0,behavior:'smooth'});};
           window.planningApp._pwF=function(key){vis[key]=!vis[key];doRender();};
+          // 🌐 TRADUCTION
+          var PW_LANGUES=[{code:'ar',label:'🇸🇦 Arabe',dir:'rtl'},{code:'en',label:'🇬🇧 Anglais',dir:'ltr'},{code:'es',label:'🇪🇸 Espagnol',dir:'ltr'},{code:'de',label:'🇩🇪 Allemand',dir:'ltr'},{code:'it',label:'🇮🇹 Italien',dir:'ltr'},{code:'pt',label:'🇧🇷 Portugais',dir:'ltr'}];
+          window.pwOuvrirTraduction=function(id){
+            var old=document.getElementById('pw-trad-'+id);
+            if(old){old.remove();return;}
+            var anchor=elToolbar.parentNode;
+            var box=document.createElement('div');
+            box.id='pw-trad-'+id;
+            box.style.cssText='background:var(--card-bg);border:1.5px solid rgba(26,115,232,.5);border-radius:12px;padding:13px 15px;margin-bottom:12px;animation:slideIn .25s ease;';
+            box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.83rem;color:#1a73e8;margin-bottom:9px;">🌐 Choisir la langue<button onclick="document.getElementById(\'pw-trad-'+id+'\').remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;">✕</button></div>'+
+              '<div style="display:flex;flex-wrap:wrap;gap:7px;">'+PW_LANGUES.map(function(l){return '<button onclick="pwTraduire('+id+',\''+l.code+'\',\''+l.label+'\',\''+l.dir+'\')" style="padding:5px 13px;border-radius:16px;border:1.5px solid rgba(26,115,232,.4);background:rgba(26,115,232,.08);color:#1a73e8;font-size:.77rem;font-weight:700;cursor:pointer;">'+l.label+'</button>';}).join('')+'</div>';
+            anchor.insertBefore(box,elToolbar.nextSibling);
+          };
+          window.pwTraduire=function(id,code,label,dir){
+            var picker=document.getElementById('pw-trad-'+id);if(picker)picker.remove();
+            var old=document.getElementById('pw-trad-res-'+id);if(old)old.remove();
+            var anchor=elToolbar.parentNode;
+            var loader=document.createElement('div');
+            loader.id='pw-trad-res-'+id;
+            loader.style.cssText='display:flex;align-items:center;gap:10px;padding:16px;border:1.5px dashed rgba(26,115,232,.4);border-radius:10px;margin-bottom:12px;font-size:.83rem;';
+            loader.innerHTML='<span style="width:15px;height:15px;border:2.5px solid rgba(26,115,232,.15);border-top-color:#1a73e8;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;display:inline-block;"></span>Traduction vers <strong style="margin-left:4px;">'+label+'</strong>…';
+            anchor.insertBefore(loader,elToolbar.nextSibling);
+            fetch(API_BASE+'ai_translate.php?id='+id+'&langue='+code,{headers:{'X-Requested-With':'XMLHttpRequest'}})
+            .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+            .then(function(res){
+              if(!res.success)throw new Error(res.error||'Erreur');
+              var parDate={};
+              res.lignes.forEach(function(l){if(!parDate[l.date])parDate[l.date]=[];parDate[l.date].push(l);});
+              var isRTL=dir==='rtl';
+              var h='<div id="pw-trad-res-'+id+'" dir="'+dir+'" style="border:1.5px solid rgba(26,115,232,.35);border-radius:12px;margin-bottom:12px;overflow:hidden;">';
+              h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:linear-gradient(135deg,#1a73e8,#0d47a1);flex-wrap:wrap;gap:6px;">';
+              h+='<span style="color:#fff;font-weight:700;font-size:.78rem;">🌐 '+label+' — '+res.nb+' lignes</span>';
+              h+='<div style="display:flex;gap:6px;"><button onclick="pwOuvrirTraduction('+id+')" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:7px;padding:4px 9px;font-size:.72rem;cursor:pointer;">🔄 Autre langue</button>';
+              h+='<button onclick="document.getElementById(\'pw-trad-res-'+id+'\').remove()" style="background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;font-size:.9rem;">✕</button></div></div>';
+              Object.entries(parDate).forEach(function(e){
+                var date=e[0],lignes=e[1];
+                var d=new Date(date+'T00:00:00');
+                var dateAff=isNaN(d)?date:d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+                h+='<div style="border-bottom:1px solid rgba(26,115,232,.08);">';
+                h+='<div style="background:rgba(26,115,232,.06);padding:8px 15px;font-weight:700;font-size:.85rem;color:#1a73e8;text-transform:capitalize;direction:ltr;text-align:left;">📅 '+dateAff+'</div>';
+                h+='<div style="padding:7px 10px;display:flex;flex-direction:column;gap:5px;">';
+                lignes.forEach(function(l){
+                  var ico={repas:'🍽️',sport:'🏃',sommeil:'🌙',conseil:'💡'}[l.type_activite]||'📋';
+                  var rowDir=isRTL?'rtl':'ltr';
+                  h+='<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:8px;background:rgba(26,115,232,.04);flex-direction:'+(isRTL?'row-reverse':'row')+';">';
+                  h+='<span style="background:rgba(26,115,232,.12);color:#1a73e8;border-radius:6px;padding:3px 8px;font-size:.75rem;font-weight:700;white-space:nowrap;flex-shrink:0;">'+ico+' '+l.type_activite+'</span>';
+                  h+='<span style="flex:1;color:var(--text);line-height:1.7;direction:'+dir+';text-align:'+(isRTL?'right':'left')+';font-size:'+(isRTL?'1rem':'.87rem')+';font-family:'+(isRTL?'\'Segoe UI\',Tahoma,Arial,sans-serif':'inherit')+';">'+l.description+'</span></div>';
+                });
+                h+='</div></div>';
+              });
+              h+='</div>';
+              loader.outerHTML=h;
+            })
+            .catch(function(err){
+              loader.outerHTML='<div id="pw-trad-res-'+id+'" style="background:rgba(231,76,60,.06);border:1.5px solid rgba(231,76,60,.35);border-radius:10px;padding:11px 13px;margin-bottom:12px;color:#e74c3c;font-size:.8rem;display:flex;align-items:center;gap:8px;">❌ '+err.message+'<button onclick="pwOuvrirTraduction('+id+')" style="margin-left:8px;padding:3px 10px;background:#1a73e8;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.76rem;">Réessayer</button></div>';
+            });
+          };
           doRender();
         })
         .catch(function(err){if(elGrid)elGrid.innerHTML='<div class="empty-state"><div class="icon">❌</div><h3>Erreur de chargement</h3><p>'+escHtml(err.message)+'</p><button class="btn-add" style="margin-top:16px" onclick="planningApp.showPlanning('+idDemande+')">🔄 Réessayer</button></div>';});
@@ -1955,8 +2147,422 @@
       if(view==='home') renderHome();
       else if(view==='add') renderAddForm();
       else if(view==='list') renderList();
+      else if(view==='coach') renderCoach();
+      else if(view==='restaurants') renderRestaurants();
       else renderHome();
     }
+
+    /* ══════════════════════════════════════════════
+       RESTAURANTS — Carte IA
+    ══════════════════════════════════════════════ */
+    var _restoState = {
+      userLat: null, userLon: null,
+      demandeId: null, demande: null,
+      restaurants: [], iaAnalysis: null,
+      map: null, markers: [], radius: 1500
+    };
+
+    function renderRestaurants() {
+      // Skeleton immédiat
+      contentEl.innerHTML =
+        '<div class="resto-wrap">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">' +
+        '  <div><h2 style="font-size:1.35rem;font-weight:700;color:var(--text);margin:0">🗺️ Restaurants & Régime</h2>' +
+        '  <p style="color:var(--muted);font-size:.85rem;margin:4px 0 0">L\'IA analyse les restaurants proches selon votre régime</p></div>' +
+        '  <button class="btn-back" onclick="planningApp.showView(\'home\')">← Retour</button>' +
+        '</div>' +
+        '<div class="resto-map-box"><div id="restoMap"></div>' +
+        '  <div class="resto-map-overlay" id="restoMapOverlay">' +
+        '    <span class="resto-map-overlay-icon">📍</span>' +
+        '    <h3>Trouvez des restaurants compatibles</h3>' +
+        '    <p>Activez votre localisation pour que l\'IA suggère des établissements adaptés à votre régime</p>' +
+        '    <button class="btn-geoloc" id="btnGeoloc" onclick="restoStartGeoloc()">📡 Activer la localisation</button>' +
+        '  </div>' +
+        '</div>' +
+        '<div id="restoSelectBar" style="display:none" class="resto-select-bar">' +
+        '  <span class="resto-select-label">📋 Profil&nbsp;:</span>' +
+        '  <select class="resto-select" id="restoDemandeSelect" onchange="restoOnDemandeChange(this.value)"><option>Chargement…</option></select>' +
+        '  <span class="resto-select-label" style="margin-left:8px">📏 Rayon&nbsp;:</span>' +
+        '  <select class="resto-select" id="restoRadiusSelect" onchange="restoOnRadiusChange(this.value)">' +
+        '    <option value="500">500 m</option><option value="1000">1 km</option>' +
+        '    <option value="1500" selected>1,5 km</option><option value="3000">3 km</option><option value="5000">5 km</option>' +
+        '  </select>' +
+        '  <button class="btn-resto-search" id="btnRestoSearch" onclick="restoLancer()" disabled>🔍 Analyser</button>' +
+        '</div>' +
+        '<div id="restoIaBanner"></div>' +
+        '<div id="restoCards"></div>' +
+        '</div>';
+
+      // Charger Leaflet si absent
+      restoLoadLeaflet(function() {
+        // Charger les demandes approuvées
+        if (allDemandes.length > 0) {
+          restoPopulateSelect(allDemandes.filter(function(d){ return d.statut === 'approuve'; }));
+        } else {
+          apiGet(API_BASE + 'listMesDemandes.php').then(function(data) {
+            if (Array.isArray(data)) { allDemandes = data; filteredDemandes = data; }
+            restoPopulateSelect(allDemandes.filter(function(d){ return d.statut === 'approuve'; }));
+          }).catch(function(){});
+        }
+      });
+    }
+
+    function restoLoadLeaflet(cb) {
+      if (window.L) { cb(); return; }
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+      var script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.onload = cb;
+      document.head.appendChild(script);
+    }
+
+    function restoPopulateSelect(approuvees) {
+      var sel = document.getElementById('restoDemandeSelect');
+      if (!sel) return;
+      if (!approuvees.length) {
+        sel.innerHTML = '<option>Aucune demande approuvée</option>';
+        return;
+      }
+      sel.innerHTML = approuvees.map(function(d) {
+        return '<option value="'+d.id+'">Demande #'+d.id+' — '+d.calories+' kcal / '+parseFloat(d.budget||0).toFixed(0)+' TND</option>';
+      }).join('');
+      _restoState.demandeId = approuvees[0].id;
+      _restoState.demande   = approuvees[0];
+    }
+
+    function restoOnDemandeChange(val) {
+      _restoState.demandeId = parseInt(val) || null;
+      _restoState.demande   = allDemandes.find(function(d){ return d.id == val; }) || null;
+    }
+
+    function restoOnRadiusChange(val) {
+      _restoState.radius = parseInt(val) || 1500;
+      if (_restoState.map && _restoState.userLat) restoUpdateCircle();
+    }
+
+    var _restoCircle = null;
+    function restoUpdateCircle() {
+      if (_restoCircle) _restoCircle.remove();
+      _restoCircle = L.circle([_restoState.userLat, _restoState.userLon], {
+        radius: _restoState.radius,
+        color: '#7c3aed', fillColor: '#7c3aed', fillOpacity: 0.07, weight: 2, dashArray: '6,4'
+      }).addTo(_restoState.map);
+    }
+
+    function restoStartGeoloc() {
+      var btn = document.getElementById('btnGeoloc');
+      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Localisation…'; }
+
+      if (!navigator.geolocation) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '📡 Réessayer'; }
+        restoShowManualInput();
+        return;
+      }
+
+      // Fallback auto après 6s si le navigateur bloque
+      var safetyTimer = setTimeout(function() {
+        if (btn) { btn.disabled = false; btn.innerHTML = '📡 Réessayer'; }
+        restoShowManualInput();
+      }, 6000);
+
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          clearTimeout(safetyTimer);
+          _restoState.userLat = pos.coords.latitude;
+          _restoState.userLon = pos.coords.longitude;
+          restoLoadLeaflet(function() {
+            restoInitMap();
+            var overlay = document.getElementById('restoMapOverlay');
+            if (overlay) { overlay.style.transition = 'opacity .4s'; overlay.style.opacity = '0'; setTimeout(function(){ overlay.style.display = 'none'; }, 420); }
+            var bar = document.getElementById('restoSelectBar');
+            if (bar) bar.style.display = 'flex';
+            var btnSearch = document.getElementById('btnRestoSearch');
+            if (btnSearch) btnSearch.disabled = false;
+            showToast('📍 Localisation OK — sélectionnez un profil puis cliquez Analyser', 'success');
+          });
+        },
+        function() {
+          clearTimeout(safetyTimer);
+          if (btn) { btn.disabled = false; btn.innerHTML = '📡 Réessayer'; }
+          restoShowManualInput();
+        },
+        { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false }
+      );
+    }
+
+    function restoShowManualInput() {
+      var existing = document.getElementById('restoManualInput');
+      if (existing) { existing.style.display = 'flex'; return; }
+      var overlay = document.getElementById('restoMapOverlay');
+      if (!overlay) return;
+      var manual = document.createElement('div');
+      manual.id = 'restoManualInput';
+      manual.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:6px';
+      manual.innerHTML =
+        '<p style="color:rgba(255,255,255,.6);font-size:.78rem;margin:0;text-align:center">⚠️ Géolocalisation refusée — entrez vos coordonnées :</p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">' +
+        '  <input id="restoManLat" placeholder="Latitude (ex: 36.8190)" type="number" step="any" style="padding:7px 12px;border-radius:8px;border:1.5px solid rgba(91,62,150,.5);background:rgba(255,255,255,.08);color:#fff;font-size:.82rem;width:155px;font-family:Lato,sans-serif">' +
+        '  <input id="restoManLon" placeholder="Longitude (ex: 10.1658)" type="number" step="any" style="padding:7px 12px;border-radius:8px;border:1.5px solid rgba(91,62,150,.5);background:rgba(255,255,255,.08);color:#fff;font-size:.82rem;width:155px;font-family:Lato,sans-serif">' +
+        '</div>' +
+        '<button onclick="restoApplyManual()" style="padding:8px 22px;background:linear-gradient(135deg,#7c3aed,#3a86c4);border:none;border-radius:50px;color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Lato,sans-serif">✅ Valider la position</button>';
+      overlay.appendChild(manual);
+    }
+
+    function restoApplyManual() {
+      var lat = parseFloat(document.getElementById('restoManLat').value);
+      var lon = parseFloat(document.getElementById('restoManLon').value);
+      if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        showToast('⚠️ Coordonnées invalides', 'error'); return;
+      }
+      _restoState.userLat = lat;
+      _restoState.userLon = lon;
+      restoLoadLeaflet(function() {
+        restoInitMap();
+        var overlay = document.getElementById('restoMapOverlay');
+        if (overlay) { overlay.style.transition = 'opacity .4s'; overlay.style.opacity = '0'; setTimeout(function(){ overlay.style.display = 'none'; }, 420); }
+        var bar = document.getElementById('restoSelectBar');
+        if (bar) bar.style.display = 'flex';
+        var btnSearch = document.getElementById('btnRestoSearch');
+        if (btnSearch) btnSearch.disabled = false;
+        showToast('📍 Position définie — cliquez Analyser', 'success');
+      });
+    }
+
+    function restoInitMap() {
+      var lat = _restoState.userLat, lon = _restoState.userLon;
+      if (_restoState.map) { _restoState.map.remove(); _restoState.map = null; }
+      _restoState.map = L.map('restoMap', { zoomControl: true }).setView([lat, lon], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap',
+        maxZoom: 19
+      }).addTo(_restoState.map);
+      // Marker utilisateur
+      L.marker([lat, lon], {
+        icon: L.divIcon({ className:'', html:'<div style="width:18px;height:18px;background:linear-gradient(135deg,#7c3aed,#3a86c4);border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(124,58,237,.6)"></div>', iconSize:[18,18], iconAnchor:[9,9] })
+      }).addTo(_restoState.map).bindPopup('<strong>📍 Vous êtes ici</strong>');
+      restoUpdateCircle();
+    }
+
+    function restoLancer() {
+      if (!_restoState.userLat || !_restoState.demandeId) {
+        showToast('⚠️ Sélectionnez un profil et activez la localisation', 'error'); return;
+      }
+      var cardsEl = document.getElementById('restoCards');
+      var bannerEl = document.getElementById('restoIaBanner');
+      if (cardsEl) cardsEl.innerHTML = '<div class="resto-loading"><div class="resto-loader-spin"></div><p>🤖 L\'IA analyse les restaurants autour de vous…</p></div>';
+      if (bannerEl) bannerEl.innerHTML = '';
+
+      // 1. Chercher restaurants via Overpass API (OSM) dans le rayon
+      var r = _restoState.radius;
+      var lat = _restoState.userLat, lon = _restoState.userLon;
+      var query = '[out:json][timeout:20];(node["amenity"="restaurant"](around:'+r+','+lat+','+lon+');node["amenity"="cafe"](around:'+r+','+lat+','+lon+');node["amenity"="fast_food"](around:'+r+','+lat+','+lon+'););out body;';
+
+      fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query))
+        .then(function(res){ return res.json(); })
+        .then(function(data) {
+          var elements = (data.elements || []).filter(function(e){ return e.tags && e.tags.name; });
+          // Garder max 12, trier par distance
+          elements = elements.map(function(e) {
+            var dist = restoCalcDist(lat, lon, e.lat, e.lon);
+            return Object.assign({}, e, { _dist: dist });
+          }).sort(function(a,b){ return a._dist - b._dist; }).slice(0, 12);
+
+          _restoState.restaurants = elements;
+
+          if (!elements.length) {
+            if (cardsEl) cardsEl.innerHTML = '<div class="resto-empty-state"><span class="big-icon">🍽️</span><p>Aucun restaurant trouvé dans ce rayon.<br>Essayez d\'augmenter le rayon.</p></div>';
+            return;
+          }
+
+          // 2. Appel IA backend
+          var d = _restoState.demande || {};
+          fetch(API_BASE + 'restaurant_ia.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id_demande: _restoState.demandeId,
+              restaurants: elements.map(function(e){
+                return { name: e.tags.name, cuisine: e.tags.cuisine||'', type: e.tags.amenity, dist: Math.round(e._dist) };
+              })
+            })
+          })
+          .then(function(r){ return r.json(); })
+          .then(function(res) {
+            if (!res.success) { showToast('❌ Erreur IA : '+(res.error||'?'), 'error'); return; }
+            restoAfficher(elements, res.analysis, res.conseils, res.top_pick);
+          })
+          .catch(function() {
+            restoAfficher(elements, [], null, null);
+          });
+        })
+        .catch(function() {
+          if (cardsEl) cardsEl.innerHTML = '<div class="resto-empty-state"><span class="big-icon">❌</span><p>Impossible de charger les restaurants.<br>Vérifiez votre connexion.</p></div>';
+        });
+    }
+
+    function restoCalcDist(lat1, lon1, lat2, lon2) {
+      var R = 6371000;
+      var dLat = (lat2-lat1) * Math.PI/180;
+      var dLon = (lon2-lon1) * Math.PI/180;
+      var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function restoAfficher(elements, analysis, conseils, topPick) {
+      // Nettoyer anciens markers
+      _restoState.markers.forEach(function(m){ m.remove(); });
+      _restoState.markers = [];
+
+      // Map IA par nom (flexible : insensible à la casse)
+      var iaMap = {};
+      if (Array.isArray(analysis)) {
+        analysis.forEach(function(a){ if(a.name) iaMap[a.name.trim().toLowerCase()] = a; });
+      }
+
+      var bannerEl = document.getElementById('restoIaBanner');
+      var html = '';
+
+      // ── TOP PICK ──────────────────────────────────────────────────────────
+      if (topPick && topPick.name) {
+        html +=
+          '<div style="background:linear-gradient(135deg,rgba(46,204,113,.12),rgba(39,174,96,.06));border:2px solid rgba(46,204,113,.4);border-radius:16px;padding:20px 22px;margin-bottom:18px;position:relative;overflow:hidden">' +
+          '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2ecc71,#27ae60)"></div>' +
+          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">' +
+          '  <span style="font-size:1.8rem">🏆</span>' +
+          '  <div>' +
+          '    <div style="font-size:1rem;font-weight:800;color:#2ecc71">Meilleur choix selon votre régime</div>' +
+          '    <div style="font-size:.8rem;color:var(--muted)">Sélectionné par l\'IA selon vos calories et budget</div>' +
+          '  </div>' +
+          '</div>' +
+          '<div style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:10px">📍 '+escHtml(topPick.name)+'</div>' +
+          '<div style="font-size:.85rem;color:var(--muted);line-height:1.65;margin-bottom:12px">'+escHtml(topPick.raison||'')+'</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:9px">' +
+          '  <div style="background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.25);border-radius:10px;padding:10px 12px">' +
+          '    <div style="font-size:.7rem;color:#2ecc71;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">🍽️ Que commander</div>' +
+          '    <div style="font-size:.82rem;color:var(--text)">'+escHtml(topPick.commande_ideale||'—')+'</div>' +
+          '  </div>' +
+          '  <div style="background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.25);border-radius:10px;padding:10px 12px">' +
+          '    <div style="font-size:.7rem;color:#2ecc71;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">🔥 Calories estimées</div>' +
+          '    <div style="font-size:.82rem;color:var(--text)">'+escHtml(topPick.calories_repas||'—')+'</div>' +
+          '  </div>' +
+          '  <div style="background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.25);border-radius:10px;padding:10px 12px">' +
+          '    <div style="font-size:.7rem;color:#2ecc71;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">💰 Prix estimé</div>' +
+          '    <div style="font-size:.82rem;color:var(--text)">'+escHtml(topPick.prix_estime||'—')+'</div>' +
+          '  </div>' +
+          '</div></div>';
+      }
+
+      // ── CONSEILS IA ───────────────────────────────────────────────────────
+      if (conseils && conseils.length) {
+        html +=
+          '<div class="resto-ia-banner">' +
+          '<div class="resto-ia-banner-header"><span class="resto-ia-banner-icon">🤖</span>' +
+          '<div><div class="resto-ia-banner-title">Conseils de votre Coach IA</div>' +
+          '<div class="resto-ia-banner-sub">Basés sur votre profil nutritionnel</div></div></div>' +
+          '<div class="resto-ia-tips">' +
+          conseils.map(function(c){ return '<div class="resto-ia-tip"><strong>'+escHtml(c.titre||'')+'</strong><span>'+escHtml(c.texte||'')+'</span></div>'; }).join('') +
+          '</div></div>';
+      }
+
+      if (bannerEl) bannerEl.innerHTML = html;
+
+      // ── CARDS RESTAURANTS ─────────────────────────────────────────────────
+      var cardsEl = document.getElementById('restoCards');
+      if (!cardsEl) return;
+      var cardsHtml = '<div class="resto-grid">';
+
+      elements.forEach(function(e, idx) {
+        var ia      = iaMap[e.tags.name.trim().toLowerCase()] || {};
+        var compat  = ia.compatibilite || 'partiel';
+        var note    = parseFloat(ia.note_ia) || 0;
+        var raison  = ia.raison_note || '';
+        var conseil = ia.conseil_ia  || '';
+        var tags    = (ia.tags_alimentation || []).slice(0, 4);
+        var prix    = ia.estimation_prix || '';
+        var cal_est = ia.calories_estimees || '';
+        var isTop   = topPick && topPick.name && topPick.name.trim().toLowerCase() === e.tags.name.trim().toLowerCase();
+
+        var compatLabel = compat === 'oui' ? '✅ Compatible' : (compat === 'non' ? '❌ Non compatible' : '⚠️ Partiel');
+        var compatCls   = compat === 'oui' ? 'compat-ok'     : (compat === 'non' ? 'compat-non'       : 'compat-partiel');
+        var cuisine     = e.tags.cuisine ? e.tags.cuisine.replace(/_/g,' ') : (e.tags.amenity || 'restaurant');
+        var distStr     = e._dist < 1000 ? Math.round(e._dist)+'m' : (e._dist/1000).toFixed(1)+'km';
+
+        // Étoiles visuelles
+        var starsHtml = '';
+        if (note > 0) {
+          for (var s = 1; s <= 5; s++) {
+            if (s <= Math.floor(note))      starsHtml += '<span style="color:#f1c40f">★</span>';
+            else if (s - note <= 0.5)       starsHtml += '<span style="color:#f1c40f;opacity:.5">★</span>';
+            else                            starsHtml += '<span style="color:rgba(255,255,255,.15)">★</span>';
+          }
+          starsHtml += ' <span style="font-size:.72rem;color:var(--muted);font-weight:700">'+note.toFixed(1)+'/5</span>';
+        }
+
+        cardsHtml +=
+          '<div class="resto-card'+(isTop?' resto-card-top-pick':'')+'" onclick="restoFocusMarker('+idx+')" style="'+(isTop?'border-color:rgba(46,204,113,.5);':'')+'">'+
+          '<div class="resto-card-accent" style="'+(isTop?'opacity:1;background:linear-gradient(90deg,#2ecc71,#27ae60)':'')+'"></div>'+
+          (isTop ? '<div style="position:absolute;top:10px;right:10px;background:#2ecc71;color:#fff;font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:50px">🏆 TOP</div>' : '')+
+          '<div class="resto-card-top" style="padding-right:'+(isTop?'50px':'0')+'">' +
+          '  <div><div class="resto-card-name">'+escHtml(e.tags.name)+'</div>' +
+          '  <div class="resto-card-type">🍴 '+escHtml(cuisine)+'</div></div>' +
+          '  <div class="resto-card-dist">📍 '+distStr+'</div>' +
+          '</div>' +
+          '<div class="resto-compat-badge '+compatCls+'" style="margin-bottom:6px">'+compatLabel+'</div>' +
+          (starsHtml ? '<div style="font-size:.88rem;margin-bottom:6px;display:flex;align-items:center;gap:4px">'+starsHtml+'</div>' : '') +
+          (raison ? '<div style="font-size:.73rem;color:var(--muted);font-style:italic;margin-bottom:7px;line-height:1.4">'+escHtml(raison)+'</div>' : '') +
+          (tags.length ? '<div class="resto-card-tags">'+tags.map(function(t){ return '<span class="resto-tag">'+escHtml(t)+'</span>'; }).join('')+'</div>' : '') +
+          (cal_est || prix ? '<div style="display:flex;gap:8px;margin-bottom:7px;flex-wrap:wrap">' +
+            (cal_est ? '<span style="font-size:.72rem;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25);border-radius:50px;padding:2px 8px;font-weight:700">🔥 '+escHtml(cal_est)+'</span>' : '') +
+            (prix    ? '<span style="font-size:.72rem;background:rgba(58,134,196,.1);color:#3a86c4;border:1px solid rgba(58,134,196,.25);border-radius:50px;padding:2px 8px;font-weight:700">💰 '+escHtml(prix)+'</span>' : '') +
+          '</div>' : '') +
+          (conseil ? '<div class="resto-card-ia">💡 '+escHtml(conseil)+'</div>' : '') +
+          '</div>';
+
+        // Marker sur la carte
+        if (_restoState.map) {
+          var color  = compat === 'oui' ? '#2ecc71' : (compat === 'non' ? '#e74c3c' : '#f1a208');
+          var size   = isTop ? 18 : 13;
+          var border = isTop ? '3px solid #fff' : '2px solid #fff';
+          var icon = L.divIcon({
+            className: '',
+            html: '<div style="width:'+size+'px;height:'+size+'px;background:'+color+';border-radius:50%;border:'+border+';box-shadow:0 2px 8px rgba(0,0,0,.35)'+(isTop?';outline:3px solid rgba(46,204,113,.5)':'')+'"></div>',
+            iconSize: [size,size], iconAnchor: [size/2,size/2]
+          });
+          var popupNote = note > 0 ? ' — '+note.toFixed(1)+'★' : '';
+          var marker = L.marker([e.lat, e.lon], { icon: icon })
+            .addTo(_restoState.map)
+            .bindPopup('<div style="min-width:160px"><strong>'+(isTop?'🏆 ':'')+e.tags.name+'</strong><br><span style="font-size:.74rem;color:#666">'+escHtml(cuisine)+'</span><br><span style="font-size:.72rem;font-weight:700;color:'+color+'">'+compatLabel+popupNote+'</span>'+(raison?'<br><em style="font-size:.7rem;color:#888">'+escHtml(raison)+'</em>':'')+'</div>');
+          _restoState.markers.push(marker);
+        }
+      });
+
+      cardsHtml += '</div>';
+      cardsEl.innerHTML = cardsHtml;
+
+      // Ajuster vue carte
+      if (_restoState.map && elements.length) {
+        var bounds = L.latLngBounds([[_restoState.userLat, _restoState.userLon]]);
+        elements.forEach(function(e){ bounds.extend([e.lat, e.lon]); });
+        _restoState.map.fitBounds(bounds, { padding: [40, 40] });
+      }
+    }
+
+    function restoFocusMarker(idx) {
+      var m = _restoState.markers[idx];
+      if (!m || !_restoState.map) return;
+      _restoState.map.setView(m.getLatLng(), 17, { animate: true });
+      m.openPopup();
+    }
+
+    window.restoStartGeoloc  = restoStartGeoloc;
+    window.restoApplyManual  = restoApplyManual;
+    window.restoLancer       = restoLancer;
+    window.restoFocusMarker  = restoFocusMarker;
+    window.restoOnDemandeChange = restoOnDemandeChange;
+    window.restoOnRadiusChange  = restoOnRadiusChange;
 
     function init() {
       contentEl=document.getElementById('planningContent');
@@ -2018,10 +2624,483 @@
     window.dismissHomeNotif    = dismissHomeNotif;
     window.updateBellBadge     = updateBellBadge;
 
+    /* ══ COACH IA ══ */
+    var coachHistory   = [];
+    var coachDemandeId = null;
+    var coachLoading   = false;
+
+    function buildCoachHTML(approuvees) {
+      var selectOptions = approuvees.length
+        ? approuvees.map(function(d){
+            return '<option value="'+d.id+'">Demande #'+d.id+' — '+d.calories+' kcal — '+d.duree+' '+d.type_duree+'</option>';
+          }).join('')
+        : '<option value="">Aucune demande approuvée</option>';
+
+      var html = '<div class="coach-wrap">'
+        + '<div class="coach-header">'
+        +   '<div class="coach-avatar">🤖</div>'
+        +   '<div class="coach-header-info"><h3>Coach Nutritionnel IA</h3><p>Posez vos questions sur votre alimentation, sport & sommeil</p></div>'
+        + '</div>'
+        + '<div class="coach-selector">'
+        +   '<label>Profil utilisé :</label>'
+        +   '<select id="coachDemandeSelect" onchange="planningApp.selectCoachDemande(this.value)">'
+        +   (approuvees.length ? selectOptions : '<option value="">Soumettez et faites approuver une demande d\'abord</option>')
+        +   '</select>'
+        +   '<button onclick="planningApp.resetCoachChat()" style="padding:7px 13px;border-radius:9px;border:1.5px solid rgba(91,62,150,.3);background:rgba(91,62,150,.08);color:var(--violet);font-size:.78rem;font-weight:700;cursor:pointer;">🔄 Réinitialiser</button>'
+        + '</div>'
+        + '<div class="coach-quick-btns">'
+        +   ['💡 Que manger ce soir ?','🏋️ Exercice du jour','😴 Améliorer mon sommeil','📊 Mon bilan calorique','⚡ Snack rapide'].map(function(q){
+              return '<button class="coach-quick-btn" onclick="planningApp.sendCoachQuestion(\''+q.replace(/'/g,"\\'")+'\')">'+q+'</button>';
+            }).join('')
+        + '</div>'
+        + '<div class="coach-messages" id="coachMessages">'
+        +   '<div class="coach-empty-state"><div class="big-icon">🤖</div><h3>Bonjour ! Je suis votre coach nutritionnel.</h3><p>Sélectionnez un profil puis posez votre première question.</p></div>'
+        + '</div>'
+        + '<div class="coach-input-bar">'
+        +   '<textarea class="coach-input" id="coachInput" rows="1" placeholder="Posez une question sur votre alimentation, sport ou sommeil…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();planningApp.sendCoachMessage();}"></textarea>'
+        +   '<button class="coach-send" id="coachSendBtn" onclick="planningApp.sendCoachMessage()" title="Envoyer">➤</button>'
+        + '</div>'
+        + '</div>';
+
+      contentEl.innerHTML = html;
+
+      if (approuvees.length) {
+        coachDemandeId = approuvees[0].id;
+        document.getElementById('coachDemandeSelect').value = coachDemandeId;
+        appendCoachMsg('bot', '👋 Profil chargé : **Demande #'+coachDemandeId+'** ('+approuvees[0].calories+' kcal, '+approuvees[0].duree+' '+approuvees[0].type_duree+')\n\nJe suis prêt ! Posez-moi vos questions sur votre alimentation, votre entraînement ou votre sommeil. 💪');
+      }
+    }
+
+    function renderCoach() {
+      // Si allDemandes déjà chargé, construire directement
+      if (allDemandes.length > 0) {
+        buildCoachHTML(allDemandes.filter(function(d){ return d.statut === 'approuve'; }));
+        return;
+      }
+
+      // Sinon afficher skeleton + charger depuis API
+      contentEl.innerHTML = '<div class="coach-wrap">'
+        + '<div class="coach-header"><div class="coach-avatar">🤖</div>'
+        + '<div class="coach-header-info"><h3>Coach Nutritionnel IA</h3><p>Chargement de vos demandes…</p></div></div>'
+        + '<div class="coach-messages" id="coachMessages">'
+        + '<div class="coach-empty-state"><div class="big-icon">⏳</div><h3>Chargement en cours…</h3><p>Récupération de vos demandes.</p></div>'
+        + '</div></div>';
+
+      apiGet(API_BASE + 'listMesDemandes.php')
+        .then(function(data) {
+          if (Array.isArray(data)) {
+            allDemandes = data;
+            filteredDemandes = data;
+          }
+          buildCoachHTML(allDemandes.filter(function(d){ return d.statut === 'approuve'; }));
+        })
+        .catch(function() {
+          contentEl.innerHTML = '<div class="coach-wrap"><div class="coach-messages" id="coachMessages">'
+            + '<div class="coach-empty-state"><div class="big-icon">❌</div><h3>Erreur de chargement</h3>'
+            + '<p><button class="btn-add" onclick="planningApp.showView(\'coach\')">🔄 Réessayer</button></p></div>'
+            + '</div></div>';
+        });
+    }
+
+    function selectCoachDemande(val) {
+      coachDemandeId = parseInt(val) || null;
+      coachHistory   = [];
+      var msgs = document.getElementById('coachMessages');
+      if (msgs) msgs.innerHTML = '<div class="coach-empty-state"><div class="big-icon">🔄</div><h3>Profil changé</h3><p>Nouvelle conversation démarrée.</p></div>';
+      if (coachDemandeId) {
+        var d = allDemandes.find(function(x){ return x.id == coachDemandeId; });
+        if (d) appendCoachMsg('bot', '✅ Profil chargé : **Demande #'+d.id+'** — '+d.calories+' kcal | Budget '+parseFloat(d.budget||0).toFixed(0)+' TND/'+d.type_budget+'\n\nQue souhaitez-vous savoir ? 😊');
+      }
+    }
+
+    function resetCoachChat() {
+      coachHistory = [];
+      var msgs = document.getElementById('coachMessages');
+      if (msgs) msgs.innerHTML = '<div class="coach-empty-state"><div class="big-icon">🤖</div><h3>Conversation réinitialisée</h3><p>Posez votre question.</p></div>';
+    }
+
+    function appendCoachMsg(role, text) {
+      var msgs = document.getElementById('coachMessages');
+      if (!msgs) return;
+      var empty = msgs.querySelector('.coach-empty-state');
+      if (empty) empty.remove();
+      var div = document.createElement('div');
+      div.className = 'coach-msg ' + role;
+      var avatar = role === 'bot' ? '🤖' : '👤';
+      var formatted = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+      div.innerHTML = '<div class="coach-msg-avatar">'+avatar+'</div><div class="coach-msg-bubble">'+formatted+'</div>';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function showCoachTyping() {
+      var msgs = document.getElementById('coachMessages');
+      if (!msgs) return;
+      var div = document.createElement('div');
+      div.className = 'coach-msg bot';
+      div.id = 'coachTyping';
+      div.innerHTML = '<div class="coach-msg-avatar">🤖</div><div class="coach-typing"><span></span><span></span><span></span></div>';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function removeCoachTyping() {
+      var t = document.getElementById('coachTyping');
+      if (t) t.remove();
+    }
+
+    function sendCoachQuestion(q) {
+      var input = document.getElementById('coachInput');
+      if (input) input.value = q;
+      sendCoachMessage();
+    }
+
+    function sendCoachMessage() {
+      if (coachLoading) return;
+      var input    = document.getElementById('coachInput');
+      var btn      = document.getElementById('coachSendBtn');
+      var question = input ? input.value.trim() : '';
+      if (!question) return;
+      if (!coachDemandeId) { showToast('⚠️ Sélectionnez une demande approuvée d\'abord', 'error'); return; }
+
+      appendCoachMsg('user', question);
+      coachHistory.push({ role: 'user', content: question });
+      if (input) input.value = '';
+
+      coachLoading = true;
+      if (btn) btn.disabled = true;
+      showCoachTyping();
+
+      fetch(API_BASE + 'coach_ia.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_demande: coachDemandeId, question: question, history: coachHistory.slice(-10) })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        removeCoachTyping();
+        coachLoading = false;
+        if (btn) btn.disabled = false;
+        if (data.success) {
+          appendCoachMsg('bot', data.response);
+          coachHistory.push({ role: 'assistant', content: data.response });
+        } else {
+          appendCoachMsg('bot', '❌ Erreur : ' + (data.error || 'Réessayez'));
+        }
+      })
+      .catch(function() {
+        removeCoachTyping();
+        coachLoading = false;
+        if (btn) btn.disabled = false;
+        appendCoachMsg('bot', '❌ Erreur réseau. Vérifiez votre connexion.');
+      });
+    }
+
+    /* ══ LECTURE VOCALE (Web Speech API) ══ */
+    var _ttsUtterance = null;
+    var _ttsSpeaking  = false;
+
+    function ttsExtractText(idDemande) {
+      var lines = [];
+      var grid  = document.getElementById('pwGrid');
+      if (!grid) return '';
+
+      lines.push('Planning nutritionnel numéro ' + idDemande + '.');
+
+      var semBtn = document.querySelector('.pw-sem-btn.active');
+      if (semBtn) lines.push(semBtn.textContent.trim() + '.');
+
+      var dayCols  = grid.querySelectorAll('.pw-gh-day');
+      var mealCols = grid.querySelectorAll('.pw-mc');
+      var slotRows = grid.querySelectorAll('.pw-sl-row');
+      var slots    = [];
+      slotRows.forEach(function(r){ slots.push(r.textContent.replace(/[🌅☀️🌙🏃💤]/g,'').trim()); });
+
+      var nbDays  = dayCols.length;
+      var nbSlots = slots.length;
+
+      for (var d = 0; d < nbDays; d++) {
+        var dayEl   = dayCols[d];
+        var dayName = dayEl.querySelector('.pw-gh-day-name') ? dayEl.querySelector('.pw-gh-day-name').textContent : '';
+        var dayNum  = dayEl.querySelector('.pw-gh-day-num')  ? dayEl.querySelector('.pw-gh-day-num').textContent  : '';
+        lines.push(dayName + ' ' + dayNum + '.');
+
+        for (var s = 0; s < nbSlots; s++) {
+          var idx  = s * nbDays + d;
+          var cell = mealCols[idx];
+          if (!cell) continue;
+          var empty = cell.querySelector('.pw-mc-empty');
+          if (empty) continue;
+          var cards = cell.querySelectorAll('.pw-card-txt, .pw-sport-name, .pw-sleep-t');
+          var texts = [];
+          cards.forEach(function(c){ var t = c.textContent.trim(); if (t && t !== '—') texts.push(t); });
+          if (texts.length) lines.push(slots[s] + ' : ' + texts.join(', ') + '.');
+        }
+      }
+
+      var footer = document.getElementById('pwSummary');
+      if (footer) {
+        var vals = footer.querySelectorAll('.pw-fc');
+        vals.forEach(function(v){
+          var lbl = v.querySelector('.pw-fc-lbl'), val = v.querySelector('.pw-fc-val');
+          if (lbl && val) lines.push(lbl.textContent.replace(/[🥗💰🍳🏃]/g,'').trim() + ' : ' + val.textContent.trim() + '.');
+        });
+      }
+
+      return lines.join(' ');
+    }
+
+    function ttsLire(idDemande) {
+      if (!window.speechSynthesis) {
+        showToast('❌ Votre navigateur ne supporte pas la lecture vocale', 'error');
+        return;
+      }
+      var btn = document.getElementById('ttsBtnMain');
+
+      if (_ttsSpeaking) {
+        window.speechSynthesis.cancel();
+        _ttsSpeaking = false;
+        if (btn) { btn.classList.remove('speaking'); btn.innerHTML = '🔊 Écouter le planning'; }
+        return;
+      }
+
+      var texte = ttsExtractText(idDemande);
+      if (!texte.trim()) { showToast('⚠️ Aucun contenu à lire', 'error'); return; }
+
+      _ttsUtterance         = new SpeechSynthesisUtterance(texte);
+      _ttsUtterance.lang    = 'fr-FR';
+      _ttsUtterance.rate    = 0.95;
+      _ttsUtterance.pitch   = 1;
+      _ttsUtterance.volume  = 1;
+
+      // Sélectionner une voix française si disponible
+      var trySpeak = function() {
+        var voices  = window.speechSynthesis.getVoices();
+        var voiceFr = voices.find(function(v){ return v.lang === 'fr-FR'; })
+                   || voices.find(function(v){ return v.lang.startsWith('fr'); });
+        if (voiceFr) _ttsUtterance.voice = voiceFr;
+
+        _ttsUtterance.onstart = function() {
+          _ttsSpeaking = true;
+          if (btn) { btn.classList.add('speaking'); btn.innerHTML = '⏹️ Arrêter la lecture'; }
+        };
+        _ttsUtterance.onend = _ttsUtterance.onerror = function() {
+          _ttsSpeaking = false;
+          if (btn) { btn.classList.remove('speaking'); btn.innerHTML = '🔊 Écouter le planning'; }
+        };
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(_ttsUtterance);
+      };
+
+      // Les voix peuvent ne pas être chargées immédiatement (Chrome)
+      if (window.speechSynthesis.getVoices().length > 0) {
+        trySpeak();
+      } else {
+        window.speechSynthesis.onvoiceschanged = function() { trySpeak(); };
+      }
+    }
+    
+
+/* ══ MÉTÉO INTELLIGENTE ══ */
+    var _meteoCache = null;
+
+    function meteoGetCondition(wmo, pluie) {
+      if (pluie)          return { label: 'Pluvieux',   emoji: '🌧️', classe: 'rain' };
+      if (wmo >= 95)      return { label: 'Orageux',    emoji: '⛈️',  classe: 'rain' };
+      if (wmo >= 71)      return { label: 'Neigeux',    emoji: '❄️',  classe: 'rain' };
+      if (wmo >= 51)      return { label: 'Bruineux',   emoji: '🌦️', classe: 'rain' };
+      if (wmo >= 3)       return { label: 'Nuageux',    emoji: '☁️',  classe: 'wind' };
+      if (wmo === 2)      return { label: 'Partiellement nuageux', emoji: '⛅', classe: 'wind' };
+      return              { label: 'Ensoleillé',  emoji: '☀️',  classe: 'good' };
+    }
+
+    function meteoSportAujourdhui(groupes, todayStr) {
+      var g = groupes[todayStr] || {};
+      return (g['sport'] || []).map(function(s){
+        return s.split(/[—–-]+/)[0].trim();
+      });
+    }
+
+    function pwOuvrirMeteo(idDemande, groupes, todayStr) {
+      var oldPanel = document.getElementById('pw-meteo-panel');
+      if (oldPanel) { oldPanel.remove(); return; }
+
+      var btn = document.getElementById('pw-meteo-btn');
+      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Localisation…'; }
+
+      var anchor = document.getElementById('pwToolbar');
+      if (!anchor) return;
+
+      if (!navigator.geolocation) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '🌤️ Météo & Sport'; }
+        showToast('❌ Géolocalisation non supportée par votre navigateur', 'error');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          var lat = pos.coords.latitude.toFixed(4);
+          var lon = pos.coords.longitude.toFixed(4);
+          if (btn) btn.innerHTML = '⏳ Météo en cours…';
+
+          fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon
+            + '&current=temperature_2m,precipitation,windspeed_10m,weathercode'
+            + '&timezone=auto&forecast_days=1')
+          .then(function(r){ return r.json(); })
+          .then(function(mData) {
+            var cur    = mData.current || {};
+            var temp   = Math.round(cur.temperature_2m   || 0);
+            var pluie  = (cur.precipitation              || 0) > 0.5;
+            var vent   = Math.round(cur.windspeed_10m    || 0);
+            var wmo    = cur.weathercode                 || 0;
+            var cond   = meteoGetCondition(wmo, pluie);
+            var sports = meteoSportAujourdhui(groupes, todayStr);
+
+            var meteo = { temp: temp, pluie: pluie, vent: vent, condition: cond.label, emoji: cond.emoji, classe: cond.classe };
+            _meteoCache = meteo;
+
+            if (btn) btn.innerHTML = '⏳ Analyse IA…';
+
+            fetch(API_BASE + 'meteo_sport.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id_demande: idDemande, meteo: meteo, sports: sports })
+            })
+            .then(function(r){ return r.json(); })
+            .then(function(res) {
+              if (btn) { btn.disabled = false; btn.innerHTML = '🌤️ Météo & Sport'; }
+              if (!res.success) { showToast('❌ ' + (res.error || 'Erreur IA'), 'error'); return; }
+              pwAfficherMeteo(idDemande, meteo, res.reco, anchor, cond);
+            })
+            .catch(function() {
+              if (btn) { btn.disabled = false; btn.innerHTML = '🌤️ Météo & Sport'; }
+              showToast('❌ Erreur réseau meteo_sport.php', 'error');
+            });
+          })
+          .catch(function() {
+            if (btn) { btn.disabled = false; btn.innerHTML = '🌤️ Météo & Sport'; }
+            showToast('❌ Impossible de récupérer la météo', 'error');
+          });
+        },
+        function() {
+          if (btn) { btn.disabled = false; btn.innerHTML = '🌤️ Météo & Sport'; }
+          showToast('⚠️ Accès à la localisation refusé', 'error');
+        },
+        { timeout: 8000 }
+      );
+    }
+
+    function pwAfficherMeteo(idDemande, meteo, reco, anchor, cond) {
+      var old = document.getElementById('pw-meteo-panel');
+      if (old) old.remove();
+
+      var lieuIcon  = reco.lieu === 'intérieur' ? '🏠' : '🌳';
+      var intensIcon = { légère: '🟢', modérée: '🟡', intense: '🔴' }[reco.intensite] || '⚪';
+      var conseil_cls = reco.alerte ? 'alerte' : cond.classe;
+
+      var panel = document.createElement('div');
+      panel.className = 'meteo-panel';
+      panel.id = 'pw-meteo-panel';
+      panel.innerHTML =
+        '<div class="meteo-panel-header ' + cond.classe + '">'
+        +  '<span>' + meteo.emoji + ' ' + meteo.temp + '°C — ' + meteo.condition
+        +    (meteo.pluie ? ' · 🌧️ Pluie' : '') + (meteo.vent > 30 ? ' · 💨 ' + meteo.vent + ' km/h' : '') + '</span>'
+        +  '<button onclick="document.getElementById(\'pw-meteo-panel\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:.85rem;line-height:1">✕</button>'
+        + '</div>'
+        + '<div class="meteo-panel-body">'
+        +  '<div class="meteo-kv"><div class="meteo-kv-lbl">🏃 Sport recommandé</div><div class="meteo-kv-val">' + escHtml(reco.sport_recommande) + '</div></div>'
+        +  '<div class="meteo-kv"><div class="meteo-kv-lbl">⏱️ Durée</div><div class="meteo-kv-val">' + escHtml(reco.duree) + '</div></div>'
+        +  '<div class="meteo-kv"><div class="meteo-kv-lbl">' + lieuIcon + ' Lieu</div><div class="meteo-kv-val">' + escHtml(reco.lieu) + '</div></div>'
+        +  '<div class="meteo-kv"><div class="meteo-kv-lbl">' + intensIcon + ' Intensité</div><div class="meteo-kv-val">' + escHtml(reco.intensite) + '</div></div>'
+        +  '<div class="meteo-conseil ' + conseil_cls + '">💡 ' + escHtml(reco.conseil) + '</div>'
+        + '</div>';
+
+      anchor.parentNode.insertBefore(panel, anchor.nextSibling);
+    }
+
+
+    /* ══ QR CODE PLANNING ══ */
+    function pwOuvrirQR(idDemande) {
+      var old = document.getElementById('pw-qr-panel');
+      if (old) { old.remove(); return; }
+
+      var anchor = document.getElementById('pwToolbar');
+      if (!anchor) return;
+
+      // URL du planning : page courante + param id_demande
+      // Construit l'URL absolue vers planning_public.php quelle que soit la page courante
+      var _path = window.location.pathname; // ex: /SmartNutrition/view/frontend/dashboard.html
+      var _base = _path.substring(0, _path.lastIndexOf('/') + 1); // ex: /SmartNutrition/view/frontend/
+      var url = window.location.origin + _base + 'planning/planning_public.php?id=' + idDemande;
+
+      var panel = document.createElement('div');
+      panel.id = 'pw-qr-panel';
+      panel.className = 'qr-panel';
+      panel.innerHTML =
+        '<div id="pw-qr-canvas-wrap"></div>' +
+        '<div class="qr-info">' +
+          '<div class="qr-info-title">📱 QR Code — Planning #' + idDemande + '</div>' +
+          '<div class="qr-info-sub">Scannez ce code pour accéder directement à ce planning sur n&#39;importe quel appareil.</div>' +
+          '<button class="qr-dl-btn" id="pw-qr-dl">⬇️ Télécharger</button>' +
+          '<button onclick="document.getElementById(\'pw-qr-panel\').remove()" style="margin-left:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;">✕ Fermer</button>' +
+        '</div>';
+
+      // Insérer le panel sous le toolbar
+      anchor.parentNode.insertBefore(panel, anchor);
+
+      // Charger qrcode.js depuis CDN et générer
+      if (typeof QRCode === 'undefined') {
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+        script.onload = function() { _pwGenQR(idDemande, url); };
+        document.head.appendChild(script);
+      } else {
+        _pwGenQR(idDemande, url);
+      }
+    }
+
+    function _pwGenQR(idDemande, url) {
+      var wrap = document.getElementById('pw-qr-canvas-wrap');
+      if (!wrap) return;
+      var qr = new QRCode(wrap, {
+        text: url,
+        width:  180,
+        height: 180,
+        colorDark:  '#0d1117',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      // Bouton télécharger
+      var dlBtn = document.getElementById('pw-qr-dl');
+      if (dlBtn) {
+        dlBtn.onclick = function() {
+          // Attendre que le canvas soit prêt
+          setTimeout(function() {
+            var canvas = wrap.querySelector('canvas');
+            if (canvas) {
+              var link = document.createElement('a');
+              link.download = 'planning-' + idDemande + '-qrcode.png';
+              link.href = canvas.toDataURL('image/png');
+              link.click();
+            }
+          }, 300);
+        };
+      }
+    }
+
     window.planningApp = {
       showView:showView, showDemande:showDemande, showPlanning:showPlanning,
       goSportSommeil:goSportSommeil, deleteDemande:deleteDemande, closeModal:closeModal,
       goPage:goPage, init:init,
+      sendCoachMessage:sendCoachMessage, resetCoachChat:resetCoachChat,
+      selectCoachDemande:selectCoachDemande, sendCoachQuestion:sendCoachQuestion,
+      ttsLire:ttsLire,
+      pwOuvrirMeteo:pwOuvrirMeteo,
+      pwOuvrirQR:pwOuvrirQR,
+      renderRestaurants:renderRestaurants,
       _setSemaine:function(){}, _pwW:function(){}, _pwF:function(){},
       _applyAndRender: function() { currentPage = 1; applyAndRender(); },
       _applySort: function() { applyAndRender(); },

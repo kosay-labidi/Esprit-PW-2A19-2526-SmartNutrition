@@ -3,6 +3,7 @@ require_once(__DIR__ . '/../config.php');
 require_once(__DIR__ . '/../Model/Challenge.php');
 
 class ChallengeController {
+<<<<<<< HEAD
     private bool $paidSchemaReady = false;
 
     private function ensurePaidChallengeSchema(): void {
@@ -21,12 +22,15 @@ class ChallengeController {
         }
         $this->paidSchemaReady = true;
     }
+=======
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
 
     // ═══════════════════════════════════════════════════════════
     // CRUD DE BASE (existants)
     // ═══════════════════════════════════════════════════════════
 
     public function addChallenge(Challenge $challenge) {
+<<<<<<< HEAD
         $this->ensurePaidChallengeSchema();
         $sql = "INSERT INTO challenge (titre, description, type, objectif, valeur_cible,
                 date_debut, date_fin, statut, streak_icon, image, est_payant, prix)
@@ -55,6 +59,27 @@ class ChallengeController {
             if ($id > 0) {
                 $this->ensureChatThreadForChallenge($id);
             }
+=======
+        $sql = "INSERT INTO challenge (titre, description, type, objectif, valeur_cible,
+                date_debut, date_fin, statut, streak_icon, image)
+                VALUES (:titre, :description, :type, :objectif, :valeur_cible,
+                        :date_debut, :date_fin, :statut, :streak_icon, :image)";
+        $db = Config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute([
+                'titre'        => $challenge->getTitre(),
+                'description'  => $challenge->getDescription(),
+                'type'         => $challenge->getType(),
+                'objectif'     => $challenge->getObjectif(),
+                'valeur_cible' => $challenge->getValeurCible(),
+                'date_debut'   => $challenge->getDateDebut(),
+                'date_fin'     => $challenge->getDateFin(),
+                'statut'       => $challenge->getStatut(),
+                'streak_icon'  => $challenge->getStreakIcon(),
+                'image'        => $challenge->getImage()
+            ]);
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
             return true;
         } catch (Exception $e) {
             error_log('Erreur addChallenge: ' . $e->getMessage());
@@ -63,7 +88,10 @@ class ChallengeController {
     }
 
     public function listChallenges($userId = 0) {
+<<<<<<< HEAD
         $this->ensurePaidChallengeSchema();
+=======
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
         $sql = "SELECT c.*,
                     COUNT(DISTINCT p.id) AS participants_count,
                     (SELECT COUNT(*) FROM challenge_likes cl WHERE cl.id_challenge = c.id AND cl.id_user = :uid) > 0 AS is_liked
@@ -95,6 +123,7 @@ class ChallengeController {
         }
     }
 
+<<<<<<< HEAD
     private function ensureChatThreadForChallenge(int $challengeId): void {
         if ($challengeId <= 0) return;
         $db = Config::getConnexion();
@@ -120,6 +149,9 @@ class ChallengeController {
 
     public function showChallenge($id) {
         $this->ensurePaidChallengeSchema();
+=======
+    public function showChallenge($id) {
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
         $sql = "SELECT * FROM challenge WHERE id = :id";
         $db = Config::getConnexion();
         try {
@@ -133,6 +165,7 @@ class ChallengeController {
     }
 
     public function updateChallenge($challenge, $id) {
+<<<<<<< HEAD
         $this->ensurePaidChallengeSchema();
         $sql = "UPDATE challenge SET titre=:titre, description=:description, type=:type,
                 objectif=:objectif, valeur_cible=:valeur_cible, date_debut=:date_debut,
@@ -143,6 +176,14 @@ class ChallengeController {
         try {
             $estPayant = (int)$challenge->getEstPayant() === 1 ? 1 : 0;
             $prix = $estPayant ? max(0, (float)$challenge->getPrix()) : 0;
+=======
+        $sql = "UPDATE challenge SET titre=:titre, description=:description, type=:type,
+                objectif=:objectif, valeur_cible=:valeur_cible, date_debut=:date_debut,
+                date_fin=:date_fin, statut=:statut, streak_icon=:streak_icon, image=:image
+                WHERE id = :id";
+        $db = Config::getConnexion();
+        try {
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
             $query = $db->prepare($sql);
             $query->execute([
                 'titre'        => $challenge->getTitre(),
@@ -155,8 +196,11 @@ class ChallengeController {
                 'statut'       => $challenge->getStatut(),
                 'streak_icon'  => $challenge->getStreakIcon(),
                 'image'        => $challenge->getImage(),
+<<<<<<< HEAD
                 'est_payant'   => $estPayant,
                 'prix'         => $prix,
+=======
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
                 'id'           => (int)$id
             ]);
             return true;
@@ -183,9 +227,13 @@ class ChallengeController {
                     SUM(statut = 'accepte')                            AS challenges_acceptes,
                     SUM(statut = 'refuse')                             AS challenges_refuses,
                     COALESCE(SUM(nb_vues),  0)                         AS total_vues,
+<<<<<<< HEAD
                     COALESCE(SUM(nb_likes), 0)                         AS total_likes,
                     COALESCE(AVG(nb_vues), 0)                          AS avg_vues,
                     COALESCE(AVG(nb_likes), 0)                         AS avg_likes
+=======
+                    COALESCE(SUM(nb_likes), 0)                         AS total_likes
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
                 FROM challenge
             ")->fetch();
 
@@ -193,6 +241,7 @@ class ChallengeController {
             $totalPart = $db->query("SELECT COUNT(*) AS total FROM participant")->fetch();
             $row['total_participants'] = (int)($totalPart['total'] ?? 0);
 
+<<<<<<< HEAD
             // Total steakers (participants avec un engagement > 0 ou ayant gagné un badge)
             $totalSteakers = $db->query("SELECT COUNT(*) AS total FROM participant WHERE engagement > 0")->fetch();
             $row['total_steakers'] = (int)($totalSteakers['total'] ?? 0);
@@ -214,6 +263,12 @@ class ChallengeController {
                 SELECT c.id, c.titre, c.streak_icon, c.statut, c.nb_vues, c.nb_likes,
                        COUNT(p.id) AS nb_participants,
                        COALESCE(AVG(p.objectif / NULLIF(c.valeur_cible, 0)) * 100, 0) as completion_rate
+=======
+            // Top 3 défis par participants
+            $top3 = $db->query("
+                SELECT c.id, c.titre, c.streak_icon, c.statut, c.nb_vues, c.nb_likes,
+                       COUNT(p.id) AS nb_participants
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
                 FROM challenge c
                 LEFT JOIN participant p ON p.id_challenge = c.id
                 GROUP BY c.id, c.titre, c.streak_icon, c.statut, c.nb_vues, c.nb_likes
@@ -426,7 +481,10 @@ class ChallengeController {
     // ═══════════════════════════════════════════════════════════
 
     public function exportCSV(): void {
+<<<<<<< HEAD
         $this->ensurePaidChallengeSchema();
+=======
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
         $data = $this->listChallenges();
 
         header('Content-Type: text/csv; charset=utf-8');
@@ -442,7 +500,11 @@ class ChallengeController {
         fputcsv($output, [
             'ID', 'Titre', 'Type', 'Objectif', 'Valeur Cible (%)',
             'Date Début', 'Date Fin', 'Statut',
+<<<<<<< HEAD
             'Payant', 'Prix', 'Nb Participants', 'Nb Vues', 'Nb Likes', 'Ordre'
+=======
+            'Nb Participants', 'Nb Vues', 'Nb Likes', 'Ordre'
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
         ], ';');
 
         foreach ($data as $row) {
@@ -455,8 +517,11 @@ class ChallengeController {
                 $row['date_debut']        ?? '',
                 $row['date_fin']          ?? '',
                 $row['statut']            ?? '',
+<<<<<<< HEAD
                 ((int)($row['est_payant'] ?? 0) === 1) ? 'Oui' : 'Non',
                 $row['prix']              ?? 0,
+=======
+>>>>>>> 1c5c0dc78ae19773dcd2a28e5572cfe3c293169c
                 $row['participants_count']?? 0,
                 $row['nb_vues']           ?? 0,
                 $row['nb_likes']          ?? 0,

@@ -120,6 +120,176 @@ h1, h2, h3, h4 {
 /* ═══════════════════════════════════════
    CUSTOM CURSOR
 ═══════════════════════════════════════ */
+/* Dashboard Container */
+.dashboard-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  padding-top: 70px;
+}
+
+/* Sidebar */
+.sidebar-menu {
+  position: fixed;
+  left: 0;
+  top: 70px;
+  bottom: 0;
+  width: 280px;
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(91, 62, 150, .2);
+  padding: 30px 0;
+  overflow-y: auto;
+  z-index: 800;
+  transition: transform .3s ease;
+}
+
+.sidebar-menu.mobile-hidden {
+  transform: translateX(-100%);
+}
+
+.menu-title {
+  padding: 0 24px 20px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid rgba(91, 62, 150, .2);
+  margin-bottom: 20px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 24px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: .95rem;
+  transition: all .3s;
+  cursor: none;
+  position: relative;
+  border-left: 3px solid transparent;
+}
+
+.menu-item:hover {
+  background: rgba(91, 62, 150, .15);
+  border-left-color: var(--violet);
+}
+
+.menu-item.active {
+  background: rgba(91, 62, 150, .25);
+  border-left-color: var(--blue);
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.menu-item-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.menu-item-text {
+  flex: 1;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  padding: 40px 5%;
+  transition: margin-left .3s ease;
+}
+
+.main-content.full-width {
+  margin-left: 0;
+}
+
+/* Content Sections */
+.content-section {
+  display: none;
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.content-section.active {
+  display: block;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animations des cartes et éléments */
+.stat-card, .quick-stat, .data-card {
+  opacity: 0;
+}
+
+.animate-in {
+  animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Micro-interactions */
+.btn, .menu-item, .stat-card, .action-btn, .chip {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-item:active, .btn:active {
+  transform: scale(0.95);
+}
+
+.stat-card:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+/* Loader de section personnalisé */
+.section-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  gap: 15px;
+}
+
+.section-loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(91, 62, 150, 0.2);
+  border-top-color: var(--violet);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Section Header */
+.section-header {
+  margin-bottom: 40px;
+}
+
+.section-header h2 {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.section-header p {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+/* Cursor */
 #cursor {
   position: fixed;
   top: 0; left: 0;
@@ -990,6 +1160,72 @@ tbody tr:last-child td { border-bottom: none; }
 /* ═══════════════════════════════════════
    BADGES
 ═══════════════════════════════════════ */
+/* Detail Panel */
+.table-panel {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(91, 62, 150, .2);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.form-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(91, 62, 150, .2);
+}
+
+.form-panel-header h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.btn-reset {
+  padding: 8px 16px;
+  background: rgba(231, 76, 60, .2);
+  border: 1px solid rgba(231, 76, 60, .3);
+  border-radius: 10px;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: .85rem;
+  transition: all .3s;
+}
+
+.btn-reset:hover {
+  background: rgba(231, 76, 60, .3);
+  transform: scale(1.05);
+}
+
+.table-container-admin {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid rgba(91, 62, 150, .1);
+}
+
+.data-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.data-table td {
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: .9rem;
+}
+
+/* Badges */
 .badge {
   padding: 3px 12px;
   border-radius: 50px;
@@ -1096,6 +1332,11 @@ tbody tr:last-child td { border-bottom: none; }
   gap: 5px;
   min-width: 38px;
   justify-content: center;
+  cursor: pointer;
+  font-size: .8rem;
+  transition: all .2s;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .page-btn:hover:not(:disabled) {
@@ -1184,6 +1425,17 @@ tbody tr:last-child td { border-bottom: none; }
 /* ═══════════════════════════════════════
    CHART CONTAINERS
 ═══════════════════════════════════════ */
+.action-btn-view {
+  background: rgba(39, 174, 96, .2);
+  color: #27ae60;
+}
+
+.action-btn-view:hover {
+  background: rgba(39, 174, 96, .3);
+  transform: scale(1.05);
+}
+
+/* Charts */
 .chart-container {
   position: relative;
   height: 300px;

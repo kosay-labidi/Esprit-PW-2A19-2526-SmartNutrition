@@ -50,7 +50,7 @@ if (!in_array($status, $allowed, true)) {
 // ── 5. Connexion PDO directe (simplifiée) ─────────────────────────────────────
 try {
     $pdo = new PDO(
-        "mysql:host=127.0.0.1;dbname=ds_gaialumen;charset=utf8mb4",
+        "mysql:host=127.0.0.1;dbname=dsgaialumen;charset=utf8mb4",
         'root',
         '',
         [

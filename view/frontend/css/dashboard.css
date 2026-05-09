@@ -426,7 +426,6 @@ h1, h2, h3, h4 {
 .mobile-menu-item.active {
   background: linear-gradient(135deg, rgba(91, 62, 150, 0.3), rgba(58, 134, 196, 0.3));
   color: var(--blue);
-  font-weight: 600;
 }
 
 /* Main Content */
@@ -1190,8 +1189,8 @@ h1, h2, h3, h4 {
   .info-card {
     padding: 18px;
   }
-  
 }
+
 /* ═══════════════════════════════════════════════════════════
    AVATAR UTILISATEUR – NAVBAR
    ═══════════════════════════════════════════════════════════ */

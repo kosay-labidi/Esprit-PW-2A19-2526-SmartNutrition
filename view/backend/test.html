@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Affichage Planning</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 2px solid #ddd; border-radius: 5px; }
+        .success { border-color: #27ae60; background: #d4edda; }
+        .error { border-color: #e74c3c; background: #f8d7da; }
+        .warning { border-color: #f39c12; background: #fff3cd; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #5B3E96; color: white; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
+        .stat-box { background: #f8f9fa; padding: 15px; border-radius: 5px; text-align: center; }
+        .stat-value { font-size: 2em; font-weight: bold; color: #5B3E96; }
+        .stat-label { color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test d'Affichage - Module Planning</h1>
+        
+        <?php
+        // Test 1: Vérifier la connexion API
+        echo '<div class="test-section">';
+        echo '<h2>Test 1: Connexion API</h2>';
+        
+        $apiUrl = 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/planning/listDemandeplanning.php';
+        echo '<p>URL API: ' . htmlspecialchars($apiUrl) . '</p>';
+        
+        $ch = curl_init($apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode == 200 && $response) {
+            echo '<div class="success">✅ API accessible (HTTP ' . $httpCode . ')</div>';
+            $data = json_decode($response, true);
+            if ($data && $data['success']) {
+                echo '<p>Nombre de demandes: <strong>' . $data['count'] . '</strong></p>';
+            }
+        } else {
+            echo '<div class="error">❌ API inaccessible (HTTP ' . $httpCode . ')</div>';
+        }
+        echo '</div>';
+        
+        // Test 2: Afficher les données brutes
+        if (isset($data) && $data['success']) {
+            echo '<div class="test-section">';
+            echo '<h2>Test 2: Données Brutes (JSON)</h2>';
+            echo '<pre>';
+            echo json_encode($data, JSON_PRETTY_PRINT);
+            echo '</pre>';
+            echo '</div>';
+            
+            // Test 3: Affichage des stats
+            echo '<div class="test-section">';
+            echo '<h2>Test 3: Statistiques</h2>';
+            
+            $demandes = $data['data'];
+            $total = count($demandes);
+            $uniqueUsers = count(array_unique(array_column($demandes, 'id_utilisateur')));
+            $totalCalories = array_sum(array_column($demandes, 'calories'));
+            $totalBudget = array_sum(array_column($demandes, 'budget'));
+            $avgCalories = $total > 0 ? round($totalCalories / $total) : 0;
+            $avgBudget = $total > 0 ? round($totalBudget / $total, 2) : 0;
+            
+            echo '<div class="stats">';
+            echo '<div class="stat-box"><div class="stat-value">' . $total . '</div><div class="stat-label">Total demandes</div></div>';
+            echo '<div class="stat-box"><div class="stat-value">' . $uniqueUsers . '</div><div class="stat-label">Utilisateurs uniques</div></div>';
+            echo '<div class="stat-box"><div class="stat-value">' . number_format($avgCalories) . '</div><div class="stat-label">Calories moyennes</div></div>';
+            echo '<div class="stat-box"><div class="stat-value">' . $avgBudget . '€</div><div class="stat-label">Budget moyen</div></div>';
+            echo '</div>';
+            echo '</div>';
+            
+            // Test 4: Tableau d'affichage
+            echo '<div class="test-section">';
+            echo '<h2>Test 4: Tableau des Demandes</h2>';
+            echo '<table>';
+            echo '<thead><tr>';
+            echo '<th>ID</th><th>Utilisateur</th><th>Calories</th><th>Budget</th><th>Type Budget</th><th>Durée</th><th>Type Durée</th><th>Date</th>';
+            echo '</tr></thead><tbody>';
+            
+            foreach ($demandes as $d) {
+                echo '<tr>';
+                echo '<td><strong>#' . $d['id_demande'] . '</strong></td>';
+                echo '<td>Utilisateur ' . $d['id_utilisateur'] . '</td>';
+                echo '<td>' . number_format($d['calories']) . ' kcal</td>';
+                echo '<td>' . $d['budget'] . ' €</td>';
+                echo '<td><span style="padding:4px 8px;background:' . ($d['type_budget']=='quotidien'?'#d4edda':'#fff3cd') . ';border-radius:4px;">' . $d['type_budget'] . '</span></td>';
+                echo '<td>' . $d['duree'] . '</td>';
+                echo '<td>' . $d['type_duree'] . '</td>';
+                echo '<td>' . date('d M Y H:i', strtotime($d['date_demande'])) . '</td>';
+                echo '</tr>';
+            }
+            
+            echo '</tbody></table>';
+            echo '</div>';
+        }
+        
+        // Test 5: Vérification fichiers
+        echo '<div class="test-section">';
+        echo '<h2>Test 5: Vérification des Fichiers</h2>';
+        
+        $files = [
+            'modules/planning-admin.html',
+            'js/planning-admin.js',
+            'planning/listDemandeplanning.php',
+            '../../controller/Demandeplanning.controller.php',
+            '../../Model/Demandeplanning.php',
+            '../../config.php'
+        ];
+        
+        echo '<table>';
+        echo '<tr><th>Fichier</th><th>Statut</th></tr>';
+        
+        foreach ($files as $file) {
+            $exists = file_exists($file);
+            echo '<tr class="' . ($exists ? 'success' : 'error') . '">';
+            echo '<td>' . $file . '</td>';
+            echo '<td>' . ($exists ? '✅ Existe' : '❌ Manquant') . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '</table>';
+        echo '</div>';
+        ?>
+        
+        <div class="test-section">
+            <h2>Test 6: Test JavaScript Console</h2>
+            <p>Ouvrez la console F12 et cliquez sur ce bouton :</p>
+            <button onclick="testJS()" style="padding:10px 20px;font-size:16px;cursor:pointer;">Tester JS</button>
+            <div id="js-result" style="margin-top:10px;padding:10px;background:#f4f4f4;"></div>
+        </div>
+        
+        <script>
+        function testJS() {
+            const result = document.getElementById('js-result');
+            let html = '<h4>Résultats:</h4>';
+            
+            // Test 1
+            const planning = document.getElementById('planning-test');
+            html += '<p>✅ DOM prêt: ' + (document.readyState === 'complete' ? 'OUI' : 'NON') + '</p>';
+            
+            // Test 2
+            html += '<p>✅ Fetch API disponible: ' + (typeof fetch !== 'undefined' ? 'OUI' : 'NON') + '</p>';
+            
+            // Test 3 - Appel API
+            html += '<p>⏳ Test API en cours...</p>';
+            result.innerHTML = html;
+            
+            fetch('planning/listDemandeplanning.php')
+                .then(r => r.json())
+                .then(data => {
+                    html += '<p class="success">✅ API répond: ' + data.count + ' demandes</p>';
+                    result.innerHTML = html;
+                })
+                .catch(err => {
+                    html += '<p class="error">❌ Erreur API: ' + err.message + '</p>';
+                    result.innerHTML = html;
+                });
+        }
+        </script>
+        
+    </div>
+</body>
+</html>

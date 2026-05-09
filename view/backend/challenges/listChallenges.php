@@ -3,9 +3,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once(__DIR__ . '/../../../controller/challenge.controller.php');
+require_once(__DIR__ . '/../../../controller/participant.controller.php');
 require_once(__DIR__ . '/../../../Model/Challenge.php');
 
 $challengeC = new ChallengeController();
+$participantC = new ParticipantController();
 
 // ═══════════════════════════════════════════════════════════════
 // HANDLER AJAX CENTRAL — toutes les actions passent ici
@@ -92,6 +94,13 @@ if ($action !== '') {
             $challengeC->exportPDF();  // inclut exit()
             break;
 
+        // ── Classement intelligent ─────────────────────────────
+        case 'ranking':
+            header('Content-Type: application/json');
+            $participantC->updateSmartRankings(); // On force la mise à jour avant de lire
+            echo json_encode($participantC->getRanking(10));
+            break;
+
         default:
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Action inconnue: ' . htmlspecialchars($action)]);
@@ -124,7 +133,9 @@ if ($isAjax) {
                 $_POST['date_fin'],
                 $_POST['statut'],
                 $_POST['streak_icon'] ?? '🏆',
-                $_POST['image'] ?? ''
+                $_POST['image'] ?? '',
+                !empty($_POST['est_payant']) ? 1 : 0,
+                !empty($_POST['est_payant']) ? max(0, (float)($_POST['prix'] ?? 0)) : 0
             );
             $ok = $challengeC->addChallenge($challenge);
             echo json_encode(['success' => $ok]);
@@ -163,7 +174,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_challenge'])) {
             $_POST['date_fin'],
             $_POST['statut'],
             $_POST['streak_icon'] ?? '🏆',
-            $_POST['image'] ?? ''
+            $_POST['image'] ?? '',
+            !empty($_POST['est_payant']) ? 1 : 0,
+            !empty($_POST['est_payant']) ? max(0, (float)($_POST['prix'] ?? 0)) : 0
         );
         $challengeC->addChallenge($challenge);
     }
@@ -207,7 +220,9 @@ $list = $challengeC->listChallenges($idUser);
                 <th>Type</th>
                 <th>Statut</th>
                 <th>Participants</th>
+                <th>Prix</th>
                 <th>Date Fin</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -221,11 +236,73 @@ $list = $challengeC->listChallenges($idUser);
                     </span>
                 </td>
                 <td><?= (int)$c['participants_count'] ?></td>
+                <td>
+                    <?= ((int)($c['est_payant'] ?? 0) === 1)
+                        ? htmlspecialchars(number_format((float)($c['prix'] ?? 0), 2, ',', ' ') . ' DT')
+                        : 'Gratuit' ?>
+                </td>
                 <td><?= htmlspecialchars($c['date_fin']) ?></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-info" onclick="showAISummary(<?= $c['id'] ?>)">✨ IA</button>
+                </td>
             </tr>
         <?php endforeach; ?>
         </tbody>
     </table>
 </div>
+
+<!-- Simple AI Modal for standalone page -->
+<div id="aiModal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-light border-info">
+      <div class="modal-header border-info">
+        <h5 class="modal-title">✨ Résumé IA du Défi</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="aiContent">
+        Chargement...
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+async function showAISummary(id) {
+    const modal = new bootstrap.Modal(document.getElementById('aiModal'));
+    const content = document.getElementById('aiContent');
+    content.innerHTML = '<div class="text-center p-4">⌛ L\'IA analyse les données...</div>';
+    modal.show();
+
+    try {
+        const r = await fetch('../api/ai-challenge-summary.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challenge_id: id })
+        });
+        const data = await r.json();
+        if (!data.ok) throw new Error(data.error);
+
+        const s = data.summary;
+        const formatVal = (v) => {
+            if (!v) return '-';
+            if (typeof v === 'string') return v;
+            if (Array.isArray(v)) return v.join(', ');
+            if (typeof v === 'object') return JSON.stringify(v);
+            return String(v);
+        };
+
+        content.innerHTML = `
+            <h6>👥 Participants</h6><p class="small">${formatVal(s.synth_participants)}</p>
+            <h6>📈 Tendances</h6><p class="small">${formatVal(s.tendances)}</p>
+            <h6 class="text-danger">⚠️ Risques</h6><p class="small">${formatVal(s.risques)}</p>
+            <h6 class="text-success">💡 Recommandations</h6><p class="small">${formatVal(s.recommandations)}</p>
+            <div class="mt-3"><strong>Score Santé : ${s.score_sante}/100</strong></div>
+        `;
+    } catch (e) {
+        content.innerHTML = '<div class="alert alert-danger">Erreur : ' + e.message + '</div>';
+    }
+}
+</script>
 </body>
 </html>

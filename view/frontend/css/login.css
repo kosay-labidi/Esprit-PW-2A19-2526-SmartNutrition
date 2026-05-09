@@ -15,15 +15,17 @@
   --card-bg: rgba(15, 35, 24, 0.85);
   --glass: rgba(31, 61, 43, 0.45);
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --border: rgba(91, 62, 150, 0.3);
 }
 
 [data-theme="light"] {
   --bg: #f5f0e8;
   --text: #1F3D2B;
   --muted: #5a6e5a;
-  --card-bg: rgba(242, 232, 207, 0.85);
-  --glass: rgba(242, 232, 207, 0.6);
-  --shadow: 0 20px 60px rgba(31, 61, 43, 0.15);
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --glass: rgba(255, 255, 255, 0.6);
+  --shadow: 0 20px 60px rgba(31, 61, 43, 0.1);
+  --border: rgba(31, 61, 43, 0.15);
 }
 
 /* Reset */
@@ -66,7 +68,7 @@ h1, h2, h3 {
   border-radius: 20px;
   padding: 40px 35px;
   box-shadow: var(--shadow);
-  border: 1px solid rgba(91, 62, 150, 0.3);
+  border: 1px solid var(--border);
   animation: slideUp 0.8s ease;
   margin-left: auto;
   margin-right: 10%;

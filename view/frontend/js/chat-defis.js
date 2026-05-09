@@ -1,3 +1,12 @@
+;(function () {
+if (window.__GL_CHAT_DEFIS_LOADED__) {
+  if (typeof window.ensureChatChannelsReady === 'function') {
+    window.ensureChatChannelsReady();
+  }
+  return;
+}
+window.__GL_CHAT_DEFIS_LOADED__ = true;
+
 /**
  * chat-defis.js — GaiaLumen Chat System v1.0
  * Système de Chat pour les Défis Collaboratifs + IA Claude
@@ -15,6 +24,106 @@ const CHAT_CONFIG = {
   aiName: 'GaiaLumen IA',
   aiAvatar: '🌿',
   defaultAvatar: '👤',
+};
+
+function getBackendApiPath(file) {
+  const isModule = window.location.pathname.includes('/modules/');
+  const base = isModule ? '../../backend' : '../backend';
+  return `${base}/api/${file}`;
+}
+
+let __inlineChatPendingImage = '';
+
+function isAllowedChatImageUrl(u) {
+  if (!u || typeof u !== 'string') return false;
+  return u.includes('backend/api/uploads/chat/') || u.includes('/api/uploads/chat/');
+}
+
+function clearInlineChatPendingImage() {
+  __inlineChatPendingImage = '';
+  const wrap = document.getElementById('chat-image-preview-wrap');
+  const img = document.getElementById('chat-image-preview');
+  const file = document.getElementById('chat-file-input');
+  const sendBtn = document.getElementById('chat-send-btn');
+  const input = document.getElementById('chat-msg-input');
+  if (wrap) wrap.style.display = 'none';
+  if (img) img.removeAttribute('src');
+  if (file) file.value = '';
+  if (sendBtn && input) {
+    sendBtn.disabled = input.value.trim() === '' && !__inlineChatPendingImage;
+  }
+}
+
+function setInlineChatPendingImageUrl(url) {
+  if (!isAllowedChatImageUrl(url)) return;
+  __inlineChatPendingImage = url;
+  const wrap = document.getElementById('chat-image-preview-wrap');
+  const img = document.getElementById('chat-image-preview');
+  const sendBtn = document.getElementById('chat-send-btn');
+  if (wrap && img) {
+    img.src = url;
+    wrap.style.display = 'flex';
+  }
+  if (sendBtn) sendBtn.disabled = false;
+}
+
+async function refreshChatSessionUser() {
+  try {
+    const r = await fetch(getBackendApiPath('me.php'), {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+    });
+    if (!r.ok) return;
+    const me = await r.json();
+    window.__USER__ = { ...(window.__USER__ || {}), ...me };
+  } catch (e) { /* ignore */ }
+}
+
+function pickInlineAuthorFromChannel(ch) {
+  const u = window.__USER__ || {};
+  const list = (ch && ch.participantsList) || [];
+  const email = (u.email || '').toString().trim().toLowerCase();
+  if (email && list.length) {
+    const m = list.find(p => (p.email || '').toString().trim().toLowerCase() === email);
+    if (m) {
+      return {
+        nom: m.nom || u.nom || 'Participant',
+        avatar: '👤',
+        participantId: m.id,
+        userId: parseInt(u.id, 10) || 0,
+      };
+    }
+  }
+  return {
+    nom: u.nom || u.pseudo || 'Vous',
+    avatar: u.avatar || '😊',
+    participantId: null,
+    userId: parseInt(u.id, 10) || 0,
+  };
+}
+
+async function uploadInlineChatImage(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  const r = await fetch(getBackendApiPath('chat/attachments.php'), {
+    method: 'POST',
+    body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    credentials: 'same-origin',
+  });
+  const j = await r.json();
+  const att = j && j.attachment ? j.attachment : j;
+  if (!j || !j.ok || !att || !att.url) throw new Error((j && j.error) || 'Upload échoué');
+  return att.url;
+}
+
+window.deleteInlineChatMessage = function deleteInlineChatMessage(msgId) {
+  const ch = ChatState.channels[ChatState.activeChannel];
+  if (!ch) return;
+  const msg = ch.messages.find(m => m.id === msgId);
+  if (!msg || !msg.own || msg.isAi) return;
+  ch.messages = ch.messages.filter(m => m.id !== msgId);
+  renderMessages(ChatState.activeChannel);
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -268,10 +377,20 @@ function renderMessages(channelId) {
       : '';
 
     const hasCards = msg.type === 'cards' && Array.isArray(msg.cards) && msg.cards.length > 0;
-    const bubble = msg.text
-      ? `<div class="gl-msg-bubble ${bubbleClass}">${escapeHtml(msg.text)}</div>`
+    let innerBubble = '';
+    if (msg.image && isAllowedChatImageUrl(msg.image)) {
+      innerBubble += `<div class="gl-msg-media"><a href="${escapeHtml(msg.image)}" target="_blank" rel="noopener noreferrer"><img class="gl-msg-img" src="${escapeHtml(msg.image)}" alt="" loading="lazy" /></a></div>`;
+    }
+    if (msg.text) {
+      innerBubble += `<div class="gl-msg-text">${escapeHtml(msg.text)}</div>`;
+    }
+    const bubble = innerBubble !== ''
+      ? `<div class="gl-msg-bubble ${bubbleClass}">${innerBubble}</div>`
       : '';
     const cardsBlock = hasCards ? renderCardsBlock(msg.cards) : '';
+    const ownDel = (msg.own && !msg.isAi)
+      ? `<div class="gl-msg-own-actions"><button type="button" class="gl-msg-del" onclick="deleteInlineChatMessage('${msg.id}')" title="Supprimer">✕</button></div>`
+      : '';
 
     html += `
       <div class="gl-msg ${ownClass}" data-msg-id="${msg.id}">
@@ -279,12 +398,13 @@ function renderMessages(channelId) {
         <div class="gl-msg-content">
           ${isNewGroup ? `
             <div class="gl-msg-meta">
-              <span class="gl-msg-author ${authorClass}">${msg.author}</span>
+              <span class="gl-msg-author ${authorClass}">${escapeHtml(msg.author)}</span>
               <span class="gl-msg-time">${formatTime(msg.time)}</span>
             </div>
           ` : ''}
           ${bubble}
           ${cardsBlock}
+          ${ownDel}
           ${reactions}
         </div>
       </div>
@@ -339,6 +459,26 @@ function switchChannel(channelId) {
   renderTopbar(channelId);
   renderMessages(channelId);
   clearTypingIndicator();
+
+  if (channelId.startsWith('defi_') && typeof window.fetchParticipantsForChallenge === 'function') {
+    const cid = parseInt(channelId.replace('defi_', ''), 10);
+    if (cid) {
+      window.fetchParticipantsForChallenge(cid).then((list) => {
+        const c = ChatState.channels[channelId];
+        if (!c) return;
+        c.participantsList = list || [];
+        const n = Math.max(
+          (list || []).length,
+          parseInt(c.participants_count || 0, 10),
+          1,
+        );
+        c.onlineCount = n;
+        if (ChatState.activeChannel === channelId) {
+          renderTopbar(channelId);
+        }
+      });
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -349,17 +489,21 @@ function sendMessage() {
   if (!input) return;
 
   const text = input.value.trim();
-  if (!text) return;
+  const img = __inlineChatPendingImage;
+  if (!text && !img) return;
 
-  const user = window.__USER__ || { nom: 'Vous', avatar: '😊' };
   const ch = ChatState.channels[ChatState.activeChannel];
   if (!ch) return;
 
+  const who = pickInlineAuthorFromChannel(ch);
   const msg = {
     id: generateId(),
-    author: user.nom || user.pseudo || 'Vous',
-    avatar: user.avatar || '😊',
+    author: who.nom,
+    avatar: who.avatar,
     text,
+    image: img || '',
+    participantId: who.participantId,
+    userId: who.userId,
     time: Date.now(),
     own: true,
     isAi: false,
@@ -375,6 +519,7 @@ function sendMessage() {
 
   input.value = '';
   input.style.height = '';
+  clearInlineChatPendingImage();
 
   renderMessages(ChatState.activeChannel);
 
@@ -399,7 +544,19 @@ const peerResponses = [
 function simulatePeerTyping() {
   const indicator = document.getElementById('chat-typing-indicator');
   const typingText = document.getElementById('chat-typing-text');
-  const peer = peerResponses[Math.floor(Math.random() * peerResponses.length)];
+  let peer = peerResponses[Math.floor(Math.random() * peerResponses.length)];
+  const ch = ChatState.channels[ChatState.activeChannel];
+  const plist = ch?.participantsList || [];
+  if (plist.length > 0) {
+    const pick = plist[Math.floor(Math.random() * plist.length)];
+    const replies = [
+      'Super initiative ! On continue ensemble 🌿',
+      'Bonne idée ! Ça motive toute l’équipe 💪',
+      'Merci pour le partage 👏',
+      'Bravo pour l’avancement sur ce défi ! 🔥',
+    ];
+    peer = [pick.nom || peer[0], '👤', replies[Math.floor(Math.random() * replies.length)]];
+  }
 
   if (indicator) indicator.style.display = 'flex';
   if (typingText) typingText.textContent = `${peer[0]} est en train d'écrire…`;
@@ -478,11 +635,11 @@ Contexte canal actif : "${ch.name}" — ${ch.desc}
 Réponds en français, de façon chaleureuse, concise (3-4 phrases max), avec des emojis pertinents. 
 Inclus toujours une astuce actionnable ou un encouragement spécifique.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(getBackendApiPath('anthropic-messages.php'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: 'user', content: contextPrompt }],
@@ -613,33 +770,79 @@ window.toggleReaction = function(msgId, emoji) {
 // ═══════════════════════════════════════════════════════════
 function syncWithChallenges(challenges) {
   if (!Array.isArray(challenges)) return;
-  challenges.slice(0, 4).forEach(ch => {
+
+  challenges.forEach(ch => {
     const id = `defi_${ch.id}`;
+    const count = Math.max(0, parseInt(ch.participants_count || 0, 10));
+    const base = {
+      id,
+      challengeNumericId: ch.id,
+      icon: ch.steaker || ch.streak_icon || '🏆',
+      name: ch.titre ? ch.titre.substring(0, 28) : 'Défi',
+      desc: ch.description
+        ? (ch.description.length > 72 ? ch.description.substring(0, 72) + '…' : ch.description)
+        : '',
+      section: 'DÉFIS',
+      participants_count: count,
+      participantsList: ChatState.channels[id]?.participantsList || [],
+      messages: ChatState.channels[id]?.messages || [],
+      unread: ChatState.channels[id]?.unread || 0,
+      onlineCount: Math.max(count, 1),
+    };
+
     if (!ChatState.channels[id]) {
-      ChatState.channels[id] = {
-        id,
-        icon: ch.steaker || '🏆',
-        name: ch.titre ? ch.titre.substring(0, 22) : 'Défi',
-        desc: ch.description ? ch.description.substring(0, 50) + '…' : '',
-        section: 'MES DÉFIS',
-        messages: [],
-        unread: 0,
-        onlineCount: ch.participants_count || Math.floor(Math.random() * 12) + 1,
-      };
+      ChatState.channels[id] = { ...base };
+    } else {
+      const keep = ChatState.channels[id];
+      keep.icon = base.icon;
+      keep.name = base.name;
+      keep.desc = base.desc;
+      keep.section = base.section;
+      keep.challengeNumericId = base.challengeNumericId;
+      keep.participants_count = base.participants_count;
+      keep.onlineCount = base.onlineCount;
     }
   });
-  renderChannelList();
+
+  const list = document.getElementById('chat-channel-list');
+  if (list) renderChannelList();
 }
+
+window.syncChatWithChallenges = syncWithChallenges;
+
+function ensureChatChannelsReady() {
+  if (window.__chatChannelsReady) return;
+  window.__chatChannelsReady = true;
+  buildDefaultChannels();
+  if (window.allChallenges && window.allChallenges.length > 0) {
+    syncWithChallenges(window.allChallenges);
+  }
+  const _origLoad = window.loadChallenges;
+  if (typeof _origLoad === 'function' && !window.__chatLoadChallengesPatched) {
+    window.__chatLoadChallengesPatched = true;
+    window.loadChallenges = function () {
+      const r = _origLoad.apply(this, arguments);
+      setTimeout(() => {
+        if (window.allChallenges) syncWithChallenges(window.allChallenges);
+      }, 1200);
+      return r;
+    };
+  }
+}
+
+window.ensureChatChannelsReady = ensureChatChannelsReady;
 
 // ═══════════════════════════════════════════════════════════
 // INITIALISATION DU MODULE CHAT
 // ═══════════════════════════════════════════════════════════
 function initChat() {
+  ensureChatChannelsReady();
+  void refreshChatSessionUser();
+
   const chatRoot = document.getElementById('gl-chat-root');
   if (!chatRoot || chatRoot.dataset.chatInit) return;
   chatRoot.dataset.chatInit = '1';
 
-  buildDefaultChannels();
   renderChannelList();
   renderTopbar(ChatState.activeChannel);
   renderMessages(ChatState.activeChannel);
@@ -664,8 +867,42 @@ function initChat() {
     input.addEventListener('input', () => {
       input.style.height = '';
       input.style.height = Math.min(input.scrollHeight, 90) + 'px';
-      if (sendBtn) sendBtn.disabled = input.value.trim() === '';
+      if (sendBtn) {
+        sendBtn.disabled = input.value.trim() === '' && !__inlineChatPendingImage;
+      }
     });
+
+    input.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items || [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf('image') === 0) {
+          e.preventDefault();
+          const f = items[i].getAsFile();
+          if (f) {
+            uploadInlineChatImage(f).then((url) => setInlineChatPendingImageUrl(url)).catch(() => {});
+          }
+          break;
+        }
+      }
+    });
+  }
+
+  const attachBtn = document.getElementById('chat-attach-btn');
+  const fileInp = document.getElementById('chat-file-input');
+  const clrImg = document.getElementById('chat-image-clear');
+  if (attachBtn && fileInp) {
+    attachBtn.addEventListener('click', () => fileInp.click());
+    fileInp.addEventListener('change', () => {
+      const f = fileInp.files?.[0];
+      if (!f) return;
+      uploadInlineChatImage(f)
+        .then((url) => setInlineChatPendingImageUrl(url))
+        .catch(() => {})
+        .finally(() => { fileInp.value = ''; });
+    });
+  }
+  if (clrImg) {
+    clrImg.addEventListener('click', clearInlineChatPendingImage);
   }
 
   // Bouton IA
@@ -693,23 +930,6 @@ function initChat() {
     });
   }
 
-  // Sync avec défis si déjà chargés
-  if (window.allChallenges && window.allChallenges.length > 0) {
-    syncWithChallenges(window.allChallenges);
-  }
-
-  // Patch loadChallenges pour sync auto
-  const _origLoad = window.loadChallenges;
-  if (typeof _origLoad === 'function') {
-    window.loadChallenges = function() {
-      const r = _origLoad.apply(this, arguments);
-      setTimeout(() => {
-        if (window.allChallenges) syncWithChallenges(window.allChallenges);
-      }, 1200);
-      return r;
-    };
-  }
-
   console.log('💬 Chat GaiaLumen initialisé — canaux :', Object.keys(ChatState.channels).length);
 }
 
@@ -723,3 +943,4 @@ document.addEventListener('moduleLoaded', (e) => {
 if (document.readyState !== 'loading') {
   setTimeout(initChat, 150);
 }
+})();

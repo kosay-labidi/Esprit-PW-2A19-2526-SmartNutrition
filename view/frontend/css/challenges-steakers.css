@@ -100,6 +100,74 @@
   filter: drop-shadow(0 0 8px rgba(205,127,50,.55));
 }
 
+/* ══════════════════════════════════════════════════════════
+   ADVANCED STAT BARS (PROGRESS BARS)
+   ══════════════════════════════════════════════════════════ */
+.gl-challenge-progress-wrap {
+  margin: 15px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gl-challenge-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.gl-progress-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.gl-progress-val {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--neon-blue);
+}
+
+.gl-challenge-progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.gl-challenge-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #00d4ff 100%);
+  border-radius: 3px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.gl-challenge-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 .steaker-bronze::before {
   content: '';
   position: absolute;

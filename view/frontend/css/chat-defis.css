@@ -406,8 +406,9 @@
 
 .gl-msg-meta {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
   margin-bottom: 3px;
 }
 
@@ -427,6 +428,56 @@
 .gl-msg-time {
   font-size: 0.62rem;
   color: rgba(168, 184, 160, 0.6);
+}
+
+.gl-msg-del {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(231, 76, 60, 0.12);
+  color: #e74c3c;
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.gl-msg-del:hover {
+  background: rgba(231, 76, 60, 0.22);
+}
+
+.gl-msg-own-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.gl-msg-media {
+  margin-bottom: 6px;
+}
+
+.gl-msg-img {
+  display: block;
+  max-width: min(100%, 280px);
+  max-height: 220px;
+  border-radius: 10px;
+  object-fit: contain;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gl-msg-video {
+  display: block;
+  width: min(100%, 360px);
+  max-height: 260px;
+  border-radius: 10px;
+  background: #050b12;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gl-msg-text {
+  word-break: break-word;
 }
 
 .gl-msg-bubble {
@@ -648,12 +699,14 @@
   outline: none;
   color: var(--text, #F2E8CF);
   font-size: 0.84rem;
-  font-family: inherit;
+  font-family: "Lato", system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.5;
   resize: none;
   min-height: 22px;
   max-height: 100px;
   scrollbar-width: thin;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .gl-chat-input::placeholder {

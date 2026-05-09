@@ -4,7 +4,7 @@
      ═══════════════════════════════════════════════════════════ -->
 
 <link rel="stylesheet" href="../frontend/css/challenges-steakers.css?v=20260415-4">
-<link rel="stylesheet" href="css/challenges-admin.css?v=20260415-4">
+<link rel="stylesheet" href="css/challenges-admin.css?v=20260503-calendar-ai">
 
 <section class="content-section" id="challenges">
 
@@ -63,6 +63,35 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           Réinitialiser
         </button>
+      </div>
+
+      <div class="adm-ai-box" id="challenge-ai-box">
+        <div class="adm-ai-box__head">
+          <div class="adm-ai-box__title-wrap">
+            <div class="adm-ai-box__icon">AI</div>
+            <div>
+              <div class="adm-ai-box__eyebrow">Assistant IA</div>
+              <h4 class="adm-ai-box__title">Créer un défi depuis un prompt</h4>
+            </div>
+          </div>
+          <button type="button" class="adm-ai-box__sample" id="challenge-ai-sample">
+            Exemple
+          </button>
+        </div>
+        <div class="adm-ai-box__body">
+          <textarea
+            id="challenge-ai-prompt"
+            class="form-textarea adm-input adm-ai-box__prompt"
+            rows="3"
+            placeholder="Ex: Crée un défi collectif de 14 jours pour réduire les bouteilles plastiques au campus, avec une cible de 40%."
+          ></textarea>
+        </div>
+        <div class="adm-ai-box__actions">
+          <button type="button" class="adm-ai-box__generate" id="challenge-ai-generate">
+            Générer le défi
+          </button>
+          <span class="adm-ai-box__status" id="challenge-ai-status"></span>
+        </div>
       </div>
 
       <div class="form-container-with-preview adm-form-wrap">
@@ -153,6 +182,18 @@
                     <label class="form-label">Date de fin <span class="required">*</span></label>
                     <input type="date" name="date_fin" id="challenge-date-fin" class="form-input adm-input" required onchange="updatePreview()">
                   </div>
+                  <div class="form-group">
+                    <label class="form-label">Accès</label>
+                    <label class="form-checkbox" style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(168,184,160,.24);border-radius:10px;">
+                      <input type="checkbox" name="est_payant" id="challenge-est-payant" value="1" onchange="toggleChallengePrice(); updatePreview()">
+                      <span class="checkbox-label">Défi payant</span>
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Prix</label>
+                    <input type="number" name="prix" id="challenge-prix" class="form-input adm-input" min="0" step="0.01" value="0" oninput="updatePreview()">
+                    <span class="error-msg" id="error-prix"></span>
+                  </div>
                 </div>
               </div>
 
@@ -215,8 +256,14 @@
                   </div>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Image (URL)</label>
-                  <input type="url" name="image" id="challenge-image" class="form-input adm-input" placeholder="https://…" oninput="updatePreview()">
+                  <div class="adm-image-label-row">
+                    <label class="form-label">Image (URL)</label>
+                    <button type="button" class="adm-ai-image-btn" id="challenge-ai-image-generate">
+                      Image IA
+                    </button>
+                  </div>
+                  <input type="text" name="image" id="challenge-image" class="form-input adm-input" placeholder="https://…" oninput="updatePreview()">
+                  <span class="adm-ai-image-status" id="challenge-ai-image-status"></span>
                 </div>
               </div>
             </div>
@@ -255,6 +302,7 @@
             <div class="adm-preview-body">
               <div class="challenge-preview-card" id="challenge-preview">
                 <div class="preview-image" id="preview-img-container">
+                  <img class="preview-generated-img" id="preview-generated-img" alt="Aperçu image du défi">
                   <span class="preview-category-badge" id="preview-category">Catégorie</span>
                   <span class="preview-icon-large" id="preview-icon">♻️</span>
                 </div>
@@ -271,6 +319,10 @@
                       <span class="label">Fin</span>
                       <span class="value" id="preview-date">-</span>
                     </div>
+                    <div class="preview-stat">
+                      <span class="label">Accès</span>
+                      <span class="value" id="preview-price">Gratuit</span>
+                    </div>
                   </div>
                   <div class="preview-progress-bar">
                     <div class="bar-fill" style="width:30%"></div>
@@ -284,97 +336,6 @@
       </div>
     </div>
     <!-- /FORMULAIRE + APERÇU -->
-
-
-    <!-- ╔═══════════════════════════════════════════════════════╗
-         ║   SECTION 2 : STATISTIQUES 3D ANIMÉES                ║
-         ╚═══════════════════════════════════════════════════════╝ -->
-    <div class="adm-stats-3d-grid">
-
-      <!-- Carte 1 — Défis Actifs -->
-      <div class="stat3d-card" data-tilt>
-        <div class="stat3d-glow stat3d-glow--green"></div>
-        <div class="stat3d-inner">
-          <div class="stat3d-top">
-            <div class="stat3d-icon-wrap stat3d-icon-wrap--green">
-              <span class="stat3d-icon">🏆</span>
-              <div class="stat3d-icon-ring"></div>
-            </div>
-            <div class="stat3d-trend positive">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-              +3 ce mois
-            </div>
-          </div>
-          <div class="stat3d-value" id="metric-active" data-target="28">0</div>
-          <div class="stat3d-label">Défis Actifs</div>
-          <div class="stat3d-bar-wrap">
-            <div class="stat3d-bar stat3d-bar--green" data-width="72"></div>
-          </div>
-        </div>
-        <div class="stat3d-particles">
-          <span></span><span></span><span></span>
-        </div>
-      </div>
-
-      <!-- Carte 2 — Participants -->
-      <div class="stat3d-card" data-tilt>
-        <div class="stat3d-glow stat3d-glow--blue"></div>
-        <div class="stat3d-inner">
-          <div class="stat3d-top">
-            <div class="stat3d-icon-wrap stat3d-icon-wrap--blue">
-              <span class="stat3d-icon">👥</span>
-              <div class="stat3d-icon-ring"></div>
-            </div>
-            <div class="stat3d-trend positive">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-              +12% semaine
-            </div>
-          </div>
-          <div class="stat3d-value" id="metric-participants" data-target="1847">0</div>
-          <div class="stat3d-label">Participants</div>
-          <div class="stat3d-bar-wrap">
-            <div class="stat3d-bar stat3d-bar--blue" data-width="85"></div>
-          </div>
-        </div>
-        <div class="stat3d-particles">
-          <span></span><span></span><span></span>
-        </div>
-      </div>
-
-      <!-- Carte 3 — Taux Complétion avec ring SVG 3D -->
-      <div class="stat3d-card stat3d-card--ring" data-tilt>
-        <div class="stat3d-glow stat3d-glow--gold"></div>
-        <div class="stat3d-inner">
-          <div class="stat3d-top">
-            <div class="stat3d-icon-wrap stat3d-icon-wrap--gold">
-              <span class="stat3d-icon">🎯</span>
-              <div class="stat3d-icon-ring"></div>
-            </div>
-            <div class="stat3d-trend positive">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-              +5% progress
-            </div>
-          </div>
-          <div class="stat3d-ring-wrap">
-            <svg class="stat3d-ring-svg" viewBox="0 0 80 80">
-              <circle class="stat3d-ring-bg" cx="40" cy="40" r="32"/>
-              <circle class="stat3d-ring-fill stat3d-ring-fill--gold" cx="40" cy="40" r="32"
-                stroke-dasharray="201" stroke-dashoffset="201" data-pct="82"/>
-            </svg>
-            <div class="stat3d-ring-center">
-              <span class="stat3d-value stat3d-value--sm" id="metric-completion" data-target="82">0</span>
-              <span class="stat3d-pct">%</span>
-            </div>
-          </div>
-          <div class="stat3d-label">Taux de Complétion</div>
-        </div>
-        <div class="stat3d-particles">
-          <span></span><span></span><span></span>
-        </div>
-      </div>
-
-    </div>
-    <!-- /STATS 3D -->
 
 
     <!-- ╔═══════════════════════════════════════════════════════╗
@@ -437,6 +398,7 @@
                 <th>Défi</th>
                 <th>Type</th>
                 <th>Objectif</th>
+                <th>Prix</th>
                 <th>Progression</th>
                 <th>Statut</th>
                 <th>Durée</th>
@@ -445,7 +407,7 @@
             </thead>
             <tbody id="challenges-tbody">
               <tr>
-                <td colspan="6" class="adm-table-loading">
+                <td colspan="8" class="adm-table-loading">
                   <div class="adm-table-empty-icon">⏳</div>
                   Chargement des défis…
                 </td>
@@ -456,12 +418,9 @@
       </div>
 
       <!-- Pagination -->
-      <div class="table-pagination adm-pagination" style="display:none">
-        <div class="pagination-info">Affichage de 1 à 3 sur 28 défis</div>
-        <div class="pagination-controls">
-          <button class="adm-btn adm-btn--ghost adm-btn--sm" disabled>← Précédent</button>
-          <button class="adm-btn adm-btn--ghost adm-btn--sm">Suivant →</button>
-        </div>
+      <div class="table-pagination adm-pagination" id="challenges-pagination" style="display:none">
+        <div class="pagination-info" id="challenges-pagination-info">Affichage de 0 à 0 sur 0 défis</div>
+        <div class="pagination-controls" id="challenges-pagination-controls"></div>
       </div>
     </div>
     <!-- /TABLEAU DÉFIS -->
@@ -497,12 +456,13 @@
                 <th>Objectif</th>
                 <th>Date inscription</th>
                 <th>Statut</th>
+                <th>Paiement</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="challenge-participants-tbody">
               <tr>
-                <td colspan="7" class="adm-table-loading">
+                <td colspan="8" class="adm-table-loading">
                   <div class="adm-table-empty-icon">👆</div>
                   Cliquez sur l'icône participants d'un défi pour afficher la liste.
                 </td>
@@ -585,12 +545,13 @@
                 <th>Objectif</th>
                 <th>Date inscription</th>
                 <th>Statut</th>
+                <th>Paiement</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="participants-tbody">
               <tr>
-                <td colspan="7" class="adm-table-loading">
+                <td colspan="8" class="adm-table-loading">
                   <div class="adm-table-empty-icon">⏳</div>
                   Chargement des participants…
                 </td>
@@ -604,8 +565,8 @@
       <div class="table-pagination adm-pagination">
         <div class="pagination-info" id="participants-pagination-info">Affichage de 0 à 0 sur 0 participants</div>
         <div class="pagination-controls">
-          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="participantsPage--; renderParticipantsPage()">← Précédent</button>
-          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="participantsPage++; renderParticipantsPage()">Suivant →</button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="changeParticipantsPage(-1)">← Précédent</button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" onclick="changeParticipantsPage(1)">Suivant →</button>
         </div>
       </div>
     </div>
@@ -636,6 +597,127 @@
 <style>
 /* ── RESET ─────────────────────────────────────────────── */
 #challenges *, #challenges *::before, #challenges *::after { box-sizing: border-box; }
+
+.adm-ai-box {
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid rgba(82, 183, 136, 0.28);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(82, 183, 136, 0.13), rgba(58, 134, 196, 0.08)),
+    rgba(10, 18, 28, 0.56);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 16px 34px rgba(0,0,0,.18);
+}
+.adm-ai-box__head,
+.adm-ai-box__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.adm-ai-box__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.adm-ai-box__icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: rgba(82, 183, 136, 0.16);
+  border: 1px solid rgba(82, 183, 136, 0.35);
+  color: #9be7bd;
+  font-weight: 900;
+  font-size: 0.82rem;
+}
+.adm-ai-box__eyebrow {
+  color: #9be7bd;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.adm-ai-box__title {
+  margin: 2px 0 0;
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+.adm-ai-box__body {
+  margin: 14px 0;
+}
+.adm-ai-box__prompt {
+  width: 100%;
+  margin: 0;
+  min-height: 92px;
+  resize: vertical;
+  line-height: 1.55;
+  background: var(--surface, #0f2318);
+  color: var(--text, #F2E8CF);
+  border: 1.5px solid rgba(148, 163, 184, 0.20);
+}
+.adm-ai-box__prompt::placeholder {
+  color: var(--muted, #a8b8a0);
+}
+.adm-ai-box__prompt:focus {
+  background: var(--surface, #0f2318);
+  border-color: var(--blue, #3A86C4);
+}
+.adm-ai-box__sample,
+.adm-ai-box__generate {
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.adm-ai-box__sample {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.10);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  font-weight: 700;
+}
+.adm-ai-box__generate {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2f9e73, #3a86c4);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 10px 22px rgba(47, 158, 115, 0.20);
+}
+.adm-ai-box__sample:hover,
+.adm-ai-box__generate:hover {
+  transform: translateY(-1px);
+}
+.adm-ai-box__generate:disabled {
+  cursor: wait;
+  opacity: .72;
+  transform: none;
+}
+.adm-ai-box__status {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  min-height: 18px;
+  flex: 1;
+  text-align: right;
+}
+.adm-ai-box__status.ok { color: #9be7bd; }
+.adm-ai-box__status.error { color: #ef4444; }
+@media (max-width: 640px) {
+  .adm-ai-box__head,
+  .adm-ai-box__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .adm-ai-box__status {
+    text-align: left;
+  }
+}
 
 /* ══════════════════════════════════════════════════════════
    SYSTÈME ADM-FRAME — Cadres 3D admin
@@ -1123,6 +1205,25 @@
 }
 
 .adm-select:focus { outline: none; border-color: var(--violet,#5B3E96); box-shadow: inset 0 1px 3px rgba(0,0,0,.08), 0 0 0 3px rgba(91,62,150,.1); }
+
+.adm-pagination .pagination-controls {
+  align-items: center;
+  flex-wrap: wrap;
+}
+.adm-pagination .adm-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+}
+.adm-pagination .adm-btn.active {
+  background: linear-gradient(135deg, var(--violet,#5B3E96), var(--blue,#3A86C4));
+  border-color: transparent;
+  color: #fff;
+}
+.adm-pagination .pagination-ellipsis {
+  color: var(--muted,#a8b8a0);
+  font-weight: 800;
+}
 
 [data-theme="light"] .adm-search, [data-theme="light"] .adm-select {
   background: rgba(255,255,255,.8);

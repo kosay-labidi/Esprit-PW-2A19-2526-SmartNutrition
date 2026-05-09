@@ -1,10 +1,12 @@
 <?php
 require_once(__DIR__ . '/../../../controller/participant.controller.php');
 require_once(__DIR__ . '/../../../controller/challenge.controller.php');
+require_once(__DIR__ . '/../../../controller/paiementDefi.controller.php');
 require_once(__DIR__ . '/../../../Model/Participant.php');
 
 $participantC = new ParticipantController();
 $challengeC   = new ChallengeController();
+$paiementC    = new PaiementDefiController();
 
 $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH'])
     && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
@@ -32,6 +34,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($participantC->emailDejaInscrit(trim($_POST['email']), (int)$_POST['id_challenge'])) {
         $response = ['success' => false, 'message' => 'Cette adresse email est déjà inscrite à ce défi.'];
     } else {
+        $challenge = $challengeC->showChallenge((int)$_POST['id_challenge']);
+        $estPayant = (int)($challenge['est_payant'] ?? 0) === 1;
+        $prix = max(0, (float)($challenge['prix'] ?? 0));
+        $paiementReference = trim((string)($_POST['paiement_reference'] ?? ''));
+        $paiementValide = null;
+
+        if ($estPayant && $prix > 0) {
+            $paiementValide = $paiementC->paiementValidePourInscription(
+                (int)$_POST['id_challenge'],
+                trim($_POST['email']),
+                $paiementReference,
+                $prix
+            );
+        }
+
+        if ($estPayant && $prix > 0 && !$paiementValide) {
+            $response = [
+                'success' => false,
+                'paiement_required' => true,
+                'message' => 'Paiement validé requis avant inscription.',
+                'prix' => $prix,
+                'challenge' => $challenge['titre'] ?? 'Défi payant'
+            ];
+        } else {
         $participant = new Participant(
             (int)   $_POST['id_challenge'],
             trim(   $_POST['nom']),
@@ -42,8 +68,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             (int)  ($_POST['engagement']    ?? 0),
             (int)  ($_POST['notifications'] ?? 0)
         );
-        $ok = $participantC->addParticipant($participant);
-        $response = ['success' => $ok, 'message' => $ok ? 'Participant ajouté avec succès !' : 'Erreur lors de l\'ajout.'];
+            $participantId = $participantC->addParticipant($participant);
+            $ok = $participantId !== false;
+            $paiement = null;
+
+            if ($ok && $estPayant && $prix > 0) {
+                $linked = $paiementC->lierParticipant($paiementReference, (int)$participantId);
+                if (!$linked) {
+                    $response = ['success' => false, 'message' => 'Participant ajouté, mais paiement non relié.'];
+                } else {
+                    $paiement = [
+                        'success' => true,
+                        'reference' => $paiementReference,
+                        'statut' => $paiementValide['statut'] ?? 'paye',
+                        'methode' => $paiementValide['methode'] ?? '',
+                    ];
+                }
+            }
+
+            if (!isset($response)) {
+                $response = [
+                    'success' => $ok,
+                    'message' => $ok ? 'Participant ajouté avec succès !' : 'Erreur lors de l\'ajout.',
+                    'participant_id' => $ok ? (int)$participantId : 0,
+                    'paiement' => $paiement,
+                ];
+            }
+        }
     }
 
     if ($isAjax) {

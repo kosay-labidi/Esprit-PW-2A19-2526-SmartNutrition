@@ -12,6 +12,8 @@ if (
         !empty($_POST["titre"]) && !empty($_POST["description"]) && !empty($_POST["type"]) && !empty($_POST["objectif"]) && !empty($_POST["valeur_cible"]) && !empty($_POST["date_debut"]) && !empty($_POST["date_fin"]) && !empty($_POST["statut"]) && !empty($_POST["streak_icon"])
     ) {
         $image = isset($_POST["image"]) ? $_POST["image"] : "";
+        $est_payant = !empty($_POST['est_payant']) ? 1 : 0;
+        $prix = $est_payant ? max(0, (float)($_POST['prix'] ?? 0)) : 0;
         $challenge = new Challenge(
             null, // id
             $_POST['titre'],
@@ -23,7 +25,9 @@ if (
             $_POST['date_fin'],
             $_POST['statut'],
             $_POST['streak_icon'],
-            $image
+            $image,
+            $est_payant,
+            $prix
         );
         $challengeC->addChallenge($challenge);
         
@@ -282,6 +286,17 @@ if (
             <input type="text" class="form-control" id="image" name="image" placeholder="Enter image URL" required>
           </div>
 
+          <!-- Paiement -->
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="est_payant" name="est_payant" value="1" onchange="togglePrixDefi()">
+            <label for="est_payant" class="form-check-label">Défi payant</label>
+          </div>
+
+          <div class="mb-3" id="prix-wrap" style="display:none;">
+            <label for="prix" class="form-label">Prix du défi</label>
+            <input type="number" class="form-control" id="prix" name="prix" min="0" step="0.01" value="0" placeholder="Ex: 25.00">
+          </div>
+
           <!-- Submit -->
           <div class="text-center">
             <button type="submit" class="btn btn-primary">
@@ -316,117 +331,15 @@ if (
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../js/admin.js"></script>
-</body>
-</html>
-<?php
-require_once(__DIR__ . '/../../../controller/challenge.controller.php');
-require_once(__DIR__ . '/../../../Model/Challenge.php');
-
-$error = "";
-$challengeC = new ChallengeController();
-
-if (
-    isset($_POST["titre"]) && isset($_POST["description"]) && isset($_POST["type"]) && isset($_POST["objectif"]) && 
-    isset($_POST["valeur_cible"]) && isset($_POST["date_debut"]) && isset($_POST["date_fin"]) && 
-    isset($_POST["statut"]) && isset($_POST["streak_icon"]) && isset($_POST["image"])
-) {
-    if (
-        !empty($_POST["titre"]) && !empty($_POST["description"]) && !empty($_POST["type"]) && !empty($_POST["objectif"]) && 
-        !empty($_POST["valeur_cible"]) && !empty($_POST["date_debut"]) && !empty($_POST["date_fin"]) && 
-        !empty($_POST["statut"]) && !empty($_POST["streak_icon"]) && !empty($_POST["image"])
-    ) {
-        $challenge = new Challenge(
-            null, 
-            $_POST['titre'],
-            $_POST['description'],
-            $_POST['type'],
-            $_POST['objectif'],
-            (int)$_POST['valeur_cible'],
-            $_POST['date_debut'],
-            $_POST['date_fin'],
-            $_POST['statut'],
-            $_POST['streak_icon'],
-            $_POST['image']
-        );
-        $challengeC->addChallenge($challenge);
-        header('Location: listChallenges.php');
-        exit;
-    } else {
-        $error = "Informations manquantes";
-    }
-}
-?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8" />
-    <title>Esprit Challenge | Ajouter</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="assets/css/main.css" />
-</head>
-<body>
-    <main class="main-wrapper">
-        <section class="section">
-            <div class="container-fluid">
-                <div class="title-wrapper pt-30">
-                    <h2>Ajouter un nouveau défi</h2>
-                </div>
-                <div class="container mt-4">
-                    <?php if (!empty($error)) { echo '<div class="alert alert-danger">'.$error.'</div>'; } ?>
-                    <form action="" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label">Titre</label>
-                            <input type="text" class="form-control" name="titre" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" name="description" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Type</label>
-                            <select class="form-select" name="type" required>
-                                <option value="Quotidien">Quotidien</option>
-                                <option value="Hebdomadaire">Hebdomadaire</option>
-                                <option value="Mensuel">Mensuel</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Objectif</label>
-                            <input type="text" class="form-control" name="objectif" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Valeur Cible</label>
-                            <input type="number" class="form-control" name="valeur_cible" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Date Début</label>
-                            <input type="date" class="form-control" name="date_debut" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Date Fin</label>
-                            <input type="date" class="form-control" name="date_fin" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Statut</label>
-                            <select class="form-select" name="statut" required>
-                                <option value="En cours">En cours</option>
-                                <option value="Terminé">Terminé</option>
-                                <option value="A venir">A venir</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Icône (Classe CSS)</label>
-                            <input type="text" class="form-control" name="streak_icon" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">URL Image</label>
-                            <input type="text" class="form-control" name="image" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Ajouter le défi</button>
-                    </form>
-                </div>
-            </div>
-        </section>
-    </main>
+    <script>
+      function togglePrixDefi() {
+        const checked = document.getElementById('est_payant').checked;
+        const wrap = document.getElementById('prix-wrap');
+        const input = document.getElementById('prix');
+        wrap.style.display = checked ? 'block' : 'none';
+        input.required = checked;
+        if (!checked) input.value = '0';
+      }
+    </script>
 </body>
 </html>

@@ -19,6 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ) {
         $response = ['success' => false, 'message' => 'Informations manquantes.'];
     } else {
+        $estPayant = !empty($_POST['est_payant']) ? 1 : 0;
+        $prix = $estPayant ? max(0, (float)($_POST['prix'] ?? 0)) : 0;
         $challenge = new Challenge(
             $id,
             trim($_POST['titre']),
@@ -30,7 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['date_fin'],
             $_POST['statut'],
             trim($_POST['streak_icon'] ?? '🏆'),
-            trim($_POST['image']       ?? '')
+            trim($_POST['image']       ?? ''),
+            $estPayant,
+            $prix
         );
         $ok = $challengeC->updateChallenge($challenge, $id);
         $response = ['success' => $ok, 'message' => $ok ? 'Défi mis à jour.' : 'Erreur lors de la mise à jour.'];
@@ -223,13 +227,32 @@ $iconOptions = [
             <!-- Image -->
             <div style="margin-bottom:28px;">
                 <label class="gl-label">Image (URL)</label>
-                <input type="url" name="image" id="u-image" class="gl-input"
+                <input type="text" name="image" id="u-image" class="gl-input"
                        placeholder="https://…"
                        value="<?= htmlspecialchars($challenge['image'] ?? '') ?>">
                 <div class="gl-error" id="err-image"></div>
                 <div id="img-preview" style="margin-top:10px;display:none;">
                     <img id="img-preview-el" src="" alt="Aperçu"
                          style="max-height:120px; border-radius:10px; border:1px solid rgba(99,102,241,0.3);">
+                </div>
+            </div>
+
+            <!-- Paiement -->
+            <div class="gl-grid-2" style="margin-bottom:28px;">
+                <div>
+                    <label class="gl-label">Type d'accès</label>
+                    <label style="display:flex;align-items:center;gap:10px;background:#2d2d44;border:1px solid rgba(99,102,241,0.35);border-radius:9px;padding:11px 14px;color:#e2e8f0;">
+                        <input type="checkbox" name="est_payant" id="u-est-payant" value="1"
+                               <?= ((int)($challenge['est_payant'] ?? 0) === 1) ? 'checked' : '' ?>
+                               onchange="togglePrixDefi()">
+                        Défi payant
+                    </label>
+                </div>
+                <div id="u-prix-wrap">
+                    <label class="gl-label">Prix</label>
+                    <input type="number" name="prix" id="u-prix" class="gl-input" min="0" step="0.01"
+                           value="<?= htmlspecialchars((string)($challenge['prix'] ?? '0')) ?>">
+                    <div class="gl-error" id="err-prix"></div>
                 </div>
             </div>
 
@@ -270,6 +293,16 @@ document.getElementById('u-image').addEventListener('input', function() {
         img.onerror = () => { wrap.style.display = 'none'; };
     } catch { wrap.style.display = 'none'; }
 });
+
+function togglePrixDefi() {
+    const checked = document.getElementById('u-est-payant').checked;
+    const wrap = document.getElementById('u-prix-wrap');
+    const input = document.getElementById('u-prix');
+    wrap.style.opacity = checked ? '1' : '0.45';
+    input.required = checked;
+    if (!checked) input.value = '0';
+}
+togglePrixDefi();
 
 // ── Validation avant submit ───────────────────────────────────
 document.getElementById('update-form').addEventListener('submit', function(e) {
@@ -314,6 +347,17 @@ document.getElementById('update-form').addEventListener('submit', function(e) {
     } else {
         document.getElementById('u-debut').classList.remove('error');
         document.getElementById('err-debut').textContent = '';
+    }
+
+    const paid = document.getElementById('u-est-payant').checked;
+    const prix = parseFloat(document.getElementById('u-prix').value || '0');
+    if (paid && (isNaN(prix) || prix <= 0)) {
+        document.getElementById('u-prix').classList.add('error');
+        document.getElementById('err-prix').textContent = 'Le prix doit être supérieur à 0.';
+        valid = false;
+    } else {
+        document.getElementById('u-prix').classList.remove('error');
+        document.getElementById('err-prix').textContent = '';
     }
 
     if (!valid) e.preventDefault();

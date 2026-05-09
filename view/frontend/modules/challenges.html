@@ -319,6 +319,8 @@
             <select id="ranking-sort-filter" class="gl-rank-select" style="width: auto; margin-left: 10px; height: 24px; font-size: 0.65rem; padding: 0 5px; border: none; background: rgba(91,62,150,0.2);">
               <option value="progression">📈 %</option>
               <option value="points">💎 Pts</option>
+              <option value="engagement">🔥 Eng.</option>
+              <option value="recent">🕒 Récent</option>
             </select>
             <div class="rank-live-dot"><span></span>Live</div>
           </div>
@@ -570,6 +572,25 @@
             <span id="modal-online-count">— en ligne</span>
           </div>
           <button
+            type="button"
+            id="modal-fullscreen-btn"
+            class="gl-chat-modal-fullscreen"
+            title="Plein écran"
+            aria-pressed="false"
+          >
+            ⤢
+          </button>
+          <button
+            type="button"
+            id="modal-live-btn"
+            class="gl-chat-live-btn"
+            title="Démarrer un live"
+            style="display: none"
+          >
+            <span class="gl-chat-live-btn__dot"></span>
+            Live
+          </button>
+          <button
             class="gl-chat-modal-close"
             onclick="closeChatModal()"
             title="Fermer"
@@ -589,8 +610,47 @@
         </div>
       </div>
 
+      <div class="gl-chat-modal-tools">
+        <input
+          type="search"
+          id="modal-channel-search"
+          class="gl-chat-modal-search"
+          placeholder="Rechercher un défi ou canal..."
+          autocomplete="off"
+        />
+        <span id="modal-channel-count" class="gl-chat-modal-count">0</span>
+      </div>
+
       <!-- Tabs canaux -->
       <div class="gl-chat-modal-tabs" id="modal-channel-tabs"></div>
+
+      <!-- Défi + participants liés au canal actif -->
+      <div
+        id="modal-chat-context"
+        class="gl-chat-modal-context gl-chat-modal-context--empty"
+        aria-live="polite"
+      ></div>
+
+      <div id="modal-webrtc-panel" class="gl-chat-live-panel" style="display: none">
+        <div class="gl-chat-live-item">
+          <div class="gl-chat-live-item__top">
+            <strong>Live Streaming</strong>
+            <span id="modal-webrtc-status" class="gl-chat-live-status">Inactif</span>
+          </div>
+          <div class="gl-chat-live-actions">
+            <button type="button" id="modal-webrtc-start-btn">Démarrer</button>
+            <button type="button" id="modal-webrtc-join-btn">Rejoindre</button>
+            <button type="button" id="modal-webrtc-screen-btn">Écran</button>
+            <button type="button" id="modal-webrtc-mic-btn">Micro</button>
+            <button type="button" id="modal-webrtc-cam-btn">Caméra</button>
+            <button type="button" id="modal-webrtc-end-btn">Terminer</button>
+          </div>
+          <div class="gl-chat-live-item__top" style="margin-top:8px">
+            <video id="modal-webrtc-local" class="gl-chat-live-frame" autoplay muted playsinline></video>
+            <video id="modal-webrtc-remote" class="gl-chat-live-frame" autoplay playsinline></video>
+          </div>
+        </div>
+      </div>
 
       <!-- Zone messages -->
       <div class="gl-chat-modal-messages" id="modal-messages-area"></div>
@@ -609,70 +669,120 @@
 
       <!-- Barre d'envoi -->
       <div class="gl-chat-modal-inputbar">
-        <!-- Emojis rapides -->
-        <div class="gl-emoji-quick gl-emoji-quick--modal">
-          <button>🌱</button><button>💪</button><button>🏆</button>
-          <button>♻️</button><button>🔥</button><button>✅</button>
-          <button>👏</button><button>🌍</button>
-        </div>
-        <div class="gl-chat-input-wrap">
-          <textarea
-            id="modal-msg-input"
-            class="gl-chat-input"
-            placeholder="Message dans ce canal…"
-            rows="1"
-            autocomplete="off"
-          ></textarea>
-          <div class="gl-chat-input-actions">
-            <button
-              id="modal-ai-btn"
-              class="gl-chat-ai-btn"
-              title="Demander un conseil à l'IA"
-            >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polygon
-                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                />
-              </svg>
-              IA
-            </button>
-            <button
-              id="modal-send-btn"
-              class="gl-chat-send-btn"
-              title="Envoyer (Entrée)"
-              disabled
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-              >
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            </button>
+        <div class="gl-chat-modal-compose" aria-label="Composer un message">
+          <div class="gl-emoji-quick gl-emoji-quick--modal" role="toolbar" aria-label="Emojis rapides">
+            <button type="button">🌱</button><button type="button">💪</button><button type="button">🏆</button>
+            <button type="button">♻️</button><button type="button">🔥</button><button type="button">✅</button>
+            <button type="button">👏</button><button type="button">🌍</button>
           </div>
-        </div>
-        <div
-          style="
-            margin-top: 6px;
-            font-size: 0.62rem;
-            color: rgba(168, 184, 160, 0.45);
-            text-align: right;
-          "
-        >
-          Entrée pour envoyer · Shift+Entrée pour nouvelle ligne · ✨ IA pour un
-          conseil
+          <input
+            type="file"
+            id="modal-chat-file"
+            accept="image/jpeg,image/png,image/webp,image/gif,audio/webm,audio/ogg,audio/mpeg,audio/wav,video/mp4,video/webm,video/ogg,video/quicktime"
+            style="display: none"
+            aria-hidden="true"
+          />
+          <div class="gl-chat-input-wrap gl-chat-input-wrap--modal">
+            <div class="gl-chat-modal-input-stack">
+              <div
+                id="modal-chat-image-preview-wrap"
+                class="gl-chat-modal-img-preview-wrap"
+                style="display: none"
+              >
+                <img id="modal-chat-image-preview" alt="Aperçu" />
+                <span id="modal-chat-media-label" class="gl-chat-modal-media-label"></span>
+                <button type="button" id="modal-chat-image-clear" class="gl-chat-modal-img-clear">
+                  Retirer
+                </button>
+              </div>
+              <textarea
+                id="modal-msg-input"
+                class="gl-chat-input gl-chat-input--modal"
+                placeholder="Message dans ce canal… (Entrée envoie)"
+                rows="1"
+                autocomplete="off"
+                spellcheck="true"
+              ></textarea>
+            </div>
+            <div class="gl-chat-input-actions">
+              <button
+                type="button"
+                id="modal-emoji-picker-btn"
+                class="gl-chat-icon-btn gl-chat-attach-btn"
+                title="Ouvrir le clavier emoji"
+              >
+                😀
+              </button>
+              <button
+                type="button"
+                id="modal-attach-image-btn"
+                class="gl-chat-icon-btn gl-chat-attach-btn"
+                title="Joindre image, audio ou vidéo"
+              >
+                📎
+              </button>
+              <button
+                type="button"
+                id="modal-record-audio-btn"
+                class="gl-chat-icon-btn gl-chat-attach-btn"
+                title="Enregistrer un message vocal"
+              >
+                🎙️
+              </button>
+              <button
+                type="button"
+                id="modal-record-video-btn"
+                class="gl-chat-icon-btn gl-chat-attach-btn"
+                title="Enregistrer une vidéo"
+              >
+                🎥
+              </button>
+              <button
+                type="button"
+                id="modal-ai-btn"
+                class="gl-chat-ai-btn"
+                title="Demander un conseil à l'IA"
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                  />
+                </svg>
+                IA
+              </button>
+              <button
+                type="button"
+                id="modal-send-btn"
+                class="gl-chat-send-btn"
+                title="Envoyer (Entrée)"
+                disabled
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="modal-emoji-picker" class="gl-chat-live-panel" style="display:none"></div>
+          <p class="gl-chat-modal-hint">
+            Entrée envoie · Shift+Entrée nouvelle ligne · 📎 image (max 3 Mo) · ✨
+            IA conseil · suppression sur vos messages
+          </p>
         </div>
       </div>
     </div>
@@ -3518,6 +3628,427 @@
     margin-bottom: 14px;
   }
 
+  /* ═══════════════════════════════════════════════════
+     MODAL DÉTAIL DÉFI — QR CODE & SHARE REDESIGN
+     ═══════════════════════════════════════════════════ */
+  .gl-ch-detail__qr-section {
+    margin-bottom: 24px;
+  }
+
+  .gl-ch-detail__qr-card {
+    background: #fff;
+    border: 1px solid rgba(58, 134, 196, 0.3);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .gl-ch-detail__qr-content {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .gl-ch-detail__qr-box {
+    width: 140px;
+    height: 140px;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  .gl-ch-detail__qr-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .gl-ch-detail__qr-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .gl-ch-detail__qr-title {
+    color: #1a2d4a;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .gl-ch-detail__qr-sub {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+
+  .gl-ch-detail__qr-link-field {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .gl-ch-detail__qr-link-text {
+    flex: 1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gl-ch-detail__qr-copy-btn {
+    background: transparent;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+
+  .gl-ch-detail__qr-copy-btn:hover {
+    color: #2563eb;
+  }
+
+  .gl-ch-detail__qr-footer {
+    display: flex;
+    background: #f1f5f9;
+    padding: 12px 20px;
+    gap: 12px;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .gl-ch-detail__qr-action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    color: #334155;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .gl-ch-detail__qr-action-btn:hover {
+    background: #f8fafc;
+    border-color: #3b82f6;
+    color: #3b82f6;
+  }
+
+  .gl-ch-detail__qr-action-btn i {
+    font-size: 1rem;
+  }
+
+  /* ── SHARE SECTION ── */
+  .gl-ch-detail__share-section {
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 20px;
+  }
+
+  .gl-ch-detail__share-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 15px;
+  }
+
+  .gl-ch-detail__share-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .gl-ch-detail__share-icon-circle {
+    width: 40px;
+    height: 40px;
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+
+  .gl-ch-detail__share-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .gl-ch-detail__share-sub {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .gl-ch-detail__chat-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #fff;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+
+  .gl-ch-detail__chat-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #3b82f6;
+  }
+
+  .gl-ch-detail__share-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .gl-ch-detail__share-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 16px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .gl-ch-detail__share-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .gl-ch-detail__share-card-icon {
+    font-size: 1.8rem;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .gl-ch-detail__share-card-icon.whatsapp { color: #25d366; }
+  .gl-ch-detail__share-card-icon.facebook { color: #1877f2; }
+  .gl-ch-detail__share-card-icon.instagram { color: #e4405f; }
+  .gl-ch-detail__share-card-icon.tiktok { color: #fff; }
+  .gl-ch-detail__share-card-icon.x { color: #fff; }
+  .gl-ch-detail__share-card-icon.linkedin { color: #0a66c2; }
+
+  .gl-ch-detail__share-card-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .gl-ch-detail__share-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 16px;
+  }
+
+  .gl-ch-detail__share-link-field {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .gl-ch-detail__share-link-text {
+    flex: 1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gl-ch-detail__share-copy-btn {
+    background: var(--blue);
+    border: none;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.2s;
+  }
+
+  .gl-ch-detail__share-copy-btn:hover {
+    opacity: 0.9;
+  }
+
+  @media (max-width: 600px) {
+    .gl-ch-detail__qr-content {
+      flex-direction: column;
+      text-align: center;
+    }
+    .gl-ch-detail__qr-link-field {
+      justify-content: center;
+    }
+    .gl-ch-detail__share-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .gl-ch-detail__share-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .gl-ch-detail__chat-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .gl-share-type-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+
+  .gl-share-type-modal.active {
+    display: flex;
+  }
+
+  .gl-share-type-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.66);
+    backdrop-filter: blur(7px);
+  }
+
+  .gl-share-type-modal__panel {
+    position: relative;
+    z-index: 1;
+    width: min(430px, 96vw);
+    border-radius: 18px;
+    border: 1px solid rgba(91,62,150,.38);
+    background: #101d17;
+    color: var(--text, #F2E8CF);
+    padding: 20px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.42);
+  }
+
+  .gl-share-type-modal__close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    border: 0;
+    background: transparent;
+    color: var(--muted, #a8b8a0);
+    cursor: pointer;
+    font-size: 1.5rem;
+  }
+
+  .gl-share-type-modal__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .gl-share-type-modal__brand img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .gl-share-type-modal__eyebrow {
+    color: var(--muted, #a8b8a0);
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 900;
+  }
+
+  .gl-share-type-modal__brand h3 {
+    margin: 2px 0 0;
+    font-size: 1.2rem;
+  }
+
+  .gl-share-type-modal__sub,
+  .gl-share-type-modal__hint {
+    color: var(--muted, #a8b8a0);
+    font-size: .84rem;
+    line-height: 1.45;
+  }
+
+  .gl-share-type-modal__choices {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 16px 0 12px;
+  }
+
+  .gl-share-type-choice {
+    border: 1px solid rgba(58,134,196,.24);
+    border-radius: 14px;
+    background: rgba(58,134,196,.10);
+    color: var(--text, #F2E8CF);
+    cursor: pointer;
+    padding: 13px 14px;
+    text-align: left;
+    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+  }
+
+  .gl-share-type-choice span {
+    display: block;
+    font-size: .95rem;
+    font-weight: 900;
+    margin-bottom: 3px;
+  }
+
+  .gl-share-type-choice small {
+    display: block;
+    color: var(--muted, #a8b8a0);
+    font-size: .72rem;
+  }
+
+  .gl-share-type-choice:hover {
+    transform: translateY(-1px);
+    background: rgba(58,134,196,.16);
+    border-color: rgba(58,134,196,.42);
+  }
+
   .gl-ch-detail__cta {
     margin-top: 4px;
   }
@@ -3556,6 +4087,28 @@
     }
     .gl-ch-detail__title {
       font-size: 1.55rem;
+    }
+    .gl-ch-detail__qr {
+      grid-template-columns: 1fr;
+    }
+    .gl-ch-detail__qrBox {
+      margin: 0 auto;
+    }
+    .gl-ch-detail__qrActions {
+      justify-content: stretch;
+    }
+    .gl-ch-detail__qrActions button {
+      flex: 1;
+    }
+    .gl-ch-detail__shareHead {
+      align-items: center;
+    }
+    .gl-ch-detail__shareHead .gl-ch-share-pill--primary {
+      width: 100%;
+    }
+    .gl-ch-detail__shareBtns {
+      display: grid;
+      grid-template-columns: 1fr;
     }
   }
 
@@ -4572,6 +5125,168 @@
     border-color: rgba(231, 76, 60, 0.35);
     color: #e74c3c;
   }
+  .gl-chat-live-btn {
+    height: 34px;
+    border-radius: 10px;
+    padding: 0 12px;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.12);
+    color: #fecaca;
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+  }
+  .gl-chat-live-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.55);
+  }
+  .gl-chat-live-btn__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #ef4444;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
+  }
+  .gl-chat-modal-fullscreen {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--muted, #a8b8a0);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 1;
+    transition: all 0.2s;
+  }
+  .gl-chat-modal-fullscreen:hover {
+    background: rgba(0, 245, 255, 0.14);
+    border-color: rgba(0, 245, 255, 0.34);
+    color: #cffafe;
+  }
+  .gl-chat-modal-overlay.is-fullscreen {
+    align-items: stretch;
+    padding: 0;
+  }
+  .gl-chat-modal-overlay.is-fullscreen .gl-chat-modal-panel {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  .gl-chat-modal-overlay.is-fullscreen .gl-chat-modal-handle {
+    display: none;
+  }
+  .gl-chat-modal-overlay.is-fullscreen .gl-chat-modal-messages {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .gl-chat-modal-overlay.is-fullscreen .gl-chat-modal-inputbar {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .gl-chat-live-panel {
+    margin-top: 8px;
+    display: grid;
+    gap: 6px;
+  }
+  .gl-chat-live-item {
+    display: grid;
+    gap: 5px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(239, 68, 68, 0.16);
+    background: rgba(239, 68, 68, 0.07);
+  }
+  .gl-chat-live-item__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.76rem;
+  }
+  .gl-chat-live-status {
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(242, 232, 207, 0.9);
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  .gl-chat-live-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .gl-chat-live-actions button,
+  .gl-chat-live-watch {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text, #f2e8cf);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .gl-chat-live-watch {
+    width: fit-content;
+  }
+  .gl-chat-live-frame {
+    width: 100%;
+    min-height: 220px;
+    border: 0;
+    border-radius: 10px;
+    background: #050b12;
+  }
+  .gl-chat-modal-tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px 0;
+    background: rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+  }
+  .gl-chat-modal-search {
+    flex: 1;
+    min-width: 0;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.045);
+    color: var(--text, #f2e8cf);
+    padding: 0 12px;
+    outline: none;
+    font-size: 0.78rem;
+  }
+  .gl-chat-modal-search:focus {
+    border-color: rgba(0, 245, 255, 0.35);
+    box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.08);
+  }
+  .gl-chat-modal-count {
+    flex-shrink: 0;
+    min-width: 28px;
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--neon-blue, #00f5ff);
+    padding: 6px 8px;
+    border-radius: 9px;
+    background: rgba(0, 245, 255, 0.09);
+    border: 1px solid rgba(0, 245, 255, 0.16);
+  }
 
   /* Tabs canaux en haut du modal */
   .gl-chat-modal-tabs {
@@ -4621,10 +5336,213 @@
     margin-left: 5px;
     vertical-align: middle;
   }
+  .gl-chat-modal-tab-empty {
+    width: 100%;
+    padding: 10px 12px 12px;
+    font-size: 0.75rem;
+    color: rgba(168, 184, 160, 0.7);
+    text-align: center;
+  }
+
+  /* Bandeau défi + participants */
+  .gl-chat-modal-context {
+    flex-shrink: 0;
+    padding: 8px 20px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.14);
+    font-size: 0.72rem;
+    color: rgba(242, 232, 207, 0.88);
+    max-height: 120px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .gl-chat-modal-context--empty {
+    display: none;
+    padding: 0;
+    border: none;
+    max-height: 0;
+  }
+  .gl-chat-modal-context--loading {
+    opacity: 0.85;
+  }
+  .gl-chat-modal-context__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .gl-chat-modal-context__head {
+    line-height: 1.45;
+  }
+  .gl-chat-modal-context__badge {
+    display: inline-block;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(0, 245, 255, 0.12);
+    border: 1px solid rgba(0, 245, 255, 0.22);
+    color: var(--neon-blue, #00f5ff);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .gl-chat-modal-context__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .gl-chat-modal-context__pill {
+    display: inline-flex;
+    align-items: center;
+    max-width: 140px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.68rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gl-chat-modal-context__more {
+    align-self: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--muted, #a8b8a0);
+    padding: 0 4px;
+  }
+  .gl-chat-modal-context__empty-hint {
+    font-size: 0.68rem;
+    color: rgba(168, 184, 160, 0.65);
+    font-style: italic;
+  }
+
+  .gl-chat-modal-input-stack {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .gl-chat-modal-img-preview-wrap {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0 0;
+  }
+  .gl-chat-modal-img-preview-wrap img {
+    max-height: 56px;
+    max-width: 120px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .gl-chat-modal-img-clear {
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text, #f2e8cf);
+    cursor: pointer;
+  }
+  .gl-chat-modal-img-clear:hover {
+    background: rgba(231, 76, 60, 0.15);
+    border-color: rgba(231, 76, 60, 0.35);
+  }
+  .gl-chat-modal-media-label {
+    font-size: 0.7rem;
+    color: rgba(168, 184, 160, 0.9);
+    font-weight: 700;
+  }
+  .gl-msg-video {
+    display: block;
+    width: min(100%, 360px);
+    max-height: 260px;
+    border-radius: 10px;
+    background: #050b12;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .gl-chat-attach-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .gl-msg-meta {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+  .gl-msg-del {
+    margin-left: auto;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: none;
+    background: rgba(231, 76, 60, 0.12);
+    color: #e74c3c;
+    font-size: 0.72rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .gl-msg-del:hover {
+    background: rgba(231, 76, 60, 0.22);
+  }
+  .gl-msg-media {
+    margin-bottom: 6px;
+  }
+  .gl-msg-img {
+    display: block;
+    max-width: min(100%, 280px);
+    max-height: 220px;
+    border-radius: 10px;
+    object-fit: contain;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .gl-msg-text {
+    word-break: break-word;
+  }
+  .gl-msg-own-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+
+  .gl-msg-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+    justify-content: flex-end;
+  }
+  .gl-msg-action {
+    border: none;
+    background: transparent;
+    color: rgba(168, 184, 160, 0.9);
+    font-size: 0.68rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 0;
+  }
+  .gl-msg-action:hover {
+    color: var(--neon-blue, #00f5ff);
+  }
+  .gl-msg-action--danger:hover {
+    color: #e74c3c;
+  }
+
+  .gl-msg-audio {
+    width: min(100%, 280px);
+  }
 
   /* Messages zone */
   .gl-chat-modal-messages {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 14px 20px;
     scroll-behavior: smooth;
@@ -4641,30 +5559,99 @@
 
   /* Input bar */
   .gl-chat-modal-inputbar {
-    padding: 10px 20px 14px;
+    padding: 12px 20px 16px;
     border-top: 1px solid rgba(255, 255, 255, 0.07);
     background: rgba(0, 0, 0, 0.12);
     flex-shrink: 0;
   }
+
+  .gl-chat-modal-compose {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
   .gl-emoji-quick--modal {
     display: flex;
-    gap: 5px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 0;
     flex-wrap: wrap;
   }
   .gl-emoji-quick--modal button {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 7px;
-    padding: 3px 7px;
+    border-radius: 8px;
+    padding: 5px 8px;
+    min-width: 36px;
+    min-height: 36px;
     cursor: pointer;
-    font-size: 0.84rem;
+    font-size: 0.92rem;
+    line-height: 1;
     transition: all 0.15s;
     color: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .gl-emoji-quick--modal button:hover {
     background: rgba(255, 255, 255, 0.12);
-    transform: scale(1.15);
+    transform: scale(1.08);
+  }
+
+  /* Conteneur arrondi + textarea sans style navigateur */
+  .gl-chat-input-wrap--modal {
+    align-items: flex-end;
+    border-radius: 24px;
+    padding: 6px 8px 6px 18px;
+    min-height: 48px;
+    gap: 6px;
+  }
+
+  .gl-chat-input--modal,
+  #modal-msg-input.gl-chat-input--modal {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 22px;
+    max-height: 120px;
+    margin: 0;
+    padding: 10px 6px;
+    resize: none;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    font-family: "Lato", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--text, #f2e8cf);
+  }
+
+  .gl-chat-input--modal::placeholder,
+  #modal-msg-input.gl-chat-input--modal::placeholder {
+    color: rgba(168, 184, 160, 0.48);
+  }
+
+  .gl-chat-input--modal:focus,
+  #modal-msg-input.gl-chat-input--modal:focus {
+    outline: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .gl-chat-modal-hint {
+    margin: 0;
+    font-size: 0.62rem;
+    color: rgba(168, 184, 160, 0.48);
+    text-align: center;
+    line-height: 1.45;
+  }
+
+  [data-theme="light"] .gl-chat-input--modal,
+  [data-theme="light"] #modal-msg-input.gl-chat-input--modal {
+    color: var(--text, #1f3d2b);
   }
 
   @media (max-width: 600px) {
@@ -4678,11 +5665,914 @@
   }
 </style>
 
-<script src="js/challenges-complete.js"></script>
+<script src="js/challenges-complete.js?v=20260503-instagram-story-fix"></script>
+<script src="js/chat-realtime.js"></script>
+<script src="js/chat-notify.js"></script>
 
 <script>
   (function () {
     "use strict";
+
+    function getBackendApiPath(file) {
+      var isModule = window.location.pathname.indexOf("/modules/") !== -1;
+      var base = isModule ? "../../backend" : "../backend";
+      return base + "/api/" + file;
+    }
+
+    window.__modalChatPendingAttachments = [];
+    window.__modalChatReplyTo = "";
+    window.__modalChatEditId = "";
+    window.__modalWebRtc = {
+      pc: null,
+      localStream: null,
+      remoteStream: null,
+      challengeId: 0,
+      peerConnId: 0,
+      myConnId: 0,
+      isCaller: false,
+      isMicMuted: false,
+      isCamOff: false,
+      isScreenShared: false,
+      pendingInvite: false,
+      autoAcceptingInvite: false,
+      callInitInProgress: false,
+      offerInFlight: false,
+      offerTargetConnId: 0,
+      videoRecorder: null,
+      videoChunks: [],
+      isVideoRecording: false,
+    };
+    window.__modalChatUi = { isFullscreen: false };
+
+    function setModalFullscreen(enabled) {
+      var overlay = document.getElementById("chat-defi-modal");
+      var btn = document.getElementById("modal-fullscreen-btn");
+      var isOn = !!enabled;
+      window.__modalChatUi.isFullscreen = isOn;
+      if (overlay) overlay.classList.toggle("is-fullscreen", isOn);
+      if (btn) {
+        btn.textContent = isOn ? "⤡" : "⤢";
+        btn.setAttribute("title", isOn ? "Quitter le plein écran" : "Plein écran");
+        btn.setAttribute("aria-pressed", isOn ? "true" : "false");
+      }
+    }
+
+    function isAllowedChatMediaUrl(u) {
+      if (!u || typeof u !== "string") return false;
+      return (
+        u.indexOf("backend/api/uploads/chat/") !== -1 ||
+        u.indexOf("/api/uploads/chat/") !== -1
+      );
+    }
+
+    function clearModalPendingMedia() {
+      window.__modalChatPendingAttachments = [];
+      var wrap = document.getElementById("modal-chat-image-preview-wrap");
+      var img = document.getElementById("modal-chat-image-preview");
+      var lbl = document.getElementById("modal-chat-media-label");
+      var file = document.getElementById("modal-chat-file");
+      var sendBtn = document.getElementById("modal-send-btn");
+      var input = document.getElementById("modal-msg-input");
+      if (wrap) wrap.style.display = "none";
+      if (img) img.removeAttribute("src");
+      if (lbl) lbl.textContent = "";
+      if (file) file.value = "";
+      if (sendBtn && input)
+        sendBtn.disabled =
+          input.value.trim() === "" &&
+          (!window.__modalChatPendingAttachments ||
+            window.__modalChatPendingAttachments.length === 0);
+    }
+
+    function syncModalSendButton() {
+      var sendBtn = document.getElementById("modal-send-btn");
+      var input = document.getElementById("modal-msg-input");
+      if (!sendBtn) return;
+      var hasText = input && input.value.trim() !== "";
+      var hasMedia =
+        window.__modalChatPendingAttachments &&
+        window.__modalChatPendingAttachments.length > 0;
+      sendBtn.disabled = !(hasText || hasMedia);
+    }
+
+    function toastChatError(message) {
+      if (typeof showToast === "function") showToast(message, "error");
+      else console.warn(message);
+    }
+
+    function escapeModalHtml(s) {
+      return (s || "")
+        .toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function setModalPendingAttachment(att) {
+      if (!att || !att.url || !isAllowedChatMediaUrl(att.url)) return;
+      window.__modalChatPendingAttachments = [att];
+      var wrap = document.getElementById("modal-chat-image-preview-wrap");
+      var img = document.getElementById("modal-chat-image-preview");
+      var lbl = document.getElementById("modal-chat-media-label");
+      var sendBtn = document.getElementById("modal-send-btn");
+      if (wrap && img) {
+        if (att.type === "image") {
+          img.src = att.url;
+          img.style.display = "block";
+          if (lbl) lbl.textContent = "";
+          wrap.style.display = "flex";
+        } else if (att.type === "video") {
+          img.removeAttribute("src");
+          img.style.display = "none";
+          if (lbl) lbl.textContent = "Vidéo prête";
+          wrap.style.display = "flex";
+        } else {
+          img.removeAttribute("src");
+          img.style.display = "none";
+          if (lbl) lbl.textContent = "Audio prêt";
+          wrap.style.display = "flex";
+        }
+      }
+      if (sendBtn) sendBtn.disabled = false;
+      syncModalSendButton();
+    }
+
+    function setModalPendingImageUrl(url) {
+      setModalPendingAttachment({
+        type: "image",
+        url: url,
+        mime: "image/*",
+        size_bytes: 0,
+        duration_ms: null,
+      });
+    }
+
+    async function refreshModalSessionUser() {
+      try {
+        var r = await fetch(getBackendApiPath("me.php"), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        });
+        if (!r.ok) return;
+        var me = await r.json();
+        window.__USER__ = Object.assign({}, window.__USER__ || {}, me);
+      } catch (e) {}
+    }
+
+    function pickModalAuthorFromChannel(ch) {
+      var u = window.__USER__ || {};
+      var list = (ch && ch.participantsList) || [];
+      var email = (u.email || "").toString().trim().toLowerCase();
+      if (email && list.length) {
+        for (var i = 0; i < list.length; i++) {
+          if (
+            (list[i].email || "").toString().trim().toLowerCase() === email
+          ) {
+            return {
+              nom: list[i].nom || u.nom || "Participant",
+              avatar: "👤",
+              participantId: list[i].id,
+              userId: parseInt(u.id, 10) || 0,
+            };
+          }
+        }
+      }
+      return {
+        nom: u.nom || u.pseudo || "Vous",
+        avatar: u.avatar || "👤",
+        participantId: null,
+        userId: parseInt(u.id, 10) || 0,
+      };
+    }
+
+    async function uploadModalChatMedia(file) {
+      var maxBytes = 80 * 1024 * 1024;
+      if (!file || !file.type) throw new Error("Fichier invalide");
+      if (file.size > maxBytes) throw new Error("Fichier trop volumineux (max 80 Mo)");
+      var allowed = /^(image\/(jpeg|png|webp|gif)|audio\/(webm|ogg|mpeg|mp3|wav|x-wav)|video\/(mp4|webm|ogg|quicktime|x-m4v))$/i;
+      if (!allowed.test(file.type) && !/\.(webm|ogg|mp3|wav|mp4|mov|m4v)$/i.test(file.name || "")) {
+        throw new Error("Type de média non supporté");
+      }
+      var fd = new FormData();
+      fd.append("file", file);
+      var cid = modalActiveChallengeId();
+      if (cid) fd.append("challenge_id", cid);
+      var r = await fetch(getBackendApiPath("chat/attachments.php"), {
+        method: "POST",
+        body: fd,
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        credentials: "same-origin",
+      });
+      var j = await r.json();
+      var attachment = j && j.attachment ? j.attachment : j;
+      if (!j || !j.ok || !attachment || !attachment.url)
+        throw new Error((j && j.error) || "Upload échoué");
+      return attachment;
+    }
+
+    function modalActiveChallengeId() {
+      if (_modalActiveChannel && _modalActiveChannel.indexOf("defi_") === 0) {
+        var cid = parseInt(_modalActiveChannel.replace("defi_", ""), 10);
+        return cid || 0;
+      }
+      return 0;
+    }
+
+    function syncModalLiveButton() {
+      var btn = document.getElementById("modal-live-btn");
+      if (!btn) return;
+      var cid = modalActiveChallengeId();
+      btn.style.display = cid ? "inline-flex" : "none";
+      // On ne force plus l'affichage du panel ici, l'utilisateur doit cliquer sur "Live"
+    }
+
+    function toggleWebRtcPanel() {
+      var panel = document.getElementById("modal-webrtc-panel");
+      if (!panel) return;
+      var isHidden = panel.style.display === "none";
+      panel.style.display = isHidden ? "block" : "none";
+      if (isHidden) {
+        setWebRtcButtonState();
+        // On démarre la caméra pour la prévisualisation dès l'ouverture du panneau
+        void ensureLocalMedia().catch(function(e) {
+          console.warn("Camera preview failed on toggle:", e);
+        });
+      }
+    }
+
+    function setWebRtcStatus(label) {
+      var el = document.getElementById("modal-webrtc-status");
+      if (el) el.textContent = label || "Inactif";
+    }
+
+    function setWebRtcButtonState() {
+      var s = window.__modalWebRtc || {};
+      var hasSession = !!(s.pc && s.localStream);
+      var joinBtn = document.getElementById("modal-webrtc-join-btn");
+      var startBtn = document.getElementById("modal-webrtc-start-btn");
+      var endBtn = document.getElementById("modal-webrtc-end-btn");
+      var screenBtn = document.getElementById("modal-webrtc-screen-btn");
+      var micBtn = document.getElementById("modal-webrtc-mic-btn");
+      var camBtn = document.getElementById("modal-webrtc-cam-btn");
+      var liveBtn = document.getElementById("modal-live-btn");
+      
+      if (startBtn) {
+        startBtn.disabled = hasSession;
+        startBtn.textContent = hasSession ? "En direct" : "Démarrer";
+      }
+      if (joinBtn) joinBtn.disabled = !s.pendingInvite && !hasSession;
+      if (endBtn) endBtn.disabled = !hasSession;
+      if (screenBtn) screenBtn.disabled = !hasSession;
+      if (micBtn) micBtn.disabled = !hasSession;
+      if (camBtn) camBtn.disabled = !hasSession;
+      
+      if (liveBtn) liveBtn.disabled = !!s.callInitInProgress || !!s.offerInFlight;
+      
+      if (micBtn) micBtn.textContent = s.isMicMuted ? "Micro OFF" : "Micro";
+      if (camBtn) camBtn.textContent = s.isCamOff ? "Caméra OFF" : "Caméra";
+      if (screenBtn) screenBtn.textContent = s.isScreenShared ? "Écran ON" : "Écran";
+
+      // Gestion de la visibilité des flux pour le mode diffusion
+      var localVideo = document.getElementById("modal-webrtc-local");
+      var remoteVideo = document.getElementById("modal-webrtc-remote");
+      if (localVideo) localVideo.style.display = (s.localStream) ? "block" : "none";
+      if (remoteVideo) remoteVideo.style.display = (s.remoteStream && s.remoteStream.getTracks().length > 0) ? "block" : "none";
+    }
+
+    function resetWebRtcVideos() {
+      var localVideo = document.getElementById("modal-webrtc-local");
+      var remoteVideo = document.getElementById("modal-webrtc-remote");
+      if (localVideo) {
+        localVideo.srcObject = null;
+        localVideo.style.display = "none";
+      }
+      if (remoteVideo) {
+        remoteVideo.srcObject = null;
+        remoteVideo.style.display = "none";
+      }
+    }
+
+    async function ensureLocalMedia() {
+      var s = window.__modalWebRtc;
+      if (s.localStream) return s.localStream;
+      
+      try {
+        setWebRtcStatus("Accès caméra...");
+        var stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: true, 
+          video: { 
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user"
+          } 
+        });
+        s.localStream = stream;
+        var localVideo = document.getElementById("modal-webrtc-local");
+        if (localVideo) {
+          localVideo.srcObject = stream;
+          localVideo.style.display = "block";
+          // Forcer le play pour éviter l'écran noir
+          localVideo.play().catch(function(e) { console.error("Video play error:", e); });
+        }
+        setWebRtcStatus("Caméra prête");
+        setWebRtcButtonState();
+        return stream;
+      } catch (err) {
+        console.error("getUserMedia error:", err);
+        var msg = "Impossible d'accéder à la caméra/micro. ";
+        if (err.name === "NotAllowedError") msg += "Permission refusée.";
+        else if (err.name === "NotFoundError") msg += "Périphérique introuvable.";
+        else msg += err.message || "";
+        toastChatError(msg);
+        setWebRtcStatus("Erreur caméra");
+        throw err;
+      }
+    }
+
+    function closePeerConnection(sendEndSignal) {
+      var s = window.__modalWebRtc;
+      if (sendEndSignal && s.challengeId && window.ChatRealtime && s.peerConnId) {
+        window.ChatRealtime.sendSignal(s.challengeId, {
+          type: "webrtc:end",
+          target_conn_id: s.peerConnId,
+        });
+      }
+      if (s.pc) {
+        try { s.pc.close(); } catch (e) {}
+      }
+      if (s.localStream) {
+        try { s.localStream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+      }
+      s.pc = null;
+      s.localStream = null;
+      s.remoteStream = null;
+      s.peerConnId = 0;
+      s.isCaller = false;
+      s.isMicMuted = false;
+      s.isCamOff = false;
+      s.isScreenShared = false;
+      s.pendingInvite = false;
+      s.autoAcceptingInvite = false;
+      s.callInitInProgress = false;
+      s.offerInFlight = false;
+      s.offerTargetConnId = 0;
+      resetWebRtcVideos();
+      setWebRtcStatus("Inactif");
+      setWebRtcButtonState();
+    }
+
+    async function createPeerConnection(challengeId, peerConnId) {
+      var s = window.__modalWebRtc;
+      if (s.pc) return s.pc;
+      s.challengeId = challengeId;
+      s.peerConnId = peerConnId || 0;
+      var pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      });
+      s.pc = pc;
+
+      var local = await ensureLocalMedia();
+      local.getTracks().forEach(function (track) {
+        pc.addTrack(track, local);
+      });
+
+      var remote = new MediaStream();
+      s.remoteStream = remote;
+      var remoteVideo = document.getElementById("modal-webrtc-remote");
+      if (remoteVideo) remoteVideo.srcObject = remote;
+
+      pc.ontrack = function (evt) {
+        (evt.streams && evt.streams[0] ? evt.streams[0].getTracks() : [evt.track]).forEach(function (track) {
+          remote.addTrack(track);
+        });
+        setWebRtcStatus("Connecté");
+      };
+      pc.onicecandidate = function (evt) {
+        if (!evt.candidate) return;
+        if (window.ChatRealtime) {
+          window.ChatRealtime.sendSignal(challengeId, {
+            type: "webrtc:ice",
+            target_conn_id: s.peerConnId,
+            candidate: evt.candidate,
+          });
+        }
+      };
+      pc.onconnectionstatechange = function () {
+        var cs = pc.connectionState || "new";
+        if (cs === "connected") setWebRtcStatus("En appel");
+        else if (cs === "connecting") setWebRtcStatus("Connexion...");
+        else if (cs === "failed") setWebRtcStatus("Échec connexion");
+      };
+      setWebRtcButtonState();
+      return pc;
+    }
+
+    async function startWebRtcCall() {
+      var cid = modalActiveChallengeId();
+      if (!cid) return toastChatError("Choisissez un canal défi pour lancer le live.");
+      if (!window.ChatRealtime) return toastChatError("WebSocket live indisponible.");
+      var s = window.__modalWebRtc;
+      if (s.callInitInProgress) return;
+      s.callInitInProgress = true;
+      s.challengeId = cid;
+      s.isCaller = true;
+      setWebRtcStatus("Lancement du live...");
+      setWebRtcButtonState();
+      try {
+        // On s'assure d'abord d'avoir accès à la caméra avant de signaler le live
+        await ensureLocalMedia();
+        
+        window.ChatRealtime.join(cid);
+        window.ChatRealtime.sendSignal(cid, { type: "webrtc:invite" });
+        if (s.peerConnId) {
+          void createAndSendOffer(cid, s.peerConnId);
+        }
+        if (typeof showToast === "function") showToast("Live démarré. En attente de spectateurs...", "success");
+        setWebRtcStatus("En direct");
+      } catch (err) {
+        setWebRtcStatus("Erreur lancement");
+        console.error("Failed to start live:", err);
+      } finally {
+        s.callInitInProgress = false;
+        setWebRtcButtonState();
+      }
+    }
+
+    async function createAndSendOffer(cid, targetConnId) {
+      if (!cid || !targetConnId) return;
+      var s = window.__modalWebRtc;
+      if (s.offerInFlight && s.offerTargetConnId === targetConnId) return;
+      if (s.pc && s.pc.signalingState !== "stable") return;
+      s.offerInFlight = true;
+      s.offerTargetConnId = targetConnId;
+      try {
+        var pc = await createPeerConnection(cid, targetConnId);
+        if (pc.signalingState !== "stable") return;
+        var offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        window.ChatRealtime.sendSignal(cid, {
+          type: "webrtc:offer",
+          target_conn_id: targetConnId,
+          sdp: offer,
+        });
+        setWebRtcStatus("Offre envoyée");
+      } finally {
+        s.offerInFlight = false;
+        s.offerTargetConnId = 0;
+        setWebRtcButtonState();
+      }
+    }
+
+    async function acceptWebRtcInvite(fromConnId) {
+      var cid = modalActiveChallengeId();
+      if (!cid) return;
+      await ensureLocalMedia();
+      window.__modalWebRtc.peerConnId = fromConnId || 0;
+      window.__modalWebRtc.pendingInvite = false;
+      window.ChatRealtime.sendSignal(cid, {
+        type: "webrtc:state",
+        target_conn_id: fromConnId || 0,
+        state: "accepted",
+      });
+      setWebRtcStatus("En attente de connexion...");
+      setWebRtcButtonState();
+    }
+
+    function insertAtCursor(input, text) {
+      if (!input) return;
+      var start = input.selectionStart || 0;
+      var end = input.selectionEnd || 0;
+      var before = input.value.slice(0, start);
+      var after = input.value.slice(end);
+      input.value = before + text + after;
+      var pos = start + text.length;
+      input.selectionStart = pos;
+      input.selectionEnd = pos;
+      input.focus();
+      input.dispatchEvent(new Event("input"));
+    }
+
+    function buildEmojiPickerHtml() {
+      var groups = [
+        { title: "Smileys", list: ["😀","😃","😄","😁","😅","😂","🙂","😉","😍","😘","🤩","🥳"] },
+        { title: "Gestes", list: ["👍","👎","👏","🙏","💪","👋","🤝","👌","✌️","🤟","🙌","🫶"] },
+        { title: "Nature", list: ["🌿","🌱","🍀","🌳","🌍","🌊","🔥","☀️","🌈","🪴","🐝","🦋"] },
+        { title: "Sport", list: ["🏃","🚴","🏋️","⚽","🏀","🎾","🥇","🏆","🥈","🥉","🎯","⛰️"] },
+        { title: "Objets", list: ["📌","📎","💡","📣","🎥","🎙️","📷","💻","📱","⌚","🔋","🧭"] },
+        { title: "Symboles", list: ["✅","❌","⚠️","⭐","❤️","💚","💙","💛","♻️","💬","✨","🔔"] },
+        { title: "Drapeaux", list: ["🇫🇷","🇲🇦","🇩🇿","🇹🇳","🇺🇸","🇬🇧","🇪🇸","🇮🇹","🇩🇪","🇧🇪","🇨🇭","🇨🇦"] }
+      ];
+      return groups.map(function (g) {
+        return '<div class="gl-chat-live-item"><div class="gl-chat-live-item__top"><strong>' +
+          escapeModalHtml(g.title) +
+          '</strong></div><div class="gl-chat-live-actions">' +
+          g.list.map(function (e) {
+            return '<button type="button" class="gl-emoji-pick-btn" data-emoji="' + escapeModalHtml(e) + '">' + e + "</button>";
+          }).join("") +
+          "</div></div>";
+      }).join("");
+    }
+
+    function liveStatusLabel(status) {
+      var map = {
+        pending: "En attente",
+        approved: "Approuvé",
+        rejected: "Refusé",
+        live: "En direct",
+        ended: "Terminé",
+      };
+      return map[status] || status || "Live";
+    }
+
+    function liveEmbedUrl(url) {
+      url = (url || "").toString().trim();
+      var m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+      if (m && m[1]) return "https://www.youtube.com/embed/" + encodeURIComponent(m[1]);
+      return "";
+    }
+
+    async function loadModalLives(cid) {
+      if (!cid) return null;
+      try {
+        var r = await fetch(
+          getBackendApiPath("chat/live-streams.php") +
+            "?challenge_id=" +
+            encodeURIComponent(cid) +
+            "&t=" +
+            Date.now(),
+          {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+            credentials: "same-origin",
+          },
+        );
+        var j = await r.json();
+        if (!j || !j.ok) return null;
+        return j;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function renderLivePanel(liveData) {
+      if (!liveData || !Array.isArray(liveData.lives) || liveData.lives.length === 0) {
+        return '<div class="gl-chat-modal-context__empty-hint">Aucun live pour ce défi. Cliquez sur Live pour en proposer un.</div>';
+      }
+      return (
+        '<div class="gl-chat-live-panel">' +
+        liveData.lives
+          .slice(0, 4)
+          .map(function (l) {
+            var id = String(l.id || "").replace(/'/g, "");
+            var status = l.status || "pending";
+            var canControl = !!(liveData.can_moderate || l.can_control);
+            var embed = status === "live" ? liveEmbedUrl(l.stream_url || "") : "";
+            var actions = "";
+            if (liveData.can_moderate && status === "pending") {
+              actions +=
+                "<button type=\"button\" onclick=\"moderateModalLive('" +
+                id +
+                "', 'approve')\">Valider</button>" +
+                "<button type=\"button\" onclick=\"moderateModalLive('" +
+                id +
+                "', 'reject')\">Refuser</button>";
+            }
+            if (canControl && status === "approved") {
+              actions +=
+                "<button type=\"button\" onclick=\"moderateModalLive('" +
+                id +
+                "', 'start')\">Lancer</button>";
+            }
+            if (canControl && status === "live") {
+              actions +=
+                "<button type=\"button\" onclick=\"moderateModalLive('" +
+                id +
+                "', 'end')\">Terminer</button>";
+            }
+            return (
+              '<div class="gl-chat-live-item">' +
+              '<div class="gl-chat-live-item__top"><strong>' +
+              escapeModalHtml(l.title || "Live du défi") +
+              '</strong><span class="gl-chat-live-status">' +
+              escapeModalHtml(liveStatusLabel(status)) +
+              "</span></div>" +
+              (l.description ? '<div class="gl-chat-modal-context__empty-hint">' + escapeModalHtml(l.description) + "</div>" : "") +
+              '<a class="gl-chat-live-watch" href="' +
+              escapeModalHtml(l.stream_url || "#") +
+              '" target="_blank" rel="noopener noreferrer">Regarder le live</a>' +
+              (embed ? '<iframe class="gl-chat-live-frame" src="' + escapeModalHtml(embed) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>' : "") +
+              (actions ? '<div class="gl-chat-live-actions">' + actions + "</div>" : "") +
+              "</div>"
+            );
+          })
+          .join("") +
+        "</div>"
+      );
+    }
+
+    window.openModalLivePrompt = async function () {
+      var cid = modalActiveChallengeId();
+      if (!cid) {
+        toastChatError("Choisissez d'abord un canal de défi pour lancer un live.");
+        return;
+      }
+      var title = window.prompt("Titre du live :", "Live du défi");
+      if (title === null) return;
+      title = title.trim();
+      if (!title) {
+        toastChatError("Titre live requis");
+        return;
+      }
+      var url = window.prompt("Lien du live (YouTube, Meet, OBS/RTMP, etc.) :");
+      if (url === null) return;
+      url = url.trim();
+      if (!url) {
+        toastChatError("Lien live requis");
+        return;
+      }
+      try {
+        var r = await fetch(getBackendApiPath("chat/live-streams.php"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            challenge_id: cid,
+            title: title,
+            stream_url: url,
+            provider: "external",
+          }),
+        });
+        var j = await r.json();
+        if (!j || !j.ok) {
+          toastChatError((j && j.error) || "Live non créé");
+          return;
+        }
+        if (typeof showToast === "function") {
+          showToast(j.live && j.live.status === "pending" ? "Live envoyé pour validation" : "Live prêt à lancer", "success");
+        }
+        renderModalChatContext(_modalActiveChannel);
+      } catch (e) {
+        toastChatError("Erreur réseau live");
+      }
+    };
+
+    window.moderateModalLive = async function (id, action) {
+      try {
+        var r = await fetch(getBackendApiPath("chat/live-streams.php"), {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({ id: id, action: action }),
+        });
+        var j = await r.json();
+        if (!j || !j.ok) {
+          toastChatError((j && j.error) || "Action live refusée");
+          return;
+        }
+        if (typeof showToast === "function") showToast("Live mis à jour", "success");
+        renderModalChatContext(_modalActiveChannel);
+      } catch (e) {
+        toastChatError("Erreur réseau live");
+      }
+    };
+
+    async function loadModalHistoryIfDefi() {
+      var cid = modalActiveChallengeId();
+      if (!cid || !window.ChatState || !window.ChatState.channels[_modalActiveChannel]) return;
+      var ch = window.ChatState.channels[_modalActiveChannel];
+      try {
+        var r = await fetch(
+          getBackendApiPath("chat/messages.php") +
+            "?challenge_id=" +
+            cid +
+            "&limit=40&t=" +
+            Date.now(),
+          {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+            credentials: "same-origin",
+          },
+        );
+        if (!r.ok) return;
+        var j = await r.json();
+        if (!j || !j.ok || !Array.isArray(j.messages)) return;
+        var me = pickModalAuthorFromChannel(ch);
+        var msgs = j.messages
+          .slice()
+          .reverse()
+          .map(function (m) {
+            var own =
+              (me.userId && m.user_id && parseInt(m.user_id, 10) === me.userId) ||
+              (me.participantId &&
+                m.participant_id &&
+                parseInt(m.participant_id, 10) === me.participantId) ||
+              false;
+            return {
+              id: m.id,
+              author: m.author_name,
+              avatar: "👤",
+              text: m.body || "",
+              time: new Date(m.created_at).getTime(),
+              own: own,
+              isAi: false,
+              parent_id: m.parent_id || null,
+              attachments: Array.isArray(m.attachments) ? m.attachments : [],
+              reactions: [],
+            };
+          });
+        ch.messages = msgs;
+        renderModalMessages(_modalActiveChannel);
+      } catch (e) {}
+    }
+
+    window.__loadModalHistoryIfDefi = loadModalHistoryIfDefi;
+
+    window.deleteModalChatMessage = function (msgId) {
+      if (!window.ChatState) return;
+      var ch = window.ChatState.channels[_modalActiveChannel];
+      if (!ch) return;
+      var msg = ch.messages.find(function (m) {
+        return m.id === msgId;
+      });
+      if (!msg || !msg.own || msg.isAi) return;
+      var cid = modalActiveChallengeId();
+      if (cid) {
+        fetch(getBackendApiPath("chat/message.php?id=") + encodeURIComponent(msgId), {
+          method: "DELETE",
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        })
+          .then(function () {
+            ch.messages = ch.messages.filter(function (m) {
+              return m.id !== msgId;
+            });
+            renderModalMessages(_modalActiveChannel);
+          })
+          .catch(function () {
+            ch.messages = ch.messages.filter(function (m) {
+              return m.id !== msgId;
+            });
+            renderModalMessages(_modalActiveChannel);
+          });
+      } else {
+        ch.messages = ch.messages.filter(function (m) {
+          return m.id !== msgId;
+        });
+        renderModalMessages(_modalActiveChannel);
+      }
+    };
+
+    window.replyToModalMessage = function (msgId) {
+      window.__modalChatReplyTo = (msgId || "").toString();
+      window.__modalChatEditId = "";
+      var input = document.getElementById("modal-msg-input");
+      if (input) input.focus();
+      if (typeof showToast === "function") showToast("Réponse activée", "success");
+    };
+
+    window.editModalMessage = function (msgId) {
+      if (!window.ChatState) return;
+      var ch = window.ChatState.channels[_modalActiveChannel];
+      if (!ch) return;
+      var msg = (ch.messages || []).find(function (m) { return m.id === msgId; });
+      if (!msg || !msg.own || msg.isAi) return;
+      window.__modalChatEditId = (msgId || "").toString();
+      window.__modalChatReplyTo = "";
+      var input = document.getElementById("modal-msg-input");
+      if (input) {
+        input.value = msg.text || "";
+        input.dispatchEvent(new Event("input"));
+        input.focus();
+      }
+      if (typeof showToast === "function") showToast("Modification activée", "success");
+    };
+
+    // Realtime typing indicator (WebSocket)
+    if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
+      window.ChatRealtime.on(function (evt) {
+        var cid = modalActiveChallengeId();
+        if (!evt || !cid || parseInt(evt.challenge_id, 10) !== cid) return;
+        if (evt.type === "typing") {
+          var el = document.getElementById("modal-typing-indicator");
+          var txt = document.getElementById("modal-typing-text");
+          if (!el || !txt) return;
+          if (evt.is_typing) {
+            txt.textContent =
+              ((evt.author && evt.author.name) || "Quelqu'un") +
+              " est en train d'écrire…";
+            el.style.display = "flex";
+          } else {
+            el.style.display = "none";
+          }
+          return;
+        }
+        if (evt.type === "joined" && evt.conn_id) {
+          window.__modalWebRtc.myConnId = parseInt(evt.conn_id, 10) || 0;
+          return;
+        }
+        if (evt.type === "webrtc:state") {
+          if (evt.author && evt.author.conn_id) {
+            var peerId = parseInt(evt.author.conn_id, 10) || 0;
+            var state = (evt.state || "").toString();
+            if (state === "ready") {
+              window.__modalWebRtc.peerConnId = peerId;
+              if (window.__modalWebRtc.isCaller && peerId) {
+                void createAndSendOffer(cid, peerId);
+              }
+              setWebRtcButtonState();
+            } else if (state === "accepted") {
+              window.__modalWebRtc.peerConnId = peerId;
+              if (window.__modalWebRtc.isCaller && peerId) {
+                void createAndSendOffer(cid, peerId);
+              }
+              setWebRtcStatus("Connexion pair...");
+              setWebRtcButtonState();
+            } else if (state === "offline" && window.__modalWebRtc.peerConnId === parseInt(evt.author.conn_id, 10)) {
+              window.__modalWebRtc.peerConnId = 0;
+              setWebRtcStatus("Pair hors ligne");
+              setWebRtcButtonState();
+            }
+          }
+          return;
+        }
+        if (evt.type === "webrtc:invite") {
+          var fromId = evt.author && parseInt(evt.author.conn_id || 0, 10);
+          if (!fromId || fromId === window.__modalWebRtc.myConnId) return;
+          window.__modalWebRtc.pendingInvite = true;
+          window.__modalWebRtc.peerConnId = fromId;
+          setWebRtcStatus("Invitation reçue");
+          setWebRtcButtonState();
+          if (typeof showToast === "function") showToast("Invitation d'appel reçue", "success");
+          if (!window.__modalWebRtc.autoAcceptingInvite) {
+            window.__modalWebRtc.autoAcceptingInvite = true;
+            (async function () {
+              try {
+                await acceptWebRtcInvite(fromId);
+              } catch (e) {
+                setWebRtcStatus("Invitation reçue (Rejoindre)");
+              } finally {
+                window.__modalWebRtc.autoAcceptingInvite = false;
+                setWebRtcButtonState();
+              }
+            })();
+          }
+          return;
+        }
+        if (evt.type === "webrtc:offer") {
+          (async function () {
+            try {
+              var fromId = evt.author && parseInt(evt.author.conn_id || 0, 10);
+              var pc = await createPeerConnection(cid, fromId || 0);
+              await pc.setRemoteDescription(new RTCSessionDescription(evt.sdp));
+              var answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+              window.ChatRealtime.sendSignal(cid, {
+                type: "webrtc:answer",
+                target_conn_id: fromId || 0,
+                sdp: answer,
+              });
+              setWebRtcStatus("Réponse envoyée");
+            } catch (e) {
+              toastChatError("Échec réception offre WebRTC");
+            }
+          })();
+          return;
+        }
+        if (evt.type === "webrtc:answer") {
+          (async function () {
+            try {
+              var pc = window.__modalWebRtc.pc;
+              if (!pc || !evt.sdp) return;
+              await pc.setRemoteDescription(new RTCSessionDescription(evt.sdp));
+              setWebRtcStatus("Appel établi");
+            } catch (e) {
+              toastChatError("Échec réception réponse WebRTC");
+            }
+          })();
+          return;
+        }
+        if (evt.type === "webrtc:ice") {
+          (async function () {
+            try {
+              var pc = window.__modalWebRtc.pc;
+              if (!pc || !evt.candidate) return;
+              await pc.addIceCandidate(new RTCIceCandidate(evt.candidate));
+            } catch (e) {}
+          })();
+          return;
+        }
+        if (evt.type === "webrtc:end") {
+          closePeerConnection(false);
+          setWebRtcStatus("Appel terminé");
+        }
+      });
+    }
 
     /* ── Stats hero ──────────────────────────────────── */
     function updateStats(challenges) {
@@ -4912,6 +6802,73 @@
     var _modalActiveChannel = "global";
     var _modalDefiId = null;
 
+    function ensureModalChatState() {
+      if (!window.ChatState) {
+        window.ChatState = {
+          activeChannel: "global",
+          channels: {},
+          typingTimer: null,
+          isAiThinking: false,
+        };
+      }
+      if (!window.ChatState.channels) window.ChatState.channels = {};
+
+      var defaults = [
+        { id: "global", icon: "🌍", name: "Général", desc: "Discussion générale", section: "DÉFIS" },
+        { id: "ecology", icon: "♻️", name: "Écologie", desc: "Défis environnement", section: "DÉFIS" },
+        { id: "sport", icon: "🏃", name: "Sport & Santé", desc: "Défis sportifs", section: "DÉFIS" },
+        { id: "nutrition", icon: "🥗", name: "Nutrition", desc: "Défis alimentation", section: "DÉFIS" },
+      ];
+      defaults.forEach(function (ch) {
+        if (!window.ChatState.channels[ch.id]) {
+          window.ChatState.channels[ch.id] = Object.assign({}, ch, {
+            messages: [],
+            unread: 0,
+            onlineCount: 1,
+            participantsList: [],
+          });
+        }
+      });
+
+      if (typeof window.syncChatWithChallenges === "function" && Array.isArray(window.allChallenges)) {
+        window.syncChatWithChallenges(window.allChallenges);
+      }
+      buildAllModalDefiTabs();
+    }
+
+    async function loadChatChannelsFromDb() {
+      try {
+        var r = await fetch(getBackendApiPath("chat/channels.php") + "?t=" + Date.now(), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        });
+        if (!r.ok) return;
+        var j = await r.json();
+        if (!j || !j.ok || !Array.isArray(j.channels)) return;
+        ensureModalChatState();
+        j.channels.forEach(function (c) {
+          var id = "defi_" + parseInt(c.challenge_id || 0, 10);
+          if (!parseInt(c.challenge_id || 0, 10)) return;
+          var existing = window.ChatState.channels[id] || {};
+          window.ChatState.channels[id] = Object.assign({}, existing, {
+            id: id,
+            challengeNumericId: parseInt(c.challenge_id, 10),
+            icon: c.icon || "🏆",
+            name: (c.name || "Défi").substring(0, 34),
+            desc: c.desc || "Discussion du défi",
+            section: "DÉFIS",
+            messages: existing.messages || [],
+            unread: existing.unread || 0,
+            participants_count: parseInt(c.participants_count || 0, 10),
+            participantsList: existing.participantsList || [],
+            onlineCount: Math.max(parseInt(c.participants_count || 0, 10), 1),
+          });
+        });
+        renderModalChannelTabs();
+        renderModalChatContext(_modalActiveChannel);
+      } catch (e) {}
+    }
+
     // ── Open modal ───────────────────────────────────────
     window.openChatModal = function (
       challengeId,
@@ -4920,6 +6877,14 @@
     ) {
       var overlay = document.getElementById("chat-defi-modal");
       if (!overlay) return;
+
+      if (typeof window.ensureChatChannelsReady === "function") {
+        window.ensureChatChannelsReady();
+      }
+      ensureModalChatState();
+      void loadChatChannelsFromDb();
+      clearModalPendingMedia();
+      void refreshModalSessionUser();
 
       // ✅ FIX: déplacer modal et FAB dans <body> pour échapper au
       // contexte de positionnement créé par transform de .content-section
@@ -4944,7 +6909,8 @@
           ? "Discussion du défi"
           : "Discutez avec la communauté";
 
-      // Build channel tabs — default channels + defi channel if specified
+      // Build défi channels before rendering tabs.
+      buildAllModalDefiTabs();
       if (challengeId)
         buildModalTabs(challengeId, challengeTitle, challengeIcon);
 
@@ -4960,9 +6926,11 @@
       } else {
         _modalActiveChannel = "global";
       }
+      window.__glModalActiveChannel = _modalActiveChannel;
 
       renderModalChannelTabs();
       renderModalMessages(_modalActiveChannel);
+      syncModalLiveButton();
 
       // Update online count
       var onlineEl = document.getElementById("modal-online-count");
@@ -4976,14 +6944,28 @@
           " en ligne";
       }
 
+      renderModalChatContext(_modalActiveChannel);
+      void loadModalHistoryIfDefi();
+
+      // WebSocket join room for défi channels
+      if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
+        var joinCid = modalActiveChallengeId();
+        if (joinCid) window.ChatRealtime.join(joinCid);
+      }
+
       overlay.classList.add("active");
       overlay.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
+      setModalFullscreen(false);
 
       // Focus input
       setTimeout(function () {
         var inp = document.getElementById("modal-msg-input");
         if (inp) inp.focus();
+        ensureModalChatState();
+        void loadChatChannelsFromDb();
+        renderModalChannelTabs();
+        renderModalMessages(_modalActiveChannel);
       }, 400);
     };
 
@@ -4991,6 +6973,13 @@
     window.closeChatModal = function () {
       var overlay = document.getElementById("chat-defi-modal");
       if (!overlay) return;
+      closePeerConnection(true);
+      setModalFullscreen(false);
+      clearModalPendingMedia();
+      if (typeof window.ChatNotify === "object" && window.ChatNotify) {
+        var cid = modalActiveChallengeId();
+        if (cid) window.ChatNotify.markSeen(cid, Date.now());
+      }
       overlay.classList.remove("active");
       overlay.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
@@ -4998,34 +6987,245 @@
 
     // ESC to close
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") window.closeChatModal();
+      if (e.key !== "Escape") return;
+      var overlay = document.getElementById("chat-defi-modal");
+      if (!overlay || !overlay.classList.contains("active")) return;
+      if (window.__modalChatUi && window.__modalChatUi.isFullscreen) {
+        e.preventDefault();
+        setModalFullscreen(false);
+        return;
+      }
+      window.closeChatModal();
     });
 
     // ── Build tabs ───────────────────────────────────────
     function buildModalTabs(challengeId, challengeTitle, challengeIcon) {
       if (!window.ChatState) return;
-      // Ensure defi channel exists
       var defiChannelId = "defi_" + challengeId;
+      var c =
+        window.allChallenges &&
+        window.allChallenges.find(function (x) {
+          return parseInt(x.id, 10) === parseInt(challengeId, 10);
+        });
+      var nb = c
+        ? Math.max(0, parseInt(c.participants_count || 0, 10))
+        : 0;
       if (!window.ChatState.channels[defiChannelId]) {
         window.ChatState.channels[defiChannelId] = {
           id: defiChannelId,
-          icon: challengeIcon || "🏆",
-          name: challengeTitle ? challengeTitle.substring(0, 22) : "Ce Défi",
-          desc: "Discussion du défi",
-          section: "MES DÉFIS",
+          challengeNumericId: parseInt(challengeId, 10),
+          icon: challengeIcon || (c && c.steaker) || "🏆",
+          name: challengeTitle
+            ? challengeTitle.substring(0, 28)
+            : c && c.titre
+              ? c.titre.substring(0, 28)
+              : "Ce défi",
+          desc:
+            c && c.description
+              ? c.description.length > 72
+                ? c.description.substring(0, 72) + "…"
+                : c.description
+              : "Discussion du défi",
+          section: "DÉFIS",
           messages: [],
           unread: 0,
-          onlineCount: Math.floor(Math.random() * 15) + 3,
+          participants_count: nb,
+          participantsList: [],
+          onlineCount: Math.max(nb, 1),
         };
+      } else {
+        var ch = window.ChatState.channels[defiChannelId];
+        ch.challengeNumericId = parseInt(challengeId, 10);
+        ch.participants_count = nb;
+        ch.onlineCount = Math.max(nb, ch.onlineCount || 1);
+        if (challengeTitle) ch.name = challengeTitle.substring(0, 28);
+        if (challengeIcon) ch.icon = challengeIcon;
+      }
+    }
+
+    function buildAllModalDefiTabs() {
+      if (!window.ChatState) return;
+      var list = Array.isArray(window.allChallenges) ? window.allChallenges : [];
+      list.forEach(function (c) {
+        var idNum = parseInt(c && c.id, 10);
+        if (!idNum) return;
+        buildModalTabs(
+          idNum,
+          c.titre || "Défi",
+          c.steaker || c.streak_icon || "🏆",
+        );
+      });
+    }
+
+    function renderModalChatContext(channelId) {
+      var el = document.getElementById("modal-chat-context");
+      if (!el) return;
+      syncModalLiveButton();
+
+      if (!window.ChatState || !window.ChatState.channels[channelId]) {
+        el.className = "gl-chat-modal-context gl-chat-modal-context--empty";
+        el.innerHTML = "";
+        return;
+      }
+
+      var ch = window.ChatState.channels[channelId];
+      var isDefi = channelId.indexOf("defi_") === 0;
+      var cid = isDefi ? parseInt(channelId.replace("defi_", ""), 10) : 0;
+
+      function esc(s) {
+        return (s || "")
+          .toString()
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      if (!isDefi) {
+        var act =
+          window.allChallenges &&
+          window.allChallenges.filter(function (x) {
+            return (x.statut || "").toLowerCase() === "actif";
+          });
+        var nAct = act ? act.length : 0;
+        var sumP = 0;
+        if (act && act.length) {
+          act.forEach(function (x) {
+            sumP += parseInt(x.participants_count || 0, 10);
+          });
+        }
+        el.className = "gl-chat-modal-context";
+        el.innerHTML =
+          '<div class="gl-chat-modal-context__inner">' +
+          '<div class="gl-chat-modal-context__head"><span class="gl-chat-modal-context__badge">Communauté</span> ' +
+          (nAct
+            ? "<strong>" +
+              nAct +
+              "</strong> défi(s) actif(s) · <strong>" +
+              sumP +
+              "</strong> inscription(s) au total"
+            : "Les défis chargés apparaissent dans l’onglet Défis.") +
+          "</div></div>";
+        return;
+      }
+
+      el.className = "gl-chat-modal-context gl-chat-modal-context--loading";
+      el.innerHTML =
+        '<div class="gl-chat-modal-context__inner"><div class="gl-chat-modal-context__head">Chargement des participants…</div></div>';
+
+      var done = function (list) {
+        list = list || [];
+        ch.participantsList = list;
+        ch.onlineCount = Math.max(
+          list.length,
+          parseInt(ch.participants_count || 0, 10),
+          1,
+        );
+        var onlineEl = document.getElementById("modal-online-count");
+        if (onlineEl && channelId === _modalActiveChannel) {
+          onlineEl.textContent = ch.onlineCount + " en ligne";
+        }
+        var maxShow = 14;
+        var pills = list
+          .slice(0, maxShow)
+          .map(function (p) {
+            return (
+              '<span class="gl-chat-modal-context__pill" title="' +
+              esc(p.nom) +
+              '">' +
+              esc(p.nom) +
+              "</span>"
+            );
+          })
+          .join("");
+        var more =
+          list.length > maxShow
+            ? '<span class="gl-chat-modal-context__more">+' +
+              (list.length - maxShow) +
+              "</span>"
+            : "";
+        var chMeta =
+          window.allChallenges &&
+          window.allChallenges.find(function (x) {
+            return parseInt(x.id, 10) === cid;
+          });
+        var titre = (chMeta && chMeta.titre) || ch.name || "Ce défi";
+        el.className = "gl-chat-modal-context";
+        el.innerHTML =
+          '<div class="gl-chat-modal-context__inner">' +
+          '<div class="gl-chat-modal-context__head">' +
+          '<span class="gl-chat-modal-context__badge">Défi</span> ' +
+          "<strong>" +
+          esc(titre) +
+          "</strong> · " +
+          list.length +
+          " inscrit" +
+          (list.length > 1 ? "s" : "") +
+          "</div>" +
+          (pills || more
+            ? '<div class="gl-chat-modal-context__pills">' + pills + more + "</div>"
+            : '<div class="gl-chat-modal-context__empty-hint">Aucun participant en base pour l’instant — soyez le premier.</div>') +
+          '<div id="modal-live-panel" class="gl-chat-live-panel"><div class="gl-chat-modal-context__empty-hint">Chargement des lives…</div></div>' +
+          "</div>";
+        loadModalLives(cid).then(function (data) {
+          if (channelId !== _modalActiveChannel) return;
+          var panel = document.getElementById("modal-live-panel");
+          if (panel) panel.innerHTML = renderLivePanel(data);
+        });
+      };
+
+      if (typeof window.fetchParticipantsForChallenge === "function") {
+        window
+          .fetchParticipantsForChallenge(cid)
+          .then(done)
+          .catch(function () {
+            done([]);
+          });
+      } else {
+        done([]);
       }
     }
 
     function renderModalChannelTabs() {
       var tabsEl = document.getElementById("modal-channel-tabs");
+      ensureModalChatState();
       if (!tabsEl || !window.ChatState) return;
 
-      var shown = ["global", "ecology", "sport", "nutrition"];
-      if (_modalDefiId) shown.unshift("defi_" + _modalDefiId);
+      buildAllModalDefiTabs();
+
+      var baseTabs = ["global", "ecology", "sport", "nutrition"];
+      var defiTabs = [];
+      var challenges = Array.isArray(window.allChallenges) ? window.allChallenges : [];
+      challenges.forEach(function (c) {
+        var idNum = parseInt(c && c.id, 10);
+        if (!idNum) return;
+        var channelId = "defi_" + idNum;
+        if (window.ChatState.channels[channelId]) defiTabs.push(channelId);
+      });
+
+      Object.keys(window.ChatState.channels).forEach(function (id) {
+        if (id.indexOf("defi_") === 0 && defiTabs.indexOf(id) === -1) {
+          defiTabs.push(id);
+        }
+      });
+
+      var shown = baseTabs.concat(defiTabs);
+      var search = (
+        document.getElementById("modal-channel-search")?.value || ""
+      ).toString().trim().toLowerCase();
+      if (search !== "") {
+        shown = shown.filter(function (id) {
+          var ch = window.ChatState.channels[id];
+          if (!ch) return false;
+          return (
+            (ch.name || "").toLowerCase().indexOf(search) !== -1 ||
+            (ch.desc || "").toLowerCase().indexOf(search) !== -1 ||
+            id.toLowerCase().indexOf(search) !== -1
+          );
+        });
+      }
+      var countEl = document.getElementById("modal-channel-count");
+      if (countEl) countEl.textContent = shown.length.toString();
 
       var html = "";
       shown.forEach(function (id) {
@@ -5050,9 +7250,21 @@
       });
       tabsEl.innerHTML = html;
 
+      if (html === "") {
+        tabsEl.innerHTML =
+          '<div class="gl-chat-modal-tab-empty">Aucun canal trouvé</div>';
+        return;
+      }
+
       tabsEl.querySelectorAll(".gl-chat-modal-tab").forEach(function (btn) {
         btn.addEventListener("click", function () {
+          var prevCid = modalActiveChallengeId();
           _modalActiveChannel = btn.dataset.ch;
+          window.__glModalActiveChannel = _modalActiveChannel;
+          var nextCid = modalActiveChallengeId();
+          if (prevCid && nextCid && prevCid !== nextCid) {
+            closePeerConnection(true);
+          }
           if (window.ChatState.channels[_modalActiveChannel]) {
             window.ChatState.channels[_modalActiveChannel].unread = 0;
           }
@@ -5064,9 +7276,24 @@
           var onlineEl = document.getElementById("modal-online-count");
           if (onlineEl && ch)
             onlineEl.textContent = (ch.onlineCount || "—") + " en ligne";
+          renderModalChatContext(_modalActiveChannel);
+          void loadModalHistoryIfDefi();
+
+          if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
+            var joinCid = modalActiveChallengeId();
+            if (joinCid) window.ChatRealtime.join(joinCid);
+          }
         });
       });
     }
+
+    window.refreshChatDefiTabs = function () {
+      ensureModalChatState();
+      void loadChatChannelsFromDb();
+      renderModalChannelTabs();
+      renderModalChatContext(_modalActiveChannel);
+      renderModalMessages(_modalActiveChannel);
+    };
 
     // ── Render messages in modal ─────────────────────────
     function renderModalMessages(channelId) {
@@ -5231,7 +7458,7 @@
             '<span class="gl-msg-author ' +
             aiAuthorClass +
             '">' +
-            msg.author +
+            esc(msg.author) +
             "</span>" +
             '<span class="gl-msg-time">' +
             new Date(msg.time).toLocaleTimeString("fr-FR", {
@@ -5241,15 +7468,58 @@
             "</span>" +
             "</div>";
         }
-        var bubble = escapedText
-          ? '<div class="gl-msg-bubble ' + aiBubbleClass + '">' + escapedText + "</div>"
-          : "";
+        var innerBubble = "";
+        if (msg.attachments && msg.attachments.length) {
+          msg.attachments.forEach(function (a) {
+            if (!a || !a.url || !isAllowedChatMediaUrl(a.url)) return;
+            if (a.type === "image") {
+              innerBubble +=
+                '<div class="gl-msg-media"><a href="' +
+                esc(a.url) +
+                '" target="_blank" rel="noopener noreferrer"><img class="gl-msg-img" src="' +
+                esc(a.url) +
+                '" alt="" loading="lazy" /></a></div>';
+            } else if (a.type === "audio") {
+              innerBubble +=
+                '<div class="gl-msg-media"><audio class="gl-msg-audio" controls src="' +
+                esc(a.url) +
+                '"></audio></div>';
+            } else if (a.type === "video") {
+              innerBubble +=
+                '<div class="gl-msg-media"><video class="gl-msg-video" controls preload="metadata" src="' +
+                esc(a.url) +
+                '"></video></div>';
+            }
+          });
+        }
+        if (escapedText) {
+          innerBubble += '<div class="gl-msg-text">' + escapedText + "</div>";
+        }
+        var bubble =
+          innerBubble !== ""
+            ? '<div class="gl-msg-bubble ' + aiBubbleClass + '">' + innerBubble + "</div>"
+            : "";
         var cardsBlock =
           msg.type === "cards" && msg.cards && msg.cards.length
             ? renderCardsBlock(msg.cards)
             : "";
+        var actions =
+          '<div class="gl-msg-actions">' +
+          '<button type="button" class="gl-msg-action" onclick="replyToModalMessage(\'' +
+          String(msg.id).replace(/'/g, "") +
+          '\')" title="Répondre">Répondre</button>';
+        if (msg.own && !msg.isAi) {
+          actions +=
+            '<button type="button" class="gl-msg-action" onclick="editModalMessage(\'' +
+            String(msg.id).replace(/'/g, "") +
+            '\')" title="Modifier">Modifier</button>' +
+            '<button type="button" class="gl-msg-action gl-msg-action--danger" onclick="deleteModalChatMessage(\'' +
+            String(msg.id).replace(/'/g, "") +
+            '\')" title="Supprimer">Supprimer</button>';
+        }
+        actions += "</div>";
 
-        html += bubble + cardsBlock;
+        html += bubble + cardsBlock + actions;
         html += reactions;
         html += "</div></div>";
 
@@ -5270,32 +7540,141 @@
       var input = document.getElementById("modal-msg-input");
       if (!input || !window.ChatState) return;
       var text = input.value.trim();
-      if (!text) return;
+      var pendingAtt = (window.__modalChatPendingAttachments || []).slice();
+      if (!text && (!pendingAtt || pendingAtt.length === 0)) return;
 
-      var user = window.__USER__ || { nom: "Vous", avatar: "😊" };
       var ch = window.ChatState.channels[_modalActiveChannel];
       if (!ch) return;
 
-      ch.messages.push({
-        id: Math.random().toString(36).slice(2, 10),
-        author: user.nom || "Vous",
-        avatar: user.avatar || "😊",
-        text: text,
-        time: Date.now(),
-        own: true,
-        isAi: false,
-        reactions: [],
-      });
+      var who = pickModalAuthorFromChannel(ch);
+      var cid = modalActiveChallengeId();
+      var replyTo = (window.__modalChatReplyTo || "").toString().trim();
+      var editId = (window.__modalChatEditId || "").toString().trim();
+
+      // Edition (texte uniquement)
+      if (cid && editId) {
+        fetch(getBackendApiPath("chat/message.php?id=") + encodeURIComponent(editId), {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({ body: text }),
+        })
+          .then(function () {
+            ch.messages = (ch.messages || []).map(function (m) {
+              if (m.id === editId) {
+                m.text = text;
+                m.updated_at = Date.now();
+              }
+              return m;
+            });
+            renderModalMessages(_modalActiveChannel);
+          })
+          .catch(function () {});
+        window.__modalChatEditId = "";
+      } else if (cid) {
+        // Persisté en DB
+        fetch(getBackendApiPath("chat/messages.php"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            challenge_id: cid,
+            body: text,
+            parent_id: replyTo || null,
+            attachments: pendingAtt,
+          }),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            if (!j || !j.ok || !j.message) {
+              toastChatError((j && j.error) || "Message non envoyé");
+              ch.messages.push({
+                id: Math.random().toString(36).slice(2, 10),
+                author: who.nom,
+                avatar: who.avatar,
+                text: text,
+                attachments: pendingAtt,
+                participantId: who.participantId,
+                userId: who.userId,
+                time: Date.now(),
+                own: true,
+                isAi: false,
+                reactions: [],
+                parent_id: replyTo || null,
+              });
+              renderModalMessages(_modalActiveChannel);
+              return;
+            }
+            ch.messages.push({
+              id: j.message.id,
+              author: j.message.author_name || who.nom,
+              avatar: who.avatar,
+              text: j.message.body || text,
+              attachments: Array.isArray(j.message.attachments) ? j.message.attachments : pendingAtt,
+              participantId: j.message.participant_id || who.participantId,
+              userId: j.message.user_id || who.userId,
+              time: Date.now(),
+              own: true,
+              isAi: false,
+              reactions: [],
+              parent_id: replyTo || null,
+            });
+            renderModalMessages(_modalActiveChannel);
+          })
+          .catch(function () {
+            // fallback local
+            ch.messages.push({
+              id: Math.random().toString(36).slice(2, 10),
+              author: who.nom,
+              avatar: who.avatar,
+              text: text,
+              attachments: pendingAtt,
+              participantId: who.participantId,
+              userId: who.userId,
+              time: Date.now(),
+              own: true,
+              isAi: false,
+              reactions: [],
+              parent_id: replyTo || null,
+            });
+            renderModalMessages(_modalActiveChannel);
+          });
+        window.__modalChatReplyTo = "";
+      } else {
+        // Canaux non défi: local
+        ch.messages.push({
+          id: Math.random().toString(36).slice(2, 10),
+          author: who.nom,
+          avatar: who.avatar,
+          text: text,
+          attachments: pendingAtt,
+          participantId: who.participantId,
+          userId: who.userId,
+          time: Date.now(),
+          own: true,
+          isAi: false,
+          reactions: [],
+        });
+      }
 
       if (ch.messages.length > 120) ch.messages.shift();
       input.value = "";
       input.style.height = "";
+      clearModalPendingMedia();
       var sendBtn = document.getElementById("modal-send-btn");
       if (sendBtn) sendBtn.disabled = true;
 
       renderModalMessages(_modalActiveChannel);
 
-      // Simulate peer response 25% chance
+      // Simulate peer response 25% chance (prénoms réels si inscrits chargés)
       if (Math.random() < 0.25) {
         var peerList = [
           ["Marie D.", "👩", "Super initiative ! Je vais essayer ça aussi 🌿"],
@@ -5313,6 +7692,18 @@
           ],
         ];
         var peer = peerList[Math.floor(Math.random() * peerList.length)];
+        var plist = ch.participantsList || [];
+        if (plist.length > 0) {
+          var pick = plist[Math.floor(Math.random() * plist.length)];
+          var nom = (pick && pick.nom) || peer[0];
+          var replies = [
+            "Super initiative ! On continue ensemble 🌿",
+            "Bonne idée ! Ça motive toute l'équipe 💪",
+            "Merci pour le partage, ça aide vraiment 👏",
+            "Bravo pour l'avancement sur ce défi ! 🔥",
+          ];
+          peer = [nom, "👤", replies[Math.floor(Math.random() * replies.length)]];
+        }
         var typingEl = document.getElementById("modal-typing-indicator");
         var typingTxt = document.getElementById("modal-typing-text");
         if (typingEl) typingEl.style.display = "flex";
@@ -5363,18 +7754,35 @@
       if (typingTxt) typingTxt.textContent = "GaiaLumen IA réfléchit…";
 
       try {
+        var partLine = "";
+        if (
+          _modalActiveChannel.indexOf("defi_") === 0 &&
+          ch.participantsList &&
+          ch.participantsList.length
+        ) {
+          partLine =
+            "\nInscrits récents à ce défi (extraits) : " +
+            ch.participantsList
+              .slice(0, 12)
+              .map(function (p) {
+                return p.nom;
+              })
+              .join(", ") +
+            ".";
+        }
         var sys =
           "Tu es GaiaLumen IA, l'assistant bienveillant de la plateforme de défis collaboratifs GaiaLumen.\nTu aides les participants à progresser dans leurs défis (écologie, sport, nutrition), trouver de la motivation et gagner des steakers 3D.\nCanal actif: \"" +
           ch.name +
           '" — ' +
           ch.desc +
+          partLine +
           "\nRéponds en français, de façon chaleureuse et concise (3-4 phrases max), avec des emojis pertinents.";
 
-        var resp = await fetch("https://api.anthropic.com/v1/messages", {
+        var resp = await fetch(getBackendApiPath("anthropic-messages.php"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
+            model: "llama-3.3-70b-versatile",
             max_tokens: 1000,
             system: sys,
             messages: [{ role: "user", content: prompt }],
@@ -5443,8 +7851,40 @@
       var sendBtn = document.getElementById("modal-send-btn");
       var input = document.getElementById("modal-msg-input");
       var aiBtn = document.getElementById("modal-ai-btn");
+      var liveBtn = document.getElementById("modal-live-btn");
+      var fullscreenBtn = document.getElementById("modal-fullscreen-btn");
+      var attachBtn = document.getElementById("modal-attach-image-btn");
+      var emojiBtn = document.getElementById("modal-emoji-picker-btn");
+      var emojiPanel = document.getElementById("modal-emoji-picker");
+      var recBtn = document.getElementById("modal-record-audio-btn");
+      var recVideoBtn = document.getElementById("modal-record-video-btn");
+      var fileInp = document.getElementById("modal-chat-file");
+      var clrImg = document.getElementById("modal-chat-image-clear");
+      var webrtcStartBtn = document.getElementById("modal-webrtc-start-btn");
+      var webrtcJoinBtn = document.getElementById("modal-webrtc-join-btn");
+      var webrtcScreenBtn = document.getElementById("modal-webrtc-screen-btn");
+      var webrtcMicBtn = document.getElementById("modal-webrtc-mic-btn");
+      var webrtcCamBtn = document.getElementById("modal-webrtc-cam-btn");
+      var webrtcEndBtn = document.getElementById("modal-webrtc-end-btn");
 
-      if (sendBtn) sendBtn.addEventListener("click", sendModalMessage);
+      function syncSendEnabled() {
+        syncModalSendButton();
+      }
+
+      var typingTimer = null;
+      function sendTyping(isTyping) {
+        if (typeof window.ChatRealtime !== "object" || !window.ChatRealtime) return;
+        var cid = modalActiveChallengeId();
+        if (!cid) return;
+        window.ChatRealtime.join(cid);
+        window.ChatRealtime.sendTyping(cid, !!isTyping);
+      }
+
+      // Important: module-loader can re-render; bind once per DOM instance
+      if (sendBtn && !sendBtn.dataset.bound) {
+        sendBtn.addEventListener("click", sendModalMessage);
+        sendBtn.dataset.bound = "1";
+      }
 
       if (input) {
         input.addEventListener("keydown", function (e) {
@@ -5455,23 +7895,304 @@
         });
         input.addEventListener("input", function () {
           input.style.height = "";
-          input.style.height = Math.min(input.scrollHeight, 90) + "px";
-          if (sendBtn) sendBtn.disabled = input.value.trim() === "";
+          input.style.height = Math.min(input.scrollHeight, 120) + "px";
+          syncSendEnabled();
+          sendTyping(true);
+          if (typingTimer) clearTimeout(typingTimer);
+          typingTimer = setTimeout(function () {
+            sendTyping(false);
+          }, 1500);
+        });
+        input.addEventListener("paste", function (e) {
+          var items = (e.clipboardData && e.clipboardData.items) || [];
+          for (var i = 0; i < items.length; i++) {
+            if (items[i].type && items[i].type.indexOf("image") === 0) {
+              e.preventDefault();
+              var f = items[i].getAsFile();
+              if (f) {
+                uploadModalChatMedia(f)
+                  .then(function (att) {
+                    if (!att || !att.url) return;
+                    if (att.type === "image") setModalPendingImageUrl(att.url);
+                    else setModalPendingAttachment(att);
+                    syncSendEnabled();
+                  })
+                  .catch(function () {
+                    toastChatError("Image non importée");
+                  });
+              }
+              break;
+            }
+          }
+        });
+      }
+
+      if (attachBtn && fileInp) {
+        attachBtn.addEventListener("click", function () {
+          fileInp.click();
+        });
+        fileInp.addEventListener("change", function () {
+          var f = fileInp.files && fileInp.files[0];
+          if (!f) return;
+          if (f.size > 80 * 1024 * 1024) {
+            toastChatError("Fichier trop volumineux (max 80 Mo)");
+            fileInp.value = "";
+            return;
+          }
+          uploadModalChatMedia(f)
+            .then(function (att) {
+              if (!att || !att.url) return;
+              if (att.type === "image") setModalPendingImageUrl(att.url);
+              else setModalPendingAttachment(att);
+              syncSendEnabled();
+            })
+              .catch(function (err) {
+                toastChatError((err && err.message) || (f.type && f.type.indexOf("video") === 0 ? "Vidéo non importée" : (f.type && f.type.indexOf("audio") === 0 ? "Audio non importé" : "Image non importée")));
+              })
+            .finally(function () {
+              fileInp.value = "";
+            });
+        });
+      }
+
+      if (clrImg) clrImg.addEventListener("click", clearModalPendingMedia);
+      if (emojiPanel && !emojiPanel.dataset.ready) {
+        emojiPanel.innerHTML = buildEmojiPickerHtml();
+        emojiPanel.dataset.ready = "1";
+      }
+      if (emojiBtn && emojiPanel) {
+        emojiBtn.addEventListener("click", function () {
+          emojiPanel.style.display = emojiPanel.style.display === "none" ? "block" : "none";
+        });
+      }
+      if (emojiPanel && !emojiPanel.dataset.bound) {
+        emojiPanel.addEventListener("click", function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest(".gl-emoji-pick-btn") : null;
+          if (!btn || !input) return;
+          insertAtCursor(input, btn.getAttribute("data-emoji") || "");
+        });
+        emojiPanel.dataset.bound = "1";
+      }
+
+      var searchInput = document.getElementById("modal-channel-search");
+      if (searchInput && !searchInput.dataset.bound) {
+        searchInput.addEventListener("input", function () {
+          renderModalChannelTabs();
+        });
+        searchInput.dataset.bound = "1";
+      }
+
+      // Voice recording (MediaRecorder -> upload audio/webm)
+      if (recBtn && (!navigator.mediaDevices || !window.MediaRecorder)) {
+        recBtn.addEventListener("click", function () {
+          toastChatError("Micro non disponible dans ce navigateur");
+        });
+      }
+      if (recBtn && navigator.mediaDevices && window.MediaRecorder) {
+        var recorder = null;
+        var chunks = [];
+        var isRec = false;
+        recBtn.addEventListener("click", function () {
+          if (isRec && recorder) {
+            try { recorder.stop(); } catch (e) {}
+            return;
+          }
+          navigator.mediaDevices
+            .getUserMedia({ audio: true })
+            .then(function (stream) {
+              chunks = [];
+              var preferred = "audio/webm;codecs=opus";
+              var mt = "";
+              if (window.MediaRecorder && typeof window.MediaRecorder.isTypeSupported === "function") {
+                if (window.MediaRecorder.isTypeSupported(preferred)) mt = preferred;
+                else if (window.MediaRecorder.isTypeSupported("audio/webm")) mt = "audio/webm";
+                else if (window.MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) mt = "audio/ogg;codecs=opus";
+              }
+              try {
+                recorder = mt ? new MediaRecorder(stream, { mimeType: mt }) : new MediaRecorder(stream);
+              } catch (e) {
+                try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (_) {}
+                toastChatError("Enregistrement vocal non supporté");
+                return;
+              }
+              recorder.ondataavailable = function (e) {
+                if (e.data && e.data.size) chunks.push(e.data);
+              };
+              recorder.onstop = function () {
+                isRec = false;
+                recBtn.textContent = "🎙️";
+                try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+                var blobType = (recorder && recorder.mimeType) ? recorder.mimeType : "audio/webm";
+                var blob = new Blob(chunks, { type: blobType });
+                var ext = blobType.indexOf("ogg") !== -1 ? "ogg" : "webm";
+                var file = new File([blob], "voice." + ext, { type: blobType });
+                uploadModalChatMedia(file)
+                  .then(function (att) {
+                    if (!att || !att.url) return;
+                    setModalPendingAttachment(att);
+                    if (typeof showToast === "function") showToast("Audio prêt à envoyer", "success");
+                    syncSendEnabled();
+                  })
+                  .catch(function () {
+                    toastChatError("Audio non importé");
+                  });
+              };
+              isRec = true;
+              recBtn.textContent = "⏹";
+              try {
+                recorder.start();
+              } catch (e) {
+                isRec = false;
+                recBtn.textContent = "🎙️";
+                try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (_) {}
+                toastChatError("Impossible de démarrer l'enregistrement");
+              }
+            })
+            .catch(function () {
+              toastChatError("Micro non disponible");
+            });
+        });
+      }
+      if (recVideoBtn && navigator.mediaDevices && window.MediaRecorder) {
+        recVideoBtn.addEventListener("click", function () {
+          var s = window.__modalWebRtc;
+          if (s.isVideoRecording && s.videoRecorder) {
+            try { s.videoRecorder.stop(); } catch (e) {}
+            return;
+          }
+          navigator.mediaDevices
+            .getUserMedia({ audio: true, video: true })
+            .then(function (stream) {
+              s.videoChunks = [];
+              var mt = "video/webm";
+              try {
+                s.videoRecorder = new MediaRecorder(stream, { mimeType: mt });
+              } catch (e) {
+                s.videoRecorder = new MediaRecorder(stream);
+                mt = s.videoRecorder.mimeType || "video/webm";
+              }
+              s.videoRecorder.ondataavailable = function (e) {
+                if (e.data && e.data.size) s.videoChunks.push(e.data);
+              };
+              s.videoRecorder.onstop = function () {
+                s.isVideoRecording = false;
+                recVideoBtn.textContent = "🎥";
+                try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+                var blob = new Blob(s.videoChunks, { type: mt });
+                var file = new File([blob], "camera-recording.webm", { type: mt });
+                uploadModalChatMedia(file)
+                  .then(function (att) {
+                    if (!att || !att.url) return;
+                    setModalPendingAttachment(att);
+                    if (typeof showToast === "function") showToast("Vidéo prête à envoyer", "success");
+                    syncSendEnabled();
+                  })
+                  .catch(function (err) {
+                    toastChatError((err && err.message) || "Vidéo non importée");
+                  });
+              };
+              s.isVideoRecording = true;
+              recVideoBtn.textContent = "⏹";
+              try {
+                s.videoRecorder.start();
+              } catch (e) {
+                s.isVideoRecording = false;
+                recVideoBtn.textContent = "🎥";
+                try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (_) {}
+                toastChatError("Impossible de démarrer la vidéo");
+              }
+            })
+            .catch(function () {
+              toastChatError("Caméra/micro non disponibles");
+            });
         });
       }
 
       if (aiBtn) aiBtn.addEventListener("click", askModalAI);
+      if (liveBtn && !liveBtn.dataset.bound) {
+        liveBtn.addEventListener("click", toggleWebRtcPanel);
+        liveBtn.dataset.bound = "1";
+      }
+      if (fullscreenBtn && !fullscreenBtn.dataset.bound) {
+        fullscreenBtn.addEventListener("click", function () {
+          var enabled = !!(window.__modalChatUi && window.__modalChatUi.isFullscreen);
+          setModalFullscreen(!enabled);
+        });
+        fullscreenBtn.dataset.bound = "1";
+      }
+      if (webrtcStartBtn && !webrtcStartBtn.dataset.bound) {
+        webrtcStartBtn.addEventListener("click", startWebRtcCall);
+        webrtcStartBtn.dataset.bound = "1";
+      }
+      if (webrtcJoinBtn && !webrtcJoinBtn.dataset.bound) {
+        webrtcJoinBtn.addEventListener("click", function () {
+          var peerId = window.__modalWebRtc.peerConnId || 0;
+          if (!peerId) return toastChatError("Aucune invitation en attente");
+          window.__modalWebRtc.pendingInvite = false;
+          void acceptWebRtcInvite(peerId);
+          setWebRtcButtonState();
+        });
+        webrtcJoinBtn.dataset.bound = "1";
+      }
+      if (webrtcScreenBtn && !webrtcScreenBtn.dataset.bound) {
+        webrtcScreenBtn.addEventListener("click", async function () {
+          var s = window.__modalWebRtc;
+          if (!s.pc || !s.localStream) return;
+          try {
+            if (!s.isScreenShared) {
+              var screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
+              var screenTrack = screen.getVideoTracks()[0];
+              var sender = s.pc.getSenders().find(function (x) { return x.track && x.track.kind === "video"; });
+              if (sender && screenTrack) await sender.replaceTrack(screenTrack);
+              screenTrack.onended = function () { s.isScreenShared = false; setWebRtcButtonState(); };
+              s.isScreenShared = true;
+            } else {
+              var camTrack = s.localStream.getVideoTracks()[0];
+              var sender2 = s.pc.getSenders().find(function (x) { return x.track && x.track.kind === "video"; });
+              if (sender2 && camTrack) await sender2.replaceTrack(camTrack);
+              s.isScreenShared = false;
+            }
+            setWebRtcButtonState();
+          } catch (e) {
+            toastChatError("Partage écran indisponible");
+          }
+        });
+        webrtcScreenBtn.dataset.bound = "1";
+      }
+      if (webrtcMicBtn && !webrtcMicBtn.dataset.bound) {
+        webrtcMicBtn.addEventListener("click", function () {
+          var s = window.__modalWebRtc;
+          if (!s.localStream) return;
+          s.isMicMuted = !s.isMicMuted;
+          s.localStream.getAudioTracks().forEach(function (t) { t.enabled = !s.isMicMuted; });
+          setWebRtcButtonState();
+        });
+        webrtcMicBtn.dataset.bound = "1";
+      }
+      if (webrtcCamBtn && !webrtcCamBtn.dataset.bound) {
+        webrtcCamBtn.addEventListener("click", function () {
+          var s = window.__modalWebRtc;
+          if (!s.localStream) return;
+          s.isCamOff = !s.isCamOff;
+          s.localStream.getVideoTracks().forEach(function (t) { t.enabled = !s.isCamOff; });
+          setWebRtcButtonState();
+        });
+        webrtcCamBtn.dataset.bound = "1";
+      }
+      if (webrtcEndBtn && !webrtcEndBtn.dataset.bound) {
+        webrtcEndBtn.addEventListener("click", function () { closePeerConnection(true); });
+        webrtcEndBtn.dataset.bound = "1";
+      }
 
       document
         .querySelectorAll(".gl-emoji-quick--modal button")
         .forEach(function (btn) {
           btn.addEventListener("click", function () {
             if (!input) return;
-            input.value += btn.textContent.trim();
-            input.focus();
-            input.dispatchEvent(new Event("input"));
+            insertAtCursor(input, btn.textContent.trim());
           });
         });
+      setWebRtcButtonState();
     })();
 
     // FAB chat button — single global button, no per-card injection needed

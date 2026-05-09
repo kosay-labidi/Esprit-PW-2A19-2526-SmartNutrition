@@ -3,28 +3,60 @@ require_once(__DIR__ . '/../config.php');
 require_once(__DIR__ . '/../Model/Participant.php');
 
 class ParticipantController {
+    private bool $paymentSchemaReady = false;
+
+    private function ensurePaymentSchema(): void {
+        if ($this->paymentSchemaReady) return;
+        try {
+            Config::getConnexion()->exec("
+                CREATE TABLE IF NOT EXISTS paiement_defi (
+                    id INT NOT NULL AUTO_INCREMENT,
+                    id_challenge INT NOT NULL,
+                    id_participant INT DEFAULT NULL,
+                    nom VARCHAR(150) NOT NULL,
+                    email VARCHAR(255) NOT NULL,
+                    montant DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    statut ENUM('en_attente','paye','echoue','rembourse') NOT NULL DEFAULT 'en_attente',
+                    methode VARCHAR(50) NOT NULL DEFAULT 'simulation',
+                    reference_transaction VARCHAR(255) DEFAULT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id),
+                    INDEX idx_paiement_challenge (id_challenge),
+                    INDEX idx_paiement_participant (id_participant),
+                    INDEX idx_paiement_email (email)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+        } catch (Exception $e) {
+            error_log('Erreur ensurePaymentSchema participant: ' . $e->getMessage());
+        }
+        $this->paymentSchemaReady = true;
+    }
 
     // ═══════════════════════════════════════════════════════════
     // CRUD DE BASE (préservés identiques)
     // ═══════════════════════════════════════════════════════════
 
     public function addParticipant(Participant $participant) {
-        $sql = "INSERT INTO participant (id_challenge, nom, email, objectif, motivation, action, engagement, notifications)
-                VALUES (:id_challenge, :nom, :email, :objectif, :motivation, :action, :engagement, :notifications)";
+        $sql = "INSERT INTO participant (id_challenge, nom, email, objectif, motivation, action, engagement, notifications, points, days_active, smart_score)
+                VALUES (:id_challenge, :nom, :email, :objectif, :motivation, :action, :engagement, :notifications, :points, :days_active, :smart_score)";
         $db = Config::getConnexion();
         try {
             $query = $db->prepare($sql);
             $query->execute([
-                'id_challenge' => $participant->getIdChallenge(),
-                'nom'          => $participant->getNom(),
-                'email'        => $participant->getEmail(),
-                'objectif'     => $participant->getObjectif(),
-                'motivation'   => $participant->getMotivation(),
-                'action'       => $participant->getAction(),
-                'engagement'   => $participant->getEngagement(),
-                'notifications'=> $participant->getNotifications()
+                'id_challenge' => (int)$participant->getIdChallenge(),
+                'nom'          => Config::sanitizeInput($participant->getNom()),
+                'email'        => Config::sanitizeInput($participant->getEmail()),
+                'objectif'     => (int)$participant->getObjectif(),
+                'motivation'   => Config::sanitizeInput($participant->getMotivation()),
+                'action'       => Config::sanitizeInput($participant->getAction()),
+                'engagement'   => (int)$participant->getEngagement(),
+                'notifications'=> (int)$participant->getNotifications(),
+                'points'       => (int)($participant->getPoints() ?? 0),
+                'days_active'  => (int)($participant->getDaysActive() ?? 1),
+                'smart_score'  => (float)($participant->getSmartScore() ?? 0)
             ]);
-            return true;
+            return (int)$db->lastInsertId();
         } catch (Exception $e) {
             error_log('Erreur addParticipant: ' . $e->getMessage());
             return false;
@@ -32,12 +64,20 @@ class ParticipantController {
     }
 
     public function listParticipants($id_challenge = null) {
+        $this->ensurePaymentSchema();
         $sql = "SELECT p.*,
                     c.titre        AS challenge_titre,
                     c.streak_icon  AS challenge_icon,
-                    c.valeur_cible AS challenge_target
+                    c.valeur_cible AS challenge_target,
+                    c.prix         AS challenge_prix,
+                    c.est_payant   AS challenge_est_payant,
+                    pd.statut      AS paiement_statut,
+                    pd.methode     AS paiement_methode,
+                    pd.montant     AS paiement_montant,
+                    pd.reference_transaction AS paiement_reference
                 FROM participant p
-                LEFT JOIN challenge c ON c.id = p.id_challenge";
+                LEFT JOIN challenge c ON c.id = p.id_challenge
+                LEFT JOIN paiement_defi pd ON pd.id_participant = p.id";
 
         $params = [];
         if ($id_challenge !== null) {
@@ -108,7 +148,10 @@ class ParticipantController {
                     motivation    = :motivation,
                     action        = :action,
                     engagement    = :engagement,
-                    notifications = :notifications
+                    notifications = :notifications,
+                    points        = :points,
+                    days_active   = :days_active,
+                    smart_score   = :smart_score
                 WHERE id = :id";
         $db = Config::getConnexion();
         try {
@@ -122,11 +165,42 @@ class ParticipantController {
                 'action'       => $participant->getAction(),
                 'engagement'   => $participant->getEngagement(),
                 'notifications'=> $participant->getNotifications(),
+                'points'       => $participant->getPoints(),
+                'days_active'  => $participant->getDaysActive(),
+                'smart_score'  => $participant->getSmartScore(),
                 'id'           => (int)$id
             ]);
             return true;
         } catch (Exception $e) {
             error_log('Erreur updateParticipant: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Calcule le score intelligent pour tous les participants et met à jour le classement.
+     * Algorithme Smart Ranking : (Points * 0.4) + (Engagement * 0.4) + (Régularité * 0.2)
+     */
+    public function updateSmartRankings() {
+        $db = Config::getConnexion();
+        try {
+            $participants = $db->query("SELECT id, points, engagement, days_active FROM participant")->fetchAll();
+            
+            $sql = "UPDATE participant SET smart_score = :score WHERE id = :id";
+            $stmt = $db->prepare($sql);
+            
+            foreach ($participants as $p) {
+                // Algorithme Smart Ranking
+                $score = ($p['points'] * 0.4) + ($p['engagement'] * 0.4) + ($p['days_active'] * 0.2);
+                
+                $stmt->execute([
+                    'score' => $score,
+                    'id'    => $p['id']
+                ]);
+            }
+            return true;
+        } catch (Exception $e) {
+            error_log('Erreur updateSmartRankings: ' . $e->getMessage());
             return false;
         }
     }
@@ -144,9 +218,25 @@ class ParticipantController {
                     SUM(engagement = 1)                  AS engages,
                     SUM(notifications = 1)               AS notifs_actives,
                     COALESCE(AVG(objectif),    0)         AS avg_objectif,
-                    COALESCE(AVG(engagement),  0)         AS avg_engagement
+                    COALESCE(AVG(engagement),  0)         AS avg_engagement,
+                    COALESCE(AVG(points),      0)         AS avg_points,
+                    COALESCE(MAX(points),      0)         AS max_points
                 FROM participant
             ")->fetch();
+
+            // Répartition par niveau de Smart Score
+            $scoreDistribution = $db->query("
+                SELECT 
+                    CASE 
+                        WHEN smart_score >= 80 THEN 'Expert'
+                        WHEN smart_score >= 50 THEN 'Intermédiaire'
+                        ELSE 'Débutant'
+                    END as level,
+                    COUNT(*) as count
+                FROM participant
+                GROUP BY level
+            ")->fetchAll();
+            $row['score_distribution'] = $scoreDistribution;
 
             // Top défis avec le plus de participants
             $topDefis = $db->query("
@@ -180,6 +270,23 @@ class ParticipantController {
      * @param int    $limit       Participants par page
      * @return array ['data' => [], 'total' => int, 'page' => int, 'totalPages' => int]
      */
+    public function getRanking($limit = 10) {
+        $sql = "SELECT nom, points, engagement, days_active, smart_score 
+                FROM participant 
+                ORDER BY smart_score DESC, points DESC 
+                LIMIT :limit";
+        $db = Config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $query->execute();
+            return $query->fetchAll();
+        } catch (Exception $e) {
+            error_log('Erreur getRanking: ' . $e->getMessage());
+            return [];
+        }
+    }
+
     public function listParticipantsFiltres(
         string $search       = '',
         int    $id_challenge = 0,
@@ -220,9 +327,15 @@ class ParticipantController {
 
             // Requête principale
             $sql = "SELECT p.*, c.titre AS challenge_titre, c.streak_icon AS challenge_icon,
-                           c.valeur_cible AS challenge_target
+                           c.valeur_cible AS challenge_target,
+                           c.prix         AS challenge_prix,
+                           c.est_payant   AS challenge_est_payant,
+                           pd.statut      AS paiement_statut,
+                           pd.methode     AS paiement_methode,
+                           pd.montant     AS paiement_montant
                     FROM participant p
                     LEFT JOIN challenge c ON c.id = p.id_challenge
+                    LEFT JOIN paiement_defi pd ON pd.id_participant = p.id
                     $whereClause
                     ORDER BY p.date_inscription DESC, p.id DESC
                     LIMIT :limit OFFSET :offset";

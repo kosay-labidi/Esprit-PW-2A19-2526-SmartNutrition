@@ -136,9 +136,21 @@ function initChallenges() {
             </div>
             <p class="challenge-description">${c.description}</p>
             ${streakDisplay}
+            
+            <!-- Barre de progression avancée -->
+            <div class="gl-challenge-progress-wrap">
+              <div class="gl-challenge-progress-meta">
+                <span class="gl-progress-label">Progression globale</span>
+                <span class="gl-progress-val">${Math.min(Math.round((c.participants_count / (c.valeur_cible || 100)) * 100), 100)}%</span>
+              </div>
+              <div class="gl-challenge-progress-bar">
+                <div class="gl-challenge-progress-fill" style="width: ${Math.min((c.participants_count / (c.valeur_cible || 100)) * 100, 100)}%"></div>
+              </div>
+            </div>
+
             <div class="challenge-stats">
               <div class="challenge-stat"><span>${c.participants_count || 0} participants</span></div>
-              <div class="challenge-stat"><span>Objectif: -${c.valeur_cible}%</span></div>
+              <div class="challenge-stat"><span>Objectif: ${c.valeur_cible} inscrits</span></div>
             </div>
             <button class="btn-participate" onclick="event.stopPropagation(); window.showInlineParticipationForm(${c.id})">
               Participer
@@ -183,10 +195,12 @@ function initChallenges() {
          const elTotal = document.getElementById('stat-total');
          const elActive = document.getElementById('stat-active');
          const elPart = document.getElementById('stat-participants');
+         const elSteakers = document.getElementById('stat-steakers');
          
          if (elTotal) elTotal.textContent = stats.total_challenges || 0;
          if (elActive) elActive.textContent = stats.challenges_actifs || 0;
          if (elPart) elPart.textContent = stats.total_participants || 0;
+         if (elSteakers) elSteakers.textContent = stats.total_steakers || 0;
        })
        .catch(err => console.warn('Erreur stats hero:', err));
    }
@@ -194,17 +208,48 @@ function initChallenges() {
   // ── Classement ────────────────────────────────────────────
   function renderRanking(type = 'global') {
     if (!rankingList) return;
-    rankingList.innerHTML = (sampleRankings[type] || []).map(r => `
-      <div class="ranking-item ${r.isUser ? 'current-user' : ''}">
-        <div class="ranking-position ${r.rang <= 3 ? 'top3' : ''}">${r.rang}</div>
-        <div class="ranking-info">
-          <div class="ranking-name">${r.pseudo}</div>
-          <div class="ranking-progress-bar">
-            <div class="ranking-progress-fill" style="width:${r.progression}%;background:${getProgressColor(r.progression)}"></div>
+    
+    // Si c'est global, on charge depuis l'API
+    if (type === 'global') {
+      fetch('../backend/challenges/listChallenges.php?action=ranking', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(r => r.json())
+      .then(data => {
+        rankingList.innerHTML = data.map((r, index) => {
+          const rang = index + 1;
+          const level = getSteakerFromProgression(r.smart_score);
+          return `
+            <div class="ranking-item">
+              <div class="ranking-position ${rang <= 3 ? 'top3' : ''}">${rang}</div>
+              <div class="ranking-info">
+                <div class="ranking-name">${r.nom}</div>
+                <div class="ranking-progress-bar">
+                  <div class="ranking-progress-fill" style="width:${Math.min(r.smart_score, 100)}%;background:${getProgressColor(r.smart_score)}"></div>
+                </div>
+              </div>
+              <div class="ranking-steaker">${getSteakerIcon(level)}</div>
+            </div>`;
+        }).join('');
+      })
+      .catch(err => {
+        console.error('Erreur ranking:', err);
+        rankingList.innerHTML = '<div class="no-data">Erreur de chargement</div>';
+      });
+    } else {
+      // Pour les autres types (amis), on garde le mock pour l'instant
+      rankingList.innerHTML = (sampleRankings[type] || []).map(r => `
+        <div class="ranking-item ${r.isUser ? 'current-user' : ''}">
+          <div class="ranking-position ${r.rang <= 3 ? 'top3' : ''}">${r.rang}</div>
+          <div class="ranking-info">
+            <div class="ranking-name">${r.pseudo}</div>
+            <div class="ranking-progress-bar">
+              <div class="ranking-progress-fill" style="width:${r.progression}%;background:${getProgressColor(r.progression)}"></div>
+            </div>
           </div>
-        </div>
-        <div class="ranking-steaker">${getSteakerIcon(r.steaker)}</div>
-      </div>`).join('');
+          <div class="ranking-steaker">${getSteakerIcon(r.steaker)}</div>
+        </div>`).join('');
+    }
   }
 
   function renderMyRank() {

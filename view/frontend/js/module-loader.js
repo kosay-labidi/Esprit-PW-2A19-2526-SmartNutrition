@@ -227,8 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Charger le module d'accueil par défaut
-  const activeModule = localStorage.getItem('activeModule') || 'welcome';
+  // Charger le module d'accueil par défaut, ou celui demandé par un lien partagé.
+  const params = new URLSearchParams(window.location.search);
+  const requestedModule = params.get('module');
+  const activeModule = modules[requestedModule] ? requestedModule : (localStorage.getItem('activeModule') || 'welcome');
   const targetItem = document.querySelector(`.menu-item[data-module="${activeModule}"]`);
   
   if (targetItem) {

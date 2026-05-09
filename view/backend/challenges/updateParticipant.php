@@ -8,16 +8,30 @@ $participantC = new ParticipantController();
 $challengeC = new ChallengeController();
 $challenges = [];
 $participant = null;
+$isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+    && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($id > 0) {
     $participant = $participantC->showParticipant($id);
     if (!$participant) {
+        if ($isAjax) {
+            if (ob_get_length()) ob_clean();
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'error' => 'Participant introuvable']);
+            exit;
+        }
         header('Location: showParticipant.php');
         exit;
     }
 } else {
+    if ($isAjax) {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'error' => 'ID participant manquant']);
+        exit;
+    }
     header('Location: showParticipant.php');
     exit;
 }
@@ -47,13 +61,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $updatedParticipant = new Participant($id_challenge, $nom, $email, $objectif, $motivation, $action, $engagement, $notifications);
 
             if ($participantC->updateParticipant($updatedParticipant, $id)) {
-                header('Location: showParticipant.php?id=' . $id_challenge);
+                if ($isAjax) {
+                    if (ob_get_length()) ob_clean();
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'success' => true,
+                        'id' => $id,
+                        'id_challenge' => $id_challenge
+                    ]);
+                    exit;
+                }
+                header('Location: showParticipant.php?id_challenge=' . $id_challenge);
                 exit;
             }
             $error = "Error: Could not update participant";
         }
     } else {
         $error = "Missing information";
+    }
+
+    if ($isAjax) {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'error' => $error ?: 'Modification impossible']);
+        exit;
     }
 }
 ?>
@@ -224,7 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="d-flex justify-content-between mt-30">
-                      <a href="showParticipant.php?id=<?php echo $participant['id_challenge']; ?>" class="main-btn danger-btn-outline btn-hover">Cancel</a>
+                      <a href="showParticipant.php?id_challenge=<?php echo (int)$participant['id_challenge']; ?>" class="main-btn danger-btn-outline btn-hover">Cancel</a>
                       <button type="submit" class="main-btn primary-btn btn-hover">Update Participant</button>
                     </div>
                   </form>

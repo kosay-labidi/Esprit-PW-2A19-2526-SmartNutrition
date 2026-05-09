@@ -226,6 +226,7 @@ $badgeColors = [
                     <th>Objectif</th>
                     <th>Engagement</th>
                     <th>Notifications</th>
+                    <th>Paiement</th>
                     <th>Date inscription</th>
                     <th>Actions</th>
                 </tr>
@@ -233,7 +234,7 @@ $badgeColors = [
             <tbody id="participants-table-body">
             <?php if (empty($participants)): ?>
                 <tr>
-                    <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8;">
+                    <td colspan="8" style="text-align:center; padding:40px; color:#94a3b8;">
                         <div style="font-size:3rem; margin-bottom:10px;">👤</div>
                         Aucun participant pour ce défi.
                         <br><br>
@@ -290,6 +291,19 @@ $badgeColors = [
                             <span class="gl-badge" style="background:#3b82f622; color:#3b82f6; border:1px solid #3b82f655;">🔔 Oui</span>
                         <?php else: ?>
                             <span class="gl-badge" style="background:#6b728022; color:#94a3b8; border:1px solid #6b728055;">🔕 Non</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if (($p['paiement_statut'] ?? '') === 'paye'): ?>
+                            <span class="gl-badge" style="background:#22c55e22; color:#22c55e; border:1px solid #22c55e55;">
+                                💳 Payé
+                            </span>
+                            <div style="font-size:11px;color:#94a3b8;margin-top:4px;">
+                                <?= htmlspecialchars((string)($p['paiement_methode'] ?? '')) ?>
+                                <?= isset($p['paiement_montant']) ? ' · ' . htmlspecialchars(number_format((float)$p['paiement_montant'], 2, ',', ' ')) . ' DT' : '' ?>
+                            </div>
+                        <?php else: ?>
+                            <span class="gl-badge" style="background:#6b728022; color:#94a3b8; border:1px solid #6b728055;">Gratuit / N.A.</span>
                         <?php endif; ?>
                     </td>
                     <td style="font-size:12px; color:#94a3b8;">

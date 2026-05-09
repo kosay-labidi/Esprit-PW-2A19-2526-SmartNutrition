@@ -1,0 +1,47 @@
+# PHP Dependencies
+/vendor/
+composer.lock
+
+# Configuration files
+config.php
+.env
+.env.local
+.env.*.local
+
+# Database dumps
+*.sql
+
+# Uploads (ignoring content but keeping directory structure via .gitkeep)
+/view/backend/api/uploads/chat/audio/*
+!/view/backend/api/uploads/chat/audio/.gitkeep
+/view/backend/api/uploads/chat/images/*
+!/view/backend/api/uploads/chat/images/.gitkeep
+/view/backend/api/uploads/chat/videos/*
+/view/backend/api/uploads/chat/2026/*
+/view/backend/api/uploads/chat/*
+!/view/backend/api/uploads/chat/.gitkeep
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Logs and temporary files
+*.log
+error_log
+/tmp/
+/temp/
+
+# Specific project files
+test-ml.php

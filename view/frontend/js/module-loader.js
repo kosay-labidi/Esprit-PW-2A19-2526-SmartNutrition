@@ -181,7 +181,41 @@ async function showModule(moduleName) {
   if (targetSection) {
     targetSection.style.display = 'block';
     targetSection.classList.add('active');
-    
+
+    // Init planning : ré-exécuter le script depuis la section dans le DOM
+    if (moduleName === 'planning') {
+      const planningSection = document.getElementById('planning');
+      if (planningSection) {
+        planningSection.querySelectorAll('script').forEach(function(oldScript) {
+          const newScript = document.createElement('script');
+          if (oldScript.src) {
+            newScript.src = oldScript.src;
+          } else {
+            newScript.textContent = oldScript.textContent;
+          }
+          document.body.appendChild(newScript);
+        });
+      }
+      // Attendre que planningApp soit prêt
+      var attempts = 0;
+      var pollPlanning = setInterval(function() {
+        attempts++;
+        var el = document.getElementById('planningContent');
+        var app = window.planningApp;
+        if (el && app) {
+          clearInterval(pollPlanning);
+          console.log('✅ planningApp trouvé, init...');
+          document.querySelectorAll('.spa-nav-btn').forEach(function(btn) {
+            btn.onclick = function() { app.showView(btn.dataset.view); };
+          });
+          app.showView('home');
+        } else if (attempts > 60) {
+          clearInterval(pollPlanning);
+          console.error('❌ planningApp introuvable après 3s', {el: !!el, app: !!app});
+        }
+      }, 50);
+    }
+
     // Déclencher l'événement de chargement du module
     const event = new CustomEvent('moduleLoaded', { detail: { moduleName } });
     document.dispatchEvent(event);
@@ -253,6 +287,9 @@ window.reloadModule = reloadModule;
 let autoReloadInterval = null;
 let lastModuleContent = {};
 
+// Modules à exclure de l'auto-reload (car ils ont des interactions utilisateur)
+const excludeFromAutoReload = ['planning', 'challenges', 'events'];
+
 function startAutoReload() {
   if (autoReloadInterval) return;
   
@@ -262,6 +299,11 @@ function startAutoReload() {
     
     const moduleName = activeMenuItem.dataset.module;
     if (!moduleName) return;
+    
+    // Ne pas recharger certains modules automatiquement
+    if (excludeFromAutoReload.includes(moduleName)) {
+      return;
+    }
     
     // Charger le module avec un timestamp pour éviter le cache
     const timestamp = new Date().getTime();
@@ -365,4 +407,18 @@ document.addEventListener('moduleLoaded', (e) => {
   }
 });
 
+
 console.log('✅ Module Loader prêt');
+// Ajouter à la fin de module-loader.js existant
+
+// ── Gestion des clics SPA internes ─────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  // Intercepter les liens qui pointent vers des fichiers PHP dans planning/
+  const link = e.target.closest('a[href*="planning/"]');
+  if (link && link.closest('.content-section#planning')) {
+    e.preventDefault();
+    e.stopPropagation();
+    // Laisser le planningApp gérer ça
+    return false;
+  }
+}, true);

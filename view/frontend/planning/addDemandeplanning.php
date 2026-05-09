@@ -1,49 +1,43 @@
 <?php
-ob_start();
-error_reporting(0);
-ini_set('display_errors','0');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 header('Content-Type: application/json; charset=utf-8');
 
 try {
-    require_once __DIR__ . '/../../../controller/Demandeplanning.controller.php';
-    require_once __DIR__ . '/../../../Model/Demandeplanning.php';
+    require_once __DIR__ . '/../../../config.php';
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        ob_end_clean();
         http_response_code(405);
-        echo json_encode(['success'=>false,'error'=>'Methode non autorisee']);
+        echo json_encode(['success' => false, 'error' => 'Methode non autorisee']);
         exit;
     }
 
-    $id_utilisateur = (int)   ($_POST['id_utilisateur'] ?? 0);
-    $calories       = (int)   ($_POST['calories']       ?? 0);
-    $budget         = (float) ($_POST['budget']         ?? 0);
-    $type_budget    = trim($_POST['type_budget']    ?? '');
-    $duree          = (int)   ($_POST['duree']          ?? 0);
-    $type_duree     = trim($_POST['type_duree']     ?? '');
+    $id_utilisateur = isset($_POST['id_utilisateur']) ? (int)$_POST['id_utilisateur'] : 1;
+    $calories       = isset($_POST['calories']) ? (int)$_POST['calories'] : 0;
+    $budget         = isset($_POST['budget']) ? (float)str_replace(',', '.', $_POST['budget']) : 0;
+    $type_budget    = isset($_POST['type_budget']) ? trim($_POST['type_budget']) : 'quotidien';
+    $duree          = isset($_POST['duree']) ? (int)$_POST['duree'] : 7;
+    $type_duree     = isset($_POST['type_duree']) ? trim($_POST['type_duree']) : 'jours';
 
     $errors = [];
-    if ($id_utilisateur <= 0) $errors['id_utilisateur'] = 'ID Utilisateur invalide.';
     if ($calories <= 0)       $errors['calories']       = 'Calories doivent etre > 0.';
-    if ($calories > 10000)    $errors['calories']       = 'Max 10 000 kcal.';
     if ($budget   <= 0)       $errors['budget']         = 'Budget doit etre > 0.';
     if (empty($type_budget))  $errors['type_budget']    = 'Type budget requis.';
     if ($duree    <= 0)       $errors['duree']          = 'Duree doit etre > 0.';
-    if ($duree    > 365)      $errors['duree']          = 'Max 365 jours.';
     if (empty($type_duree))   $errors['type_duree']     = 'Type duree requis.';
 
     if (!empty($errors)) {
-        ob_end_clean();
         http_response_code(422);
-        echo json_encode(['success'=>false,'errors'=>$errors,'message'=>'Validation echouee.']);
+        echo json_encode(['success' => false, 'errors' => $errors, 'message' => 'Validation echouee.']);
         exit;
     }
 
-    $controller = new DemandeplanningController();
-    $demande    = new Demandeplanning(null,$id_utilisateur,$calories,$budget,$type_budget,$duree,$type_duree,'en_attente');
-    $idDemande  = $controller->addDemande($demande);
+    $db = Config::getConnexion();
+    $sql = "INSERT INTO demandeplanning (id_utilisateur, calories, budget, type_budget, duree, type_duree, statut, date_demande) VALUES (?, ?, ?, ?, ?, ?, 'en_attente', ?)";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([$id_utilisateur, $calories, $budget, $type_budget, $duree, $type_duree, date('Y-m-d H:i:s')]);
+    $idDemande = $db->lastInsertId();
 
-    ob_end_clean();
     http_response_code(201);
     echo json_encode([
         'success'    => true,
@@ -53,8 +47,13 @@ try {
     ]);
 
 } catch (Throwable $e) {
-    ob_end_clean();
     http_response_code(500);
-    echo json_encode(['success'=>false,'error'=>$e->getMessage(),'file'=>basename($e->getFile()),'line'=>$e->getLine()]);
+    echo json_encode([
+        'success' => false,
+        'error'   => $e->getMessage(),
+        'file'    => basename($e->getFile()),
+        'line'    => $e->getLine(),
+        'trace'   => $e->getTraceAsString()
+    ]);
 }
 ?>

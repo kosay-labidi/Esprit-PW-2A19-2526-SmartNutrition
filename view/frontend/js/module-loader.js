@@ -6,7 +6,7 @@ const modules = {
   welcome: 'modules/welcome.html',
   users: 'modules/users.html',
   planning: 'modules/planning.html',
-  events: 'modules/events.html',
+  events: 'modules/evenements.php',
   meals: 'modules/meals.html',
   health: 'modules/health.html',
   challenges: 'modules/challenges.html'

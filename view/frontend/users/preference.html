@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Préferences Alimentaires - GaiaLumen</title>
+
+<!-- Polices -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+
+<style>
+:root {
+  --green: #1F3D2B;
+  --sand: #F2E8CF;
+  --violet: #5B3E96;
+  --blue: #3A86C4;
+  --bg: #0a1a10;
+  --surface: #0f2318;
+  --text: #F2E8CF;
+  --muted: #a8b8a0;
+  --card-bg: rgba(15, 35, 24, 0.72);
+  --glass: rgba(31, 61, 43, 0.45);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --radius: 18px;
+  --tr: 0.4s cubic-bezier(.4, 0, .2, 1);
+}
+
+[data-theme="light"] {
+  --bg: #f5f0e8;
+  --surface: #ede5d0;
+  --text: #1F3D2B;
+  --muted: #5a6e5a;
+  --card-bg: rgba(242, 232, 207, 0.75);
+  --glass: rgba(242, 232, 207, 0.6);
+  --shadow: 0 8px 32px rgba(31, 61, 43, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--tr), color var(--tr);
+  padding: 40px 20px;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* Container principal */
+.preference-container {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Carte formulaire */
+.form-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(91, 62, 150, 0.2);
+  border-radius: var(--radius);
+  padding: 40px;
+  transition: all 0.3s;
+  box-shadow: var(--shadow);
+}
+
+.form-card:hover {
+  border-color: rgba(91, 62, 150, 0.5);
+  box-shadow: 0 12px 40px rgba(91, 62, 150, 0.3);
+}
+
+/* En-tête */
+.form-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+}
+
+.form-header h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--violet), var(--blue));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.form-header p {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Groupes de formulaire */
+.form-group {
+  margin-bottom: 28px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.form-group label i {
+  margin-right: 8px;
+  opacity: 0.7;
+}
+
+/* Select stylisé */
+.form-select {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(91, 62, 150, 0.1);
+  border: 1px solid rgba(91, 62, 150, 0.3);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 1rem;
+  font-family: 'Lato', sans-serif;
+  transition: all 0.3s;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a8b8a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+}
+
+.form-select:hover {
+  background: rgba(91, 62, 150, 0.15);
+  border-color: rgba(91, 62, 150, 0.5);
+}
+
+.form-select:focus {
+  border-color: var(--violet);
+  background: rgba(91, 62, 150, 0.2);
+  box-shadow: 0 0 0 3px rgba(91, 62, 150, 0.1);
+}
+
+/* Option styling (fonctionne dans la plupart des navigateurs) */
+.form-select option {
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px;
+}
+
+/* Input number */
+.form-input {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(91, 62, 150, 0.1);
+  border: 1px solid rgba(91, 62, 150, 0.3);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 1rem;
+  font-family: 'Lato', sans-serif;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--violet);
+  background: rgba(91, 62, 150, 0.2);
+  box-shadow: 0 0 0 3px rgba(91, 62, 150, 0.1);
+}
+
+.form-input::placeholder {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+/* Champ budget avec icône */
+.budget-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.budget-prefix {
+  position: absolute;
+  left: 18px;
+  font-size: 1.2rem;
+  opacity: 0.7;
+}
+
+.budget-input-wrapper .form-input {
+  padding-left: 42px;
+}
+
+/* Boutons */
+.form-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 12px 28px;
+  border-radius: 50px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Lato', sans-serif;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--violet), var(--blue));
+  color: #fff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(91, 62, 150, 0.5);
+}
+
+.btn-secondary {
+  background: var(--glass);
+  border: 1px solid rgba(91, 62, 150, 0.3);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background: rgba(91, 62, 150, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Message de statut */
+.status-message {
+  margin-top: 20px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-message.success {
+  background: rgba(39, 174, 96, 0.15);
+  border: 1px solid #27ae60;
+  color: #27ae60;
+  display: flex;
+}
+
+.status-message.error {
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  display: flex;
+}
+
+.status-message.info {
+  background: rgba(58, 134, 196, 0.15);
+  border: 1px solid var(--blue);
+  color: var(--blue);
+  display: flex;
+}
+
+/* Navbar simple */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  height: 70px;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--glass);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(91, 62, 150, 0.2);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav-logo svg {
+  width: 38px;
+  height: 38px;
+}
+
+.nav-logo-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#theme-toggle {
+  background: var(--glass);
+  border: 1.5px solid rgba(91, 62, 150, 0.5);
+  border-radius: 50px;
+  padding: 6px 16px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+}
+
+#theme-toggle:hover {
+  background: rgba(91, 62, 150, 0.2);
+  transform: scale(1.05);
+}
+
+.btn-back {
+  background: var(--glass);
+  border: 1.5px solid rgba(91, 62, 150, 0.5);
+  border-radius: 50px;
+  padding: 6px 16px;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-back:hover {
+  background: rgba(91, 62, 150, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Curseur personnalisé */
+#cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--violet);
+  box-shadow: 0 0 12px var(--violet), 0 0 24px var(--blue);
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s;
+  mix-blend-mode: screen;
+}
+
+#cursor.hover {
+  width: 28px;
+  height: 28px;
+  background: var(--blue);
+}
+
+#cursor-trail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9998;
+  pointer-events: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(91, 62, 150, 0.5);
+  transform: translate(-50%, -50%);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .form-card {
+    padding: 28px 20px;
+  }
+  
+  .form-header h1 {
+    font-size: 1.6rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    justify-content: center;
+  }
+  
+  .navbar {
+    padding: 0 4%;
+  }
+  
+  .nav-logo-text {
+    font-size: 1rem;
+  }
+  
+  body {
+    padding-top: 90px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<nav class="navbar">
+  <a href="../dashboard.html" class="nav-logo">
+    <svg viewBox="0 0 60 60" fill="none">
+      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <defs>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#5B3E96"/>
+        </radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1F3D2B"/>
+          <stop offset="100%" stop-color="#3A86C4"/>
+        </linearGradient>
+      </defs>
+      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-logo-text">🍃 GaiaLumen</span>
+  </a>
+  <div class="nav-actions">
+    <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
+    <a href="../dashboard.html" class="btn-back">← Retour Admin</a>
+  </div>
+</nav>
+
+<div class="preference-container">
+  <div class="form-card">
+    <div class="form-header">
+      <h1>🥗 Préferences Alimentaires</h1>
+      <p>Personnalisez votre expérience nutritionnelle</p>
+    </div>
+
+    <form id="preferenceForm" method="POST">
+      <!-- Champ caché pour l'ID utilisateur -->
+      <input type="hidden" id="id_utilisateur" name="id_utilisateur" value="1">
+
+      <!-- Type de régime - Select (combo box) -->
+      <div class="form-group">
+        <label><i>🌿</i> Type de régime</label>
+        <select id="type_regime" name="type_regime" class="form-select" required>
+          <option value="" disabled selected>— Sélectionnez un régime —</option>
+          <option value="omnivore">🍖 Omnivore</option>
+          <option value="vegetarien">🥬 Végétarien</option>
+          <option value="vegan">🌱 Végan</option>
+          <option value="sans_gluten">🌾 Sans gluten</option>
+          <option value="keto">🥑 Kéto</option>
+          <option value="mediterraneen">🇬🇷 Méditerranéen</option>
+          <option value="pescetarien">🐟 Pescétarien</option>
+          <option value="flexitarien">🌿 Flexitarien</option>
+        </select>
+      </div>
+
+      <!-- Budget mensuel -->
+      <div class="form-group">
+        <label><i>💰</i> Budget mensuel (€)</label>
+        <div class="budget-input-wrapper">
+          <span class="budget-prefix">€</span>
+          <input type="number" id="budget" name="budget" class="form-input" 
+                 placeholder="ex: 300" step="10" min="0">
+        </div>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+          🔄 Réinitialiser
+        </button>
+        <button type="submit" class="btn btn-primary">
+          💾 Enregistrer mes préférences
+        </button>
+      </div>
+    </form>
+
+    <!-- Message de statut -->
+    <div id="statusMessage" class="status-message"></div>
+  </div>
+</div>
+
+<script>
+// ==================== GESTION DU THÈME ====================
+function initTheme() {
+  const btn = document.getElementById('theme-toggle');
+  const html = document.documentElement;
+  const saved = localStorage.getItem('gaialumen-theme') || 'dark';
+  
+  html.setAttribute('data-theme', saved);
+  if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+  
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', n);
+      localStorage.setItem('gaialumen-theme', n);
+      btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+    });
+  }
+}
+
+// ==================== CURSEUR PERSONNALISÉ ====================
+function initCursor() {
+  const cur = document.getElementById('cursor');
+  const trail = document.getElementById('cursor-trail');
+  if (!cur || !trail) return;
+  let mx = 0, my = 0, tx = 0, ty = 0;
+  
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX;
+    my = e.clientY;
+    cur.style.left = mx + 'px';
+    cur.style.top = my + 'px';
+  });
+  
+  (function loop() {
+    tx += (mx - tx) * 0.12;
+    ty += (my - ty) * 0.12;
+    trail.style.left = tx + 'px';
+    trail.style.top = ty + 'px';
+    requestAnimationFrame(loop);
+  })();
+  
+  const interactiveElements = 'a, button, input, select';
+  document.querySelectorAll(interactiveElements).forEach(el => {
+    el.addEventListener('mouseenter', () => cur.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+  });
+}
+
+// ==================== AFFICHER UN MESSAGE ====================
+function showMessage(message, type = 'info') {
+  const msgDiv = document.getElementById('statusMessage');
+  msgDiv.className = 'status-message ' + type;
+  msgDiv.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span> ${message}`;
+  msgDiv.style.display = 'flex';
+  
+  // Auto-cacher après 5 secondes
+  setTimeout(() => {
+    msgDiv.style.display = 'none';
+    msgDiv.className = 'status-message';
+  }, 5000);
+}
+
+// ==================== RÉINITIALISER LE FORMULAIRE ====================
+function resetForm() {
+  document.getElementById('budget').value = '';
+  const select = document.getElementById('type_regime');
+  select.value = '';
+  showMessage('Formulaire réinitialisé', 'info');
+}
+
+// ==================== CHARGER LES PRÉFÉRENCES EXISTANTES ====================
+async function loadPreferences(userId) {
+  try {
+    const response = await fetch(`../../backend/preferences/showPreference.php?id=${userId}`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      const prefs = result.data;
+      
+      // Remplir le select du type de régime
+      if (prefs.type_regime) {
+        const select = document.getElementById('type_regime');
+        select.value = prefs.type_regime;
+      }
+      
+      // Remplir le budget
+      if (prefs.budget) {
+        document.getElementById('budget').value = prefs.budget;
+      }
+      
+      showMessage('Préférences chargées avec succès', 'success');
+      return prefs;
+    }
+    
+    return null;
+  } catch (error) {
+    console.log('Aucune préférence existante:', error);
+    return null;
+  }
+}
+
+// ==================== SAUVEGARDER LES PRÉFÉRENCES ====================
+async function savePreferences(formData) {
+  try {
+const response = await fetch('../../backend/preferences/addPreference.php', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const text = await response.text();
+    let result;
+    
+    try {
+      result = JSON.parse(text);
+    } catch (e) {
+      console.error('Réponse non-JSON:', text);
+      throw new Error('Erreur serveur');
+    }
+    
+    if (response.ok && result.success) {
+      showMessage(result.message || 'Préférences enregistrées avec succès !', 'success');
+      return true;
+    } else {
+      showMessage(result.message || 'Erreur lors de l\'enregistrement', 'error');
+      return false;
+    }
+  } catch (error) {
+    console.error('Erreur:', error);
+    showMessage('Erreur réseau - Vérifiez que XAMPP est démarré', 'error');
+    return false;
+  }
+}
+
+// ==================== SOUMISSION DU FORMULAIRE ====================
+function handleSubmit(e) {
+  e.preventDefault();
+  
+  const userId = document.getElementById('id_utilisateur').value;
+  const typeRegime = document.getElementById('type_regime').value;
+  const budget = document.getElementById('budget').value;
+  
+  // Validation
+  if (!typeRegime) {
+    showMessage('Veuillez sélectionner un type de régime', 'error');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('id_utilisateur', userId);
+  formData.append('type_regime', typeRegime);
+  if (budget) formData.append('budget', budget);
+  
+  savePreferences(formData);
+}
+
+// ==================== INITIALISATION ====================
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  initCursor();
+  
+  // Récupérer l'ID utilisateur depuis localStorage ou session
+  const storedUser = localStorage.getItem('gaialumen-user');
+  if (storedUser) {
+    try {
+      const user = JSON.parse(storedUser);
+      if (user.id) {
+        document.getElementById('id_utilisateur').value = user.id;
+        loadPreferences(user.id);
+      }
+    } catch (e) {
+      console.error('Erreur parsing utilisateur:', e);
+    }
+  }
+  
+  const form = document.getElementById('preferenceForm');
+  form.addEventListener('submit', handleSubmit);
+});
+
+// Exposer les fonctions globalement
+window.resetForm = resetForm;
+window.showMessage = showMessage;
+</script>
+
+</body>
+</html>

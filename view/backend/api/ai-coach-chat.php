@@ -59,8 +59,8 @@ try {
     $q->execute(['pid' => $participantId]);
     $history = array_reverse($q->fetchAll(PDO::FETCH_ASSOC));
 
-    $apiKey = getenv('GROQ_API_KEY') ?: ($_SERVER['GROQ_API_KEY'] ?? '');
-    $model = getenv('GROQ_MODEL') ?: ($_SERVER['GROQ_MODEL'] ?? 'llama-3.3-70b-versatile');
+    $apiKey = GROQ_API_KEY;
+    $model = GROQ_MODEL;
 
     $system = "Tu es le Coach IA de GaiaLumen. Tu discutes avec un administrateur à propos de la progression de {$participant['nom']} dans le défi '{$participant['challenge_titre']}'.
 Progression actuelle : {$participant['objectif']}% / {$participant['valeur_cible']}%.

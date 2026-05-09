@@ -112,12 +112,12 @@ try {
     $participants = $q->fetchAll();
 
     // 4. Call Groq
-    $apiKey = getenv('GROQ_API_KEY') ?: ($_SERVER['GROQ_API_KEY'] ?? '');
+    $apiKey = GROQ_API_KEY;
     if (!$apiKey) {
         summary_json(['ok' => false, 'error' => 'GROQ_API_KEY manquante'], 500);
     }
 
-    $model = getenv('GROQ_MODEL') ?: ($_SERVER['GROQ_MODEL'] ?? 'llama-3.3-70b-versatile');
+    $model = GROQ_MODEL;
     $system = "Tu es un assistant IA d'analyse de défis collaboratifs pour la plateforme GaiaLumen. 
  Tu reçois les statistiques globales d'un défi. 
  

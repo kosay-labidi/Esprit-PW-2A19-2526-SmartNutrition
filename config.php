@@ -1,4 +1,27 @@
 <?php
+// --- Charger le fichier .env ---
+$envFile = __DIR__ . '/.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            if (!empty($key) && !getenv($key)) {
+                putenv("$key=$value");
+                $_SERVER[$key] = $value;
+                $_ENV[$key] = $value;
+            }
+        }
+    }
+}
+
+// --- Configuration GROQ ---
+define('GROQ_API_KEY', getenv('GROQ_API_KEY') ?: ($_SERVER['GROQ_API_KEY'] ?? ''));
+define('GROQ_MODEL', getenv('GROQ_MODEL') ?: ($_SERVER['GROQ_MODEL'] ?? 'llama-3.3-70b-versatile'));
+define('GROQ_API_URL', 'https://api.groq.com/openai/v1/chat/completions');
+
 class Config
 {
     private static $pdo = null;

@@ -10,8 +10,7 @@ const adminModules = {
   meals: 'modules/meals-admin.html',
   health: 'modules/health-admin.html',
   challenges: 'modules/challenges-admin.html',
-  activity: 'modules/activity-admin.html',
-  export: 'modules/export-admin.html'
+  activity: 'modules/activity-admin.html'
 };
 
 // Cache des modules chargés
@@ -378,6 +377,15 @@ document.addEventListener('adminModuleLoaded', (e) => {
       // Vider le cache pour forcer le rechargement du module
       delete adminModuleCache['planning'];
       setTimeout(() => loadPlanningData(), 200);
+      break;
+    case 'events':
+      // Charger les événements
+      if (typeof loadEvents === 'function' && typeof loadStats === 'function') {
+        setTimeout(() => {
+          loadStats();
+          loadEvents();
+        }, 100);
+      }
       break;
   }
 });

@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ai_challenge_json(['ok' => false, 'error' => 'Method not allowed'], 405);
 }
 
-$apiKey = getenv('GROQ_API_KEY') ?: ($_SERVER['GROQ_API_KEY'] ?? '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');
+$apiKey = GROQ_API_KEY;
 if (!$apiKey) {
     ai_challenge_json(['ok' => false, 'error' => 'GROQ_API_KEY manquant côté serveur'], 500);
 }

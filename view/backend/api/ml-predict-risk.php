@@ -106,7 +106,7 @@ try {
 
     // 5. Groq Recommendation (Optional)
     $recommendation = "Continuer l'engagement social.";
-    $apiKey = getenv('GROQ_API_KEY') ?: ($_SERVER['GROQ_API_KEY'] ?? '');
+    $apiKey = GROQ_API_KEY;
     if ($apiKey) {
         // We could call Groq here for a more refined recommendation based on the score
         // For brevity in this phase, we use a solid heuristic

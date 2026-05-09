@@ -15,17 +15,15 @@
   --card-bg: rgba(15, 35, 24, 0.85);
   --glass: rgba(31, 61, 43, 0.45);
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  --border: rgba(91, 62, 150, 0.3);
 }
 
 [data-theme="light"] {
   --bg: #f5f0e8;
   --text: #1F3D2B;
   --muted: #5a6e5a;
-  --card-bg: rgba(255, 255, 255, 0.9);
-  --glass: rgba(255, 255, 255, 0.6);
-  --shadow: 0 20px 60px rgba(31, 61, 43, 0.1);
-  --border: rgba(31, 61, 43, 0.15);
+  --card-bg: rgba(242, 232, 207, 0.85);
+  --glass: rgba(242, 232, 207, 0.6);
+  --shadow: 0 20px 60px rgba(31, 61, 43, 0.15);
 }
 
 /* Reset */
@@ -68,7 +66,7 @@ h1, h2, h3 {
   border-radius: 20px;
   padding: 40px 35px;
   box-shadow: var(--shadow);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(91, 62, 150, 0.3);
   animation: slideUp 0.8s ease;
   margin-left: auto;
   margin-right: 10%;
@@ -107,7 +105,7 @@ h1, h2, h3 {
 }
 
 .logo p {
-  color: var(--muted);
+  color: rgba(242, 232, 207, 0.7);
   font-size: 0.85rem;
 }
 
@@ -120,17 +118,17 @@ h1, h2, h3 {
   display: block;
   margin-bottom: 6px;
   font-size: 0.85rem;
-  color: var(--text);
+  color: var(--sand);
   font-weight: 600;
 }
 
 .form-group input {
   width: 100%;
   padding: 12px 14px;
-  background: var(--glass);
+  background: rgba(31, 61, 43, 0.4);
   border: 1px solid rgba(91, 62, 150, 0.3);
   border-radius: 10px;
-  color: var(--text);
+  color: var(--sand);
   font-size: 0.95rem;
   transition: all 0.3s;
 }
@@ -138,13 +136,12 @@ h1, h2, h3 {
 .form-group input:focus {
   outline: none;
   border-color: var(--violet);
-  background: rgba(91, 62, 150, 0.1);
+  background: rgba(31, 61, 43, 0.6);
   box-shadow: 0 0 20px rgba(91, 62, 150, 0.3);
 }
 
 .form-group input::placeholder {
-  color: var(--muted);
-  opacity: 0.6;
+  color: rgba(242, 232, 207, 0.4);
 }
 
 /* Button */

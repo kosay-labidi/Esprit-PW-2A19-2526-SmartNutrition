@@ -130,7 +130,7 @@ function coach_rule_based_plan(array $row, array $analysis): array {
 }
 
 function coach_groq(array $row, array $analysis, array $fallbackPlan, array $messages = []): array {
-    $apiKey = getenv('GROQ_API_KEY') ?: ($_SERVER['GROQ_API_KEY'] ?? '');
+    $apiKey = GROQ_API_KEY;
     if (!$apiKey || !function_exists('curl_init')) {
         return [
             'provider' => 'local',
@@ -140,7 +140,7 @@ function coach_groq(array $row, array $analysis, array $fallbackPlan, array $mes
         ];
     }
 
-    $model = getenv('GROQ_MODEL') ?: ($_SERVER['GROQ_MODEL'] ?? 'llama-3.3-70b-versatile');
+    $model = GROQ_MODEL;
     $system = "Tu es un coach IA de progression intégré dans la plateforme GaiaLumen. 
  Tu reçois les données d'un participant à un défi. 
  

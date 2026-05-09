@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$apiKey = getenv('GROQ_API_KEY') ?: ($_SERVER['GROQ_API_KEY'] ?? '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');
+$apiKey = GROQ_API_KEY;
 if (!$apiKey) {
     http_response_code(500);
     echo json_encode(['error' => 'Server misconfigured: GROQ_API_KEY missing']);

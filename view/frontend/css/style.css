@@ -1,0 +1,25 @@
+:root {
+    --vert-profond: #006400;
+    --sable: #f5f0e6;
+    --violet: #c8a2c8;
+    --bleu: #6cb4ee;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.hero {
+    background-size: cover;
+    background-position: center;
+}
+
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+}

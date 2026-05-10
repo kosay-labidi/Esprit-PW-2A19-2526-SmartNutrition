@@ -1,70 +1,98 @@
 <section class="content-section" id="users">
+
+  <!-- ══════════════════════════════════
+       TABLE DE GESTION UTILISATEURS
+  ══════════════════════════════════ -->
   <div class="section">
     <div class="section-header">
       <h2 class="module-title">👥 Gestion des Utilisateurs</h2>
       <div class="section-actions">
-        <button class="btn btn-secondary" onclick="refreshUsers()">🔄 Actualiser</button>
-        <button class="btn btn-primary" onclick="exportData('users')">📥 Exporter</button>
+        <button class="btn btn-secondary" onclick="refreshUsers()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Actualiser
+        </button>
+        <button class="btn btn-primary" onclick="exportData('users')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exporter
+        </button>
       </div>
     </div>
 
+    <!-- Filtres rapides -->
     <div class="filter-chips">
       <div class="chip active" onclick="filterByChip(this,'all')">Tous</div>
       <div class="chip" onclick="filterByChip(this,'active')">✅ Actifs</div>
       <div class="chip" onclick="filterByChip(this,'inactive')">⭕ Inactifs</div>
+      <div class="chip" onclick="filterByChip(this,'suspended')">🚫 Suspendus</div>
       <div class="chip" onclick="filterByChip(this,'admin')">🛡️ Admins</div>
-      <div class="chip" onclick="filterByChip(this,'user')">👤 Utilisateurs</div>
+      <!--<div class="chip" onclick="filterByChip(this,'user')">👤 Utilisateurs</div>-->
     </div>
 
+    <!-- Barre de recherche & filtres -->
     <div class="search-bar">
-      <input type="text" class="search-input" id="searchInput" placeholder="Rechercher par nom ou email..." onkeyup="searchUsers()">
+      <input
+        type="text"
+        class="search-input"
+        id="searchInput"
+        placeholder="Rechercher par nom ou email…"
+        onkeyup="searchUsers()"
+        autocomplete="off"
+        spellcheck="false"
+      >
       <select class="form-select" id="roleFilter" onchange="filterUsers()">
         <option value="">Tous les rôles</option>
-        <option value="user">Utilisateur</option>
-        <option value="admin">Administrateur</option>
+        <option value="utilisateur">👤 Utilisateur</option>
+        <option value="admin">🛡️ Administrateur</option>
+        <option value="nutritionniste">🥗 Nutritionniste</option>
+        <option value="ecologiste">🌱 Écologiste</option>
       </select>
-      <button class="btn btn-primary" onclick="addUser()">➕ Ajouter</button>
+      <select class="form-select" id="triDate" onchange="tri()">
+        <option value="">Trier par date</option>
+        <option value="desc">📅 Plus récent → Plus ancien</option>
+        <option value="asc">📅 Plus ancien → Plus récent</option>
+      </select>
+      <select class="form-select" id="rowsPerPageSelect" onchange="setRowsPerPage(parseInt(this.value))">
+        <option value="5">5 / page</option>
+        <option value="10">10 / page</option>
+        <option value="25">25 / page</option>
+        <option value="50">50 / page</option>
+      </select>
+      <button class="btn btn-primary" onclick="addUser()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Ajouter
+      </button>
     </div>
 
+    <!-- Tableau -->
     <div class="table-container">
-      <table>
+      <table class="data-table" aria-label="Liste des utilisateurs">
         <thead>
           <tr>
             <th>ID</th>
-            <th>Nom</th>
-            <th>Email</th>
+            <th>Nom complet</th>
+            <th>E-mail</th>
             <th>Rôle</th>
+            <th>Date d'inscription</th>
             <th>Statut</th>
-            <th>Inscription</th>
-            <th>Actions</th>
+            <th style="text-align:center;">Actions</th>
           </tr>
         </thead>
         <tbody id="usersTableBody">
           <tr>
-            <td>1</td>
-            <td>Jean Dupont</td>
-            <td>jean.dupont@email.com</td>
-            <td><span class="badge badge-user">Utilisateur</span></td>
-            <td><span class="badge badge-active">Actif</span></td>
-            <td>15/03/2026</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="editUser(1)">✏️ Modifier</button>
-                <button class="action-btn action-btn-delete" onclick="deleteUser(1)">🗑️ Supprimer</button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Marie Martin</td>
-            <td>marie.martin@email.com</td>
-            <td><span class="badge badge-admin">Admin</span></td>
-            <td><span class="badge badge-active">Actif</span></td>
-            <td>10/03/2026</td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn-edit" onclick="editUser(2)">✏️ Modifier</button>
-                <button class="action-btn action-btn-delete" onclick="deleteUser(2)">🗑️ Supprimer</button>
+            <td colspan="7" style="text-align:center; padding:40px; color:var(--muted);">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+                <div class="section-loader-spinner"></div>
+                Chargement…
               </div>
             </td>
           </tr>
@@ -72,23 +100,77 @@
       </table>
     </div>
 
+    <!-- Pagination -->
     <div class="pagination">
-      <button class="page-btn" disabled>◀ Précédent</button>
+      <button class="page-btn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="15 18 9 12 15 6"/></svg>
+        Précédent
+      </button>
       <button class="page-btn active">1</button>
       <button class="page-btn">2</button>
       <button class="page-btn">3</button>
-      <button class="page-btn">Suivant ▶</button>
+      <button class="page-btn">
+        Suivant
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
   </div>
-</section>
 
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 1.6rem;
-  font-weight: 700;
-}
-</style>
+  <!-- ══════════════════════════════════
+       STATISTIQUES — côte à côte
+  ══════════════════════════════════ -->
+  <div class="stats-dual-row">
+
+    <!-- Bloc rôle -->
+    <div class="stats-section stats-section--compact">
+      <div class="stats-header">
+        <h3>📊 Par rôle</h3>
+        <div class="chart-toggle">
+          <button class="toggle-btn active" onclick="switchChartType('pie')">🥧</button>
+          <button class="toggle-btn" onclick="switchChartType('bar')">📊</button>
+        </div>
+      </div>
+      <div class="stats-grid-compact">
+        <div class="chart-card chart-card--sm" id="pieChartContainer">
+          <canvas id="userPieChart" aria-label="Graphique camembert des rôles"></canvas>
+        </div>
+        <div class="chart-card chart-card--sm" id="barChartContainer" style="display:none;">
+          <canvas id="userBarChart" aria-label="Graphique barres des rôles"></canvas>
+        </div>
+        <div class="stats-legend stats-legend--compact">
+          <div class="legend-title">📈 Résumé rôles</div>
+          <div class="legend-stats" id="userStatsLegend">
+            <div class="stat-item"><span style="color:var(--muted);font-size:.82rem;">Chargement…</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bloc statut -->
+    <div class="stats-section stats-section--compact">
+      <div class="stats-header">
+        <h3>🔵 Par statut</h3>
+        <div class="chart-toggle">
+          <button class="toggle-btn active" onclick="switchStatusChartType('pie')">🥧</button>
+          <button class="toggle-btn" onclick="switchStatusChartType('bar')">📊</button>
+        </div>
+      </div>
+      <div class="stats-grid-compact">
+        <div class="chart-card chart-card--sm" id="statusPieChartContainer">
+          <canvas id="userStatusPieChart" aria-label="Graphique camembert des statuts"></canvas>
+        </div>
+        <div class="chart-card chart-card--sm" id="statusBarChartContainer" style="display:none;">
+          <canvas id="userStatusBarChart" aria-label="Graphique barres des statuts"></canvas>
+        </div>
+        <div class="stats-legend stats-legend--compact">
+          <div class="legend-title">📈 Résumé statuts</div>
+          <div class="legend-stats" id="userStatusStatsLegend">
+            <div class="stat-item"><span style="color:var(--muted);font-size:.82rem;">Chargement…</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>

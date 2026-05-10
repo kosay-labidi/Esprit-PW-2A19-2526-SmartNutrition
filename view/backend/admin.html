@@ -3,35 +3,39 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Admin Dashboard - GaiaLumen</title>
+<title>Admin Dashboard — GaiaLumen</title>
 
 <!-- Polices -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
 
 <!-- Styles -->
 <link rel="stylesheet" href="css/admin.css"/>
 
 <!-- Librairies externes -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 </head>
 <body>
 
 <div id="cursor"></div>
 <div id="cursor-trail"></div>
 
+<!-- ════════════ PRELOADER ════════════ -->
 <div id="preloader">
   <canvas id="pl-canvas"></canvas>
   <div id="pl-text">GAIALUMEN ADMIN</div>
   <div id="pl-bar"><div id="pl-fill"></div></div>
 </div>
 
+<!-- ════════════ NAVBAR ════════════ -->
 <nav id="navbar">
   <a href="admin.html" class="nav-logo">
-    <svg viewBox="0 0 60 60" fill="none">
+    <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
-      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <circle cx="30" cy="30" r="20" stroke="url(#ag)" stroke-width=".6" opacity=".25"/>
       <defs>
         <radialGradient id="ag" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="#3A86C4"/>
@@ -43,19 +47,24 @@
         </linearGradient>
       </defs>
       <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
-      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.45)" stroke-width=".8" stroke-linecap="round"/>
     </svg>
-    <span class="nav-logo-text">🛡️ Admin GaiaLumen</span>
+    <span class="nav-logo-text">GaiaLumen Admin</span>
   </a>
+
   <div class="nav-actions">
-    <button id="menu-toggle" title="Menu">
+    <button id="lang-toggle" title="Changer de langue">
+      <span id="lang-flag">🌐</span>
+      <span id="lang-label">FR</span>
+    </button>
+    <button id="menu-toggle" title="Menu" aria-label="Ouvrir le menu">
       <span></span>
       <span></span>
       <span></span>
     </button>
     <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
     <button class="btn-logout" onclick="logout()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
         <polyline points="16 17 21 12 16 7"/>
         <line x1="21" y1="12" x2="9" y2="12"/>
@@ -65,15 +74,20 @@
   </div>
 </nav>
 
-<button id="sidebar-toggle" title="Toggle sidebar">
+<!-- ════════════ SIDEBAR TOGGLE ════════════ -->
+<button id="sidebar-toggle" title="Réduire le menu" aria-label="Masquer la barre latérale">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
     <path d="M15 18l-6-6 6-6"/>
   </svg>
 </button>
 
+<!-- ════════════ DASHBOARD CONTAINER ════════════ -->
 <div class="dashboard-container">
-  <aside class="sidebar-menu">
-    <div class="menu-title">📊 Modules Admin</div>
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar-menu" role="navigation" aria-label="Menu principal">
+    <div class="menu-title">Modules Admin</div>
+
     <a href="#" class="menu-item" data-module="dashboard">
       <span class="menu-item-icon">🏠</span>
       <span class="menu-item-text">Dashboard</span>
@@ -88,7 +102,7 @@
     </a>
     <a href="#" class="menu-item" data-module="events">
       <span class="menu-item-icon">🎯</span>
-      <span class="menu-item-text">GS Events</span>
+      <span class="menu-item-text">GS Événements</span>
     </a>
     <a href="#" class="menu-item" data-module="meals">
       <span class="menu-item-icon">🍽️</span>
@@ -108,20 +122,72 @@
     </a>
   </aside>
 
-  <main class="main-content">
-      <div id="module-initial-loader" class="section-loader">
-        <div class="section-loader-spinner"></div>
-        <p style="color:var(--muted); font-size:1.1rem;">Initialisation du dashboard...</p>
-      </div>
-    </main>
+  <!-- ─── MAIN CONTENT ─── -->
+  <main class="main-content" role="main">
+    <div id="module-initial-loader" class="section-loader">
+      <div class="section-loader-spinner"></div>
+      <p style="color:var(--muted); font-size:1rem; letter-spacing:.04em;">Initialisation du dashboard…</p>
+    </div>
+  </main>
+
 </div>
 
-<div class="progress-bar">
+<!-- ════════════ SCROLL PROGRESS ════════════ -->
+<div class="progress-bar" role="progressbar" aria-hidden="true">
   <div class="progress-bar-fill" id="progressBar"></div>
 </div>
 
-<!-- Scripts -->
+<!-- ════════════ MODAL MODIFIER UTILISATEUR ════════════ -->
+<div id="editUserModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="editModalTitle">✏️ Modifier l'utilisateur</h3>
+      <span class="modal-close" onclick="closeEditModal()" role="button" tabindex="0" aria-label="Fermer">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form id="editUserForm" method="POST" action="http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php">
+        <input type="hidden" name="id" id="edit_user_id">
+
+        <div class="form-group">
+          <label for="edit_nom">Nom</label>
+          <input type="text" name="nom" id="edit_nom" class="modal-input" required autocomplete="family-name">
+        </div>
+        <div class="form-group">
+          <label for="edit_prenom">Prénom</label>
+          <input type="text" name="prenom" id="edit_prenom" class="modal-input" required autocomplete="given-name">
+        </div>
+        <div class="form-group">
+          <label for="edit_email">Adresse e-mail</label>
+          <input type="email" name="email" id="edit_email" class="modal-input" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="edit_role">Rôle</label>
+          <select name="role" id="edit_role" class="modal-input">
+            <option value="utilisateur">👤 Utilisateur</option>
+            <option value="nutritionniste">🥗 Nutritionniste</option>
+            <option value="ecologiste">🌱 Écologiste</option>
+            <option value="admin">🛡️ Administrateur</option>
+          </select>
+        </div>
+
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="closeEditModal()">Annuler</button>
+          <button type="submit" class="btn-save">💾 Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SCRIPTS ════════════ -->
+<script src="js/admin-translations.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/admin-module-loader.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof initAdminLanguage === 'function') initAdminLanguage();
+  });
+</script>
 </body>
 </html>

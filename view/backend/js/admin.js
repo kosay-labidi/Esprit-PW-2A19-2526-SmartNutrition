@@ -1,8 +1,3 @@
-/**
- * Admin Dashboard Main Script - GaiaLumen
- * Version modularisée et harmonisée
- */
-
 console.log('🛡️ GaiaLumen Admin Dashboard chargé');
 
 // Initialisation globale au chargement du document
@@ -98,22 +93,37 @@ function initCursor() {
 /* ═══════════════════════════════════════════════════════════
    GESTION DU THÈME
    ═══════════════════════════════════════════════════════════ */
+function updateThemeBtn() {
+  const btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  // Utilise t() si disponible, sinon fallback FR
+  if (typeof t === 'function') {
+    btn.textContent = isDark ? t('themeLight') : t('themeDark');
+  } else {
+    btn.textContent = isDark ? '☀️ Clair' : '🌙 Sombre';
+  }
+}
+
 function initTheme() {
   const btn = document.getElementById('theme-toggle');
   const html = document.documentElement;
   const saved = localStorage.getItem('gaialumen-theme') || 'dark';
-  
+
   html.setAttribute('data-theme', saved);
-  if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
-  
+  updateThemeBtn();
+
   if (btn) {
     btn.addEventListener('click', () => {
       const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', n);
       localStorage.setItem('gaialumen-theme', n);
-      btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+      updateThemeBtn();
     });
   }
+
+  // Mettre à jour le libellé quand la langue change
+  document.addEventListener('languageChanged', updateThemeBtn);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -166,32 +176,385 @@ function initStatsProgression() {
 }
 
 // Fonctions globales pour l'interface admin
-window.logout = function() {
+window.logout = async function() {
   if (confirm('Êtes-vous sûr de vouloir vous déconnecter?')) {
-    localStorage.removeItem('gaialumen-token');
-    localStorage.removeItem('gaialumen-user');
+    await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/logout.php', {
+      method: 'POST',
+      credentials: 'include'
+    });
     window.location.href = '../frontend/index.html';
   }
 };
 
 window.showToast = function(title, message, type = 'info') {
+  const colors = { success: '#2ecc71', error: '#e74c3c', info: '#3498db', warning: '#f39c12' };
+  const icons  = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  const color  = colors[type] || colors.info;
+  const icon   = icons[type]  || icons.info;
+
   const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  toast.style.cssText = `
+    position:fixed;top:20px;right:20px;z-index:99999;
+    background:#1e1e2e;border:1px solid ${color};border-left:4px solid ${color};
+    border-radius:10px;padding:14px 18px;min-width:280px;max-width:380px;
+    display:flex;align-items:flex-start;gap:12px;
+    box-shadow:0 8px 32px rgba(0,0,0,.4);
+    opacity:0;transform:translateX(120%);transition:all .35s ease;
+    color:#f0f0f0;font-family:inherit;font-size:14px;
+  `;
   toast.innerHTML = `
-    <div class="toast-icon">${icons[type] || 'ℹ️'}</div>
-    <div class="toast-content">
-      <div class="toast-title">${title}</div>
-      <div class="toast-message">${message}</div>
+    <span style="font-size:1.2rem;margin-top:2px;flex-shrink:0">${icon}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:.95rem;margin-bottom:4px">${title}</div>
+      <div style="font-size:.85rem;opacity:.8;line-height:1.4">${message}</div>
     </div>
-    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:1.2rem;padding:0;line-height:1;flex-shrink:0">×</button>
   `;
   document.body.appendChild(toast);
-  setTimeout(() => toast.classList.add('show'), 100);
+  setTimeout(() => { toast.style.opacity = '1'; toast.style.transform = 'translateX(0)'; }, 50);
   setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(120%)';
+    setTimeout(() => toast.remove(), 350);
   }, 4000);
+};
+
+// Modale Ajouter Utilisateur
+window.showAddUserModal = function() {
+  document.getElementById('modal-add-user')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-add-user';
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:99998;
+    background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .3s ease;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:#1e1e2e;border:1px solid rgba(91,62,150,.5);
+      border-radius:18px;padding:36px;width:100%;max-width:480px;
+      box-shadow:0 24px 64px rgba(0,0,0,.6);
+      transform:translateY(20px);transition:transform .3s ease;
+      color:#f0f0f0;font-family:inherit;
+    " id="modal-add-user-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <h2 style="margin:0;font-size:1.3rem;font-weight:700">➕ Ajouter un utilisateur</h2>
+        <button onclick="document.getElementById('modal-add-user').remove()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:1.4rem;line-height:1">×</button>
+      </div>
+      <div id="modal-add-user-errors" style="display:none;background:rgba(231,76,60,.1);border:1px solid #e74c3c;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:.85rem;color:#e74c3c"></div>
+      <div style="display:grid;gap:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Nom</label>
+            <input id="au-nom" type="text" placeholder="Farhani" style="${inputStyle()}">
+          </div>
+          <div>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Prénom</label>
+            <input id="au-prenom" type="text" placeholder="Ahmed" style="${inputStyle()}">
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Email</label>
+          <input id="au-email" type="email" placeholder="exemple@email.com" style="${inputStyle()}">
+        </div>
+        <div>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Mot de passe (min. 6 caractères)</label>
+          <input id="au-mdp" type="password" placeholder="Entrez un mot de passe" autocomplete="new-password" style="${inputStyle()}">
+        </div>
+        <div>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Confirmer le mot de passe</label>
+          <input id="au-mdp2" type="password" placeholder="Confirmez le mot de passe" autocomplete="new-password" style="${inputStyle()}">
+        </div>
+        <div>
+          <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Rôle</label>
+          <select id="au-role" style="${inputStyle()}">
+            <option value="utilisateur">Utilisateur</option>
+            <option value="nutritionniste">Nutritionniste</option>
+            <option value="ecologiste">Écologiste</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:24px;justify-content:flex-end">
+        <button onclick="document.getElementById('modal-add-user').remove()" style="
+          padding:10px 22px;border-radius:50px;border:1px solid rgba(255,255,255,.2);
+          background:transparent;color:#f0f0f0;cursor:pointer;font-size:.9rem;
+        ">Annuler</button>
+        <button onclick="submitAddUser()" style="
+          padding:10px 26px;border-radius:50px;border:none;
+          background:linear-gradient(135deg,#5B3E96,#3A86C4);
+          color:#fff;cursor:pointer;font-size:.9rem;font-weight:600;
+          box-shadow:0 4px 16px rgba(91,62,150,.4);
+        ">Ajouter</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  setTimeout(() => {
+    modal.style.opacity = '1';
+    document.getElementById('modal-add-user-box').style.transform = 'translateY(0)';
+  }, 10);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) modal.remove();
+  });
+};
+window.showEditUserModal = async function(id) {
+  document.getElementById('modal-edit-user')?.remove();
+
+  console.log(`🔍 Chargement des données utilisateur ID: ${id}`);
+
+  try {
+    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php?id=' + id, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      cache: 'no-cache',
+      credentials: 'include'
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const result = await response.json();
+    console.log('✅ Données reçues:', result);
+
+    if (!result.success || !result.data) {
+      showToast('Erreur', result.message || 'Impossible de charger les données', 'error');
+      return;
+    }
+
+    const user = result.data;
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-edit-user';
+    modal.style.cssText = `
+      position:fixed;inset:0;z-index:99998;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;transition:opacity .3s ease;
+    `;
+
+    modal.innerHTML = `
+      <div style="background:#1e1e2e;border:1px solid rgba(91,62,150,.5);border-radius:18px;padding:36px;width:100%;max-width:480px;box-shadow:0 24px 64px rgba(0,0,0,.6);transform:translateY(20px);transition:transform .3s ease;color:#f0f0f0;" id="modal-edit-user-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+          <h2 style="margin:0;font-size:1.3rem;font-weight:700">✏️ Modifier l'utilisateur</h2>
+          <button onclick="document.getElementById('modal-edit-user').remove()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:1.4rem;line-height:1">×</button>
+        </div>
+
+        <div id="modal-edit-user-errors" style="display:none;background:rgba(231,76,60,.1);border:1px solid #e74c3c;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:.85rem;color:#e74c3c"></div>
+
+        <div style="display:grid;gap:14px">
+          <input type="hidden" id="eu-id" value="${user.id}">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Nom</label>
+              <input id="eu-nom" type="text" value="${user.nom}" style="${inputStyle()}">
+            </div>
+            <div>
+              <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Prénom</label>
+              <input id="eu-prenom" type="text" value="${user.prenom}" style="${inputStyle()}">
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Email</label>
+            <input id="eu-email" type="text" value="${user.email}" style="${inputStyle()}">
+          </div>
+
+          <div>
+            <label style="display:block;font-size:.82rem;opacity:.7;margin-bottom:6px">Rôle</label>
+            <select id="eu-role" style="${inputStyle()}">
+              <option value="utilisateur"    ${user.role === 'utilisateur' ? 'selected' : ''}>Utilisateur</option>
+              <option value="nutritionniste" ${user.role === 'nutritionniste' ? 'selected' : ''}>Nutritionniste</option>
+              <option value="ecologiste"     ${user.role === 'ecologiste' ? 'selected' : ''}>Écologiste</option>
+              <option value="admin"          ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:24px;justify-content:flex-end">
+          <button onclick="document.getElementById('modal-edit-user').remove()" style="padding:10px 22px;border-radius:50px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#f0f0f0;cursor:pointer;">Annuler</button>
+          <button onclick="submitEditUser()" style="padding:10px 26px;border-radius:50px;border:none;background:linear-gradient(135deg,#5B3E96,#3A86C4);color:#fff;cursor:pointer;font-weight:600;">Enregistrer les modifications</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    setTimeout(() => {
+      modal.style.opacity = '1';
+      document.getElementById('modal-edit-user-box').style.transform = 'translateY(0)';
+    }, 10);
+
+    modal.addEventListener('click', e => {
+      if (e.target === modal) modal.remove();
+    });
+
+  } catch (error) {
+    console.error('Erreur complète:', error);
+    showToast('Erreur Réseau', 'Impossible d\'accéder à <b>users/updateUser.php</b><br>Vérifie que XAMPP est démarré', 'error');
+  }
+};
+
+// ==================== VALIDATION & SOUMISSION MODIFICATION ====================
+window.submitEditUser = async function() {
+  const id     = document.getElementById('eu-id')?.value;
+  const nom    = document.getElementById('eu-nom')?.value.trim();
+  const prenom = document.getElementById('eu-prenom')?.value.trim();
+  const email  = document.getElementById('eu-email')?.value.trim();
+  const role   = document.getElementById('eu-role')?.value;
+
+  const errDiv = document.getElementById('modal-edit-user-errors');
+  const errors = [];
+
+  if (!nom) {
+    errors.push('Le nom est requis');
+  } else if (/\d/.test(nom)) {
+    errors.push('Le nom ne doit pas contenir de chiffres');
+  }
+
+  if (!prenom) {
+    errors.push('Le prénom est requis');
+  } else if (/\d/.test(prenom)) {
+    errors.push('Le prénom ne doit pas contenir de chiffres');
+  }
+
+  if (!email) {
+    errors.push("L'email est requis");
+  } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+    errors.push('Adresse email invalide');
+  }
+
+  if (errors.length > 0) {
+    errDiv.style.display = 'block';
+    errDiv.innerHTML = errors.map(e => `• ${e}`).join('<br>');
+    return;
+  }
+
+  errDiv.style.display = 'none';
+
+  const BASE_URL = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/updateUser.php';
+
+  try {
+    const response = await fetch(BASE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: parseInt(id), nom, prenom, email, role }),
+      credentials: 'include'
+    });
+
+    // Lire la réponse brute d'abord pour diagnostiquer les erreurs PHP
+    const rawText = await response.text();
+
+    let result;
+    try {
+      result = JSON.parse(rawText);
+    } catch (parseErr) {
+      // Le serveur a retourné du HTML (erreur PHP, require_once introuvable, etc.)
+      console.error('Réponse non-JSON du serveur :', rawText.substring(0, 300));
+      errDiv.style.display = 'block';
+      errDiv.innerHTML = '• Erreur serveur : le PHP a retourné une réponse inattendue (voir console)';
+      return;
+    }
+
+    if (result.success) {
+      document.getElementById('modal-edit-user')?.remove();
+      showToast('Succès', 'Utilisateur modifié avec succès !', 'success');
+      if (typeof loadUsers === 'function') loadUsers();
+    } else {
+      errDiv.style.display = 'block';
+      errDiv.innerHTML = `• ${result.message || 'Erreur lors de la mise à jour'}`;
+    }
+  } catch (err) {
+    console.error('Erreur réseau :', err);
+    errDiv.style.display = 'block';
+    errDiv.innerHTML = '• Erreur réseau — Vérifiez que XAMPP est démarré';
+  }
+};
+function inputStyle() {
+  return `
+    width:100%;box-sizing:border-box;padding:10px 14px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);
+    border-radius:8px;color:#f0f0f0;font-size:.9rem;font-family:inherit;
+    outline:none;transition:border-color .2s;
+  `;
+}
+
+window.submitAddUser = async function() {
+  const nom    = document.getElementById('au-nom')?.value.trim();
+  const prenom = document.getElementById('au-prenom')?.value.trim();
+  const email  = document.getElementById('au-email')?.value.trim();
+  const mdp    = document.getElementById('au-mdp')?.value;
+  const mdp2   = document.getElementById('au-mdp2')?.value;
+  const role   = document.getElementById('au-role')?.value;
+  const errDiv = document.getElementById('modal-add-user-errors');
+  const errors = [];
+
+  if (!nom || !prenom || !email || !mdp) {
+    errors.push('Tous les champs sont requis');
+  }
+
+  if (errors.length === 0) {
+    if (/\d/.test(nom) || /\d/.test(prenom))
+      errors.push('Le nom et le prénom ne doivent pas contenir de chiffres');
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      errors.push('Email invalide');
+
+    if (mdp.length < 6)
+      errors.push('Le mot de passe doit contenir au moins 6 caractères');
+    if (mdp !== mdp2)
+      errors.push('Les mots de passe ne correspondent pas');
+  }
+
+  if (errors.length > 0) {
+    errDiv.style.display = 'block';
+    errDiv.innerHTML = errors.map(e => `• ${e}`).join('<br>');
+    return;
+  }
+
+  errDiv.style.display = 'none';
+
+  // Envoi vers addUser.php - PAS DE CAPTCHA pour l'admin !
+  try {
+    const response = await fetch('http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/addUser.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        nom: nom,
+        prenom: prenom,
+        email: email,
+        mdp: mdp,
+        role: role,
+        is_admin: true  // ← Flag pour indiquer que ça vient de l'admin !
+      })
+    });
+
+    const result = await response.json();
+    console.log('📡 Réponse addUser:', result);
+
+    if (result.success) {
+      document.getElementById('modal-add-user')?.remove();
+      if (typeof showToast === 'function') {
+        showToast('Succès', 'Utilisateur ajouté avec succès !', 'success');
+      }
+      if (typeof loadUsers === 'function') {
+        loadUsers();
+      }
+    } else {
+      errDiv.style.display = 'block';
+      errDiv.innerHTML = `• ${result.message || 'Email déjà utilisé ou erreur serveur'}`;
+    }
+  } catch (err) {
+    console.error('❌ Erreur réseau:', err);
+    errDiv.style.display = 'block';
+    errDiv.innerHTML = '• Erreur réseau, veuillez réessayer';
+  }
 };
 
 // Gestion des modales

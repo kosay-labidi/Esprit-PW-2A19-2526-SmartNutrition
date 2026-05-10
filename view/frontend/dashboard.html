@@ -20,33 +20,72 @@
   <div id="pl-bar"><div id="pl-fill"></div></div>
 </div>
 
+<!-- Nouvelle navbar principale (top) -->
 <nav id="navbar">
-  <a href="index.html" class="nav-logo">
-    <svg viewBox="0 0 60 60" fill="none">
-      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
-      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
-      <defs>
-        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#3A86C4"/>
-          <stop offset="100%" stop-color="#5B3E96"/>
-        </radialGradient>
-        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#1F3D2B"/>
-          <stop offset="100%" stop-color="#3A86C4"/>
-        </linearGradient>
-      </defs>
-      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
-      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
-    </svg>
-    <span class="nav-logo-text">GaiaLumen</span>
-  </a>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 60 60" fill="none">
+        <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+        <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+        <defs>
+          <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#3A86C4"/>
+            <stop offset="100%" stop-color="#5B3E96"/>
+          </radialGradient>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1F3D2B"/>
+            <stop offset="100%" stop-color="#3A86C4"/>
+          </linearGradient>
+        </defs>
+        <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+        <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+      </svg>
+      <span class="nav-logo-text">GaiaLumen</span>
+    </a>
+  </div>
+
+  <!-- Barre de navigation horizontale des modules -->
+  <div class="nav-modules">
+    <a href="#" class="nav-module-item" data-module="welcome">
+      <span class="module-icon">🏠</span>
+      <span class="module-text">Accueil</span>
+    </a>
+    <a href="#" class="nav-module-item" data-module="users">
+      <span class="module-icon">👥</span>
+      <span class="module-text">Utilisateurs</span>
+    </a>
+    <a href="#" class="nav-module-item" data-module="planning">
+      <span class="module-icon">📅</span>
+      <span class="module-text">Planning</span>
+    </a>
+    <a href="#" class="nav-module-item" data-module="events">
+      <span class="module-icon">🎯</span>
+      <span class="module-text">Events</span>
+    </a>
+    <a href="#" class="nav-module-item" data-module="meals">
+      <span class="module-icon">🍽️</span>
+      <span class="module-text">Repas</span>
+    </a>
+    <a href="#" class="nav-module-item" data-module="health">
+      <span class="module-icon">❤️</span>
+      <span class="module-text">Santé</span>
+    </a>
+    <a href="#" class="nav-module-item" data-module="challenges">
+      <span class="module-icon">🏆</span>
+      <span class="module-text">Défis</span>
+    </a>
+  </div>
+
   <div class="nav-actions">
-    <button id="menu-toggle" title="Menu">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
     <button id="theme-toggle" title="Changer le thème">🌙 Sombre</button>
+    <a href="friends.html" class="btn-friends" title="Gérer vos amis et messages">
+      👥 Amis & Messages
+    </a>
+    <!-- Avatar utilisateur -->
+    <div id="nav-user-avatar" class="nav-user-avatar" style="display:none;" title="">
+      <img id="nav-avatar-img" class="nav-avatar-img" src="" alt="Avatar" style="display:none;" />
+      <span id="nav-avatar-initials" class="nav-avatar-initials"></span>
+    </div>
     <a href="#" class="btn-logout" title="Déconnexion" onclick="logout(); return false;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -58,45 +97,53 @@
   </div>
 </nav>
 
-<button id="sidebar-toggle" title="Toggle sidebar">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path d="M15 18l-6-6 6-6"/>
-  </svg>
+<!-- Bouton menu mobile (remplace sidebar-toggle) -->
+<button id="mobile-menu-btn" title="Menu">
+  <span></span>
+  <span></span>
+  <span></span>
 </button>
 
-<div class="dashboard-container">
-  <aside class="sidebar-menu">
-    <div class="menu-title">📊 Modules</div>
-    <a href="#" class="menu-item" data-module="welcome">
-      <span class="menu-item-icon">🏠</span>
-      <span class="menu-item-text">Accueil</span>
-    </a>
-    <a href="#" class="menu-item" data-module="users">
-      <span class="menu-item-icon">👥</span>
-      <span class="menu-item-text">GS Utilisateur</span>
-    </a>
-    <a href="#" class="menu-item" data-module="planning">
-      <span class="menu-item-icon">📅</span>
-      <span class="menu-item-text">GS Planning</span>
-    </a>
-    <a href="#" class="menu-item" data-module="events">
-      <span class="menu-item-icon">🎯</span>
-      <span class="menu-item-text">GS Events</span>
-    </a>
-    <a href="#" class="menu-item" data-module="meals">
-      <span class="menu-item-icon">🍽️</span>
-      <span class="menu-item-text">GS Repas</span>
-    </a>
-    <a href="#" class="menu-item" data-module="health">
-      <span class="menu-item-icon">❤️</span>
-      <span class="menu-item-text">GS Santé</span>
-    </a>
-    <a href="#" class="menu-item" data-module="challenges">
-      <span class="menu-item-icon">🏆</span>
-      <span class="menu-item-text">GS Défis</span>
-    </a>
-  </aside>
+<!-- Overlay pour mobile -->
+<div id="mobile-overlay"></div>
 
+<!-- Menu mobile (version slide-in) -->
+<div id="mobile-menu">
+  <div class="mobile-menu-header">
+    <span>📋 Modules</span>
+    <button id="mobile-menu-close">✕</button>
+  </div>
+  <a href="#" class="mobile-menu-item" data-module="welcome">
+    <span class="module-icon">🏠</span>
+    <span>Accueil</span>
+  </a>
+  <a href="#" class="mobile-menu-item" data-module="users">
+    <span class="module-icon">👥</span>
+    <span>Utilisateurs</span>
+  </a>
+  <a href="#" class="mobile-menu-item" data-module="planning">
+    <span class="module-icon">📅</span>
+    <span>Planning</span>
+  </a>
+  <a href="#" class="mobile-menu-item" data-module="events">
+    <span class="module-icon">🎯</span>
+    <span>Events</span>
+  </a>
+  <a href="#" class="mobile-menu-item" data-module="meals">
+    <span class="module-icon">🍽️</span>
+    <span>Repas</span>
+  </a>
+  <a href="#" class="mobile-menu-item" data-module="health">
+    <span class="module-icon">❤️</span>
+    <span>Santé</span>
+  </a>
+  <a href="#" class="mobile-menu-item" data-module="challenges">
+    <span class="module-icon">🏆</span>
+    <span>Défis</span>
+  </a>
+</div>
+
+<div class="dashboard-container">
   <main class="main-content">
     <!-- Les modules seront chargés dynamiquement ici par module-loader.js -->
   </main>

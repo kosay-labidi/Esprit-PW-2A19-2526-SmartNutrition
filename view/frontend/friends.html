@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GaiaLumen - Amis et Messages</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #08120d;
+      --surface: rgba(17, 37, 24, 0.86);
+      --surface-2: rgba(21, 44, 29, 0.7);
+      --border: rgba(91, 62, 150, 0.25);
+      --text: #ede4cc;
+      --muted: #9fb4a4;
+      --violet: #5b3e96;
+      --blue: #3a86c4;
+      --danger: #d15454;
+      --ok: #2aa06e;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Lato", sans-serif;
+      background:
+        radial-gradient(circle at 8% 12%, rgba(91, 62, 150, 0.2), transparent 35%),
+        radial-gradient(circle at 88% 15%, rgba(58, 134, 196, 0.18), transparent 36%),
+        linear-gradient(180deg, #09140e 0%, #07110d 100%);
+    }
+
+    /* HEADER */
+    .friends-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      backdrop-filter: blur(12px);
+      background: rgba(10, 23, 16, 0.7);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    .head-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .friends-header h1 {
+      margin: 0;
+      font-family: "Cormorant Garamond", serif;
+      font-size: 2rem;
+    }
+
+    .head-right {
+      position: relative;
+    }
+
+    .back-link {
+      color: #9cc6ff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: opacity 0.2s;
+    }
+
+    .back-link:hover {
+      opacity: 0.8;
+    }
+
+    .notif-bell {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      position: relative;
+      min-width: 48px;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+    }
+
+    .notif-bell:hover {
+      border-color: rgba(58, 134, 196, 0.6);
+      box-shadow: 0 0 0 3px rgba(58, 134, 196, 0.14);
+    }
+
+    .notif-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .notif-count.hidden {
+      display: none;
+    }
+
+    .notif-dropdown {
+      position: absolute;
+      right: 0;
+      top: 46px;
+      width: 280px;
+      max-height: 300px;
+      overflow-y: auto;
+      background: #101d17;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: none;
+      padding: 8px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+      z-index: 20;
+    }
+
+    .notif-dropdown.open { display: block; }
+
+    .notif-item {
+      border: 1px solid rgba(91, 62, 150, 0.15);
+      background: rgba(18, 36, 26, 0.75);
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .notif-item:hover {
+      border-color: rgba(58, 134, 196, 0.45);
+      background: rgba(23, 44, 33, 0.9);
+    }
+
+    /* LAYOUT : colonnes fixes avec 70% pour le chat */
+    .friends-layout {
+      display: flex;
+      gap: 18px;
+      padding: 20px 24px;
+      height: calc(100vh - 82px);
+      min-height: 0;
+    }
+
+    /* Panneau gauche (tous utilisateurs) - taille contenue */
+    .panel-left {
+      flex: 0 0 280px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(2px);
+      overflow: hidden;
+    }
+
+    /* Panneau central (amis) - taille contenue */
+    .panel-middle {
+      flex: 0 0 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(2px);
+      overflow: hidden;
+    }
+
+    /* Panneau chat - prend 70% de l'espace restant */
+    .panel-chat {
+      flex: 2;
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(2px);
+      transition: all 0.2s;
+    }
+
+    .panel-left h2, .panel-middle h2, .panel-chat h2 {
+      margin: 0 0 12px 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(91, 62, 150, 0.3);
+      flex-shrink: 0;
+    }
+
+    /* STYLE SCROLL UNIFORME - pour toutes les listes ET le chat */
+    .list, .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 4px;
+    }
+
+    /* Scrollbar personnalisée identique (même style que "Tous les utilisateurs") */
+    .list::-webkit-scrollbar, .chat-box::-webkit-scrollbar {
+      width: 5px;
+    }
+    .list::-webkit-scrollbar-track, .chat-box::-webkit-scrollbar-track {
+      background: rgba(21, 44, 29, 0.5);
+      border-radius: 10px;
+    }
+    .list::-webkit-scrollbar-thumb, .chat-box::-webkit-scrollbar-thumb {
+      background: var(--violet);
+      border-radius: 10px;
+    }
+    .list::-webkit-scrollbar-thumb:hover, .chat-box::-webkit-scrollbar-thumb:hover {
+      background: var(--blue);
+    }
+
+    /* Compatibilité Firefox */
+    .list, .chat-box {
+      scrollbar-width: thin;
+      scrollbar-color: var(--violet) rgba(21, 44, 29, 0.5);
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid rgba(91, 62, 150, 0.2);
+      border-radius: 14px;
+      background: rgba(10, 24, 17, 0.7);
+      transition: all 0.2s ease;
+    }
+
+    .user-card:hover {
+      transform: translateX(2px);
+      border-color: rgba(91, 62, 150, 0.5);
+      background: rgba(18, 38, 27, 0.85);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .user-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-sub {
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+
+    .avatar, .fallback-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      object-fit: cover;
+      background: #223043;
+    }
+
+    .fallback-avatar {
+      background: linear-gradient(135deg, var(--violet), var(--blue));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: white;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, var(--violet), var(--blue));
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    button.danger { background: linear-gradient(135deg, #b94040, #d15454); }
+
+    .friend-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* CHAT ZONE - spécifique */
+    .chat-box {
+      flex: 1;
+      border: 1px solid rgba(91, 62, 150, 0.25);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(9, 20, 15, 0.7);
+      scroll-behavior: smooth;
+      margin-bottom: 12px;
+      min-height: 0;
+      /* on conserve le même gap que les listes pour la cohérence */
+      gap: 12px;
+    }
+
+    /* Les messages dans le chat ont leur propre marge, pas besoin de gap supplémentaire */
+    .chat-message {
+      margin-bottom: 0;
+      line-height: 1.45;
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(91, 62, 150, 0.12);
+      border: 1px solid rgba(91, 62, 150, 0.2);
+      transition: background 0.1s;
+    }
+
+    .chat-message.me {
+      background: rgba(58, 134, 196, 0.18);
+      border-left: 3px solid rgba(58, 134, 196, 0.7);
+      border-color: rgba(58, 134, 196, 0.35);
+    }
+
+    .chat-meta {
+      display: block;
+      color: var(--muted);
+      font-size: 0.7rem;
+      margin-bottom: 5px;
+    }
+
+    .chat-media {
+      max-width: 280px;
+      max-height: 220px;
+      border-radius: 12px;
+      border: 1px solid rgba(91, 62, 150, 0.35);
+      margin-top: 6px;
+      cursor: pointer;
+    }
+
+    .chat-link {
+      color: #9cc6ff;
+      word-break: break-all;
+      text-decoration: underline;
+    }
+
+    /* Formulaire messages amélioré */
+    .message-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .message-form input[type="text"] {
+      flex: 1;
+      background: rgba(9, 20, 15, 0.85);
+      border: 1px solid rgba(91, 62, 150, 0.35);
+      border-radius: 999px;
+      color: var(--text);
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .message-form input:focus {
+      outline: none;
+      border-color: rgba(58, 134, 196, 0.7);
+      box-shadow: 0 0 0 3px rgba(58, 134, 196, 0.2);
+    }
+
+    /* zone DROP agrandie & stylée */
+    .drop-zone {
+      margin-top: 12px;
+      border: 2px dashed rgba(91, 62, 150, 0.55);
+      border-radius: 20px;
+      background: rgba(8, 18, 13, 0.6);
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 20px 16px;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      backdrop-filter: blur(4px);
+    }
+
+    .drop-zone.active {
+      border-color: rgba(58, 134, 196, 0.9);
+      background: rgba(58, 134, 196, 0.15);
+      color: var(--text);
+      transform: scale(0.99);
+    }
+
+    .drop-zone::before {
+      content: "📎 ";
+      font-size: 1.1rem;
+    }
+
+    .icon-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: rgba(21, 44, 29, 0.8);
+      padding: 8px 14px;
+      font-size: 1rem;
+      border: 1px solid rgba(91, 62, 150, 0.3);
+    }
+
+    .flash-msg {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      border-radius: 40px;
+      background: rgba(10, 23, 16, 0.96);
+      border: 1px solid rgba(58, 134, 196, 0.5);
+      color: var(--text);
+      padding: 12px 20px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s ease;
+      z-index: 999;
+      font-size: 0.85rem;
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+    }
+
+    .flash-msg.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .empty-state {
+      color: var(--muted);
+      text-align: center;
+      padding: 24px 8px;
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    /* responsive tablette */
+    @media (max-width: 1000px) {
+      .friends-layout {
+        flex-direction: column;
+        height: auto;
+        gap: 16px;
+      }
+      .panel-left, .panel-middle, .panel-chat {
+        flex: auto;
+        max-height: 350px;
+      }
+      .panel-chat {
+        min-height: 480px;
+      }
+      .drop-zone {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="friends-header">
+    <div class="head-left">
+<a href="dashboard.html" class="back-link">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+  </svg>
+  </a>      <h1>Amis & Messages</h1>
+    </div>
+    <div class="head-right">
+      <button id="notif-bell" class="notif-bell" title="Nouveaux messages">
+        🔔
+        <span id="notif-count" class="notif-count">0</span>
+      </button>
+      <div id="notif-dropdown" class="notif-dropdown"></div>
+    </div>
+  </header>
+
+  <main class="friends-layout">
+    <!-- Colonne gauche : tous les utilisateurs -->
+    <section class="panel-left">
+      <h2>Tous les utilisateurs</h2>
+      <div id="users-list" class="list"></div>
+    </section>
+
+    <!-- Colonne centrale : mes amis (taille contenue) -->
+    <section class="panel-middle">
+      <h2>Mes amis</h2>
+      <div id="friends-list" class="list"></div>
+    </section>
+
+    <!-- Colonne chat : prend 70% de l'espace -->
+    <section class="panel-chat">
+      <h2 id="chat-title">Messages</h2>
+      <div id="chat-box" class="chat-box"></div>
+      <!-- Zone drop agrandie -->
+      <div id="drop-zone" class="drop-zone">📂 Glissez image/vidéo ou cliquez pour envoyer</div>
+      <form id="message-form" class="message-form">
+        <input id="message-input" type="text" placeholder="Votre message..." autocomplete="off" />
+        <div class="icon-buttons">
+          <button type="button" id="attach-btn" class="icon-btn" title="Image/Vidéo">📎</button>
+          <button type="button" id="insert-link-btn" class="icon-btn" title="Insérer un lien">🔗</button>
+          <button type="submit" class="icon-btn" style="background: linear-gradient(135deg, #5b3e96, #3a86c4);">Envoyer</button>
+        </div>
+        <input id="file-input" type="file" accept="image/*,video/*" hidden />
+      </form>
+    </section>
+  </main>
+
+  <div id="flash-msg" class="flash-msg"></div>
+
+  <script>
+    const API_BASE = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/friends_api.php';
+    let currentUser = null;
+    let activeFriendId = null;
+    let lastUnreadCount = 0;
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function flash(message) {
+      const box = document.getElementById('flash-msg');
+      if (!box) return;
+      box.textContent = message;
+      box.classList.add('show');
+      setTimeout(() => box.classList.remove('show'), 2200);
+    }
+
+    function avatarNode(user) {
+      const photo = user.avatar_url || '';
+      if (photo) {
+        const img = document.createElement('img');
+        img.className = 'avatar';
+        img.src = photo;
+        img.alt = 'avatar';
+        img.onerror = () => {
+          img.replaceWith(initialNode(user));
+        };
+        return img;
+      }
+      return initialNode(user);
+    }
+
+    function initialNode(user) {
+      const span = document.createElement('span');
+      span.className = 'fallback-avatar';
+      const p = (user.prenom || '').charAt(0).toUpperCase();
+      const n = (user.nom || '').charAt(0).toUpperCase();
+      span.textContent = (p + n) || '?';
+      return span;
+    }
+
+    async function api(action, method = 'GET', body = null) {
+      const url = new URL(API_BASE);
+      url.searchParams.set('action', action);
+      if (method === 'GET' && body && typeof body === 'object') {
+        Object.entries(body).forEach(([key, value]) => {
+          url.searchParams.set(key, String(value));
+        });
+      }
+      const options = {
+        method,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      };
+      if (method !== 'GET' && body) {
+        options.body = JSON.stringify(body);
+      }
+      const res = await fetch(url, options);
+      return res.json();
+    }
+
+    async function uploadAttachment(friendId, file) {
+      const formData = new FormData();
+      formData.append('friend_id', String(friendId));
+      formData.append('attachment', file);
+      const res = await fetch(`${API_BASE}?action=send_attachment`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      return res.json();
+    }
+
+    async function loadSessionUser() {
+      const res = await fetch(
+        'http://localhost/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/auto_login.php',
+        { method: 'GET', credentials: 'include' }
+      );
+      const data = await res.json();
+      if (!data.success || !data.data) {
+        window.location.href = 'login.html';
+        return;
+      }
+      currentUser = data.data;
+    }
+
+    function renderUsers(users) {
+      const container = document.getElementById('users-list');
+      container.innerHTML = '';
+      if (!users.length) {
+        container.innerHTML = '<div class="empty-state">✨ Aucun utilisateur disponible</div>';
+        return;
+      }
+
+      users.forEach((user) => {
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        const left = document.createElement('div');
+        left.className = 'user-info';
+        left.appendChild(avatarNode(user));
+        const meta = document.createElement('div');
+        meta.className = 'user-meta';
+        const name = document.createElement('span');
+        name.className = 'user-name';
+        name.textContent = `${user.prenom} ${user.nom}`;
+        const sub = document.createElement('span');
+        sub.className = 'user-sub';
+        sub.textContent = 'Membre';
+        meta.appendChild(name);
+        meta.appendChild(sub);
+        left.appendChild(meta);
+
+        const btn = document.createElement('button');
+        if (user.is_friend) {
+          btn.textContent = '✓ Ami';
+          btn.disabled = true;
+        } else {
+          btn.textContent = 'Ajouter';
+          btn.onclick = async () => {
+            const result = await api('add_friend', 'POST', { friend_id: user.id_utilisateur });
+            if (!result.success) {
+              flash(result.message || 'Impossible d\'ajouter cet ami');
+              return;
+            }
+            flash('Ami ajouté ✓');
+            await refreshData();
+          };
+        }
+
+        card.appendChild(left);
+        card.appendChild(btn);
+        container.appendChild(card);
+      });
+    }
+
+    function renderFriends(friends) {
+      const container = document.getElementById('friends-list');
+      container.innerHTML = '';
+      if (!friends.length) {
+        container.innerHTML = '<div class="empty-state">👥 Aucun ami pour le moment</div>';
+        return;
+      }
+
+      friends.forEach((friend) => {
+        const card = document.createElement('div');
+        card.className = 'user-card';
+
+        const left = document.createElement('div');
+        left.className = 'user-info';
+        left.appendChild(avatarNode(friend));
+        const meta = document.createElement('div');
+        meta.className = 'user-meta';
+        const name = document.createElement('span');
+        name.className = 'user-name';
+        name.textContent = `${friend.prenom} ${friend.nom}`;
+        const sub = document.createElement('span');
+        sub.className = 'user-sub';
+        sub.textContent = 'Ami';
+        meta.appendChild(name);
+        meta.appendChild(sub);
+        left.appendChild(meta);
+        card.appendChild(left);
+
+        const actions = document.createElement('div');
+        actions.className = 'friend-actions';
+        const msgBtn = document.createElement('button');
+        msgBtn.textContent = '💬';
+        msgBtn.title = 'Message';
+        msgBtn.onclick = async () => {
+          activeFriendId = friend.id_utilisateur;
+          document.getElementById('chat-title').textContent = `💬 Messages avec ${friend.prenom} ${friend.nom}`;
+          await loadMessages();
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '✖';
+        delBtn.className = 'danger';
+        delBtn.title = 'Supprimer';
+        delBtn.onclick = async () => {
+          await api('remove_friend', 'POST', { friend_id: friend.id_utilisateur });
+          if (activeFriendId === friend.id_utilisateur) {
+            activeFriendId = null;
+            document.getElementById('chat-title').textContent = 'Messages';
+            document.getElementById('chat-box').innerHTML = '';
+          }
+          flash('Ami supprimé');
+          await refreshData();
+        };
+
+        actions.appendChild(msgBtn);
+        actions.appendChild(delBtn);
+        card.appendChild(actions);
+        container.appendChild(card);
+      });
+    }
+
+    async function loadMessages() {
+      if (!activeFriendId) return;
+      const data = await api('messages', 'GET', { friend_id: activeFriendId });
+      const box = document.getElementById('chat-box');
+      box.innerHTML = '';
+
+      if (!data.success) return;
+      if (!data.messages.length) {
+        box.innerHTML = '<div class="empty-state">💬 Aucun message, écrivez quelque chose !</div>';
+        await refreshNotifications();
+        return;
+      }
+      data.messages.forEach((msg) => {
+        const line = document.createElement('div');
+        line.className = 'chat-message' + (Number(msg.sender_id) === Number(currentUser.id_utilisateur) ? ' me' : '');
+        const author = Number(msg.sender_id) === Number(currentUser.id_utilisateur) ? 'Moi' : 'Ami';
+        const when = new Date(msg.created_at.replace(' ', 'T'));
+        let content = msg.message || '';
+        if (msg.type === 'image' && msg.file_url) {
+          content = `<span class="chat-meta">${escapeHtml(author)} • ${escapeHtml(when.toLocaleString('fr-FR'))}</span><img class="chat-media" src="${escapeHtml(msg.file_url)}" alt="image" />`;
+        } else if (msg.type === 'video' && msg.file_url) {
+          content = `<span class="chat-meta">${escapeHtml(author)} • ${escapeHtml(when.toLocaleString('fr-FR'))}</span><video class="chat-media" controls src="${escapeHtml(msg.file_url)}"></video>`;
+        } else if (msg.type === 'link') {
+          const safe = escapeHtml(msg.message || '');
+          content = `<span class="chat-meta">${escapeHtml(author)} • ${escapeHtml(when.toLocaleString('fr-FR'))}</span><a class="chat-link" href="${safe}" target="_blank" rel="noopener noreferrer">🔗 ${safe}</a>`;
+        } else {
+          content = `<span class="chat-meta">${escapeHtml(author)} • ${escapeHtml(when.toLocaleString('fr-FR'))}</span>${escapeHtml(content)}`;
+        }
+        line.innerHTML = content;
+        box.appendChild(line);
+      });
+
+      box.scrollTop = box.scrollHeight;
+      await refreshNotifications();
+    }
+
+    function renderNotifications(items) {
+      const dropdown = document.getElementById('notif-dropdown');
+      const count = document.getElementById('notif-count');
+      const unread = items.reduce((sum, item) => sum + Number(item.unread_count || 0), 0);
+      count.textContent = String(unread);
+      count.classList.toggle('hidden', unread === 0);
+
+      dropdown.innerHTML = '';
+      if (!items.length) {
+        dropdown.innerHTML = '<div class="notif-item">🔔 Aucune notification</div>';
+        return;
+      }
+
+      items.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'notif-item';
+        const preview = item.last_type === 'image'
+          ? '📷 a envoyé une image'
+          : item.last_type === 'video'
+            ? '🎥 a envoyé une vidéo'
+            : item.last_type === 'link'
+              ? '🔗 a envoyé un lien'
+              : '💬 nouveau message';
+        row.innerHTML = `<strong>${escapeHtml(item.friend_name)}</strong><br/>${escapeHtml(preview)}`;
+        row.onclick = async () => {
+          activeFriendId = Number(item.friend_id);
+          document.getElementById('chat-title').textContent = `Messages avec ${item.friend_name}`;
+          dropdown.classList.remove('open');
+          await loadMessages();
+        };
+        dropdown.appendChild(row);
+      });
+    }
+
+    async function refreshNotifications() {
+      const data = await api('notifications');
+      if (!data.success) return;
+      renderNotifications(data.notifications || []);
+      if (typeof data.unread_count === 'number' && data.unread_count > lastUnreadCount) {
+        const first = data.notifications?.[0];
+        if (first?.friend_name) {
+          flash(`🔔 ${first.friend_name} a envoyé un message`);
+        } else {
+          flash('🔔 Nouveau message reçu');
+        }
+      }
+      lastUnreadCount = Number(data.unread_count || 0);
+    }
+
+    async function refreshData() {
+      const usersData = await api('users');
+      const friendsData = await api('friends');
+      if (usersData.success) renderUsers(usersData.users);
+      if (friendsData.success) renderFriends(friendsData.friends);
+      await refreshNotifications();
+    }
+
+    // Drag & drop amélioré + click sur drop zone
+    document.addEventListener('DOMContentLoaded', async () => {
+      const attachBtn = document.getElementById('attach-btn');
+      const fileInput = document.getElementById('file-input');
+      const linkBtn = document.getElementById('insert-link-btn');
+      const dropZone = document.getElementById('drop-zone');
+
+      // Permet de cliquer sur la drop zone pour ouvrir le sélecteur
+      dropZone.addEventListener('click', () => {
+        if (!activeFriendId) {
+          flash('👥 Choisissez un ami d\'abord');
+          return;
+        }
+        fileInput.click();
+      });
+
+      attachBtn.addEventListener('click', () => {
+        if (!activeFriendId) {
+          flash('Sélectionnez un ami avant');
+          return;
+        }
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        if (!activeFriendId) {
+          flash('Choisissez un ami avant d\'envoyer un fichier');
+          return;
+        }
+        const result = await uploadAttachment(activeFriendId, file);
+        if (!result.success) {
+          flash(result.message || 'Upload échoué');
+          return;
+        }
+        fileInput.value = '';
+        await loadMessages();
+        flash('📎 Fichier envoyé');
+      });
+
+      linkBtn.addEventListener('click', async () => {
+        const url = window.prompt('Collez le lien (https://...)');
+        if (!url) return;
+        if (!activeFriendId) {
+          flash('Choisissez un ami avant');
+          return;
+        }
+        const result = await api('send_message', 'POST', { friend_id: activeFriendId, message: url.trim() });
+        if (!result.success) {
+          flash(result.message || 'Envoi impossible');
+          return;
+        }
+        await loadMessages();
+        flash('🔗 Lien envoyé');
+      });
+
+      // drag & drop events améliorés
+      ['dragenter', 'dragover'].forEach((evt) => {
+        dropZone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          dropZone.classList.add('active');
+        });
+      });
+      ['dragleave', 'drop'].forEach((evt) => {
+        dropZone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('active');
+        });
+      });
+      dropZone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer?.files?.[0];
+        if (!file) return;
+        if (!activeFriendId) {
+          flash('Sélectionnez un ami avant le drag & drop');
+          return;
+        }
+        const result = await uploadAttachment(activeFriendId, file);
+        if (!result.success) {
+          flash(result.message || 'Upload échoué');
+          return;
+        }
+        await loadMessages();
+        flash('📁 Fichier glissé envoyé');
+      });
+
+      document.getElementById('notif-bell').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('notif-dropdown').classList.toggle('open');
+      });
+      document.addEventListener('click', (e) => {
+        const bell = document.getElementById('notif-bell');
+        const dropdown = document.getElementById('notif-dropdown');
+        if (!bell.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.remove('open');
+        }
+      });
+
+      document.getElementById('message-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('message-input');
+        const text = input.value.trim();
+        if (!text || !activeFriendId) return;
+        await api('send_message', 'POST', { friend_id: activeFriendId, message: text });
+        input.value = '';
+        await loadMessages();
+      });
+
+      await loadSessionUser();
+      await refreshData();
+      setInterval(async () => {
+        await refreshNotifications();
+        if (activeFriendId) await loadMessages();
+      }, 5000);
+    });
+  </script>
+</body>
+</html>

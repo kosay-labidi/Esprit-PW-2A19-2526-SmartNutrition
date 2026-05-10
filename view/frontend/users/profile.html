@@ -1,146 +1,1157 @@
-<section class="content-section" id="profile">
-  <div class="section-header">
-    <h2 class="module-title">👤 Mon Profil</h2>
-    <p>Gérez vos informations personnelles</p>
-  </div>
-
-  <div class="profile-container">
-    <div class="profile-card" id="profile-info">
-      <!-- Chargé dynamiquement -->
-    </div>
-
-    <div class="profile-actions">
-      <button class="btn btn-primary" onclick="window.location.href='users/updateProfile.php'">
-        ✏️ Modifier mon profil
-      </button>
-      <button class="btn btn-secondary" onclick="window.location.href='../../view/frontend/login.html'">
-        🚪 Déconnexion
-      </button>
-    </div>
-  </div>
-</section>
-
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GaiaLumen – Mon Profil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-.profile-container {
-  max-width: 800px;
-  margin: 0 auto;
-}
+  :root {
+    --green: #1F3D2B;
+    --sand: #F2E8CF;
+    --violet: #5B3E96;
+    --blue: #3A86C4;
+    --bg: #0a1a10;
+    --surface: #0f2318;
+    --text: #F2E8CF;
+    --text-secondary: #a8b8a0;
+    --card-bg: rgba(15, 35, 24, 0.72);
+    --glass: rgba(31, 61, 43, 0.45);
+    --border: rgba(91, 62, 150, 0.2);
+    --radius: 18px;
+    --transition: 0.2s ease;
+    --success: #2ecc71;
+    --warning: #e67e22;
+    --danger: #e74c3c;
+    --scrollbar-track: rgba(91, 62, 150, 0.1);
+    --scrollbar-thumb: #5B3E96;
+    --scrollbar-thumb-hover: #3A86C4;
+  }
 
-.profile-card {
-  background: var(--surface);
-  padding: 32px;
-  border-radius: 16px;
-  border: 1px solid rgba(168, 184, 160, 0.2);
-  margin-bottom: 24px;
-}
+  [data-theme="light"] {
+    --bg: #f5f0e8;
+    --surface: #ede5d0;
+    --text: #1F3D2B;
+    --text-secondary: #5a6e5a;
+    --card-bg: rgba(242, 232, 207, 0.75);
+    --glass: rgba(242, 232, 207, 0.6);
+    --border: rgba(91, 62, 150, 0.15);
+    --scrollbar-track: rgba(91, 62, 150, 0.08);
+    --scrollbar-thumb: #5B3E96;
+    --scrollbar-thumb-hover: #3A86C4;
+  }
 
-.profile-avatar {
-  text-align: center;
-  margin-bottom: 24px;
-}
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    transition: background var(--transition);
+  }
 
-.profile-avatar img {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid var(--blue);
-}
+  /* ========== SCROLLBAR STYLISÉE ========== */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 
-.profile-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 24px;
-}
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 10px;
+  }
 
-.profile-info-item {
-  padding: 16px;
-  background: rgba(168, 184, 160, 0.1);
-  border-radius: 12px;
-}
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 10px;
+    transition: background 0.2s;
+  }
 
-.profile-info-label {
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-bottom: 4px;
-}
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
 
-.profile-info-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
 
-.profile-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
+  /* Navbar */
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+
+  .nav-logo svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .nav-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-icon {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 8px 16px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all var(--transition);
+  }
+
+  .btn-icon:hover {
+    border-color: var(--violet);
+    background: rgba(91, 62, 150, 0.2);
+  }
+
+  /* Layout 2 colonnes */
+  .profile-dashboard {
+    display: flex;
+    min-height: 100vh;
+    padding-top: 72px;
+  }
+
+  /* Colonne gauche - avec scroll stylisé */
+  .profile-sidebar {
+    width: 360px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    position: fixed;
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Colonne droite - avec scroll stylisé */
+  .profile-main {
+    flex: 1;
+    margin-left: 360px;
+    padding: 2rem;
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+  }
+
+  /* Avatar */
+  .avatar-wrapper {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--violet);
+    background: var(--surface);
+    box-shadow: 0 8px 25px rgba(91, 62, 150, 0.3);
+  }
+
+  .avatar-upload {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: var(--violet);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform var(--transition);
+    border: 2px solid var(--text);
+  }
+
+  .avatar-upload:hover {
+    background: var(--blue);
+    transform: scale(1.1);
+  }
+
+  /* Image section */
+  .image-section {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .image-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .image-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .profile-photo {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--blue);
+    background: var(--surface);
+  }
+
+  .avatar-photo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--violet);
+    background: var(--surface);
+  }
+
+  .badge-note {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+  }
+
+  /* Status badge */
+  .status-badge {
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 1rem 0;
+  }
+
+  .status-active {
+    background: rgba(46, 204, 113, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+  }
+
+  .status-inactive {
+    background: rgba(231, 76, 60, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+  }
+
+  /* Sidebar buttons */
+  .sidebar-buttons {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .btn-sidebar {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--glass);
+    color: var(--text);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-sidebar:hover {
+    background: rgba(91, 62, 150, 0.2);
+    border-color: var(--violet);
+  }
+
+  .btn-sidebar.danger:hover {
+    background: rgba(231, 76, 60, 0.15);
+    border-color: var(--danger);
+  }
+
+  /* Prompt section - ESPACE D'ÉCRITURE PLUS GRAND */
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin: 1rem 0 0.8rem;
+    width: 100%;
+  }
+
+  .prompt-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin: 10px 0;
+  }
+
+  .prompt-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(91, 62, 150, 0.1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .prompt-input:focus {
+    outline: none;
+    border-color: var(--violet);
+    box-shadow: 0 0 0 3px rgba(91, 62, 150, 0.2);
+  }
+
+  .btn-prompt {
+    width: 100%;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    border: none;
+    border-radius: 14px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+  }
+
+  .btn-prompt:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(91, 62, 150, 0.4);
+  }
+
+  .btn-prompt.loading {
+    opacity: 0.7;
+    cursor: wait;
+    transform: none;
+  }
+
+  .avatar-styles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    width: 100%;
+  }
+
+  .avatar-style-btn {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 8px 14px;
+    font-size: 0.75rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .avatar-style-btn:hover {
+    background: rgba(91, 62, 150, 0.2);
+    border-color: var(--violet);
+    transform: translateY(-1px);
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+    width: 100%;
+  }
+
+  /* Formulaires */
+  .form-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 0.6rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(91, 62, 150, 0.1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-size: 0.95rem;
+    color: var(--text);
+    transition: all var(--transition);
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(58, 134, 196, 0.2);
+  }
+
+  /* Password strength */
+  .strength-bars {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .strength-bar {
+    flex: 1;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    transition: all var(--transition);
+  }
+
+  .strength-bar.weak { background: var(--danger); }
+  .strength-bar.medium { background: var(--warning); }
+  .strength-bar.strong { background: var(--success); }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--violet), var(--blue));
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: all var(--transition);
+    font-size: 0.95rem;
+  }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(91, 62, 150, 0.5);
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Messages */
+  .message {
+    padding: 14px 18px;
+    border-radius: 14px;
+    margin-bottom: 1.2rem;
+    display: none;
+    font-size: 0.9rem;
+  }
+
+  .message.success {
+    background: rgba(46, 204, 113, 0.1);
+    border-left: 3px solid var(--success);
+    color: var(--success);
+  }
+
+  .message.error {
+    background: rgba(231, 76, 60, 0.1);
+    border-left: 3px solid var(--danger);
+    color: var(--danger);
+  }
+
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+    padding: 2rem;
+    width: 340px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .modal-content h3 {
+    color: var(--danger);
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 1.5rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .profile-dashboard {
+      flex-direction: column;
+    }
+    .profile-sidebar {
+      position: relative;
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem;
+    }
+    .profile-main {
+      margin-left: 0;
+      height: auto;
+    }
+    .prompt-input {
+      min-height: 60px;
+    }
+  }
+
+  #real-photo-input, #avatar-image-input { display: none; }
+  #cursor, #cursor-trail { display: none; }
 </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <a href="dashboard.html" class="nav-logo">
+    <svg viewBox="0 0 60 60" fill="none" width="32" height="32">
+      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <defs>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#5B3E96"/>
+        </radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1F3D2B"/>
+          <stop offset="100%" stop-color="#3A86C4"/>
+        </linearGradient>
+      </defs>
+      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1"/>
+    </svg>
+    <span>GaiaLumen</span>
+  </a>
+  <div class="nav-actions">
+    <button id="theme-toggle" class="btn-icon">🌙</button>
+    <button class="btn-icon" onclick="goBackToDashboard()">← Retour</button>
+  </div>
+</nav>
+
+<div class="profile-dashboard">
+  <!-- COLONNE GAUCHE -->
+  <div class="profile-sidebar">
+    <!-- PHOTO RÉELLE (Face ID) -->
+    <div class="image-section">
+      <div class="image-label">📸 PHOTO (Face ID)</div>
+      <div class="image-wrapper">
+        <img id="realPhoto" class="profile-photo" src="https://ui-avatars.com/api/?background=3A86C4&color=fff&bold=true&length=2" alt="Photo réelle">
+        <div class="avatar-upload" id="photoUploadBtn">📷</div>
+      </div>
+      <div class="badge-note">Utilisée pour la connexion Face ID</div>
+    </div>
+
+    <!-- AVATAR (affichage) -->
+    <div class="image-section">
+      <div class="image-label">✨ AVATAR (Affichage)</div>
+      <div class="image-wrapper">
+        <img id="avatarDisplay" class="avatar-photo" src="https://ui-avatars.com/api/?background=5B3E96&color=fff&bold=true&length=2" alt="Avatar">
+        <div class="avatar-upload" id="avatarUploadBtn" style="background: var(--blue);">🎨</div>
+      </div>
+      <div class="badge-note">Affiché dans votre dashboard</div>
+    </div>
+
+    <div id="accountStatusBadge" class="status-badge status-active">✓ Compte actif</div>
+
+    <div class="sidebar-buttons">
+      <button id="toggleStatusBtn" class="btn-sidebar">🔒 Désactiver</button>
+      <button onclick="openDeleteModal()" class="btn-sidebar danger">🗑 Supprimer</button>
+    </div>
+
+    <hr>
+
+    <div class="section-label">🤖 GÉNÉRER AVATAR IA</div>
+
+    <div class="prompt-container">
+      <textarea id="avatarPrompt" class="prompt-input" placeholder="Décrivez l'avatar que vous voulez...&#10;Exemple: avatar mignon, style cartoon, cheveux bruns, sourire, fond vert"></textarea>
+      <button id="generatePromptBtn" class="btn-prompt">✨ Générer avatar</button>
+    </div>
+
+    <div class="avatar-styles">
+      <button class="avatar-style-btn" data-prompt="avatar anime mignon, cheveux courts, grand sourire, yeux brillants">🎨 Anime</button>
+      <button class="avatar-style-btn" data-prompt="avatar professionnel cartoon, lunettes, costume cravate, sérieux, élégant">😊 Pro</button>
+      <button class="avatar-style-btn" data-prompt="avatar minimaliste, traits épurés, design moderne, élégant, pastel">✨ Minimal</button>
+      <button class="avatar-style-btn" data-prompt="avatar pixel art, style jeu vidéo rétro, 8bit, coloré, nostalgique">👾 Pixel</button>
+      <button class="avatar-style-btn" data-prompt="avatar fantaisie, elfe, forêt enchantée, magique, lumineux, ailes">🧚 Fantaisie</button>
+    </div>
+  </div>
+
+  <!-- COLONNE DROITE -->
+  <div class="profile-main">
+    <div id="messageArea" class="message"></div>
+
+    <div class="form-card">
+      <div class="form-title">📋 INFORMATIONS</div>
+      <form id="profileForm" onsubmit="return updateProfile(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>NOM</label>
+            <input type="text" id="nom" required placeholder="Nom">
+          </div>
+          <div class="form-group">
+            <label>PRÉNOM</label>
+            <input type="text" id="prenom" required placeholder="Prénom">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>EMAIL</label>
+          <input type="email" id="email" required placeholder="exemple@gaialumen.com">
+        </div>
+        <button type="submit" class="btn-submit" id="submitBtn">💾 Enregistrer</button>
+      </form>
+    </div>
+
+    <div class="form-card">
+      <div class="form-title">🔐 SÉCURITÉ</div>
+      <div class="form-group">
+        <label>ANCIEN MOT DE PASSE</label>
+        <input type="password" id="old_password" autocomplete="new-password" placeholder="Requis pour changer le mot de passe">
+      </div>
+      <div class="form-group">
+        <label>NOUVEAU MOT DE PASSE</label>
+        <input type="password" id="new_password" autocomplete="new-password" placeholder="Laissez vide pour ne pas changer">
+        <div class="strength-bars" id="strengthBars">
+          <div class="strength-bar"></div><div class="strength-bar"></div>
+          <div class="strength-bar"></div><div class="strength-bar"></div>
+          <div class="strength-bar"></div><div class="strength-bar"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>CONFIRMER</label>
+        <input type="password" id="confirm_password" autocomplete="new-password" placeholder="Retapez le nouveau mot de passe">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Inputs cachés pour upload -->
+<input type="file" id="real-photo-input" accept="image/jpeg,image/png,image/jpg,image/webp">
+<input type="file" id="avatar-image-input" accept="image/jpeg,image/png,image/jpg,image/webp,image/svg+xml">
+
+<!-- MODALE SUPPRESSION -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <h3>⚠️ Supprimer le compte ?</h3>
+    <p>Action irréversible. Toutes vos données seront perdues.</p>
+    <div class="modal-buttons">
+      <button onclick="closeDeleteModal()" style="flex:1; padding:10px; background:var(--glass); border:1px solid var(--border); border-radius:40px; cursor:pointer;">Annuler</button>
+      <button onclick="deleteAccount()" style="flex:1; padding:10px; background:var(--danger); border:none; border-radius:40px; color:white; cursor:pointer;">Supprimer</button>
+    </div>
+  </div>
+</div>
 
 <script>
-function loadProfile() {
-  const userId = 1; // À remplacer par l'ID de l'utilisateur connecté
+  // ========== ÉTAT GLOBAL ==========
+  let currentUserId = null;
+  let currentUserStatus = 'actif';
+  let currentRealPhoto = null;
+  let currentAvatar = null;
+
+  const BASE_URL = 'http://localhost/Esprit-PW-2A19-2526-SmartNutrition';
+
+  // ========== UTILITAIRES ==========
+  function showMessage(msg, type) {
+    const div = document.getElementById('messageArea');
+    div.textContent = msg;
+    div.className = `message ${type}`;
+    div.style.display = 'block';
+    setTimeout(() => { div.style.display = 'none'; }, 4000);
+  }
+
+  function goBackToDashboard() {
+    window.location.href = BASE_URL + '/view/frontend/dashboard.html';
+  }
   
-  fetch('../../controller/user.controller.php?action=readOne&id=' + userId)
-    .then(response => response.json())
-    .then(result => {
-      if(result.success) {
-        displayProfile(result.data);
+  function openDeleteModal() {
+    document.getElementById('deleteModal').classList.add('active');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+  }
+
+  // ========== INDICATEUR FORCE MOT DE PASSE ==========
+  function checkStrength(pw) {
+    if (!pw) return 0;
+    let s = 0;
+    if (pw.length >= 8) s += 2;
+    else if (pw.length >= 6) s += 1;
+    if (/[0-9]/.test(pw)) s += 1;
+    if (/[a-z]/.test(pw)) s += 1;
+    if (/[A-Z]/.test(pw)) s += 1;
+    if (/[^a-zA-Z0-9]/.test(pw)) s += 1;
+    return Math.min(s, 6);
+  }
+
+  function updateStrength() {
+    const pw = document.getElementById('new_password').value;
+    const score = checkStrength(pw);
+    const bars = document.querySelectorAll('#strengthBars .strength-bar');
+    bars.forEach((bar, i) => {
+      bar.classList.remove('weak', 'medium', 'strong');
+      if (i < score) {
+        if (score >= 5) bar.classList.add('strong');
+        else if (score >= 3) bar.classList.add('medium');
+        else if (score >= 1) bar.classList.add('weak');
       }
     });
-}
+    return score;
+  }
 
-function displayProfile(user) {
-  const html = `
-    <div class="profile-avatar">
-      ${user.avatar ? 
-        `<img src="${user.avatar}" alt="Avatar">` : 
-        `<div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--violet)); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; margin: 0 auto;">
-          ${user.prenom.charAt(0)}${user.nom.charAt(0)}
-        </div>`
+  function isFormValid() {
+    const newPw = document.getElementById('new_password').value;
+    const oldPw = document.getElementById('old_password').value;
+    const confirm = document.getElementById('confirm_password').value;
+    if (!newPw) return true;
+    if (!oldPw) return false;
+    if (checkStrength(newPw) < 5) return false;
+    if (newPw !== confirm) return false;
+    return true;
+  }
+
+  function updateSubmitBtn() {
+    const btn = document.getElementById('submitBtn');
+    if (btn) btn.disabled = !isFormValid();
+  }
+
+  // ========== CHARGEMENT DU PROFIL ==========
+  async function loadUserProfile() {
+    try {
+      const res = await fetch(BASE_URL + '/view/backend/users/auto_login.php', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+
+      if (data.success && data.data) {
+        currentUserId = data.data.id_utilisateur;
+        currentUserStatus = data.data.status || 'actif';
+        currentRealPhoto = data.data.photo || null;
+        currentAvatar = data.data.avatar || null;
+
+        document.getElementById('nom').value = data.data.nom || '';
+        document.getElementById('prenom').value = data.data.prenom || '';
+        document.getElementById('email').value = data.data.email || '';
+
+        updateStatusUI();
+        updatePhotos();
+      } else {
+        showMessage("Non connecté", "error");
+        setTimeout(() => window.location.href = BASE_URL + '/view/frontend/login.html', 1500);
       }
-      <h2 style="margin-top: 16px;">${user.prenom} ${user.nom}</h2>
-      <p style="color: var(--muted);">${user.email}</p>
-    </div>
+    } catch(e) {
+      console.error(e);
+      showMessage("Erreur chargement", "error");
+    }
+  }
 
-    <div class="profile-info-grid">
-      <div class="profile-info-item">
-        <div class="profile-info-label">Téléphone</div>
-        <div class="profile-info-value">${user.telephone || 'Non renseigné'}</div>
-      </div>
-      <div class="profile-info-item">
-        <div class="profile-info-label">Date de naissance</div>
-        <div class="profile-info-value">${user.date_naissance || 'Non renseigné'}</div>
-      </div>
-      <div class="profile-info-item">
-        <div class="profile-info-label">Ville</div>
-        <div class="profile-info-value">${user.ville || 'Non renseigné'}</div>
-      </div>
-      <div class="profile-info-item">
-        <div class="profile-info-label">Code postal</div>
-        <div class="profile-info-value">${user.code_postal || 'Non renseigné'}</div>
-      </div>
-      <div class="profile-info-item">
-        <div class="profile-info-label">Rôle</div>
-        <div class="profile-info-value">${user.role === 'admin' ? '👑 Admin' : '👤 Utilisateur'}</div>
-      </div>
-      <div class="profile-info-item">
-        <div class="profile-info-label">Membre depuis</div>
-        <div class="profile-info-value">${new Date(user.created_at).toLocaleDateString('fr-FR')}</div>
-      </div>
-    </div>
-  `;
-  
-  document.getElementById('profile-info').innerHTML = html;
-}
+  function updateStatusUI() {
+    const badge = document.getElementById('accountStatusBadge');
+    const btn = document.getElementById('toggleStatusBtn');
+    if (currentUserStatus === 'actif') {
+      badge.className = 'status-badge status-active';
+      badge.innerHTML = '✓ Compte actif';
+      btn.innerHTML = '🔒 Désactiver';
+    } else {
+      badge.className = 'status-badge status-inactive';
+      badge.innerHTML = '✗ Compte inactif';
+      btn.innerHTML = '🔓 Réactiver';
+    }
+  }
 
-window.addEventListener('load', loadProfile);
+  function updatePhotos() {
+    const realImg = document.getElementById('realPhoto');
+    const avatarImg = document.getElementById('avatarDisplay');
+    const nom = document.getElementById('nom').value || 'User';
+    const prenom = document.getElementById('prenom').value || '';
+
+    if (currentRealPhoto && currentRealPhoto !== 'null') {
+      const url = currentRealPhoto.startsWith('http') ? currentRealPhoto : BASE_URL + '/' + currentRealPhoto;
+      realImg.src = url;
+    } else {
+      realImg.src = `https://ui-avatars.com/api/?background=3A86C4&color=fff&bold=true&length=2&name=${encodeURIComponent(prenom)}+${encodeURIComponent(nom)}`;
+    }
+
+    if (currentAvatar && currentAvatar !== 'null') {
+      const url = currentAvatar.startsWith('http') ? currentAvatar : BASE_URL + '/' + currentAvatar;
+      avatarImg.src = url;
+    } else {
+      avatarImg.src = `https://ui-avatars.com/api/?background=5B3E96&color=fff&bold=true&length=2&name=${encodeURIComponent(prenom)}+${encodeURIComponent(nom)}`;
+    }
+  }
+
+  // ========== UPLOAD PHOTO RÉELLE ==========
+  async function uploadRealPhoto(file) {
+    const fd = new FormData();
+    fd.append('profile_image', file);
+    fd.append('user_id', currentUserId);
+
+    try {
+      const res = await fetch(BASE_URL + '/view/backend/users/update_profile_picture.php', {
+        method: 'POST',
+        credentials: 'include',
+        body: fd
+      });
+      const data = await res.json();
+      if (data.success) {
+        currentRealPhoto = data.photo_url;
+        updatePhotos();
+        showMessage('Photo Face ID mise à jour', 'success');
+      } else {
+        showMessage(data.message || 'Erreur', 'error');
+      }
+    } catch(e) {
+      showMessage('Erreur upload', 'error');
+    }
+  }
+
+  // ========== UPLOAD AVATAR PERSONNALISÉ ==========
+  async function uploadCustomAvatar(file) {
+    const fd = new FormData();
+    fd.append('avatar_image', file);
+    fd.append('user_id', currentUserId);
+
+    try {
+      const res = await fetch(BASE_URL + '/view/backend/users/update_avatar.php', {
+        method: 'POST',
+        credentials: 'include',
+        body: fd
+      });
+      const data = await res.json();
+      if (data.success) {
+        currentAvatar = data.avatar_url;
+        updatePhotos();
+        showMessage('Avatar mis à jour', 'success');
+      } else {
+        showMessage(data.message || 'Erreur', 'error');
+      }
+    } catch(e) {
+      showMessage('Erreur upload', 'error');
+    }
+  }
+
+  // ========== GÉNÉRATION AVATAR PAR PROMPT ==========
+  async function generateAvatarByPrompt() {
+    const promptInput = document.getElementById('avatarPrompt');
+    const prompt = promptInput.value.trim();
+    const generateBtn = document.getElementById('generatePromptBtn');
+
+    if (!prompt) {
+      showMessage('Veuillez décrire l\'avatar que vous souhaitez', 'error');
+      return;
+    }
+
+    const originalText = generateBtn.innerHTML;
+    generateBtn.innerHTML = '⏳ Génération...';
+    generateBtn.classList.add('loading');
+
+    try {
+      const response = await fetch(BASE_URL + '/view/backend/users/generate_avatar.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentUserId,
+          prompt: prompt
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        currentAvatar = result.avatar_url;
+        updatePhotos();
+        showMessage(`✅ Avatar généré !`, 'success');
+      } else {
+        showMessage(result.message || 'Erreur génération', 'error');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      showMessage('Erreur lors de la génération', 'error');
+    } finally {
+      generateBtn.innerHTML = originalText;
+      generateBtn.classList.remove('loading');
+    }
+  }
+
+  async function generateAvatarWithPrompt(prompt) {
+    const promptInput = document.getElementById('avatarPrompt');
+    promptInput.value = prompt;
+    await generateAvatarByPrompt();
+  }
+
+  // ========== ACTIVATION/DÉSACTIVATION ==========
+  async function toggleStatus() {
+    if (!currentUserId) return;
+    const action = currentUserStatus === 'actif' ? 'désactiver' : 'réactiver';
+    if (!confirm(`Confirmer la ${action} du compte ?`)) return;
+
+    try {
+      const res = await fetch(BASE_URL + '/view/backend/users/toggle_account_status.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showMessage(data.message, 'success');
+        if (data.redirect) {
+          setTimeout(() => window.location.href = BASE_URL + '/view/frontend/login.html', 1500);
+        } else {
+          currentUserStatus = data.status;
+          updateStatusUI();
+        }
+      } else {
+        showMessage(data.message || 'Erreur', 'error');
+      }
+    } catch(e) {
+      showMessage('Erreur', 'error');
+    }
+  }
+
+  // ========== MISE À JOUR PROFIL ==========
+  async function updateProfile(e) {
+    e.preventDefault();
+    if (!currentUserId) {
+      showMessage("Non connecté", "error");
+      return false;
+    }
+
+    const nom = document.getElementById('nom').value.trim();
+    const prenom = document.getElementById('prenom').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const oldPw = document.getElementById('old_password').value;
+    const newPw = document.getElementById('new_password').value;
+    const confirm = document.getElementById('confirm_password').value;
+
+    if (!nom || !prenom || !email) {
+      showMessage("Champs requis", "error");
+      return false;
+    }
+    if (newPw && !oldPw) {
+      showMessage("Ancien mot de passe requis", "error");
+      return false;
+    }
+    if (newPw && newPw !== confirm) {
+      showMessage("Mots de passe différents", "error");
+      return false;
+    }
+    if (newPw && checkStrength(newPw) < 5) {
+      showMessage("Mot de passe trop faible (8+ car, maj, min, chiffre, symbole)", "error");
+      return false;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = "Enregistrement...";
+
+    try {
+      const res = await fetch(BASE_URL + '/view/backend/users/updateprofil.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: currentUserId,
+          nom,
+          prenom,
+          email,
+          old_password: oldPw,
+          new_password: newPw
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showMessage(data.message, 'success');
+        document.getElementById('old_password').value = '';
+        document.getElementById('new_password').value = '';
+        document.getElementById('confirm_password').value = '';
+        updateStrength();
+        updatePhotos();
+      } else {
+        showMessage(data.message || 'Erreur', 'error');
+      }
+    } catch(e) {
+      showMessage('Erreur serveur', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "💾 Enregistrer";
+    }
+    return false;
+  }
+
+  // ========== SUPPRESSION COMPTE ==========
+  async function deleteAccount() {
+    if (!currentUserId) return;
+
+    try {
+      const res = await fetch(BASE_URL + '/view/backend/users/deleteprofil.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentUserId })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showMessage("Compte supprimé", "success");
+        setTimeout(() => window.location.href = BASE_URL + '/view/frontend/register.html', 1500);
+      } else {
+        showMessage(data.message || 'Erreur', 'error');
+      }
+      closeDeleteModal();
+    } catch(e) {
+      showMessage('Erreur', 'error');
+      closeDeleteModal();
+    }
+  }
+
+  // ========== THÈME ==========
+  function initTheme() {
+    const btn = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('gaialumen-theme') || 'dark';
+    html.setAttribute('data-theme', saved);
+    btn.textContent = saved === 'dark' ? '☀️' : '🌙';
+    btn.onclick = () => {
+      const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', n);
+      localStorage.setItem('gaialumen-theme', n);
+      btn.textContent = n === 'dark' ? '☀️' : '🌙';
+    };
+  }
+
+  // ========== INITIALISATION ==========
+  document.addEventListener('DOMContentLoaded', async () => {
+    initTheme();
+    await loadUserProfile();
+
+    document.getElementById('photoUploadBtn').onclick = () => document.getElementById('real-photo-input').click();
+    document.getElementById('real-photo-input').onchange = (e) => {
+      if (e.target.files && e.target.files[0]) uploadRealPhoto(e.target.files[0]);
+    };
+
+    document.getElementById('avatarUploadBtn').onclick = () => document.getElementById('avatar-image-input').click();
+    document.getElementById('avatar-image-input').onchange = (e) => {
+      if (e.target.files && e.target.files[0]) uploadCustomAvatar(e.target.files[0]);
+    };
+
+    document.getElementById('generatePromptBtn').onclick = generateAvatarByPrompt;
+
+    document.querySelectorAll('.avatar-style-btn').forEach(btn => {
+      const prompt = btn.getAttribute('data-prompt');
+      btn.onclick = () => generateAvatarWithPrompt(prompt);
+    });
+
+    document.getElementById('toggleStatusBtn').onclick = toggleStatus;
+
+    const newPw = document.getElementById('new_password');
+    const confirm = document.getElementById('confirm_password');
+    const oldPw = document.getElementById('old_password');
+
+    if (newPw) newPw.oninput = () => { updateStrength(); updateSubmitBtn(); };
+    if (confirm) confirm.oninput = updateSubmitBtn;
+    if (oldPw) oldPw.oninput = updateSubmitBtn;
+    updateSubmitBtn();
+
+    window.onclick = (e) => {
+      if (e.target === document.getElementById('deleteModal')) closeDeleteModal();
+    };
+  });
 </script>
+</body>
+</html>

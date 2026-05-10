@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Planning</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: #fff; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; background: #5B3E96; color: white; border: none; border-radius: 5px; }
+        #result { margin-top: 20px; padding: 20px; background: #2a2a2a; border-radius: 5px; white-space: pre-wrap; }
+        .success { color: #2ecc71; }
+        .error { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de chargement des demandes</h1>
+
+    <button onclick="testAjax()">Tester AJAX</button>
+    <button onclick="testDirect()">Tester Direct</button>
+    <button onclick="clearResult()">Effacer</button>
+
+    <div id="result"></div>
+
+    <script>
+        function testAjax() {
+            const result = document.getElementById('result');
+            result.innerHTML = '⏳ Chargement en cours...\n';
+
+            const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+            const ajaxUrl = baseUrl + '/planning/listMesDemandes.php';
+
+            result.innerHTML += `URL construite: ${ajaxUrl}\n\n`;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', ajaxUrl, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.onload = function() {
+                result.innerHTML += `Status: ${xhr.status}\n`;
+                result.innerHTML += `Response:\n${xhr.responseText}\n`;
+
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        result.innerHTML += `\n✅ JSON valide!\n`;
+                        result.innerHTML += `Nombre de demandes: ${data.length}\n`;
+                        result.innerHTML += `Données: ${JSON.stringify(data, null, 2)}\n`;
+                        result.className = 'success';
+                    } catch(e) {
+                        result.innerHTML += `\n❌ Erreur JSON: ${e.message}\n`;
+                        result.className = 'error';
+                    }
+                } else {
+                    result.className = 'error';
+                }
+            };
+
+            xhr.onerror = function() {
+                result.innerHTML += '❌ Erreur de connexion\n';
+                result.className = 'error';
+            };
+
+            xhr.send();
+        }
+
+        function testDirect() {
+            const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+            const url = baseUrl + '/planning/listMesDemandes.php';
+            window.open(url, '_blank');
+        }
+
+        function clearResult() {
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('result').className = '';
+        }
+    </script>
+</body>
+</html>

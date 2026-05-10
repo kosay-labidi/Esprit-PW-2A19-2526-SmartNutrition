@@ -3,39 +3,80 @@
     <h2 class="module-title">👥 Gestion des Utilisateurs</h2>
     <p>Gérez les profils utilisateurs, leurs préférences alimentaires et objectifs santé.</p>
   </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-icon">👥</span>
+      <div class="stat-info">
+        <span class="stat-value" id="total-users">24</span>
+        <span class="stat-label">Utilisateurs actifs</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">🎯</span>
+      <div class="stat-info">
+        <span class="stat-value" id="active-goals">18</span>
+        <span class="stat-label">Objectifs en cours</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">⭐</span>
+      <div class="stat-info">
+        <span class="stat-value" id="avg-rating">4.8</span>
+        <span class="stat-label">Note moyenne</span>
+      </div>
+    </div>
+  </div>
+
   <div class="cards-grid">
     <div class="info-card">
-      <h3>Profils Utilisateurs</h3>
+      <h3>📋 Profils Utilisateurs</h3>
       <p>Créez et gérez les profils avec informations personnelles, préférences alimentaires et restrictions.</p>
       <div class="progress-indicator">
         <div class="progress-fill" style="width:75%"></div>
       </div>
-      <span class="feature-badge">✨ Populaire</span>
+      <div class="card-footer">
+        <span class="feature-badge">✨ Populaire</span>
+        <button class="card-btn" onclick="window.location.href='../frontend/users/profile.html'">Gérer</button>
+      </div>
     </div>
+
     <div class="info-card">
-      <h3>Objectifs Santé</h3>
+      <h3>🏆 Objectifs Santé</h3>
       <p>Définissez des objectifs personnalisés: perte de poids, gain musculaire, équilibre nutritionnel.</p>
       <div class="progress-indicator">
         <div class="progress-fill" style="width:60%"></div>
       </div>
-      <span class="feature-badge">🎯 Recommandé</span>
+      <div class="card-footer">
+        <span class="feature-badge">🎯 Recommandé</span>
+        <button class="card-btn" onclick="window.location.href='../frontend/users/profile.html'">Définir</button>
+      </div>
     </div>
+
     <div class="info-card">
-      <h3>Préférences</h3>
+      <h3>⚙️ Préférences</h3>
       <p>Configurez les préférences alimentaires, allergies, régimes spéciaux (végétarien, vegan, etc.).</p>
       <div class="progress-indicator">
         <div class="progress-fill" style="width:90%"></div>
       </div>
-      <span class="feature-badge">🔥 Nouveau</span>
+      <div class="card-footer">
+        <span class="feature-badge">🔥 Nouveau</span>
+        <button class="card-btn" onclick="window.location.href='../frontend/users/preference.html'">Configurer</button>
+      </div>
     </div>
+  </div>
+
+  <div class="action-buttons">
+    <button class="action-btn primary" onclick="window.location.href='../frontend/users/profile.html'">
+      <span class="btn-icon">👤</span>
+      Voir mon profil personnel
+    </button>
+    <button class="action-btn secondary" onclick="window.location.href='../frontend/users/preference.html'">
+      <span class="btn-icon">⚙️</span>
+      Gérer mes préférences
+    </button>
   </div>
 </section>
 
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>
+<link rel="stylesheet" href="css/users.css">
+<script src="js/users.js"></script>

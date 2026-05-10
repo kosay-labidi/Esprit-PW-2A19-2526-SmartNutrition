@@ -309,10 +309,10 @@ function stopAutoReload() {
   }
 }
 
-// Démarrer l'auto-reload au chargement
+// Démarrer l'auto-reload au chargement (désactivé pour éviter les blocages)
 window.addEventListener('load', () => {
-  startAutoReload();
-  console.log('✅ Auto-reload activé - Les modifications s\'affichent automatiquement dans la zone principale');
+  // startAutoReload(); // Désactivé temporairement
+  console.log('ℹ️ Auto-reload désactivé pour éviter les blocages');
 });
 
 // Exposer les fonctions d'auto-reload
@@ -390,32 +390,26 @@ document.addEventListener('adminModuleLoaded', (e) => {
   }
 });
 
-// Fonctions utilitaires admin
-function refreshUsers() {
-  console.log('🔄 Actualisation des utilisateurs...');
-  showToast('Utilisateurs actualisés', 'success');
+// Fonctions utilitaires admin (utilisées si les fonctions ne sont pas définies dans les modules)
+if (typeof refreshUsers === 'undefined') {
+  window.refreshUsers = function() {
+    console.log('🔄 Actualisation des utilisateurs...');
+    if (typeof showToast === 'function') showToast('Utilisateurs actualisés', 'success');
+  };
 }
 
-function exportData(type) {
-  console.log(`📥 Export des données: ${type}`);
-  showToast(`Export ${type} en cours...`, 'info');
+if (typeof exportData === 'undefined') {
+  window.exportData = function(type) {
+    console.log(`📥 Export des données: ${type}`);
+    if (typeof showToast === 'function') showToast(`Export ${type} en cours...`, 'info');
+  };
 }
 
-function addUser() {
-  console.log('➕ Ajout d\'un utilisateur');
-  showToast('Fonctionnalité à implémenter', 'info');
-}
-
-function editUser(id) {
-  console.log(`✏️ Modification utilisateur ${id}`);
-  showToast(`Modification utilisateur ${id}`, 'info');
-}
-
-function deleteUser(id) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur?')) {
-    console.log(`🗑️ Suppression utilisateur ${id}`);
-    showToast(`Utilisateur ${id} supprimé`, 'success');
-  }
+if (typeof addUser === 'undefined') {
+  window.addUser = function() {
+    console.log('➕ Ajout d\'un utilisateur');
+    if (typeof showToast === 'function') showToast('Fonctionnalité à implémenter', 'info');
+  };
 }
 
 function refreshEvents() {

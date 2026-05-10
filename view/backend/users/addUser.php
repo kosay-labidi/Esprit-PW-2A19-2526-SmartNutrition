@@ -4,6 +4,9 @@ require_once __DIR__ . '/../../../controller/user.controller.php';
 require_once __DIR__ . '/../../../Model/User.php';
 require_once __DIR__ . '/../../../config.php';
 
+// Vérification des droits admin
+requireAdmin();
+
 $userController = new UserController();
 
 $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
@@ -19,22 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Détecter si la requête vient de l'admin (via le flag is_admin)
-$isAdminRequest = false;
-
-// Lire le corps de la requête pour détecter le flag is_admin
-$inputData = [];
-$rawInput = file_get_contents('php://input');
-if (!empty($rawInput)) {
-    $inputData = json_decode($rawInput, true) ?? [];
-    if (isset($inputData['is_admin']) && $inputData['is_admin'] === true) {
-        $isAdminRequest = true;
-    }
-}
-
-// Vérifier aussi via le referer si la requête vient de l'admin
-if (!$isAdminRequest && isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'admin.html') !== false) {
-    $isAdminRequest = true;
-}
+$isAdminRequest = true; // On est dans le backend admin, donc toujours true
 
 // ==================== REQUÊTE JSON (API) ====================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'application/json')) {
@@ -51,39 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'applica
     $recaptchaToken = $inputData['recaptcha_token'] ?? '';
 
     $errors = [];
-
-    // ========== VÉRIFICATION RECAPTCHA ==========
-    // Le CAPTCHA est requis UNIQUEMENT pour les inscriptions publiques (non-admin)
-    if (!$isAdminRequest) {
-        if (empty($recaptchaToken)) {
-            echo json_encode(['success' => false, 'message' => 'CAPTCHA requis. Veuillez cocher la case.']);
-            exit();
-        }
-
-        $secretKey = '6LeZW9wsAAAAAD70RL10eJdvwNFGrWpgwoioZ8ER';
-        $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $verifyUrl);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-            'secret' => $secretKey,
-            'response' => $recaptchaToken
-        ]));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $verifyResponse = curl_exec($ch);
-        curl_close($ch);
-
-        $verifyData = json_decode($verifyResponse, true);
-
-        if (!$verifyData['success']) {
-            error_log('reCAPTCHA échec addUser: ' . print_r($verifyData, true));
-            echo json_encode(['success' => false, 'message' => 'CAPTCHA invalide. Veuillez réessayer.']);
-            exit();
-        }
-    }
-    // ========== FIN VÉRIFICATION RECAPTCHA ==========
 
     // Validation des champs
     if ($nom === '') {

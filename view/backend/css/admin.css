@@ -1083,6 +1083,124 @@ tbody tr:hover {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   STATS DUAL ROW (Users Admin)
+   ═══════════════════════════════════════════════════════════ */
+.stats-dual-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.stats-section {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.stats-section--compact {
+  padding: 20px;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.stats-header h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.chart-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle-btn {
+  padding: 6px 12px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: none;
+  transition: all 0.3s;
+}
+
+.toggle-btn:hover {
+  background: var(--header-bg);
+  border-color: var(--violet);
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, var(--violet), var(--blue));
+  border-color: transparent;
+  color: #fff;
+}
+
+.stats-grid-compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.chart-card {
+  background: var(--glass);
+  border: 1px solid rgba(91, 62, 150, 0.15);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-card--sm {
+  padding: 12px;
+}
+
+.stats-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stats-legend--compact {
+  justify-content: center;
+}
+
+.legend-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.legend-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-item {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.module-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ═══════════════════════════════════════════════════════════
    TOAST NOTIFICATIONS
    ═══════════════════════════════════════════════════════════ */
 .toast {

@@ -4,19 +4,21 @@ require_once(__DIR__ . '/../../../auth.php');
 require_once(__DIR__ . '/../../../config.php');
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost:3000');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 
-requireAuth();
+requireAdmin();
 $sessionUser = getSessionUser();
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $userId = isset($input['user_id']) ? (int)$input['user_id'] : 0;
+} else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $userId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+} else {
     echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
     exit();
 }
-
-$input = json_decode(file_get_contents('php://input'), true);
-$userId = isset($input['user_id']) ? (int)$input['user_id'] : 0;
 
 // Vérification des droits (admin ou son propre profil)
 if ($sessionUser['role'] !== 'admin' && $sessionUser['id_utilisateur'] != $userId) {

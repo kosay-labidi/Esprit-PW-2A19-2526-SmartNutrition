@@ -6,7 +6,7 @@
     "react/event-loop": "^1.5",
     "symfony/http-foundation": "^6.4",
     "endroid/qr-code": "^6.0",
-    "phpmailer/phpmailer": "^7.0"
+    "phpmailer/phpmailer": "*"
   },
   "autoload": {
     "psr-4": {

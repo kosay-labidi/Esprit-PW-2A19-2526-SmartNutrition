@@ -3,6 +3,7 @@
  * suspendUser.php
  * Placer dans : view/backend/users/suspendUser.php
  */
+require_once __DIR__ . '/../../../config.php';
 
 // ── 1. Headers ───────────────────────────────────────────────────────────────
 header('Content-Type: application/json; charset=utf-8');
@@ -47,19 +48,10 @@ if (!in_array($status, $allowed, true)) {
     exit;
 }
 
-// ── 5. Connexion PDO directe (simplifiée) ─────────────────────────────────────
+// ── 5. Connexion via Config ─────────────────────────────────────
 try {
-    $pdo = new PDO(
-        "mysql:host=127.0.0.1;dbname=ds_gaialumen;charset=utf8mb4",
-        'root',
-        '',
-        [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
-        ]
-    );
-} catch (PDOException $e) {
+    $pdo = Config::getConnexion();
+} catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Connexion BDD impossible : ' . $e->getMessage()]);
     exit;

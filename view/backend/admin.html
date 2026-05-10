@@ -385,6 +385,28 @@
 
 <!-- Librairies externes -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- Vérification de session admin -->
+<script>
+async function verifyAdminSession() {
+  try {
+    const response = await fetch('users/verify_session.php', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const result = await response.json();
+    
+    if (!result.success || !result.data || result.data.role !== 'admin') {
+      window.location.href = '../frontend/login.html';
+    }
+  } catch (err) {
+    console.error('Erreur vérification session admin:', err);
+    window.location.href = '../frontend/login.html';
+  }
+}
+verifyAdminSession();
+</script>
 </head>
 <body>
 
@@ -602,10 +624,106 @@
   <div class="progress-bar-fill" id="progressBar"></div>
 </div>
 
-<!-- ── SCRIPTS (inchangés) ──────────────────────────────────── -->
+<!-- ── Scripts pour preloader, curseur, thème ───────────────────── -->
+<script>
+/* ═══════════════════════════════════════════════════════════
+   PRELOADER
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const c=document.getElementById('pl-canvas');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  c.width=140;c.height=140;
+  const fill=document.getElementById('pl-fill');
+  let a=0,start=null;
+  function draw(ts){
+    if(!start)start=ts;
+    const p=Math.min((ts-start)/2000*100,100);
+    if(fill)fill.style.width=p+'%';
+    a+=.04;
+    ctx.clearRect(0,0,140,140);
+    ctx.save();ctx.translate(70,70);ctx.rotate(a);
+    for(let i=0;i<3;i++){
+      ctx.beginPath();ctx.arc(0,0,48-i*10,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${i===0?'58,134,196':i===1?'91,62,150':'31,61,43'},${.6-i*.15})`;
+      ctx.lineWidth=1.5;ctx.stroke();
+    }
+    ctx.rotate(-a*.3);
+    const g=ctx.createLinearGradient(-18,-26,18,26);
+    g.addColorStop(0,'#1F3D2B');g.addColorStop(1,'#3A86C4');
+    ctx.beginPath();ctx.fillStyle=g;
+    ctx.moveTo(0,-26);ctx.bezierCurveTo(19,-12,22,7,0,26);
+    ctx.bezierCurveTo(-22,7,-19,-12,0,-26);ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,-24);ctx.lineTo(0,24);
+    ctx.strokeStyle='rgba(242,232,207,.5)';ctx.lineWidth=1;ctx.stroke();
+    ctx.restore();
+    if(p<100)requestAnimationFrame(draw);
+    else setTimeout(()=>{
+      const pl=document.getElementById('preloader');
+      if(pl)pl.classList.add('hidden');
+    },300);
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   CURSEUR
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const cur=document.getElementById('cursor');
+  const trail=document.getElementById('cursor-trail');
+  if(!cur||!trail)return;
+  let mx=0,my=0,tx=0,ty=0;
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX;my=e.clientY;
+    cur.style.left=mx+'px';cur.style.top=my+'px';
+  });
+  (function loop(){
+    tx+=(mx-tx)*.12;ty+=(my-ty)*.12;
+    trail.style.left=tx+'px';trail.style.top=ty+'px';
+    requestAnimationFrame(loop);
+  })();
+  document.querySelectorAll('a,button,.menu-item,.chip,.page-btn,.form-select,.search-input,.action-btn').forEach(el=>{
+    el.addEventListener('mouseenter',()=>cur.classList.add('hover'));
+    el.addEventListener('mouseleave',()=>cur.classList.remove('hover'));
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   THEME TOGGLE
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const btn=document.getElementById('theme-toggle');
+  const html=document.documentElement;
+  const saved=localStorage.getItem('gaialumen-theme')||'dark';
+  html.setAttribute('data-theme',saved);
+  if(btn)btn.textContent=saved==='dark'?'🌙 Sombre':'☀️ Clair';
+  if(btn)btn.addEventListener('click',()=>{
+    const n=html.getAttribute('data-theme')==='dark'?'light':'dark';
+    html.setAttribute('data-theme',n);
+    localStorage.setItem('gaialumen-theme',n);
+    btn.textContent=n==='dark'?'🌙 Sombre':'☀️ Clair';
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   LOGOUT
+   ═══════════════════════════════════════════════════════════ */
+function logout() {
+  fetch('users/logout.php', {
+    method: 'POST',
+    credentials: 'include'
+  }).then(() => {
+    window.location.href = '../frontend/login.html';
+  });
+}
+window.logout = logout;
+</script>
+
+<!-- ── SCRIPTS ──────────────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="js/admin.js?v=20260415-5"></script>
 <script src="js/challenges-admin.js?v=20260506-payments"></script>
+<script src="js/users-admin.js?v=20260510"></script>
 <script src="js/admin-module-loader.js?v=20260415-5"></script>
 </body>
 </html>

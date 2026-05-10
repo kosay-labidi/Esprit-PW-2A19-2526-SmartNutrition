@@ -17,6 +17,12 @@ if (file_exists($envFile)) {
     }
 }
 
+// --- Configuration BDD ---
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'dsgaialumen');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+
 // --- Configuration GROQ ---
 define('GROQ_API_KEY', getenv('GROQ_API_KEY') ?: ($_SERVER['GROQ_API_KEY'] ?? ''));
 define('GROQ_MODEL', getenv('GROQ_MODEL') ?: ($_SERVER['GROQ_MODEL'] ?? 'llama-3.3-70b-versatile'));

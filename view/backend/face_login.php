@@ -1,5 +1,6 @@
 <?php
 // face_login.php - Version avec vraie reconnaissance faciale
+require_once __DIR__ . '/../../config.php';
 session_start();
 ob_clean();
 
@@ -20,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Connexion BDD
 try {
-    $pdo = new PDO("mysql:host=localhost;dbname=ds_gaialumen;charset=utf8mb4", "root", "");
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => 'BDD error: ' . $e->getMessage()]);
@@ -103,6 +104,7 @@ function findUserByFaceComparison($pdo, $uploadedImagePath) {
         
         if ($bestMatch && $bestScore >= $threshold) {
             // Connexion réussie
+            $_SESSION['user_id'] = $bestMatch['id_utilisateur'];
             $_SESSION['user'] = [
                 'id_utilisateur' => $bestMatch['id_utilisateur'],
                 'nom' => $bestMatch['nom'],
@@ -141,7 +143,6 @@ function findUserByFaceComparison($pdo, $uploadedImagePath) {
  */
 function findPhotoPath($relativePath) {
     $basePaths = [
-        'C:/xampp/htdocs/Esprit-PW-2A19-2526-SmartNutrition/',
         __DIR__ . '/../../',
         __DIR__ . '/../../uploads/profiles/'
     ];

@@ -1,14 +1,18 @@
 <?php
 // tri.php
-session_start();
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
-header('Access-Control-Allow-Headers: Content-Type');
-
+require_once __DIR__ . '/../../../auth.php';
 require_once __DIR__ . '/../../../config.php';
 require_once __DIR__ . '/../../../Model/User.php';
 require_once __DIR__ . '/../../../controller/user.controller.php';
+
+// Vérification des droits admin
+requireAdmin();
+
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: http://localhost');
+header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Allow-Methods: GET, POST');
+header('Access-Control-Allow-Headers: Content-Type');
 
 try {
     $pdo = config::getConnexion();

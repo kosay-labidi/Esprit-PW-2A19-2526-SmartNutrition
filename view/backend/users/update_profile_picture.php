@@ -5,7 +5,7 @@ require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/../../../controller/user.controller.php');
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost:3000');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 
 requireAuth();

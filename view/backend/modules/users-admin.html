@@ -173,4 +173,83 @@
 
   </div>
 
+  <!-- Modal de modification utilisateur -->
+  <div id="editUserModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; padding: 30px; max-width: 500px; width: 90%;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h3 class="modal-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700;">✏️ Modifier l'utilisateur</h3>
+        <button onclick="closeEditModal()" class="modal-close" style="background: none; border: none; font-size: 1.5rem; cursor: none; color: var(--text);">&times;</button>
+      </div>
+      <form id="editUserForm">
+        <input type="hidden" id="editUserId">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text);">Nom</label>
+          <input type="text" id="editUserNom" class="form-input" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: var(--header-bg); border: 1px solid var(--border); color: var(--text); outline: none;">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text);">Prénom</label>
+          <input type="text" id="editUserPrenom" class="form-input" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: var(--header-bg); border: 1px solid var(--border); color: var(--text); outline: none;">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text);">Email</label>
+          <input type="email" id="editUserEmail" class="form-input" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: var(--header-bg); border: 1px solid var(--border); color: var(--text); outline: none;">
+        </div>
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text);">Rôle</label>
+          <select id="editUserRole" class="form-select" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: var(--header-bg); border: 1px solid var(--border); color: var(--text); outline: none;">
+            <option value="utilisateur">👤 Utilisateur</option>
+            <option value="admin">🛡️ Administrateur</option>
+            <option value="nutritionniste">🥗 Nutritionniste</option>
+            <option value="ecologiste">🌱 Écologiste</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button type="button" onclick="closeEditModal()" class="btn btn-secondary" style="flex: 1;">Annuler</button>
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal d'ajout utilisateur -->
+  <div id="addUserModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; padding: 30px; max-width: 500px; width: 90%;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h3 class="modal-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700;">➕ Ajouter un utilisateur</h3>
+        <button onclick="closeAddModal()" class="modal-close" style="background: none; border: none; font-size: 1.5rem; cursor: none; color: var(--text);">&times;</button>
+      </div>
+      <form id="addUserForm">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text);">Nom</label>
+          <input type="text" id="addUserNom" class="form-input" placeholder="Farhani" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: var(--header-bg); border: 1px solid var(--border); color: var(--text); outline: none;">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text);">Prénom</label>
+          <input type="text" id="addUserPrenom" class="form-input" placeholder="Ahmed" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: var(--header-bg); border: 1px solid var(--border); color: var(--text); outline: none;">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text);">Email</label>
+          <input type="email" id="addUserEmail" class="form-input" placeholder="exemple@email.com" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: var(--header-bg); border: 1px solid var(--border); color: var(--text); outline: none;">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text);">Mot de passe</label>
+          <input type="password" id="addUserMdp" class="form-input" placeholder="••••••••" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: var(--header-bg); border: 1px solid var(--border); color: var(--text); outline: none;">
+        </div>
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text);">Rôle</label>
+          <select id="addUserRole" class="form-select" style="width: 100%; padding: 12px 16px; border-radius: 12px; background: var(--header-bg); border: 1px solid var(--border); color: var(--text); outline: none;">
+            <option value="utilisateur">👤 Utilisateur</option>
+            <option value="admin">🛡️ Administrateur</option>
+            <option value="nutritionniste">🥗 Nutritionniste</option>
+            <option value="ecologiste">🌱 Écologiste</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button type="button" onclick="closeAddModal()" class="btn btn-secondary" style="flex: 1;">Annuler</button>
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Ajouter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </section>

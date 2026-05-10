@@ -4,6 +4,9 @@ require_once __DIR__ . '/../../../Model/User.php';
 require_once __DIR__ . '/../../../config.php';
 require_once __DIR__ . '/../../../auth.php';
 
+// Vérification des droits admin
+requireAdmin();
+
 $userController = new UserController();
 
 // Détecter si c'est une requête AJAX/JSON
@@ -11,10 +14,42 @@ $isAjax = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest' ||
           (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
 
 $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'application/json')) {
 
+// ──────────────────────────────────────────────────────────────
+// GESTION DES REQUÊTES AJAX (PRIORITÉ HAUTE)
+// ──────────────────────────────────────────────────────────────
+
+// 1. REQUÊTE AJAX GET : Charger les données d'un utilisateur
+if ($isAjax && $_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
     header('Content-Type: application/json');
-    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: http://localhost');
+    header('Access-Control-Allow-Credentials: true');
+    
+    $userData = $userController->getUserById((int)$_GET['id']);
+    
+    if (!$userData) {
+        echo json_encode(['success' => false, 'message' => 'Utilisateur non trouvé']);
+        exit();
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'id' => $userData['id_utilisateur'],
+            'nom' => $userData['nom'],
+            'prenom' => $userData['prenom'],
+            'email' => $userData['email'],
+            'role' => $userData['role']
+        ]
+    ]);
+    exit();
+}
+
+// 2. REQUÊTE AJAX POST : Mettre à jour un utilisateur
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'application/json')) {
+    header('Content-Type: application/json');
+    header('Access-Control-Allow-Origin: http://localhost');
+    header('Access-Control-Allow-Credentials: true');
 
     $input  = json_decode(file_get_contents('php://input'), true) ?? [];
     $id     = (int)($input['id'] ?? 0);
@@ -26,13 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'applica
     $errors = [];
 
     if ($id < 1) { $errors[] = 'ID utilisateur invalide.'; }
-
     if ($nom === '')               { $errors[] = 'Le nom est requis.'; }
-    elseif (preg_match('/\d/', $nom)) { $errors[] = 'Le nom ne doit pas contenir de chiffres.'; }
-
     if ($prenom === '')               { $errors[] = 'Le prénom est requis.'; }
-    elseif (preg_match('/\d/', $prenom)) { $errors[] = 'Le prénom ne doit pas contenir de chiffres.'; }
-
     if ($email === '')                               { $errors[] = "L'email est requis."; }
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $errors[] = 'Email invalide.'; }
 
@@ -79,16 +109,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'applica
     exit();
 }
 
+// ──────────────────────────────────────────────────────────────
+// GESTION DES REQUÊTES CLASSIQUES (FORMULAIRE HTML)
+// ──────────────────────────────────────────────────────────────
 
 // Récupération des informations de l'utilisateur à modifier (GET)
 if (isset($_GET['id'])) {
     $userData = $userController->getUserById((int)$_GET['id']);
     if (!$userData) {
-        if ($isAjax) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Utilisateur non trouvé']);
-            exit();
-        }
         die("Utilisateur non trouvé");
     }
 } else {
@@ -108,13 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($contentType, 'applic
     $role   = trim($_POST['role']   ?? 'utilisateur');
 
     if ($id < 1) { $errors[] = 'ID utilisateur invalide.'; }
-
     if ($nom === '')               { $errors[] = 'Le nom est requis.'; }
-    elseif (preg_match('/\d/', $nom)) { $errors[] = 'Le nom ne doit pas contenir de chiffres.'; }
-
     if ($prenom === '')               { $errors[] = 'Le prénom est requis.'; }
-    elseif (preg_match('/\d/', $prenom)) { $errors[] = 'Le prénom ne doit pas contenir de chiffres.'; }
-
     if ($email === '')                               { $errors[] = "L'email est requis."; }
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $errors[] = 'Email invalide.'; }
 
@@ -166,35 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($errors)) {
     $userData['email'] = $_POST['email'] ?? $userData['email'];
     $userData['role'] = $_POST['role'] ?? $userData['role'];
 }
-
-// Pour les requêtes AJAX en GET (chargement des données pour le modal)
-if ($isAjax && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    header('Content-Type: application/json');
-    echo json_encode([
-        'success' => true,
-        'data' => [
-            'id' => $userData['id_utilisateur'],
-            'nom' => $userData['nom'],
-            'prenom' => $userData['prenom'],
-            'email' => $userData['email'],
-            'role' => $userData['role']
-        ]
-    ]);
-    exit();
-}
-
-// Pour les requêtes AJAX en POST
-if ($isAjax && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    header('Content-Type: application/json');
-    if ($success) {
-        echo json_encode(['success' => true, 'message' => 'Utilisateur mis à jour avec succès !']);
-    } else {
-        echo json_encode(['success' => false, 'message' => implode(', ', $errors)]);
-    }
-    exit();
-}
 ?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>

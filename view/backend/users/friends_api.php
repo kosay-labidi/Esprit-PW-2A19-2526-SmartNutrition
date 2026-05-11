@@ -7,7 +7,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-User-Id');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
@@ -15,16 +15,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../../../config.php';
 
-if (empty($_SESSION['user']['id_utilisateur'])) {
+function jsonResponse(array $payload, int $status = 200): void
+{
+    http_response_code($status);
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+    exit();
+}
+
+$sessionUserId = $_SESSION['user']['id_utilisateur']
+    ?? $_SESSION['user']['id']
+    ?? $_SESSION['id_utilisateur']
+    ?? $_SERVER['HTTP_X_USER_ID']
+    ?? null;
+
+if (empty($sessionUserId)) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Non authentifie']);
     exit();
 }
 
-$userId = (int) $_SESSION['user']['id_utilisateur'];
+$userId = (int) $sessionUserId;
 $action = $_GET['action'] ?? '';
-$payload = json_decode(file_get_contents('php://input'), true) ?? [];
-$db = config::getConnexion();
-
+$rawBody = file_get_contents('php://input');
+$payload = $rawBody !== '' ? json_decode($rawBody, true) : [];
+if ($rawBody !== '' && !is_array($payload)) {
+    jsonResponse(['success' => false, 'message' => 'JSON invalide'], 400);
+}
 function avatarUrl(array $row): ?string
 {
     $raw = $row['avatar'] ?: ($row['photo'] ?? null);
@@ -74,6 +90,8 @@ function getOrCreateConversationId(PDO $db, int $me, int $friend): int
 }
 
 try {
+    $db = config::getConnexion();
+
     if ($action === 'users') {
         $sql = "SELECT u.id_utilisateur, u.nom, u.prenom, u.avatar, u.photo,
                        EXISTS(
@@ -126,17 +144,14 @@ try {
     if ($action === 'add_friend' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $friendId = (int) ($payload['friend_id'] ?? 0);
         if ($friendId < 1 || $friendId === $userId) {
-            echo json_encode(['success' => false, 'message' => 'friend_id invalide']);
-            exit();
+            jsonResponse(['success' => false, 'message' => 'friend_id invalide'], 400);
         }
         $friendRole = getUserRole($db, $friendId);
         if ($friendRole === null) {
-            echo json_encode(['success' => false, 'message' => 'Utilisateur introuvable']);
-            exit();
+            jsonResponse(['success' => false, 'message' => 'Utilisateur introuvable'], 404);
         }
         if ($friendRole === 'admin') {
-            echo json_encode(['success' => false, 'message' => 'Vous ne pouvez pas etre ami avec un admin']);
-            exit();
+            jsonResponse(['success' => false, 'message' => 'Vous ne pouvez pas etre ami avec un admin'], 403);
         }
 
         $check = $db->prepare("SELECT id FROM friend_requests
@@ -164,6 +179,9 @@ try {
 
     if ($action === 'remove_friend' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $friendId = (int) ($payload['friend_id'] ?? 0);
+        if ($friendId < 1 || $friendId === $userId) {
+            jsonResponse(['success' => false, 'message' => 'friend_id invalide'], 400);
+        }
         $del = $db->prepare("DELETE FROM friend_requests
             WHERE ((sender_id = :me1 AND receiver_id = :friend1) OR (sender_id = :friend2 AND receiver_id = :me2))");
         $del->execute([
@@ -179,8 +197,7 @@ try {
     if ($action === 'messages') {
         $friendId = (int) ($_GET['friend_id'] ?? 0);
         if ($friendId < 1) {
-            echo json_encode(['success' => false, 'message' => 'friend_id manquant']);
-            exit();
+            jsonResponse(['success' => false, 'message' => 'friend_id manquant'], 400);
         }
 
         $conversationId = getConversationId($db, $userId, $friendId);
@@ -208,12 +225,13 @@ try {
         $friendId = (int) ($payload['friend_id'] ?? 0);
         $message = trim((string) ($payload['message'] ?? ''));
         if ($friendId < 1 || $message === '') {
-            echo json_encode(['success' => false, 'message' => 'Données invalides']);
-            exit();
+            jsonResponse(['success' => false, 'message' => 'Données invalides'], 400);
+        }
+        if ($friendId === $userId) {
+            jsonResponse(['success' => false, 'message' => 'Destinataire invalide'], 400);
         }
         if (getUserRole($db, $friendId) === 'admin') {
-            echo json_encode(['success' => false, 'message' => 'Messaging admin interdit']);
-            exit();
+            jsonResponse(['success' => false, 'message' => 'Messaging admin interdit'], 403);
         }
 
         $conversationId = getOrCreateConversationId($db, $userId, $friendId);

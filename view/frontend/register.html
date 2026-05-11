@@ -751,12 +751,11 @@ form.addEventListener('submit', async function(e) {
   btn.textContent = 'Inscription...';
   
   try {
-    const response = await fetch('../backend/users/addUser.php', {
+    const response = await fetch('../backend/users/register.php', {
       method: 'POST', 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        nom, prenom, email, mdp, role,
-        recaptcha_token: recaptchaToken
+        nom, prenom, email, mdp, role
       })
     });
     

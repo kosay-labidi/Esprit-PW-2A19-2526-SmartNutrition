@@ -31,6 +31,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && str_contains($contentType, 'applica
     header('Access-Control-Allow-Origin: http://localhost');
     header('Access-Control-Allow-Credentials: true');
 
+    $inputData = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($inputData)) {
+        echo json_encode(['success' => false, 'message' => 'JSON invalide.']);
+        exit();
+    }
+
     $nom = trim($inputData['nom'] ?? '');
     $prenom = trim($inputData['prenom'] ?? '');
     $email = trim($inputData['email'] ?? '');

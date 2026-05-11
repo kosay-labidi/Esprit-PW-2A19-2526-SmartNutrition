@@ -1,6 +1,9 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 header('Content-Type: application/json; charset=utf-8');
 
 try {
@@ -12,7 +15,15 @@ try {
         exit;
     }
 
-    $id_utilisateur = isset($_POST['id_utilisateur']) ? (int)$_POST['id_utilisateur'] : 1;
+    $id_utilisateur = 0;
+    if (!empty($_SESSION['user']['id_utilisateur'])) {
+        $id_utilisateur = (int) $_SESSION['user']['id_utilisateur'];
+    } elseif (!empty($_SESSION['user_id'])) {
+        $id_utilisateur = (int) $_SESSION['user_id'];
+    } elseif (isset($_POST['id_utilisateur'])) {
+        $id_utilisateur = (int) $_POST['id_utilisateur'];
+    }
+
     $calories       = isset($_POST['calories']) ? (int)$_POST['calories'] : 0;
     $budget         = isset($_POST['budget']) ? (float)str_replace(',', '.', $_POST['budget']) : 0;
     $type_budget    = isset($_POST['type_budget']) ? trim($_POST['type_budget']) : 'quotidien';
@@ -20,6 +31,7 @@ try {
     $type_duree     = isset($_POST['type_duree']) ? trim($_POST['type_duree']) : 'jours';
 
     $errors = [];
+    if ($id_utilisateur <= 0) $errors['id_utilisateur'] = 'Utilisateur non connecté.';
     if ($calories <= 0)       $errors['calories']       = 'Calories doivent etre > 0.';
     if ($budget   <= 0)       $errors['budget']         = 'Budget doit etre > 0.';
     if (empty($type_budget))  $errors['type_budget']    = 'Type budget requis.';

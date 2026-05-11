@@ -75,6 +75,7 @@
     <div class="ev-stat-card ev-stat-types-card">
       <div class="ev-stat-label" style="margin-bottom:10px;font-weight:700;">Répartition par type</div>
       <div id="ev-stat-types-bars"></div>
+      <div class="ev-chart-wrap"><canvas id="ev-type-chart"></canvas></div>
     </div>
   </div>
 
@@ -180,6 +181,7 @@
 .ev-bar-sport{background:linear-gradient(90deg,#27ae60,#2ecc71);}
 .ev-bar-medical{background:linear-gradient(90deg,#d4ac0d,#f1c40f);}
 .ev-bar-atelier{background:linear-gradient(90deg,#8e44ad,#9b59b6);}
+.ev-chart-wrap{height:150px;margin-top:12px;}
 
 /* ── Barre de recherche ── */
 .ev-search-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
@@ -255,7 +257,7 @@
    * (qui varie selon que l'on est sur admin.html ou ailleurs).
    * Les paramètres sont toujours ajoutés avec un seul '?'.
    */
-  var API_BASE = window.location.origin + '/view/backoffice/evenement/list.php';
+  var API_BASE = 'evenement/list.php';
 
   var TYPE_ICONS = { repas:'🍲', sport:'🧘', medical:'🥗', atelier:'🌱' };
   var TYPE_BADGES = {
@@ -266,6 +268,7 @@
   };
   var TYPE_LABELS = { repas:'Repas', sport:'Sport', medical:'Nutrition', atelier:'Atelier' };
   var TYPE_BAR_CLASSES = { repas:'ev-bar-repas', sport:'ev-bar-sport', medical:'ev-bar-medical', atelier:'ev-bar-atelier' };
+  var typeChart = null;
 
   /* ── Stats ── */
   function loadStats() {
@@ -306,6 +309,28 @@
                 '</div>';
             });
             elBars.innerHTML = html;
+          }
+
+          var chartCanvas = document.getElementById('ev-type-chart');
+          if (chartCanvas && window.Chart) {
+            if (typeChart) typeChart.destroy();
+            typeChart = new Chart(chartCanvas, {
+              type: 'doughnut',
+              data: {
+                labels: ['Repas', 'Sport', 'Nutrition', 'Atelier'],
+                datasets: [{
+                  data: ['repas','sport','medical','atelier'].map(function(k) { return data.byType[k] || 0; }),
+                  backgroundColor: ['#e67e22', '#27ae60', '#d4ac0d', '#8e44ad'],
+                  borderWidth: 0
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text') || '#F2E8CF' } } },
+                cutout: '62%'
+              }
+            });
           }
         }
       })
@@ -428,6 +453,8 @@
     var clearBtn = document.getElementById('ev-search-clear');
 
     if (searchEl) {
+      if (searchEl.dataset.evWired === '1') return;
+      searchEl.dataset.evWired = '1';
       /* FIX #4 : appel correct du debounce */
       searchEl.addEventListener('input', function() {
         clearTimeout(debounceTimer);
@@ -446,9 +473,15 @@
     });
   }
 
+  window.loadEvents = loadEvents;
+  window.loadStats = loadStats;
+  window.initEventsAdmin = function() {
+    wire();
+    loadStats();
+    loadEvents();
+  };
+
   /* ── Boot ── */
-  wire();
-  loadStats();
-  loadEvents();
+  window.initEventsAdmin();
 })();
 </script>

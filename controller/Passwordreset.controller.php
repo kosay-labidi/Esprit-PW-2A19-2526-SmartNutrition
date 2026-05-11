@@ -60,6 +60,39 @@ class PasswordResetController
         }
     }
 
+    public function getTokenStatus(string $token): array
+    {
+        $token = trim($token);
+        if ($token === '') {
+            return ['status' => 'missing', 'email' => null];
+        }
+
+        try {
+            $db   = config::getConnexion();
+            $stmt = $db->prepare('SELECT email, used, expires_at FROM password_resets WHERE token = :token LIMIT 1');
+            $stmt->execute(['token' => $token]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                return ['status' => 'invalid', 'email' => null];
+            }
+
+            if ((int)($row['used'] ?? 0) === 1) {
+                return ['status' => 'used', 'email' => $row['email'] ?? null];
+            }
+
+            $expiresAt = strtotime((string)($row['expires_at'] ?? ''));
+            if (!$expiresAt || $expiresAt <= time()) {
+                return ['status' => 'expired', 'email' => $row['email'] ?? null];
+            }
+
+            return ['status' => 'valid', 'email' => $row['email'] ?? null];
+        } catch (Throwable $e) {
+            error_log('[PasswordReset] getTokenStatus: ' . $e->getMessage());
+            return ['status' => 'error', 'email' => null];
+        }
+    }
+
     public function consumeToken(string $token): bool
     {
         try {
@@ -131,11 +164,13 @@ class PasswordResetController
             error_log('[PasswordReset] PHPMailer introuvable → composer require phpmailer/phpmailer');
         }
 
-        // ── Fallback mail() natif (dev local) ────────────────
-        $headers  = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n";
-        $headers .= "From: " . APP_NAME . " <" . GMAIL_USER . ">\r\n";
-        @mail($toEmail, $subject, $this->buildEmailHtml($name, $resetLink), $headers);
+        // ── Fallback pour développement : renvoyer le lien dans la réponse ────────────────
         error_log('[PasswordReset] 🔗 Lien test (dev) : ' . $resetLink);
+        // Stocker le lien dans une variable de session pour l'afficher
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION['reset_link_dev'] = $resetLink;
         return true; // toujours true en dev pour ne pas bloquer l'UX
     }
 
@@ -147,8 +182,7 @@ class PasswordResetController
     {
         $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $host  = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        // reset_password.php est dans view/frontend/users/
-        return "$proto://$host/Esprit-PW-2A19-2526-SmartNutrition/view/backend/users/Reset_password.php?token=" . urlencode($token);
+        return "$proto://$host/Mainn/view/backend/users/Reset_password.php?token=" . urlencode($token);
     }
 
     private function buildEmailHtml(string $name, string $link): string

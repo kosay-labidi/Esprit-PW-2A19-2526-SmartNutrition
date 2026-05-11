@@ -1,0 +1,16 @@
+{
+  "name": "gaialumen/gl-chat-defis",
+  "description": "GaiaLumen Chat Defis realtime server (Ratchet)",
+  "require": {
+    "cboden/ratchet": "^0.4",
+    "react/event-loop": "^1.5",
+    "symfony/http-foundation": "^6.4",
+    "endroid/qr-code": "^6.0",
+    "phpmailer/phpmailer": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "GaiaLumen\\Chat\\": "view/backend/ws/src/"
+    }
+  }
+}

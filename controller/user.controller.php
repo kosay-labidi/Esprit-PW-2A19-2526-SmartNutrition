@@ -57,9 +57,6 @@ class UserController
             $query = $db->prepare($sql);
             $query->execute(['email' => $email]);
             $row = $query->fetch(PDO::FETCH_ASSOC);
-            if ($row['status'] === 'inactif') {
-    return ['status' => 'account_inactive', 'data' => null];
-}
 
             if (!$row) {
                 return ['status' => 'account_not_found', 'data' => null];
@@ -77,9 +74,9 @@ class UserController
             unset($row['mdp']);
             return ['status' => 'ok', 'data' => $row];
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             error_log("Login error: " . $e->getMessage());
-            return ['status' => 'error', 'data' => null];
+            return ['status' => 'error', 'data' => null, 'message' => $e->getMessage()];
         }
     }
 

@@ -48,7 +48,7 @@ function getUserFullData($userId) {
             }
         }
         return $user;
-    } catch (PDOException $e) {
+    } catch (Throwable $e) {
         error_log("auto_login.php - Erreur BDD: " . $e->getMessage());
         return null;
     }
@@ -85,6 +85,7 @@ if (!empty($_SESSION['user']) && !empty($_SESSION['user']['id_utilisateur'])) {
         }
         
         // Mettre à jour la session avec les données fraîches
+        $_SESSION['user_id'] = (int) $freshUser['id_utilisateur'];
         $_SESSION['user'] = $freshUser;
         echo json_encode(['success' => true, 'data' => $freshUser]);
     } else {
@@ -134,6 +135,7 @@ if ($userBasic && !empty($userBasic['id_utilisateur'])) {
             exit();
         }
         
+        $_SESSION['user_id'] = (int) $fullUser['id_utilisateur'];
         $_SESSION['user'] = $fullUser;
         echo json_encode(['success' => true, 'data' => $fullUser]);
     } else {

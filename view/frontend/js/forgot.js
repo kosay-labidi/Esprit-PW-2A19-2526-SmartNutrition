@@ -3,21 +3,19 @@
  * Gestion de la récupération de mot de passe
  */
 
-const API_URL = 'http://localhost:5000/api';
-
 // Gestion du formulaire de récupération
 async function handleForgotPassword(event) {
   event.preventDefault();
   
-  const email = document.getElementById('email-input').value;
-  const btn = event.target.querySelector('.btn-submit');
+  const email = document.getElementById('email').value;
+  const btn = event.target.querySelector('.btn-submit') || event.target.querySelector('.btn');
   const message = document.getElementById('message');
   
   btn.textContent = 'Envoi en cours...';
   btn.disabled = true;
   
   try {
-    const response = await fetch(`${API_URL}/auth/forgot-password`, {
+    const response = await fetch('../backend/users/forgot_password.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -32,10 +30,16 @@ async function handleForgotPassword(event) {
       
       btn.textContent = '✓ Email envoyé!';
       
-      // Redirection après 3 secondes
+      // Afficher le lien de développement dans la console
+      if (data.dev_reset_link) {
+        console.log('🔗 Lien de réinitialisation (développement) :', data.dev_reset_link);
+        message.textContent += ' (Voir la console pour le lien de test)';
+      }
+      
+      // Redirection après 5 secondes pour laisser le temps de copier le lien
       setTimeout(() => {
         window.location.href = 'login.html';
-      }, 3000);
+      }, 5000);
     } else {
       message.className = 'message error';
       message.textContent = data.message || 'Erreur lors de l\'envoi de l\'email';
@@ -81,5 +85,11 @@ function initTheme() {
 // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
+  
+  const form = document.getElementById('forgotForm') || document.getElementById('form-forgot');
+  if (form) {
+    form.addEventListener('submit', handleForgotPassword);
+  }
+  
   console.log('🔓 Forgot Password page loaded');
 });

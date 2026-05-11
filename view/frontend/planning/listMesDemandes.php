@@ -15,7 +15,19 @@ try {
         exit;
     }
 
-    $userId   = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 1;
+    $userId = 0;
+    if (!empty($_SESSION['user']['id_utilisateur'])) {
+        $userId = (int) $_SESSION['user']['id_utilisateur'];
+    } elseif (!empty($_SESSION['user_id'])) {
+        $userId = (int) $_SESSION['user_id'];
+    }
+
+    if ($userId <= 0) {
+        ob_end_clean();
+        echo json_encode([]);
+        exit;
+    }
+
     $demandes = (new DemandeplanningController())->listDemandesByUser($userId);
     if (!is_array($demandes)) $demandes = [];
 

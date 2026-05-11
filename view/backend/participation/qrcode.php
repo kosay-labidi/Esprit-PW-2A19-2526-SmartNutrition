@@ -35,8 +35,9 @@ if (isset($_GET['dl']) && $_GET['dl'] == '1') {
 }
 
 // ── Génération base64 pour affichage inline
-$qrBase64 = QrCodeService::genererBase64($id, 350);
-$qrUrl    = QrCodeService::construireUrl($id);
+$qrImageSrc = QrCodeService::genererImageSrc($id, 350);
+$qrDownload = QrCodeService::genererDownloadUrl($id, 400);
+$qrUrl      = QrCodeService::construireUrl($id);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -270,7 +271,7 @@ $qrUrl    = QrCodeService::construireUrl($id);
             <!-- ── QR CODE ── -->
             <div class="qr-zone">
                 <div class="qr-frame">
-                    <img src="data:image/svg+xml;base64,<?= $qrBase64 ?>"
+                    <img src="<?= htmlspecialchars($qrImageSrc, ENT_QUOTES, 'UTF-8') ?>"
                          alt="QR Code de <?= htmlspecialchars($data['nom_complet']) ?>">
                     <div class="qr-badge">
                         <i class="fas fa-qrcode me-1"></i> PART-<?= str_pad($id, 4, '0', STR_PAD_LEFT) ?>
@@ -331,7 +332,7 @@ $qrUrl    = QrCodeService::construireUrl($id);
 
                 <!-- Boutons -->
                 <div class="action-btns">
-                    <a href="qrcode.php?id=<?= $id ?>&dl=1" class="btn-dl">
+                    <a href="<?= htmlspecialchars($qrDownload, ENT_QUOTES, 'UTF-8') ?>" class="btn-dl">
                         <i class="fas fa-download"></i> Télécharger le QR Code (.svg)
                     </a>
                     <a href="list.php" class="btn-back">

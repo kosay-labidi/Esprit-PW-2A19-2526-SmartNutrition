@@ -1,6 +1,5 @@
 <?php
-// face_login.php - Version avec vraie reconnaissance faciale
-require_once __DIR__ . '/../../config.php';
+// face_login.php - Version avec GD
 session_start();
 ob_clean();
 
@@ -8,6 +7,9 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -19,16 +21,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-// Connexion BDD
-try {
-    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'BDD error: ' . $e->getMessage()]);
+// Vérifier GD
+if (!extension_loaded('gd')) {
+    echo json_encode(['success' => false, 'message' => 'Extension GD non disponible. Veuillez contacter l\'administrateur.']);
     exit();
 }
 
-// Créer dossier temp
+// Connexion BDD
+try {
+    $pdo = new PDO("mysql:host=localhost;dbname=dsgaialumen;charset=utf8mb4", "root", "");
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'message' => 'Erreur BDD: ' . $e->getMessage()]);
+    exit();
+}
+
+// Dossier temp
 $tempDir = __DIR__ . '/temp/';
 if (!is_dir($tempDir)) mkdir($tempDir, 0777, true);
 
@@ -50,25 +58,19 @@ if (!$imageData) {
     exit();
 }
 
-// Sauvegarder l'image temporairement
 $tempFile = $tempDir . 'face_' . uniqid() . '.jpg';
 file_put_contents($tempFile, $imageData);
 
-// Rechercher l'utilisateur par comparaison faciale
-$result = findUserByFaceComparison($pdo, $tempFile);
+$result = findUserByFace($pdo, $tempFile);
 
-// Nettoyer
 @unlink($tempFile);
 
 echo json_encode($result);
 exit();
 
-/**
- * Compare le visage avec tous les utilisateurs
- */
-function findUserByFaceComparison($pdo, $uploadedImagePath) {
+function findUserByFace($pdo, $uploadedPath) {
     try {
-        // Récupérer tous les utilisateurs avec photo
+        // Récupérer les utilisateurs avec photo
         $stmt = $pdo->prepare("
             SELECT id_utilisateur, nom, prenom, email, role, photo 
             FROM utilisateurs 
@@ -78,23 +80,22 @@ function findUserByFaceComparison($pdo, $uploadedImagePath) {
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         if (empty($users)) {
-            return ['success' => false, 'message' => 'Aucun utilisateur avec photo. Veuillez d\'abord ajouter une photo de profil.'];
+            return ['success' => false, 'message' => 'Aucun utilisateur avec photo de profil'];
         }
         
         $bestMatch = null;
         $bestScore = 0;
-        $threshold = 0.35; // Seuil de reconnaissance (plus bas = plus tolérant)
+        $threshold = 0.6; // Seuil plus élevé pour GD
         
         foreach ($users as $user) {
-            // Trouver le chemin de la photo stockée
             $storedPath = findPhotoPath($user['photo']);
             
             if (!$storedPath || !file_exists($storedPath)) {
                 continue;
             }
             
-            // Comparer les deux images
-            $score = compareFaces($uploadedImagePath, $storedPath);
+            // Comparer avec GD
+            $score = compareImagesGD($uploadedPath, $storedPath);
             
             if ($score > $bestScore) {
                 $bestScore = $score;
@@ -103,8 +104,6 @@ function findUserByFaceComparison($pdo, $uploadedImagePath) {
         }
         
         if ($bestMatch && $bestScore >= $threshold) {
-            // Connexion réussie
-            $_SESSION['user_id'] = $bestMatch['id_utilisateur'];
             $_SESSION['user'] = [
                 'id_utilisateur' => $bestMatch['id_utilisateur'],
                 'nom' => $bestMatch['nom'],
@@ -123,66 +122,69 @@ function findUserByFaceComparison($pdo, $uploadedImagePath) {
                     'role' => $bestMatch['role']
                 ],
                 'confidence' => round($bestScore, 2),
-                'message' => 'Visage reconnu avec ' . round($bestScore * 100) . '% de correspondance'
+                'message' => 'Visage reconnu avec ' . round($bestScore * 100) . '%'
             ];
         }
         
         return [
-            'success' => false,
-            'message' => 'Visage non reconnu. Meilleur score: ' . round($bestScore * 100) . '% (seuil: ' . ($threshold * 100) . '%)'
+            'success' => false, 
+            'message' => 'Visage non reconnu. Score maximum: ' . round($bestScore * 100) . '%'
         ];
         
     } catch (Exception $e) {
-        error_log("Face recognition error: " . $e->getMessage());
         return ['success' => false, 'message' => 'Erreur: ' . $e->getMessage()];
     }
 }
 
-/**
- * Trouve le chemin complet de la photo
- */
-function findPhotoPath($relativePath) {
-    $basePaths = [
-        __DIR__ . '/../../',
-        __DIR__ . '/../../uploads/profiles/'
-    ];
-    
-    $filename = basename($relativePath);
-    
-    foreach ($basePaths as $basePath) {
-        $fullPath = $basePath . 'uploads/profiles/' . $filename;
-        if (file_exists($fullPath)) {
-            return $fullPath;
-        }
-        
-        $fullPath2 = $basePath . $relativePath;
-        if (file_exists($fullPath2)) {
-            return $fullPath2;
-        }
-    }
-    
-    return null;
-}
-
-/**
- * Compare deux visages avec des hashs perceptuels
- */
-function compareFaces($img1Path, $img2Path) {
+function compareImagesGD($img1, $img2) {
     try {
-        // Calculer les hashs des images
-        $hash1 = getPerceptualHash($img1Path);
-        $hash2 = getPerceptualHash($img2Path);
+        // Redimensionner et convertir en niveaux de gris
+        $im1 = imagecreatefromjpeg($img1);
+        $im2 = imagecreatefromjpeg($img2);
         
-        if (!$hash1 || !$hash2) {
-            return 0;
+        if (!$im1 || !$im2) {
+            // Essayer PNG
+            $im1 = $im1 ?: imagecreatefrompng($img1);
+            $im2 = $im2 ?: imagecreatefrompng($img2);
         }
         
-        // Calculer la distance de Hamming
-        $distance = hammingDistance($hash1, $hash2);
+        if (!$im1 || !$im2) return 0;
+        
+        // Redimensionner à 32x32 pour comparaison
+        $size = 32;
+        $small1 = imagescale($im1, $size, $size);
+        $small2 = imagescale($im2, $size, $size);
+        
+        // Convertir en niveaux de gris et calculer la différence
+        $diff = 0;
+        for ($y = 0; $y < $size; $y++) {
+            for ($x = 0; $x < $size; $x++) {
+                $rgb1 = imagecolorat($small1, $x, $y);
+                $rgb2 = imagecolorat($small2, $x, $y);
+                
+                $r1 = ($rgb1 >> 16) & 0xFF;
+                $g1 = ($rgb1 >> 8) & 0xFF;
+                $b1 = $rgb1 & 0xFF;
+                $gray1 = ($r1 + $g1 + $b1) / 3;
+                
+                $r2 = ($rgb2 >> 16) & 0xFF;
+                $g2 = ($rgb2 >> 8) & 0xFF;
+                $b2 = $rgb2 & 0xFF;
+                $gray2 = ($r2 + $g2 + $b2) / 3;
+                
+                $diff += abs($gray1 - $gray2);
+            }
+        }
+        
+        // Nettoyer
+        imagedestroy($im1);
+        imagedestroy($im2);
+        imagedestroy($small1);
+        imagedestroy($small2);
         
         // Convertir en score de similarité (0-1)
-        $maxDistance = 64; // 64 bits
-        $similarity = 1 - ($distance / $maxDistance);
+        $maxDiff = $size * $size * 255;
+        $similarity = 1 - ($diff / $maxDiff);
         
         return $similarity;
         
@@ -191,65 +193,20 @@ function compareFaces($img1Path, $img2Path) {
     }
 }
 
-/**
- * Calcule un hash perceptuel de l'image
- */
-function getPerceptualHash($imagePath) {
-    try {
-        // Lire l'image
-        $img = imagecreatefromstring(file_get_contents($imagePath));
-        if (!$img) return null;
-        
-        // Redimensionner à 8x8
-        $size = 8;
-        $resized = imagescale($img, $size, $size);
-        
-        // Convertir en niveaux de gris et calculer la moyenne
-        $pixels = [];
-        $sum = 0;
-        
-        for ($y = 0; $y < $size; $y++) {
-            for ($x = 0; $x < $size; $x++) {
-                $rgb = imagecolorat($resized, $x, $y);
-                $r = ($rgb >> 16) & 0xFF;
-                $g = ($rgb >> 8) & 0xFF;
-                $b = $rgb & 0xFF;
-                $gray = ($r + $g + $b) / 3;
-                $pixels[$y * $size + $x] = $gray;
-                $sum += $gray;
-            }
-        }
-        
-        $avg = $sum / ($size * $size);
-        
-        // Créer le hash binaire
-        $hash = '';
-        foreach ($pixels as $pixel) {
-            $hash .= ($pixel > $avg) ? '1' : '0';
-        }
-        
-        // Nettoyer
-        imagedestroy($img);
-        imagedestroy($resized);
-        
-        return $hash;
-        
-    } catch (Exception $e) {
-        return null;
-    }
-}
-
-/**
- * Calcule la distance de Hamming entre deux hashs
- */
-function hammingDistance($hash1, $hash2) {
-    $distance = 0;
-    $len = strlen($hash1);
-    for ($i = 0; $i < $len; $i++) {
-        if ($hash1[$i] !== $hash2[$i]) {
-            $distance++;
+function findPhotoPath($relativePath) {
+    $filename = basename($relativePath);
+    
+    $paths = [
+        __DIR__ . '/../../uploads/profiles/' . $filename,
+        'C:/xampp/htdocs/Mainn/uploads/profiles/' . $filename,
+    ];
+    
+    foreach ($paths as $path) {
+        if (file_exists($path)) {
+            return $path;
         }
     }
-    return $distance;
+    
+    return null;
 }
 ?>

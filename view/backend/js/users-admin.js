@@ -9,6 +9,30 @@ let userStatusBarChart = null;
 
 function showToast(message, subtitle, type = 'info') {
   console.log('Toast:', message, subtitle, type);
+  let toast = document.getElementById('admin-users-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'admin-users-toast';
+    toast.style.cssText = 'position:fixed;right:24px;bottom:24px;z-index:20000;max-width:360px;padding:14px 18px;border-radius:12px;font-weight:700;box-shadow:0 14px 40px rgba(0,0,0,.35);transition:opacity .25s,transform .25s;';
+    document.body.appendChild(toast);
+  }
+  const colors = {
+    success: ['rgba(34, 197, 94, .18)', '#22c55e', 'rgba(34,197,94,.45)'],
+    error: ['rgba(239, 68, 68, .18)', '#ef4444', 'rgba(239,68,68,.45)'],
+    info: ['rgba(59, 130, 246, .18)', '#60a5fa', 'rgba(59,130,246,.45)']
+  };
+  const palette = colors[type] || colors.info;
+  toast.style.background = palette[0];
+  toast.style.color = palette[1];
+  toast.style.border = `1px solid ${palette[2]}`;
+  toast.innerHTML = `<div>${message || ''}</div>${subtitle ? `<small style="display:block;margin-top:4px;color:var(--text);font-weight:500;">${subtitle}</small>` : ''}`;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateY(0)';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(8px)';
+  }, 3500);
 }
 
 document.addEventListener('adminModuleLoaded', (e) => {
@@ -90,6 +114,17 @@ async function saveNewUser() {
   const email = document.getElementById('addUserEmail').value.trim();
   const mdp = document.getElementById('addUserMdp').value;
   const role = document.getElementById('addUserRole').value;
+  const submitBtn = document.querySelector('#addUserForm button[type="submit"]');
+
+  if (!nom || !prenom || !email || !mdp) {
+    showToast('Erreur', 'Tous les champs sont obligatoires.', 'error');
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Ajout...';
+  }
 
   try {
     const response = await fetch('users/addUser.php', {
@@ -105,7 +140,13 @@ async function saveNewUser() {
         is_admin: true 
       })
     });
-    const result = await response.json();
+    const text = await response.text();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (parseError) {
+      throw new Error(text.trim() || 'Réponse serveur invalide');
+    }
     
     if (result.success) {
       showToast('Succès', result.message, 'success');
@@ -116,7 +157,12 @@ async function saveNewUser() {
     }
   } catch (error) {
     console.error('Erreur saveNewUser:', error);
-    showToast('Erreur', 'Erreur de connexion', 'error');
+    showToast('Erreur', error.message || 'Erreur de connexion', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Ajouter';
+    }
   }
 }
 

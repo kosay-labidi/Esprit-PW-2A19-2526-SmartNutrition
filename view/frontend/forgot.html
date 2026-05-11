@@ -107,14 +107,13 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
 
 /* BACK BUTTON */
 #back-home{
-  position:fixed;top:24px;left:24px;z-index:99999;
+  position:fixed;top:24px;left:24px;z-index:1000;
   width:52px;height:52px;border-radius:50%;
   border:1.5px solid rgba(107,78,158,0.4);
   background:var(--glass);
   backdrop-filter:blur(12px);
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   transition:var(--transition);text-decoration:none;
-  pointer-events:auto;
 }
 #back-home:hover{transform:scale(1.1) translateX(-3px);border-color:var(--violet);}
 #back-home svg{stroke:var(--text);transition:var(--transition);}
@@ -713,17 +712,24 @@ async function handleReset(e){
   submitBtn.disabled = true;
 
   try {
-    const res = await fetch('../backend/users/forgot_password.php', {
+    const res = await fetch('/Mainn/view/backend/users/forgot_password.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
+      cache: 'no-store',
       body: JSON.stringify({ 
         email: email,
         recaptcha_token: recaptchaToken
       })
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      throw new Error(text.trim() || 'Réponse serveur invalide');
+    }
 
     if(data.success){
       successDiv.classList.add('show');
@@ -757,7 +763,7 @@ async function handleReset(e){
     const errDiv = document.createElement('div');
     errDiv.id = 'err-msg';
     errDiv.style.cssText = 'background:rgba(231,76,60,.15);border-left:4px solid #e74c3c;padding:12px 16px;border-radius:12px;margin-top:16px;font-size:.87rem;color:#e74c3c;';
-    errDiv.textContent = '⚠️ Impossible de contacter le serveur. Vérifiez votre connexion.';
+    errDiv.textContent = '⚠️ Erreur serveur : ' + (err.message || 'Impossible de contacter le serveur. Vérifiez votre connexion.');
     form.appendChild(errDiv);
     submitBtn.textContent = 'Envoyer le lien';
     submitBtn.disabled = false;

@@ -20,6 +20,26 @@ function flash(message) {
   setTimeout(() => box.classList.remove('show'), 2200);
 }
 
+function setPanelMessage(id, message) {
+  const container = document.getElementById(id);
+  if (container) {
+    container.innerHTML = `<div class="empty-state">${escapeHtml(message)}</div>`;
+  }
+}
+
+function getStoredUserId() {
+  return sessionStorage.getItem('user_id') || localStorage.getItem('user_id') || '';
+}
+
+async function readJsonResponse(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    throw new Error(text.trim() || `Réponse serveur invalide (${res.status})`);
+  }
+}
+
 function avatarNode(user) {
   const photo = user.avatar_url || '';
   if (photo) {
@@ -45,7 +65,7 @@ function initialNode(user) {
 }
 
 async function api(action, method = 'GET', body = null) {
-  const url = new URL(API_BASE);
+  const url = new URL(API_BASE, window.location.href);
   url.searchParams.set('action', action);
   if (method === 'GET' && body && typeof body === 'object') {
     Object.entries(body).forEach(([key, value]) => {
@@ -57,11 +77,19 @@ async function api(action, method = 'GET', body = null) {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' }
   };
+  const storedUserId = getStoredUserId();
+  if (storedUserId) {
+    options.headers['X-User-Id'] = storedUserId;
+  }
   if (method !== 'GET' && body) {
     options.body = JSON.stringify(body);
   }
   const res = await fetch(url, options);
-  return res.json();
+  const data = await readJsonResponse(res);
+  if (!res.ok) {
+    throw new Error(data.message || `Erreur HTTP ${res.status}`);
+  }
+  return data;
 }
 
 async function uploadAttachment(friendId, file) {
@@ -71,9 +99,10 @@ async function uploadAttachment(friendId, file) {
   const res = await fetch(`${API_BASE}?action=send_attachment`, {
     method: 'POST',
     credentials: 'include',
+    headers: getStoredUserId() ? { 'X-User-Id': getStoredUserId() } : {},
     body: formData
   });
-  return res.json();
+  return readJsonResponse(res);
 }
 
 async function loadSessionUser() {
@@ -81,12 +110,22 @@ async function loadSessionUser() {
     '../backend/users/auto_login.php',
     { method: 'GET', credentials: 'include' }
   );
-  const data = await res.json();
+  const data = await readJsonResponse(res);
   if (!data.success || !data.data) {
-    window.location.href = 'login.html';
-    return;
+    const storedUserId = getStoredUserId();
+    if (storedUserId) {
+      currentUser = {
+        id_utilisateur: storedUserId,
+        nom: sessionStorage.getItem('user_nom') || '',
+        prenom: sessionStorage.getItem('user_prenom') || '',
+        email: sessionStorage.getItem('user_email') || ''
+      };
+      return;
+    }
+    throw new Error(data.message || 'Session expirée. Connectez-vous puis revenez au chat.');
   }
   currentUser = data.data;
+  currentUser.id_utilisateur = currentUser.id_utilisateur || currentUser.id;
 }
 
 function renderUsers(users) {
@@ -283,13 +322,21 @@ async function refreshNotifications() {
 }
 
 async function refreshData() {
-  const usersData = await api('users');
-  const friendsData = await api('friends');
-  if (usersData.success) renderUsers(usersData.users);
-  else console.error('Erreur users:', usersData.message);
-  if (friendsData.success) renderFriends(friendsData.friends);
-  else console.error('Erreur friends:', friendsData.message);
-  await refreshNotifications();
+  setPanelMessage('users-list', 'Chargement des utilisateurs...');
+  setPanelMessage('friends-list', 'Chargement des amis...');
+  try {
+    const usersData = await api('users');
+    const friendsData = await api('friends');
+    if (usersData.success) renderUsers(usersData.users || []);
+    else setPanelMessage('users-list', usersData.message || 'Impossible de charger les utilisateurs');
+    if (friendsData.success) renderFriends(friendsData.friends || []);
+    else setPanelMessage('friends-list', friendsData.message || 'Impossible de charger les amis');
+    await refreshNotifications();
+  } catch (error) {
+    console.error('refreshData erreur:', error);
+    setPanelMessage('users-list', error.message);
+    setPanelMessage('friends-list', error.message);
+  }
 }
 
 document.getElementById('message-form').addEventListener('submit', async (e) => {
@@ -380,10 +427,23 @@ window.addEventListener('DOMContentLoaded', async () => {
       dropdown.classList.remove('open');
     }
   });
-  await loadSessionUser();
-  await refreshData();
+  try {
+    await loadSessionUser();
+    await refreshData();
+  } catch (error) {
+    console.error('Initialisation chat erreur:', error);
+    setPanelMessage('users-list', error.message);
+    setPanelMessage('friends-list', error.message);
+    setPanelMessage('chat-box', 'Le chat nécessite une session active et la base de données disponible.');
+    flash(error.message);
+    return;
+  }
   setInterval(async () => {
-    await refreshNotifications();
-    await loadMessages();
+    try {
+      await refreshNotifications();
+      if (activeFriendId) await loadMessages();
+    } catch (error) {
+      console.error('Rafraîchissement chat erreur:', error);
+    }
   }, 5000);
 });

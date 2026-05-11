@@ -13,7 +13,31 @@ $token     = trim($_GET['token'] ?? '');
 $error     = '';
 $success   = false;
 
-$emailFromToken = $resetCtrl->validateToken($token);
+function resetTokenTitle(string $status): string
+{
+    return match ($status) {
+        'used' => 'Lien déjà utilisé',
+        'expired' => 'Lien expiré',
+        'missing' => 'Lien manquant',
+        'error' => 'Erreur de vérification',
+        default => 'Lien invalide',
+    };
+}
+
+function resetTokenMessage(string $status): string
+{
+    return match ($status) {
+        'used' => 'Ce lien a déjà servi à changer votre mot de passe. Pour votre sécurité, il ne peut pas être utilisé une deuxième fois.',
+        'expired' => 'Ce lien a dépassé sa durée de validité de 60 minutes.',
+        'missing' => 'Aucun jeton de réinitialisation n\'a été trouvé dans l\'URL.',
+        'error' => 'Impossible de vérifier ce lien pour le moment. Réessayez ou demandez un nouveau lien.',
+        default => 'Ce lien ne correspond à aucune demande valide.',
+    };
+}
+
+$tokenInfo      = $resetCtrl->getTokenStatus($token);
+$tokenStatus    = $tokenInfo['status'] ?? 'invalid';
+$emailFromToken = ($tokenStatus === 'valid') ? ($tokenInfo['email'] ?? null) : null;
 $tokenValid     = ($emailFromToken !== null);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -21,10 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $newMdp     = $_POST['new_mdp']     ?? '';
     $confirmMdp = $_POST['confirm_mdp'] ?? '';
 
-    $emailFromToken = $resetCtrl->validateToken($postToken);
+    $postTokenInfo  = $resetCtrl->getTokenStatus($postToken);
+    $tokenStatus    = $postTokenInfo['status'] ?? 'invalid';
+    $emailFromToken = ($tokenStatus === 'valid') ? ($postTokenInfo['email'] ?? null) : null;
 
     if (!$emailFromToken) { 
-        $error = 'Ce lien est invalide ou a expiré.';
+        $error = resetTokenMessage($tokenStatus);
     }
     elseif (strlen($newMdp) < 8) { 
         $error = 'Le mot de passe doit contenir au moins 8 caractères.';
@@ -62,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 :root{
-  --green:#1F3D2B;--sand:#F2E8CF;--violet:#5B3E96;--blue:#3A86C4;
+  --green:#1F3D2B;--sand:#F2E8CF;--violet:#5B3E96;--blue:#3A86C4;   
   --bg:#0a1a10;--text:#F2E8CF;--muted:#a8b8a0;
   --card-bg:rgba(15,35,24,0.85);--glass:rgba(31,61,43,0.45);
   --shadow:0 20px 60px rgba(0,0,0,.5);
@@ -252,14 +278,14 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;}
 
   <?php elseif (!$tokenValid): ?>
     <div class="alert alert-invalid">
-      <p style="color:#e74c3c;font-weight:700;margin-bottom:8px;">❌ Lien invalide ou expiré</p>
+      <p style="color:#e74c3c;font-weight:700;margin-bottom:8px;">❌ <?= htmlspecialchars(resetTokenTitle($tokenStatus), ENT_QUOTES, 'UTF-8') ?></p>
       <p style="color:var(--muted);font-size:.87rem;line-height:1.6;">
-        Ce lien a expiré (> 60 min), est invalide ou a déjà été utilisé.<br/>
+        <?= htmlspecialchars(resetTokenMessage($tokenStatus), ENT_QUOTES, 'UTF-8') ?><br/>
         Faites une nouvelle demande de réinitialisation.
       </p>
     </div>
     <div class="links">
-      <a href="../forgot.html">
+      <a href="../../frontend/forgot.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>Nouvelle demande

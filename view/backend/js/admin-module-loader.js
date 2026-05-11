@@ -7,7 +7,7 @@ const adminModules = {
   users: 'modules/users-admin.html',
   planning: 'modules/planning-admin.html',
   events: 'modules/events-admin.html',
-  meals: 'modules/meals-admin.html',
+  meals: 'modules/meals-admin.php',
   health: 'modules/health-admin.html',
   challenges: 'modules/challenges-admin.html',
   activity: 'modules/activity-admin.html'
@@ -89,6 +89,37 @@ function injectAdminModuleStyles(moduleName, container) {
   });
 }
 
+// Fonction pour exécuter les scripts d'un module injecté dynamiquement.
+async function executeAdminModuleScripts(container) {
+  const scripts = Array.from(container.querySelectorAll('script'));
+
+  for (const oldScript of scripts) {
+    await new Promise((resolve, reject) => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach(attr => {
+        newScript.setAttribute(attr.name, attr.value);
+      });
+
+      if (oldScript.src) {
+        const url = new URL(oldScript.src, window.location.href);
+        url.searchParams.set('v', Date.now());
+        newScript.src = url.href;
+        newScript.async = false;
+        newScript.onload = () => resolve();
+        newScript.onerror = () => reject(new Error(`Impossible de charger le script ${url.href}`));
+      } else {
+        newScript.textContent = oldScript.textContent;
+      }
+
+      document.body.appendChild(newScript);
+
+      if (!oldScript.src) {
+        resolve();
+      }
+    });
+  }
+}
+
 // Fonction pour afficher un module admin
 async function showAdminModule(moduleName) {
   // Détection du protocole file:// (CORS bloqué par les navigateurs)
@@ -160,6 +191,16 @@ async function showAdminModule(moduleName) {
         if (mainContent) {
           mainContent.appendChild(newSection);
           targetSection = newSection;
+
+          // Rendre le DOM du module disponible avant l'exécution de ses scripts.
+          targetSection.style.display = 'block';
+          targetSection.classList.add('active');
+
+          try {
+            await executeAdminModuleScripts(targetSection);
+          } catch (error) {
+            console.error(`❌ Erreur lors de l'exécution des scripts du module admin ${moduleName}:`, error);
+          }
         }
       }
     } else {
@@ -286,6 +327,12 @@ function startAutoReload() {
             mainContent.appendChild(newSection);
             newSection.style.display = 'block';
             newSection.classList.add('active');
+
+            try {
+              await executeAdminModuleScripts(newSection);
+            } catch (error) {
+              console.error(`❌ Erreur lors de l'exécution des scripts du module admin ${moduleName}:`, error);
+            }
             
             // Déclencher l'événement de chargement du module
             const event = new CustomEvent('adminModuleLoaded', { detail: { moduleName } });
@@ -318,6 +365,227 @@ window.addEventListener('load', () => {
 // Exposer les fonctions d'auto-reload
 window.startAutoReload = startAutoReload;
 window.stopAutoReload = stopAutoReload;
+
+// Initialisation robuste du module événements, indépendante des scripts inline
+// injectés depuis modules/events-admin.html.
+const adminEventTypes = ['repas', 'sport', 'medical', 'atelier'];
+const adminEventTypeIcons = { repas: '🍲', sport: '🧘', medical: '🥗', atelier: '🌱' };
+const adminEventTypeLabels = { repas: 'Repas', sport: 'Sport', medical: 'Nutrition', atelier: 'Atelier' };
+const adminEventBadgeClasses = {
+  repas: 'ev-badge ev-badge-repas',
+  sport: 'ev-badge ev-badge-sport',
+  medical: 'ev-badge ev-badge-medical',
+  atelier: 'ev-badge ev-badge-atelier'
+};
+const adminEventBarClasses = {
+  repas: 'ev-bar-repas',
+  sport: 'ev-bar-sport',
+  medical: 'ev-bar-medical',
+  atelier: 'ev-bar-atelier'
+};
+let adminEventsChart = null;
+let adminEventsDebounce = null;
+
+function adminEventsApiUrl(params) {
+  const url = new URL('evenement/list.php', window.location.href);
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      url.searchParams.set(key, value);
+    }
+  });
+  url.searchParams.set('_', Date.now());
+  return url.href;
+}
+
+async function adminEventsReadJson(response) {
+  const text = await response.text();
+  try {
+    const data = JSON.parse(text);
+    if (!response.ok) {
+      throw new Error(data.message || data.error || `HTTP ${response.status}`);
+    }
+    return data;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(text.trim() || `Réponse serveur invalide (${response.status})`);
+    }
+    throw error;
+  }
+}
+
+function adminEventsEscape(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function adminEventsHighlight(text, search) {
+  const safe = adminEventsEscape(text || '—');
+  if (!search) return safe;
+  const re = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return safe.replace(re, '<span class="ev-highlight">$1</span>');
+}
+
+function adminEventsFormatDate(value) {
+  const parts = String(value || '').split('-');
+  return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : '—';
+}
+
+async function adminEventsLoadStats() {
+  const totalEl = document.getElementById('ev-stat-total');
+  const upcomingEl = document.getElementById('ev-stat-upcoming');
+  const yearEl = document.getElementById('ev-stat-year');
+  const topCountEl = document.getElementById('ev-stat-toptype-count');
+  const topLabelEl = document.getElementById('ev-stat-toptype-label');
+  const barsEl = document.getElementById('ev-stat-types-bars');
+  if (!totalEl && !upcomingEl && !barsEl) return;
+
+  try {
+    const stats = await fetch(adminEventsApiUrl({ action: 'getstats' }), { cache: 'no-store' })
+      .then(adminEventsReadJson);
+
+    if (totalEl) totalEl.textContent = stats.total ?? 0;
+    if (upcomingEl) upcomingEl.textContent = stats.upcoming ?? 0;
+    if (yearEl) yearEl.textContent = `+${stats.thisYear ?? 0} cette année`;
+
+    const byType = stats.byType || {};
+    let total = 0;
+    let maxKey = '';
+    let maxCount = 0;
+    Object.keys(byType).forEach(key => {
+      const count = Number(byType[key] || 0);
+      total += count;
+      if (count > maxCount) {
+        maxCount = count;
+        maxKey = key;
+      }
+    });
+
+    if (topCountEl) topCountEl.textContent = maxCount;
+    if (topLabelEl) topLabelEl.textContent = maxKey ? (adminEventTypeLabels[maxKey] || maxKey) : '—';
+
+    if (barsEl) {
+      barsEl.innerHTML = adminEventTypes.map(key => {
+        const count = Number(byType[key] || 0);
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        return `<div class="ev-type-bar">
+          <span class="ev-type-bar-label">${adminEventTypeIcons[key]} ${adminEventTypeLabels[key]}</span>
+          <div class="ev-type-bar-track"><div class="ev-type-bar-fill ${adminEventBarClasses[key]}" style="width:${pct}%"></div></div>
+          <span class="ev-type-bar-count">${count}</span>
+        </div>`;
+      }).join('');
+    }
+
+    const canvas = document.getElementById('ev-type-chart');
+    if (canvas && window.Chart) {
+      if (adminEventsChart) adminEventsChart.destroy();
+      adminEventsChart = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels: adminEventTypes.map(key => adminEventTypeLabels[key]),
+          datasets: [{
+            data: adminEventTypes.map(key => Number(byType[key] || 0)),
+            backgroundColor: ['#e67e22', '#27ae60', '#d4ac0d', '#8e44ad'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '62%' }
+      });
+    }
+  } catch (error) {
+    console.error('adminEventsLoadStats erreur:', error);
+    if (totalEl) totalEl.textContent = '!';
+  }
+}
+
+async function adminEventsLoadRows() {
+  const tbody = document.getElementById('events-tbody');
+  const badge = document.getElementById('ev-count-badge');
+  if (!tbody) return;
+
+  const search = document.getElementById('ev-search-input')?.value.trim() || '';
+  const type = document.getElementById('ev-filter-type')?.value || '';
+  const sort = document.getElementById('ev-sort-select')?.value || 'date ASC';
+  const clearBtn = document.getElementById('ev-search-clear');
+  if (clearBtn) clearBtn.style.display = search ? 'flex' : 'none';
+
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;"><div class="ev-spinner"></div><p style="color:var(--muted);margin-top:12px;font-size:.9rem;">Chargement...</p></td></tr>';
+
+  try {
+    const events = await fetch(adminEventsApiUrl({ action: 'getall', search, type, sort }), { cache: 'no-store' })
+      .then(adminEventsReadJson);
+
+    if (badge) badge.textContent = `${events.length} résultat${events.length > 1 ? 's' : ''}`;
+    if (!Array.isArray(events) || events.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="ev-empty"><div class="ev-empty-icon">📅</div><strong>Aucun événement trouvé</strong></div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = events.map(event => {
+      const id = Number(event.id_event || event.id || 0);
+      const typeKey = event.type || '';
+      const icon = adminEventTypeIcons[typeKey] || '📌';
+      const badgeClass = adminEventBadgeClasses[typeKey] || 'ev-badge';
+      return `<tr>
+        <td><strong style="color:var(--violet);">#${id}</strong></td>
+        <td><a href="participation/list.php?id_event=${id}" class="ev-titre-link">${adminEventsHighlight(event.titre, search)}</a></td>
+        <td><span class="${badgeClass}">${icon} ${adminEventsEscape(typeKey || '—')}</span></td>
+        <td>${adminEventsFormatDate(event.date)}</td>
+        <td>${adminEventsEscape(event.heure || '—')}</td>
+        <td style="white-space:nowrap;">
+          <a href="evenement/show.php?id=${id}" class="ev-action-btn ev-action-btn-view" title="Voir">👁 Voir</a>
+          <a href="evenement/update.php?id=${id}" class="ev-action-btn ev-action-btn-edit" title="Modifier">✏️ Modifier</a>
+          <a href="evenement/delete.php?id=${id}" class="ev-action-btn ev-action-btn-del" title="Supprimer" onclick="return confirm('Supprimer cet événement ?')">🗑 Supprimer</a>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (error) {
+    console.error('adminEventsLoadRows erreur:', error);
+    if (badge) badge.textContent = 'Erreur';
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#e74c3c;"><strong>Erreur de chargement</strong><br><small>${adminEventsEscape(error.message)}</small></td></tr>`;
+  }
+}
+
+function adminEventsWire() {
+  const searchEl = document.getElementById('ev-search-input');
+  const typeEl = document.getElementById('ev-filter-type');
+  const sortEl = document.getElementById('ev-sort-select');
+  const clearBtn = document.getElementById('ev-search-clear');
+
+  if (searchEl && searchEl.dataset.adminEventsWired !== '1') {
+    searchEl.dataset.adminEventsWired = '1';
+    searchEl.addEventListener('input', () => {
+      clearTimeout(adminEventsDebounce);
+      adminEventsDebounce = setTimeout(adminEventsLoadRows, 250);
+    });
+  }
+  if (typeEl && typeEl.dataset.adminEventsWired !== '1') {
+    typeEl.dataset.adminEventsWired = '1';
+    typeEl.addEventListener('change', adminEventsLoadRows);
+  }
+  if (sortEl && sortEl.dataset.adminEventsWired !== '1') {
+    sortEl.dataset.adminEventsWired = '1';
+    sortEl.addEventListener('change', adminEventsLoadRows);
+  }
+  if (clearBtn && clearBtn.dataset.adminEventsWired !== '1') {
+    clearBtn.dataset.adminEventsWired = '1';
+    clearBtn.addEventListener('click', () => {
+      if (searchEl) searchEl.value = '';
+      adminEventsLoadRows();
+    });
+  }
+}
+
+function adminEventsInit() {
+  if (!document.getElementById('events-tbody')) return;
+  adminEventsWire();
+  adminEventsLoadStats();
+  adminEventsLoadRows();
+}
+window.adminEventsInit = adminEventsInit;
 
 // Ajouter un bouton de rechargement dans la navbar (optionnel)
 document.addEventListener('DOMContentLoaded', () => {
@@ -380,7 +648,11 @@ document.addEventListener('adminModuleLoaded', (e) => {
       break;
     case 'events':
       // Charger les événements
-      if (typeof loadEvents === 'function' && typeof loadStats === 'function') {
+      if (typeof window.adminEventsInit === 'function') {
+        setTimeout(() => window.adminEventsInit(), 100);
+      } else if (typeof window.initEventsAdmin === 'function') {
+        setTimeout(() => window.initEventsAdmin(), 100);
+      } else if (typeof loadEvents === 'function' && typeof loadStats === 'function') {
         setTimeout(() => {
           loadStats();
           loadEvents();

@@ -671,6 +671,18 @@
     var currentPage = 1, perPage = 5;
     var contentEl, loaderEl, toastEl, modalOverlay;
 
+    function getCurrentUserId() {
+      var direct = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+      if (direct && /^\d+$/.test(String(direct))) return String(direct);
+      try {
+        var user = JSON.parse(localStorage.getItem('gaialumen-user') || '{}');
+        var id = user.id_utilisateur || user.id;
+        return id && /^\d+$/.test(String(id)) ? String(id) : '';
+      } catch (e) {
+        return '';
+      }
+    }
+
     /* ══ FULL-PAGE FOOD PARTICLES ══ */
     (function initPlanningParticles() {
       var canvas = document.getElementById('planningParticles');
@@ -1243,7 +1255,7 @@
           '<div class="form-header"><span class="form-icon">📋</span><h1>Étape 1 — Votre Demande</h1><p>Objectif calorique, budget et durée</p></div>' +
           '<div id="addAlert"></div>' +
           '<form id="addForm" novalidate>' +
-            '<div class="form-group"><div class="label-wrap"><label>👤 ID Utilisateur</label><span class="tooltip-icon" data-tip="Identifiant entier positif">?</span></div><input type="text" name="id_utilisateur" class="form-control" placeholder="ex: 1" autocomplete="off"/></div>' +
+            '<input type="hidden" name="id_utilisateur" id="planningUserId" value="' + escHtml(getCurrentUserId()) + '"/>' +
             '<div class="form-group"><div class="label-wrap"><label>🔥 Calories (kcal/jour)</label><span class="tooltip-icon" data-tip="500–10 000 kcal">?</span></div><input type="text" name="calories" id="inp-calories" class="form-control" placeholder="ex: 2000" autocomplete="off"/><div class="field-hint">Recommandé : 1 500 – 3 000 kcal/jour</div></div>' +
             '<div class="form-group"><div class="label-wrap"><label>💰 Budget</label></div><div class="input-row"><input type="text" name="budget" class="form-control" placeholder="ex: 50.00" autocomplete="off"/><select name="type_budget" class="form-control"><option value="">-- Période --</option><option value="quotidien">Quotidien</option><option value="hebdomadaire">Hebdomadaire</option></select></div></div>' +
             '<div class="form-group"><div class="label-wrap"><label>⏱️ Durée</label></div><div class="input-row"><input type="text" name="duree" class="form-control" placeholder="ex: 7" autocomplete="off"/><select name="type_duree" class="form-control"><option value="">-- Unité --</option><option value="jours">Jours</option><option value="semaines">Semaines</option></select></div></div>' +
@@ -1258,7 +1270,6 @@
     function initAddForm() {
       var form = document.getElementById('addForm'); if (!form) return;
       var rules = {
-        id_utilisateur: function(v){ if(!v) return "Requis."; if(!/^\d+$/.test(v)||+v<=0) return "Entier positif."; return null; },
         calories:       function(v){ if(!v) return "Requis."; if(!/^\d+$/.test(v)) return "Entier."; var n=+v; if(n<500) return "Min 500."; if(n>10000) return "Max 10000."; return null; },
         budget:         function(v){ if(!v) return "Requis."; if(!/^\d+([.,]\d{1,2})?$/.test(v)) return "Format: 50.00"; var n=parseFloat(v.replace(',','.')); if(n<=0) return "> 0."; return null; },
         type_budget:    function(v){ return v ? null : "Choisir une période."; },
@@ -1277,14 +1288,20 @@
         var btn=document.getElementById('addSubmitBtn'); btn.disabled=true; btn.textContent='⏳ Envoi...';
         var ok=true; form.querySelectorAll('.form-control').forEach(function(inp){ if(!vf(inp)) ok=false; });
         if(!ok){ btn.disabled=false; btn.textContent='➡️ Suivant : Sport & Sommeil'; return; }
-        apiPost(API_BASE+'addDemandeplanning.php', new FormData(form))
+        var fd = new FormData(form);
+        if (!fd.get('id_utilisateur')) fd.set('id_utilisateur', getCurrentUserId());
+        apiPost(API_BASE+'addDemandeplanning.php', fd)
           .then(function(data) {
             if (data.success) {
               showToast('✅ Demande créée ! Passez à l\'étape 2.', 'success');
               renderSportSommeilForm(data.id_demande);
             } else {
               var al=document.getElementById('addAlert');
-              if(data.errors){ Object.entries(data.errors).forEach(function(kv){ var inp=form.querySelector('[name="'+kv[0]+'"]'); if(inp) se(inp,kv[1]); }); al.innerHTML='<div class="alert-error">⛔ Corrigez les erreurs.</div>'; }
+              if(data.errors){
+                var serverMsgs = [];
+                Object.entries(data.errors).forEach(function(kv){ var inp=form.querySelector('[name="'+kv[0]+'"]'); if(inp) se(inp,kv[1]); else serverMsgs.push(kv[1]); });
+                al.innerHTML='<div class="alert-error">⛔ '+(serverMsgs.length ? serverMsgs.join('<br>') : 'Corrigez les erreurs.')+'</div>';
+              }
               else { al.innerHTML='<div class="alert-error">⛔ '+(data.error||data.message)+'</div>'; }
               btn.disabled=false; btn.textContent='➡️ Suivant : Sport & Sommeil';
             }

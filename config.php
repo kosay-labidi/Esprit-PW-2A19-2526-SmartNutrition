@@ -37,9 +37,9 @@ class Config
         if (!isset(self::$pdo)) {
             try {
                 self::$pdo = new PDO(
-                    'mysql:host=localhost;dbname=dsgaialumen',
-                    'root',
-                    '',
+                    'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME,
+                    DB_USER,
+                    DB_PASS,
                     [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -47,7 +47,7 @@ class Config
                     ]
                 );
             } catch (Exception $e) {
-                die('Erreur: ' . $e->getMessage());
+                throw new RuntimeException('Erreur de connexion à la base de données: ' . $e->getMessage(), 0, $e);
             }
         }
         return self::$pdo;
@@ -74,3 +74,8 @@ class Config
         return htmlspecialchars(strip_tags(trim($data)));
     }
 }
+
+// Compatibilité avec les anciens contrôleurs/vues du projet qui testent
+// l'existence de la variable globale $pdo. La connexion reste explicite via
+// Config::getConnexion() pour permettre aux endpoints JSON de gérer les erreurs.
+$pdo = null;

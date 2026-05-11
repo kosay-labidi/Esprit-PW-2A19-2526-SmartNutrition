@@ -7,7 +7,7 @@ const modules = {
   users: 'modules/users.html',
   planning: 'modules/planning.html',
   events: 'modules/evenements.php',
-  meals: 'modules/meals.html',
+  meals: 'modules/meals.php',
   health: 'modules/health.html',
   challenges: 'modules/challenges.html'
 };
@@ -288,7 +288,7 @@ let autoReloadInterval = null;
 let lastModuleContent = {};
 
 // Modules à exclure de l'auto-reload (car ils ont des interactions utilisateur)
-const excludeFromAutoReload = ['planning', 'challenges', 'events'];
+const excludeFromAutoReload = ['planning', 'challenges', 'events', 'meals'];
 
 function startAutoReload() {
   if (autoReloadInterval) return;

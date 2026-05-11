@@ -1,989 +1,1222 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr" data-theme="dark">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
-<title>Connexion - GaiaLumen</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- Google reCAPTCHA -->
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<style>
-:root {
-  --green: #1F3D2B;
-  --sand: #F2E8CF;
-  --violet: #6B4E9E;
-  --violet-light: #8B6FC9;
-  --blue: #4A9FD8;
-  --blue-dark: #2E7AB6;
-  --gold: #D4AF37;
-  --bg-dark: #0A120E;
-  --bg-light: #F8F5ED;
-  --text-dark: #1A2E22;
-  --text-light: #F2E8CF;
-  --muted-dark: #8A9A82;
-  --muted-light: #6B7A63;
-  --card-bg-dark: rgba(15, 30, 20, 0.88);
-  --card-bg-light: rgba(248, 245, 237, 0.92);
-  --glass-dark: rgba(31, 61, 43, 0.4);
-  --glass-light: rgba(242, 232, 207, 0.5);
-  --shadow-dark: 0 25px 70px rgba(0, 0, 0, 0.6);
-  --shadow-light: 0 25px 70px rgba(31, 61, 43, 0.12);
-  --border-glow: rgba(107, 78, 158, 0.35);
-  --transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-[data-theme="light"] {
-  --bg: var(--bg-light);
-  --text: var(--text-dark);
-  --muted: var(--muted-light);
-  --card-bg: var(--card-bg-light);
-  --glass: var(--glass-light);
-  --shadow: var(--shadow-light);
-}
-
-[data-theme="dark"] {
-  --bg: var(--bg-dark);
-  --text: var(--text-light);
-  --muted: var(--muted-dark);
-  --card-bg: var(--card-bg-dark);
-  --glass: var(--glass-dark);
-  --shadow: var(--shadow-dark);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  overflow-x: hidden;
-  overflow-y: auto;
-  cursor: default;
-  transition: var(--transition);
-  padding: 20px 0;
-}
-
-h1, h2, h3, .logo-text {
-  font-family: 'Cormorant Garamond', serif;
-}
-
-#cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9999;
-  pointer-events: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--violet);
-  box-shadow: 0 0 15px var(--violet);
-  transform: translate(-50%, -50%);
-  transition: width 0.2s, height 0.2s;
-  mix-blend-mode: screen;
-}
-
-#cursor.hover {
-  width: 32px;
-  height: 32px;
-  background: var(--blue);
-}
-
-#cursor-trail {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9998;
-  pointer-events: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(107, 78, 158, 0.4);
-  transform: translate(-50%, -50%);
-}
-
-#preloader {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  background: #0A0E0C;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.8s, visibility 0.8s;
-}
-
-#preloader.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-#pl-canvas {
-  width: 160px;
-  height: 160px;
-}
-
-#pl-text {
-  margin-top: 24px;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.6rem;
-  letter-spacing: 0.4em;
-  color: var(--sand);
-  font-weight: 500;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.4; transform: scale(0.98); }
-  50% { opacity: 1; transform: scale(1); }
-}
-
-#bg-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-}
-
-#back-home {
-  position: fixed;
-  top: 24px;
-  left: 24px;
-  z-index: 99999;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(107, 78, 158, 0.4);
-  background: var(--glass);
-  backdrop-filter: blur(12px);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-  text-decoration: none;
-  pointer-events: auto;
-}
-
-#back-home:hover {
-  transform: scale(1.1) translateX(-3px);
-  border-color: var(--violet);
-}
-
-#back-home svg {
-  stroke: var(--text);
-}
-
-.container {
-  position: relative;
-  z-index: 2;
-  max-width: 480px;
-  width: 90%;
-  background: var(--card-bg);
-  backdrop-filter: blur(24px);
-  border-radius: 32px;
-  padding: 36px 40px;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(107, 78, 158, 0.25);
-  animation: slideUp 0.7s ease;
-  margin: 80px 8% 20px auto;
-}
-/* largeur du scroll */
-body::-webkit-scrollbar {
-  width: 8px;
-}
-
-/* fond */
-body::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-/* barre (la partie qu’on glisse) */
-body::-webkit-scrollbar-thumb {
-  background: #6B4E9E; /* ta couleur */
-  border-radius: 10px;
-}
-
-/* hover */
-body::-webkit-scrollbar-thumb:hover {
-  background: #8B6FC9;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(50px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.logo {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.logo svg {
-  width: 60px;
-  height: 60px;
-  margin-bottom: 16px;
-  filter: drop-shadow(0 0 12px rgba(107, 78, 158, 0.5));
-}
-
-.logo h1 {
-  font-size: 2.2rem;
-  background: linear-gradient(135deg, var(--sand) 0%, var(--gold) 50%, var(--blue) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 8px;
-}
-
-.logo p {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text);
-  opacity: 0.85;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 14px 16px;
-  background: rgba(31, 61, 43, 0.3);
-  border: 1.5px solid rgba(107, 78, 158, 0.25);
-  border-radius: 16px;
-  color: var(--text);
-  font-size: 0.95rem;
-  font-family: 'Inter', sans-serif;
-  transition: var(--transition);
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: var(--violet);
-  background: rgba(31, 61, 43, 0.5);
-  box-shadow: 0 0 20px rgba(107, 78, 158, 0.25);
-}
-
-/* reCAPTCHA Container Styles */
-.recaptcha-container {
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: center;
-  transform: scale(0.95);
-  transform-origin: center;
-}
-
-/* Forcer le thème sombre/clair du reCAPTCHA */
-[data-theme="dark"] .g-recaptcha {
-  filter: brightness(0.9) contrast(1.1);
-}
-
-[data-theme="light"] .g-recaptcha {
-  filter: brightness(1);
-}
-
-.remember {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.remember input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: var(--violet);
-}
-
-.btn-submit {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
-  border: none;
-  border-radius: 16px;
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-submit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 35px rgba(107, 78, 158, 0.5);
-}
-
-.btn-submit:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-#login-error {
-  margin-bottom: 20px;
-  padding: 14px 18px;
-  border-radius: 14px;
-  background: rgba(220, 53, 69, 0.12);
-  border: 1px solid rgba(220, 53, 69, 0.4);
-  color: #ff7b89;
-  font-size: 0.88rem;
-  text-align: center;
-  display: none;
-}
-
-.links {
-  text-align: center;
-  margin-top: 18px;
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.links a {
-  color: var(--blue);
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: var(--transition);
-}
-
-.links a:hover {
-  color: var(--violet-light);
-}
-
-.oauth-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.social-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 8px;
-  border-radius: 16px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: var(--transition);
-  cursor: pointer;
-}
-
-.social-btn.btn-google {
-  background: rgba(255, 255, 255, 0.96);
-  color: #2c3e2b;
-}
-
-.social-btn.btn-twitter {
-  background: #000000;
-  color: white;
-}
-
-.face-login-section {
-    margin-top: 18px;
-    text-align: center;
-    border-top: 1px solid rgba(107, 78, 158, 0.2);
-    padding-top: 18px;
-}
-
-.face-btn {
-    background: linear-gradient(135deg, #1F3D2B, #4A9FD8);
-    border: none;
-    border-radius: 50px;
-    padding: 12px 24px;
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-}
-
-.face-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(31, 61, 43, 0.3);
-}
-
-#faceCameraModal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 10001;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(8px);
-}
-
-#faceCameraModal.active {
-    display: flex;
-}
-
-.camera-container {
-    background: var(--card-bg);
-    backdrop-filter: blur(24px);
-    border-radius: 32px;
-    padding: 28px;
-    max-width: 550px;
-    width: 90%;
-    text-align: center;
-    border: 1px solid rgba(107, 78, 158, 0.3);
-    animation: slideUp 0.4s ease;
-}
-
-.camera-container h3 {
-    margin-bottom: 15px;
-    font-size: 1.5rem;
-}
-
-#video {
-    width: 100%;
-    max-width: 450px;
-    border-radius: 20px;
-    background: #000;
-    margin: 15px 0;
-    transform: scaleX(-1);
-    border: 2px solid rgba(107, 78, 158, 0.5);
-}
-
-#canvas {
-    display: none;
-}
-
-.face-status {
-    margin: 15px 0;
-    padding: 12px;
-    border-radius: 16px;
-    font-size: 0.9rem;
-}
-
-.face-status.loading {
-    background: rgba(74, 159, 216, 0.2);
-    color: #4A9FD8;
-}
-
-.face-status.success {
-    background: rgba(31, 61, 43, 0.2);
-    color: #4CAF50;
-}
-
-.face-status.error {
-    background: rgba(220, 53, 69, 0.2);
-    color: #ff6b6b;
-}
-
-.camera-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-.camera-btn {
-    padding: 12px 28px;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: var(--transition);
-    font-size: 0.9rem;
-}
-
-.camera-btn.primary {
-    background: linear-gradient(135deg, var(--violet), var(--blue));
-    color: white;
-}
-
-.camera-btn.primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(107, 78, 158, 0.4);
-}
-
-.camera-btn.secondary {
-    background: rgba(107, 78, 158, 0.2);
-    color: var(--text);
-    border: 1px solid rgba(107, 78, 158, 0.3);
-}
-
-.camera-btn.secondary:hover {
-    background: rgba(107, 78, 158, 0.4);
-}
-
-#theme-toggle {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 1000;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(107, 78, 158, 0.4);
-  background: var(--glass);
-  backdrop-filter: blur(12px);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-}
-
-#theme-toggle:hover {
-  transform: scale(1.1) rotate(8deg);
-  border-color: var(--violet);
-}
-
-#ai-toggle {
-  position: fixed;
-  bottom: 30px;
-  left: 30px;
-  z-index: 1000;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, var(--violet), var(--blue));
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-  box-shadow: 0 10px 30px rgba(107, 78, 158, 0.4);
-}
-
-#ai-toggle:hover {
-  transform: scale(1.1) translateY(-3px);
-}
-
-#ai-panel {
-  position: fixed;
-  bottom: 110px;
-  left: 30px;
-  z-index: 999;
-  width: 380px;
-  height: 520px;
-  background: var(--card-bg);
-  backdrop-filter: blur(24px);
-  border-radius: 28px;
-  border: 1px solid rgba(107, 78, 158, 0.3);
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-#ai-panel.active {
-  display: flex;
-}
-
-#ai-messages {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ai-message {
-  padding: 12px 16px;
-  border-radius: 18px;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  max-width: 80%;
-}
-
-.ai-message.user {
-  background: linear-gradient(135deg, var(--violet), var(--blue));
-  color: #fff;
-  align-self: flex-end;
-  border-bottom-right-radius: 4px;
-}
-
-.ai-message.bot {
-  background: rgba(107, 78, 158, 0.2);
-  align-self: flex-start;
-  border-bottom-left-radius: 4px;
-}
-
-#ai-input {
-  flex: 1;
-  padding: 12px 16px;
-  background: rgba(31, 61, 43, 0.4);
-  border: 1px solid rgba(107, 78, 158, 0.3);
-  border-radius: 18px;
-  color: var(--text);
-  font-size: 0.9rem;
-}
-
-#ai-send {
-  padding: 12px 22px;
-  background: linear-gradient(135deg, var(--violet), var(--blue));
-  border: none;
-  border-radius: 18px;
-  color: #fff;
-  cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  body { justify-content: center; }
-  .container { margin: 80px auto 20px; padding: 28px 24px; max-width: 95%; }
-  #ai-panel { width: calc(100% - 40px); left: 20px; height: 480px; }
-  .camera-container { padding: 20px; }
-  #video { max-width: 100%; }
-  .camera-btn { padding: 10px 20px; }
-  .recaptcha-container { transform: scale(0.85); }
-}
-</style>
-</head>
-<body>
-
-<div id="cursor"></div>
-<div id="cursor-trail"></div>
-
-<div id="preloader">
-  <canvas id="pl-canvas"></canvas>
-  <div id="pl-text">GAIALUMEN</div>
-</div>
-
-<canvas id="bg-canvas"></canvas>
-
-<a href="index.html" id="back-home">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M19 12H5M12 19l-7-7 7-7"/>
-  </svg>
-</a>
-
-<button id="theme-toggle">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-  </svg>
-</button>
-
-<button id="ai-toggle">
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-    <circle cx="9" cy="10" r="1" fill="#fff"/>
-    <circle cx="15" cy="10" r="1" fill="#fff"/>
-    <path d="M9 14c.5.5 1.5 1 3 1s2.5-.5 3-1"/>
-  </svg>
-</button>
-
-
-<div id="ai-panel">
-  <div style="padding: 20px 24px; border-bottom: 1px solid rgba(107, 78, 158, 0.2); display: flex; justify-content: space-between; align-items: center;">
-    <h3 style="margin: 0; font-size: 1.2rem; color: var(--text);">✨ Assistant GaiaLumen</h3>
-    <button id="ai-close" style="background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer;">×</button>
-  </div>
-  <div id="ai-messages">
-    <div class="ai-message bot">👋 Bonjour ! Je suis votre assistant GaiaLumen. Comment puis-je vous aider ?</div>
-  </div>
-  <div style="padding: 18px 20px; border-top: 1px solid rgba(107, 78, 158, 0.2); display: flex; gap: 12px;">
-    <input id="ai-input" type="text" placeholder="Posez votre question...">
-    <button id="ai-send">✨</button>
-  </div>
-</div>
-
-
-<div id="faceCameraModal">
-    <div class="camera-container">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0,user-scalable=no"
+    />
+    <title>Connexion - GaiaLumen</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+      :root {
+        --green: #1f3d2b;
+        --sand: #f2e8cf;
+        --violet: #6b4e9e;
+        --violet-light: #8b6fc9;
+        --blue: #4a9fd8;
+        --blue-dark: #2e7ab6;
+        --gold: #d4af37;
+        --bg-dark: #0a120e;
+        --bg-light: #f8f5ed;
+        --text-dark: #1a2e22;
+        --text-light: #f2e8cf;
+        --muted-dark: #8a9a82;
+        --muted-light: #6b7a63;
+        --card-bg-dark: rgba(15, 30, 20, 0.88);
+        --card-bg-light: rgba(248, 245, 237, 0.92);
+        --glass-dark: rgba(31, 61, 43, 0.4);
+        --glass-light: rgba(242, 232, 207, 0.5);
+        --shadow-dark: 0 25px 70px rgba(0, 0, 0, 0.6);
+        --shadow-light: 0 25px 70px rgba(31, 61, 43, 0.12);
+        --border-glow: rgba(107, 78, 158, 0.35);
+        --transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      [data-theme="light"] {
+        --bg: var(--bg-light);
+        --text: var(--text-dark);
+        --muted: var(--muted-light);
+        --card-bg: var(--card-bg-light);
+        --glass: var(--glass-light);
+        --shadow: var(--shadow-light);
+      }
+
+      [data-theme="dark"] {
+        --bg: var(--bg-dark);
+        --text: var(--text-light);
+        --muted: var(--muted-dark);
+        --card-bg: var(--card-bg-dark);
+        --glass: var(--glass-dark);
+        --shadow: var(--shadow-dark);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        overflow-x: hidden;
+        overflow-y: auto;
+        cursor: default;
+        transition: var(--transition);
+        padding: 20px 0;
+      }
+
+      h1,
+      h2,
+      h3,
+      .logo-text {
+        font-family: "Cormorant Garamond", serif;
+      }
+
+      #cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        pointer-events: none;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--violet);
+        box-shadow: 0 0 15px var(--violet);
+        transform: translate(-50%, -50%);
+        transition:
+          width 0.2s,
+          height 0.2s;
+        mix-blend-mode: screen;
+      }
+
+      #cursor.hover {
+        width: 32px;
+        height: 32px;
+        background: var(--blue);
+      }
+
+      #cursor-trail {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+        pointer-events: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(107, 78, 158, 0.4);
+        transform: translate(-50%, -50%);
+      }
+
+      #preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        background: #0a0e0c;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition:
+          opacity 0.8s,
+          visibility 0.8s;
+      }
+
+      #preloader.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      #pl-canvas {
+        width: 160px;
+        height: 160px;
+      }
+
+      #pl-text {
+        margin-top: 24px;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 1.6rem;
+        letter-spacing: 0.4em;
+        color: var(--sand);
+        font-weight: 500;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.4;
+          transform: scale(0.98);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      #bg-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
+
+      #back-home {
+        position: fixed;
+        top: 24px;
+        left: 24px;
+        z-index: 99999;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(107, 78, 158, 0.4);
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        text-decoration: none;
+        pointer-events: auto;
+      }
+
+      #back-home:hover {
+        transform: scale(1.1) translateX(-3px);
+        border-color: var(--violet);
+      }
+
+      #back-home svg {
+        stroke: var(--text);
+      }
+
+      .container {
+        position: relative;
+        z-index: 2;
+        max-width: 480px;
+        width: 90%;
+        background: var(--card-bg);
+        backdrop-filter: blur(24px);
+        border-radius: 32px;
+        padding: 36px 40px;
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(107, 78, 158, 0.25);
+        animation: slideUp 0.7s ease;
+        margin: 80px 8% 20px auto;
+      }
+      /* largeur du scroll */
+      body::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      /* fond */
+      body::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      /* barre (la partie qu’on glisse) */
+      body::-webkit-scrollbar-thumb {
+        background: #6b4e9e; /* ta couleur */
+        border-radius: 10px;
+      }
+
+      /* hover */
+      body::-webkit-scrollbar-thumb:hover {
+        background: #8b6fc9;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(50px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .logo svg {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 16px;
+        filter: drop-shadow(0 0 12px rgba(107, 78, 158, 0.5));
+      }
+
+      .logo h1 {
+        font-size: 2.2rem;
+        background: linear-gradient(
+          135deg,
+          var(--sand) 0%,
+          var(--gold) 50%,
+          var(--blue) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+      }
+
+      .logo p {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text);
+        opacity: 0.85;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 14px 16px;
+        background: rgba(31, 61, 43, 0.3);
+        border: 1.5px solid rgba(107, 78, 158, 0.25);
+        border-radius: 16px;
+        color: var(--text);
+        font-size: 0.95rem;
+        font-family: "Inter", sans-serif;
+        transition: var(--transition);
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: var(--violet);
+        background: rgba(31, 61, 43, 0.5);
+        box-shadow: 0 0 20px rgba(107, 78, 158, 0.25);
+      }
+
+      /* reCAPTCHA Container Styles */
+      .recaptcha-container {
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: center;
+        transform: scale(0.95);
+        transform-origin: center;
+      }
+
+      /* Forcer le thème sombre/clair du reCAPTCHA */
+      [data-theme="dark"] .g-recaptcha {
+        filter: brightness(0.9) contrast(1.1);
+      }
+
+      [data-theme="light"] .g-recaptcha {
+        filter: brightness(1);
+      }
+
+      .remember {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .remember input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: var(--violet);
+      }
+
+      .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
+        border: none;
+        border-radius: 16px;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(107, 78, 158, 0.5);
+      }
+
+      .btn-submit:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      #login-error {
+        margin-bottom: 20px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        background: rgba(220, 53, 69, 0.12);
+        border: 1px solid rgba(220, 53, 69, 0.4);
+        color: #ff7b89;
+        font-size: 0.88rem;
+        text-align: center;
+        display: none;
+      }
+
+      .links {
+        text-align: center;
+        margin-top: 18px;
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+
+      .links a {
+        color: var(--blue);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: var(--transition);
+      }
+
+      .links a:hover {
+        color: var(--violet-light);
+      }
+
+      .oauth-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .social-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 8px;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+        cursor: pointer;
+      }
+
+      .social-btn.btn-google {
+        background: rgba(255, 255, 255, 0.96);
+        color: #2c3e2b;
+      }
+
+      .social-btn.btn-twitter {
+        background: #000000;
+        color: white;
+      }
+
+      .face-login-section {
+        margin-top: 18px;
+        text-align: center;
+        border-top: 1px solid rgba(107, 78, 158, 0.2);
+        padding-top: 18px;
+      }
+
+      .face-btn {
+        background: linear-gradient(135deg, #1f3d2b, #4a9fd8);
+        border: none;
+        border-radius: 50px;
+        padding: 12px 24px;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: var(--transition);
+      }
+
+      .face-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(31, 61, 43, 0.3);
+      }
+
+      #faceCameraModal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 10001;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(8px);
+      }
+
+      #faceCameraModal.active {
+        display: flex;
+      }
+
+      .camera-container {
+        background: var(--card-bg);
+        backdrop-filter: blur(24px);
+        border-radius: 32px;
+        padding: 28px;
+        max-width: 550px;
+        width: 90%;
+        text-align: center;
+        border: 1px solid rgba(107, 78, 158, 0.3);
+        animation: slideUp 0.4s ease;
+      }
+
+      .camera-container h3 {
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+      }
+
+      #video {
+        width: 100%;
+        max-width: 450px;
+        border-radius: 20px;
+        background: #000;
+        margin: 15px 0;
+        transform: scaleX(-1);
+        border: 2px solid rgba(107, 78, 158, 0.5);
+      }
+
+      #canvas {
+        display: none;
+      }
+
+      .face-status {
+        margin: 15px 0;
+        padding: 12px;
+        border-radius: 16px;
+        font-size: 0.9rem;
+      }
+
+      .face-status.loading {
+        background: rgba(74, 159, 216, 0.2);
+        color: #4a9fd8;
+      }
+
+      .face-status.success {
+        background: rgba(31, 61, 43, 0.2);
+        color: #4caf50;
+      }
+
+      .face-status.error {
+        background: rgba(220, 53, 69, 0.2);
+        color: #ff6b6b;
+      }
+
+      .camera-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 20px;
+      }
+
+      .camera-btn {
+        padding: 12px 28px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: var(--transition);
+        font-size: 0.9rem;
+      }
+
+      .camera-btn.primary {
+        background: linear-gradient(135deg, var(--violet), var(--blue));
+        color: white;
+      }
+
+      .camera-btn.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(107, 78, 158, 0.4);
+      }
+
+      .camera-btn.secondary {
+        background: rgba(107, 78, 158, 0.2);
+        color: var(--text);
+        border: 1px solid rgba(107, 78, 158, 0.3);
+      }
+
+      .camera-btn.secondary:hover {
+        background: rgba(107, 78, 158, 0.4);
+      }
+
+      #theme-toggle {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        z-index: 1000;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(107, 78, 158, 0.4);
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+      }
+
+      #theme-toggle:hover {
+        transform: scale(1.1) rotate(8deg);
+        border-color: var(--violet);
+      }
+
+      #ai-toggle {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        z-index: 1000;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(135deg, var(--violet), var(--blue));
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        box-shadow: 0 10px 30px rgba(107, 78, 158, 0.4);
+      }
+
+      #ai-toggle:hover {
+        transform: scale(1.1) translateY(-3px);
+      }
+
+      #ai-panel {
+        position: fixed;
+        bottom: 110px;
+        left: 30px;
+        z-index: 999;
+        width: 380px;
+        height: 520px;
+        background: var(--card-bg);
+        backdrop-filter: blur(24px);
+        border-radius: 28px;
+        border: 1px solid rgba(107, 78, 158, 0.3);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      #ai-panel.active {
+        display: flex;
+      }
+
+      #ai-messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .ai-message {
+        padding: 12px 16px;
+        border-radius: 18px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        max-width: 80%;
+      }
+
+      .ai-message.user {
+        background: linear-gradient(135deg, var(--violet), var(--blue));
+        color: #fff;
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+      }
+
+      .ai-message.bot {
+        background: rgba(107, 78, 158, 0.2);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+      }
+
+      #ai-input {
+        flex: 1;
+        padding: 12px 16px;
+        background: rgba(31, 61, 43, 0.4);
+        border: 1px solid rgba(107, 78, 158, 0.3);
+        border-radius: 18px;
+        color: var(--text);
+        font-size: 0.9rem;
+      }
+
+      #ai-send {
+        padding: 12px 22px;
+        background: linear-gradient(135deg, var(--violet), var(--blue));
+        border: none;
+        border-radius: 18px;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          justify-content: center;
+        }
+        .container {
+          margin: 80px auto 20px;
+          padding: 28px 24px;
+          max-width: 95%;
+        }
+        #ai-panel {
+          width: calc(100% - 40px);
+          left: 20px;
+          height: 480px;
+        }
+        .camera-container {
+          padding: 20px;
+        }
+        #video {
+          max-width: 100%;
+        }
+        .camera-btn {
+          padding: 10px 20px;
+        }
+        .recaptcha-container {
+          transform: scale(0.85);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cursor"></div>
+    <div id="cursor-trail"></div>
+
+    <div id="preloader">
+      <canvas id="pl-canvas"></canvas>
+      <div id="pl-text">GAIALUMEN</div>
+    </div>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <a href="index.html" id="back-home">
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+    </a>
+
+    <button id="theme-toggle">
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    </button>
+
+    <button id="ai-toggle">
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#fff"
+        stroke-width="2"
+      >
+        <path
+          d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+        />
+        <circle cx="9" cy="10" r="1" fill="#fff" />
+        <circle cx="15" cy="10" r="1" fill="#fff" />
+        <path d="M9 14c.5.5 1.5 1 3 1s2.5-.5 3-1" />
+      </svg>
+    </button>
+
+    <div id="ai-panel">
+      <div
+        style="
+          padding: 20px 24px;
+          border-bottom: 1px solid rgba(107, 78, 158, 0.2);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text)">
+          ✨ Assistant GaiaLumen
+        </h3>
+        <button
+          id="ai-close"
+          style="
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 28px;
+            cursor: pointer;
+          "
+        >
+          ×
+        </button>
+      </div>
+      <div id="ai-messages">
+        <div class="ai-message bot">
+          👋 Bonjour ! Je suis votre assistant GaiaLumen. Comment puis-je vous
+          aider ?
+        </div>
+      </div>
+      <div
+        style="
+          padding: 18px 20px;
+          border-top: 1px solid rgba(107, 78, 158, 0.2);
+          display: flex;
+          gap: 12px;
+        "
+      >
+        <input
+          id="ai-input"
+          type="text"
+          placeholder="Posez votre question..."
+        />
+        <button id="ai-send">✨</button>
+      </div>
+    </div>
+
+    <div id="faceCameraModal">
+      <div class="camera-container">
         <h3>📸 Reconnaissance Faciale</h3>
-        <p style="color: var(--muted); margin-bottom: 10px;">Placez votre visage devant la caméra</p>
+        <p style="color: var(--muted); margin-bottom: 10px">
+          Placez votre visage devant la caméra
+        </p>
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
         <div id="faceStatus" class="face-status"></div>
         <div class="camera-buttons">
-            <button class="camera-btn primary" id="captureFace">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline; margin-right: 8px;">
-                    <circle cx="12" cy="12" r="10"/>
-                    <circle cx="12" cy="12" r="3"/>
-                </svg>
-                Capturer
-            </button>
-            <button class="camera-btn secondary" id="closeCamera">Fermer</button>
+          <button class="camera-btn primary" id="captureFace">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              style="display: inline; margin-right: 8px"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            Capturer
+          </button>
+          <button class="camera-btn secondary" id="closeCamera">Fermer</button>
         </div>
+      </div>
     </div>
-</div>
 
-<div class="container">
-  <div class="logo">
-    <svg viewBox="0 0 60 60" fill="none">
-      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
-      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
-      <defs>
-        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#4A9FD8"/>
-          <stop offset="100%" stop-color="#6B4E9E"/>
-        </radialGradient>
-        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#1F3D2B"/>
-          <stop offset="100%" stop-color="#4A9FD8"/>
-        </linearGradient>
-      </defs>
-      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
-      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1"/>
-    </svg>
-    <h1>GaiaLumen</h1>
-    <p>Nutrition Écologique &amp; Intelligente</p>
-  </div>
-  
-  
-  <form id="loginForm" novalidate>
-    <div class="form-group">
-      <label for="email-input">Adresse email</label>
-      <input type="text" id="email-input" placeholder="exemple@email.com" autocomplete="off">
+    <div class="container">
+      <div class="logo">
+        <svg viewBox="0 0 60 60" fill="none">
+          <circle
+            cx="30"
+            cy="30"
+            r="28"
+            stroke="url(#ag)"
+            stroke-width="1.5"
+            opacity=".6"
+          />
+          <circle
+            cx="30"
+            cy="30"
+            r="22"
+            stroke="url(#ag)"
+            stroke-width=".8"
+            opacity=".3"
+          />
+          <defs>
+            <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#4A9FD8" />
+              <stop offset="100%" stop-color="#6B4E9E" />
+            </radialGradient>
+            <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1F3D2B" />
+              <stop offset="100%" stop-color="#4A9FD8" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z"
+            fill="url(#lg)"
+          />
+          <path
+            d="M30 14 L30 46"
+            stroke="rgba(242,232,207,.5)"
+            stroke-width="1"
+          />
+        </svg>
+        <h1>GaiaLumen</h1>
+        <p>Nutrition Écologique &amp; Intelligente</p>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="email-input">Adresse email</label>
+          <input
+            type="text"
+            id="email-input"
+            placeholder="exemple@email.com"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password-input">Mot de passe</label>
+          <input
+            type="password"
+            id="password-input"
+            placeholder="••••••••"
+            autocomplete="new-password"
+            value=""
+          />
+        </div>
+
+        <!-- Google reCAPTCHA v2 -->
+        <div class="recaptcha-container">
+          <div
+            class="g-recaptcha"
+            data-sitekey="6LeZW9wsAAAAAKELGv3xyzmXROZZGcVxcbGxoiPg"
+            data-theme="dark"
+          ></div>
+        </div>
+
+        <div class="remember">
+          <input type="checkbox" id="remember" />
+          <label for="remember">Se souvenir de moi</label>
+        </div>
+
+        <div id="login-error"></div>
+
+        <button type="submit" class="btn-submit" id="btn-login">
+          Se connecter
+        </button>
+      </form>
+
+      <div class="links">
+        <a href="register.html">Créer un compte</a>
+        <a href="forgot.html">Mot de passe oublié ?</a>
+      </div>
+
+      <div class="oauth-buttons">
+        <a
+          href="../backend/auth/google-auth.php?action=login"
+          class="social-btn btn-google"
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            width="18"
+          />
+          <span>Google</span>
+        </a>
+        <a
+          href="../backend/auth/twitter-auth.php?action=login"
+          class="social-btn btn-twitter"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path
+              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231z"
+            />
+          </svg>
+          <span>X (Twitter)</span>
+        </a>
+      </div>
+      <div class="face-login-section">
+        <button id="faceLoginBtn" class="face-btn">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M12 2a9 9 0 0 0-9 9c0 4.5 3 8 9 12 6-4 9-7.5 9-12a9 9 0 0 0-9-9z"
+            />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          Face ID
+        </button>
+      </div>
     </div>
-    
-    <div class="form-group">
-      <label for="password-input">Mot de passe</label>
-      <input type="password" id="password-input" placeholder="••••••••" autocomplete="new-password" value="">
-    </div>
-    
-    <!-- Google reCAPTCHA v2 -->
-    <div class="recaptcha-container">
-      <div class="g-recaptcha" data-sitekey="6LeZW9wsAAAAAKELGv3xyzmXROZZGcVxcbGxoiPg" data-theme="dark"></div>
-    </div>
-    
-    <div class="remember">
-      <input type="checkbox" id="remember"/>
-      <label for="remember">Se souvenir de moi</label>
-    </div>
-    
-    <div id="login-error"></div>
 
-    <button type="submit" class="btn-submit" id="btn-login">Se connecter</button>
-  </form>
-  
-  <div class="links">
-    <a href="register.html">Créer un compte</a>
-    <a href="forgot.html">Mot de passe oublié ?</a>
-  </div>
-  
-  <div class="oauth-buttons">
-    <a href="../backend/auth/google-auth.php?action=login" class="social-btn btn-google">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18">
-      <span>Google</span>
-    </a>
-    <a href="../backend/auth/twitter-auth.php?action=login" class="social-btn btn-twitter">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231z"/>
-      </svg>
-      <span>X (Twitter)</span>
-    </a>
-  </div>
-<div class="face-login-section">
-  <button id="faceLoginBtn" class="face-btn">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M12 2a9 9 0 0 0-9 9c0 4.5 3 8 9 12 6-4 9-7.5 9-12a9 9 0 0 0-9-9z"/>
-      <circle cx="12" cy="10" r="3"/>
-    </svg>
-    Face ID
-  </button>
-</div>
-  
-</div>
+    <script>
+      /* PRELOADER */
+      (function () {
+        const c = document.getElementById("pl-canvas");
+        if (!c) return;
+        const ctx = c.getContext("2d");
+        c.width = 140;
+        c.height = 140;
+        let a = 0,
+          prog = 0;
+        function draw() {
+          prog = Math.min(prog + 2, 100);
+          a += 0.04;
+          ctx.clearRect(0, 0, 140, 140);
+          ctx.save();
+          ctx.translate(70, 70);
+          ctx.rotate(a);
+          for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.arc(0, 0, 48 - i * 10, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${i === 0 ? "74,159,216" : i === 1 ? "107,78,158" : "31,61,43"}, ${0.6 - i * 0.15})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+          ctx.rotate(-a * 0.3);
+          const g = ctx.createLinearGradient(-18, -26, 18, 26);
+          g.addColorStop(0, "#1F3D2B");
+          g.addColorStop(1, "#4A9FD8");
+          ctx.beginPath();
+          ctx.fillStyle = g;
+          ctx.moveTo(0, -26);
+          ctx.bezierCurveTo(19, -12, 22, 7, 0, 26);
+          ctx.bezierCurveTo(-22, 7, -19, -12, 0, -26);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(0, -24);
+          ctx.lineTo(0, 24);
+          ctx.strokeStyle = "rgba(242,232,207,.5)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.restore();
+          if (prog < 100) requestAnimationFrame(draw);
+          else
+            setTimeout(() => {
+              const pl = document.getElementById("preloader");
+              if (pl) pl.classList.add("hidden");
+            }, 300);
+        }
+        requestAnimationFrame(draw);
+      })();
 
-<script>
-/* PRELOADER */
-(function(){
-  const c = document.getElementById('pl-canvas');
-  if(!c) return;
-  const ctx = c.getContext('2d');
-  c.width = 140; c.height = 140;
-  let a = 0, prog = 0;
-  function draw() {
-    prog = Math.min(prog + 2, 100);
-    a += 0.04;
-    ctx.clearRect(0, 0, 140, 140);
-    ctx.save(); ctx.translate(70, 70); ctx.rotate(a);
-    for(let i = 0; i < 3; i++) {
-      ctx.beginPath(); ctx.arc(0, 0, 48 - i * 10, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(${i === 0 ? '74,159,216' : i === 1 ? '107,78,158' : '31,61,43'}, ${0.6 - i * 0.15})`;
-      ctx.lineWidth = 1.5; ctx.stroke();
-    }
-    ctx.rotate(-a * 0.3);
-    const g = ctx.createLinearGradient(-18, -26, 18, 26);
-    g.addColorStop(0, '#1F3D2B'); g.addColorStop(1, '#4A9FD8');
-    ctx.beginPath(); ctx.fillStyle = g;
-    ctx.moveTo(0, -26); ctx.bezierCurveTo(19, -12, 22, 7, 0, 26);
-    ctx.bezierCurveTo(-22, 7, -19, -12, 0, -26); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(0, -24); ctx.lineTo(0, 24);
-    ctx.strokeStyle = 'rgba(242,232,207,.5)'; ctx.lineWidth = 1; ctx.stroke();
-    ctx.restore();
-    if(prog < 100) requestAnimationFrame(draw);
-    else setTimeout(() => { const pl = document.getElementById('preloader'); if(pl) pl.classList.add('hidden'); }, 300);
-  }
-  requestAnimationFrame(draw);
-})();
+      /* CURSEUR PERSONNALISÉ */
+      (function () {
+        const cur = document.getElementById("cursor");
+        const trail = document.getElementById("cursor-trail");
+        if (!cur || !trail) return;
+        let mx = 0,
+          my = 0,
+          tx = 0,
+          ty = 0;
+        document.addEventListener("mousemove", (e) => {
+          mx = e.clientX;
+          my = e.clientY;
+          cur.style.left = mx + "px";
+          cur.style.top = my + "px";
+        });
+        (function loop() {
+          tx += (mx - tx) * 0.12;
+          ty += (my - ty) * 0.12;
+          trail.style.left = tx + "px";
+          trail.style.top = ty + "px";
+          requestAnimationFrame(loop);
+        })();
+        document
+          .querySelectorAll("a, button, input, .social-btn, .face-btn")
+          .forEach((el) => {
+            if (el) {
+              el.addEventListener("mouseenter", () =>
+                cur.classList.add("hover"),
+              );
+              el.addEventListener("mouseleave", () =>
+                cur.classList.remove("hover"),
+              );
+            }
+          });
+      })();
 
-/* CURSEUR PERSONNALISÉ */
-(function() {
-  const cur = document.getElementById('cursor');
-  const trail = document.getElementById('cursor-trail');
-  if(!cur || !trail) return;
-  let mx = 0, my = 0, tx = 0, ty = 0;
-  document.addEventListener('mousemove', e => {
-    mx = e.clientX; my = e.clientY;
-    cur.style.left = mx + 'px'; cur.style.top = my + 'px';
-  });
-  (function loop() {
-    tx += (mx - tx) * 0.12; ty += (my - ty) * 0.12;
-    trail.style.left = tx + 'px'; trail.style.top = ty + 'px';
-    requestAnimationFrame(loop);
-  })();
-  document.querySelectorAll('a, button, input, .social-btn, .face-btn').forEach(el => {
-    if(el) {
-      el.addEventListener('mouseenter', () => cur.classList.add('hover'));
-      el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
-    }
-  });
-})();
+      /* THREE.JS - BACKGROUND 3D */
+      window.addEventListener("load", function () {
+        const canvas = document.getElementById("bg-canvas");
+        if (!canvas || typeof THREE === "undefined") return;
+        const renderer = new THREE.WebGLRenderer({
+          canvas,
+          antialias: true,
+          alpha: true,
+        });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+          60,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000,
+        );
+        camera.position.set(0, 0, 6);
+        function resize() {
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+        }
+        resize();
+        window.addEventListener("resize", resize);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+        const dl = new THREE.DirectionalLight(0x4a9fd8, 1);
+        dl.position.set(5, 3, 5);
+        scene.add(dl);
+        const pl = new THREE.PointLight(0x6b4e9e, 1.5, 20);
+        pl.position.set(-3, 2, 2);
+        scene.add(pl);
+        const loader = new THREE.TextureLoader();
+        const earth = new THREE.Mesh(
+          new THREE.SphereGeometry(2, 64, 64),
+          new THREE.MeshPhongMaterial({
+            map: loader.load(
+              "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+            ),
+            specular: new THREE.Color(0x4a9fd8),
+            shininess: 28,
+          }),
+        );
+        earth.position.set(-4, 0, -2);
+        scene.add(earth);
+        const clouds = new THREE.Mesh(
+          new THREE.SphereGeometry(2.03, 64, 64),
+          new THREE.MeshPhongMaterial({
+            map: loader.load(
+              "https://threejs.org/examples/textures/planets/earth_clouds_1024.png",
+            ),
+            transparent: true,
+            opacity: 0.28,
+          }),
+        );
+        clouds.position.copy(earth.position);
+        scene.add(clouds);
+        const PC = 1200,
+          pp = new Float32Array(PC * 3),
+          pc = new Float32Array(PC * 3);
+        const pal = [
+          new THREE.Color(0x1f3d2b),
+          new THREE.Color(0x4a9fd8),
+          new THREE.Color(0x6b4e9e),
+          new THREE.Color(0xf2e8cf),
+        ];
+        for (let i = 0; i < PC; i++) {
+          pp[i * 3] = (Math.random() - 0.5) * 20;
+          pp[i * 3 + 1] = (Math.random() - 0.5) * 20;
+          pp[i * 3 + 2] = (Math.random() - 0.5) * 10;
+          const c = pal[Math.floor(Math.random() * 4)];
+          pc[i * 3] = c.r;
+          pc[i * 3 + 1] = c.g;
+          pc[i * 3 + 2] = c.b;
+        }
+        const pGeo = new THREE.BufferGeometry();
+        pGeo.setAttribute("position", new THREE.BufferAttribute(pp, 3));
+        pGeo.setAttribute("color", new THREE.BufferAttribute(pc, 3));
+        const pts = new THREE.Points(
+          pGeo,
+          new THREE.PointsMaterial({
+            size: 0.03,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.6,
+          }),
+        );
+        scene.add(pts);
+        let mx = 0,
+          my = 0;
+        document.addEventListener("mousemove", (e) => {
+          mx = (e.clientX / window.innerWidth - 0.5) * 2;
+          my = (e.clientY / window.innerHeight - 0.5) * 2;
+        });
+        (function anim() {
+          requestAnimationFrame(anim);
+          earth.rotation.y += 0.002;
+          clouds.rotation.y += 0.0025;
+          pts.rotation.y += 0.0003;
+          camera.position.x += (mx * 0.5 - camera.position.x) * 0.05;
+          camera.position.y += (-my * 0.5 - camera.position.y) * 0.05;
+          camera.lookAt(0, 0, 0);
+          renderer.render(scene, camera);
+        })();
+      });
 
-/* THREE.JS - BACKGROUND 3D */
-window.addEventListener('load', function() {
-  const canvas = document.getElementById('bg-canvas');
-  if(!canvas || typeof THREE === 'undefined') return;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 0, 6);
-  function resize() {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-  }
-  resize();
-  window.addEventListener('resize', resize);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-  const dl = new THREE.DirectionalLight(0x4A9FD8, 1);
-  dl.position.set(5, 3, 5);
-  scene.add(dl);
-  const pl = new THREE.PointLight(0x6B4E9E, 1.5, 20);
-  pl.position.set(-3, 2, 2);
-  scene.add(pl);
-  const loader = new THREE.TextureLoader();
-  const earth = new THREE.Mesh(
-    new THREE.SphereGeometry(2, 64, 64),
-    new THREE.MeshPhongMaterial({
-      map: loader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
-      specular: new THREE.Color(0x4A9FD8),
-      shininess: 28
-    })
-  );
-  earth.position.set(-4, 0, -2);
-  scene.add(earth);
-  const clouds = new THREE.Mesh(
-    new THREE.SphereGeometry(2.03, 64, 64),
-    new THREE.MeshPhongMaterial({
-      map: loader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png'),
-      transparent: true,
-      opacity: 0.28
-    })
-  );
-  clouds.position.copy(earth.position);
-  scene.add(clouds);
-  const PC = 1200, pp = new Float32Array(PC * 3), pc = new Float32Array(PC * 3);
-  const pal = [new THREE.Color(0x1F3D2B), new THREE.Color(0x4A9FD8), new THREE.Color(0x6B4E9E), new THREE.Color(0xF2E8CF)];
-  for(let i = 0; i < PC; i++) {
-    pp[i * 3] = (Math.random() - 0.5) * 20;
-    pp[i * 3 + 1] = (Math.random() - 0.5) * 20;
-    pp[i * 3 + 2] = (Math.random() - 0.5) * 10;
-    const c = pal[Math.floor(Math.random() * 4)];
-    pc[i * 3] = c.r; pc[i * 3 + 1] = c.g; pc[i * 3 + 2] = c.b;
-  }
-  const pGeo = new THREE.BufferGeometry();
-  pGeo.setAttribute('position', new THREE.BufferAttribute(pp, 3));
-  pGeo.setAttribute('color', new THREE.BufferAttribute(pc, 3));
-  const pts = new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 0.03, vertexColors: true, transparent: true, opacity: 0.6 }));
-  scene.add(pts);
-  let mx = 0, my = 0;
-  document.addEventListener('mousemove', e => {
-    mx = (e.clientX / window.innerWidth - 0.5) * 2;
-    my = (e.clientY / window.innerHeight - 0.5) * 2;
-  });
-  (function anim() {
-    requestAnimationFrame(anim);
-    earth.rotation.y += 0.002;
-    clouds.rotation.y += 0.0025;
-    pts.rotation.y += 0.0003;
-    camera.position.x += (mx * 0.5 - camera.position.x) * 0.05;
-    camera.position.y += (-my * 0.5 - camera.position.y) * 0.05;
-    camera.lookAt(0, 0, 0);
-    renderer.render(scene, camera);
-  })();
-});
-
-/* Fonction pour obtenir le token reCAPTCHA */
-function getRecaptchaToken() {
-  return new Promise((resolve, reject) => {
-    if (typeof grecaptcha !== 'undefined') {
-      const response = grecaptcha.getResponse();
-      if (response) {
-        resolve(response);
-      } else {
-        reject('Veuillez compléter le CAPTCHA');
+      /* Fonction pour obtenir le token reCAPTCHA */
+      function getRecaptchaToken() {
+        return new Promise((resolve, reject) => {
+          if (typeof grecaptcha !== "undefined") {
+            const response = grecaptcha.getResponse();
+            if (response) {
+              resolve(response);
+            } else {
+              reject("Veuillez compléter le CAPTCHA");
+            }
+          } else {
+            reject("reCAPTCHA non chargé");
+          }
+        });
       }
-    } else {
-      reject('reCAPTCHA non chargé');
-    }
-  });
-}
 
-/* REMEMBER ME & FORCE CLEAR PASSWORD FIELD */
-(function() {
-  const savedEmail = localStorage.getItem('gaialumen-remember-email');
-  if(savedEmail) {
-    document.getElementById('email-input').value = savedEmail;
-    document.getElementById('remember').checked = true;
-  }
-  
-  const pwdField = document.getElementById('password-input');
-  if(pwdField) {
-    pwdField.value = '';
-    pwdField.readOnly = true;
-    setTimeout(() => {
-      pwdField.readOnly = false;
-      pwdField.value = '';
-    }, 100);
-  }
-})();
+      /* REMEMBER ME & FORCE CLEAR PASSWORD FIELD */
+      (function () {
+        const savedEmail = localStorage.getItem("gaialumen-remember-email");
+        if (savedEmail) {
+          document.getElementById("email-input").value = savedEmail;
+          document.getElementById("remember").checked = true;
+        }
 
-/* POPUP COMPTE SUSPENDU */
-function showSuspendedPopup(contactEmail) {
-  const existingModal = document.querySelector('.suspended-modal');
-  if(existingModal) existingModal.remove();
-  
-  const modal = document.createElement('div');
-  modal.className = 'suspended-modal';
-  modal.innerHTML = `
+        const pwdField = document.getElementById("password-input");
+        if (pwdField) {
+          pwdField.value = "";
+          pwdField.readOnly = true;
+          setTimeout(() => {
+            pwdField.readOnly = false;
+            pwdField.value = "";
+          }, 100);
+        }
+      })();
+
+      /* POPUP COMPTE SUSPENDU */
+      function showSuspendedPopup(contactEmail) {
+        const existingModal = document.querySelector(".suspended-modal");
+        if (existingModal) existingModal.remove();
+
+        const modal = document.createElement("div");
+        modal.className = "suspended-modal";
+        modal.innerHTML = `
     <div class="suspended-modal-overlay">
       <div class="suspended-modal-content">
         <div class="suspended-modal-header">
@@ -1009,9 +1242,9 @@ function showSuspendedPopup(contactEmail) {
       </div>
     </div>
   `;
-  
-  const style = document.createElement('style');
-  style.textContent = `
+
+        const style = document.createElement("style");
+        style.textContent = `
     .suspended-modal {
       position: fixed;
       top: 0;
@@ -1116,470 +1349,500 @@ function showSuspendedPopup(contactEmail) {
       to { opacity: 1; }
     }
   `;
-  
-  document.head.appendChild(style);
-  document.body.appendChild(modal);
-  
-  const closeBtn = modal.querySelector('.suspended-close-btn');
-  const overlay = modal.querySelector('.suspended-modal-overlay');
-  
-  closeBtn.addEventListener('click', () => modal.remove());
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) modal.remove();
-  });
-  
-  const escHandler = (e) => {
-    if (e.key === 'Escape') {
-      modal.remove();
-      document.removeEventListener('keydown', escHandler);
-    }
-  };
-  document.addEventListener('keydown', escHandler);
-}
 
-/* FORMULAIRE LOGIN - AVEC VALIDATION reCAPTCHA */
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
+        document.head.appendChild(style);
+        document.body.appendChild(modal);
 
-  const btn = document.getElementById('btn-login');
-  const errorDiv = document.getElementById('login-error');
-  const email = document.getElementById('email-input').value.trim();
-  const password = document.getElementById('password-input').value;
+        const closeBtn = modal.querySelector(".suspended-close-btn");
+        const overlay = modal.querySelector(".suspended-modal-overlay");
 
-  errorDiv.style.display = 'none';
-  errorDiv.textContent = '';
+        closeBtn.addEventListener("click", () => modal.remove());
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) modal.remove();
+        });
 
-  if(!email || !password) {
-    errorDiv.textContent = "L'email et le mot de passe sont obligatoires";
-    errorDiv.style.display = 'block';
-    return;
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if(!emailRegex.test(email)) {
-    errorDiv.textContent = "Format d'email invalide.";
-    errorDiv.style.display = 'block';
-    return;
-  }
-
-  // Vérification du reCAPTCHA
-  let recaptchaToken;
-  try {
-    recaptchaToken = await getRecaptchaToken();
-  } catch (err) {
-    errorDiv.textContent = err;
-    errorDiv.style.display = 'block';
-    return;
-  }
-
-  if (!recaptchaToken) {
-    errorDiv.textContent = "Veuillez valider le CAPTCHA";
-    errorDiv.style.display = 'block';
-    return;
-  }
-
-  btn.textContent = 'Connexion...';
-  btn.disabled = true;
-
-  try {
-    const response = await fetch('../backend/users/login.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ 
-        email: email, 
-        mdp: password, 
-        remember_me: document.getElementById('remember').checked,
-        recaptcha_token: recaptchaToken  // Envoi du token au backend
-      })
-    });
-
-    const result = await response.json();
-    console.log('Résultat login:', result);
-
-    // Vérification du compte suspendu
-    const isSuspended = 
-      result.message === 'suspended' ||
-      (result.message && result.message.toLowerCase() === 'suspendu') ||
-      result.status === 'suspendu' ||
-      (result.data && result.data.status === 'suspendu');
-    
-    if (isSuspended) {
-      console.log('Compte suspendu détecté');
-      showSuspendedPopup('gaiaalumen@gmail.com');
-      btn.textContent = 'Se connecter';
-      btn.disabled = false;
-      document.getElementById('password-input').value = '';
-      // Réinitialiser le reCAPTCHA
-      if (typeof grecaptcha !== 'undefined') {
-        grecaptcha.reset();
-      }
-      return;
-    }
-
-    if(result.success) {
-      const userData = result.data;
-      const userId = userData.id_utilisateur || userData.id;
-      
-      if(userId) {
-        sessionStorage.setItem('user_id', userId);
-        localStorage.setItem('user_id', userId);
-      }
-      
-      sessionStorage.setItem('user_email', userData.email);
-      sessionStorage.setItem('user_nom', userData.nom || '');
-      sessionStorage.setItem('user_prenom', userData.prenom || '');
-      sessionStorage.setItem('user_role', userData.role || '');
-      
-      localStorage.setItem('gaialumen-user', JSON.stringify(userData));
-      localStorage.setItem('gaialumen-token', 'session-' + Date.now());
-
-      if(document.getElementById('remember').checked) {
-        localStorage.setItem('gaialumen-remember-email', email);
-      } else {
-        localStorage.removeItem('gaialumen-remember-email');
+        const escHandler = (e) => {
+          if (e.key === "Escape") {
+            modal.remove();
+            document.removeEventListener("keydown", escHandler);
+          }
+        };
+        document.addEventListener("keydown", escHandler);
       }
 
-      btn.textContent = '✓ Connecté !';
+      /* FORMULAIRE LOGIN - AVEC VALIDATION reCAPTCHA */
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
 
-      setTimeout(() => {
-        if(userData.role === 'admin') {
-          window.location.href = '../backend/admin.html';
-        } else {
-          window.location.href = 'dashboard.html';
+          const btn = document.getElementById("btn-login");
+          const errorDiv = document.getElementById("login-error");
+          const email = document.getElementById("email-input").value.trim();
+          const password = document.getElementById("password-input").value;
+
+          errorDiv.style.display = "none";
+          errorDiv.textContent = "";
+
+          if (!email || !password) {
+            errorDiv.textContent =
+              "L'email et le mot de passe sont obligatoires";
+            errorDiv.style.display = "block";
+            return;
+          }
+
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+            errorDiv.textContent = "Format d'email invalide.";
+            errorDiv.style.display = "block";
+            return;
+          }
+
+          // Vérification du reCAPTCHA
+          let recaptchaToken;
+          try {
+            recaptchaToken = await getRecaptchaToken();
+          } catch (err) {
+            errorDiv.textContent = err;
+            errorDiv.style.display = "block";
+            return;
+          }
+
+          if (!recaptchaToken) {
+            errorDiv.textContent = "Veuillez valider le CAPTCHA";
+            errorDiv.style.display = "block";
+            return;
+          }
+
+          btn.textContent = "Connexion...";
+          btn.disabled = true;
+
+          try {
+            const response = await fetch("../backend/users/login.php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({
+                email: email,
+                mdp: password,
+                remember_me: document.getElementById("remember").checked,
+                recaptcha_token: recaptchaToken, // Envoi du token au backend
+              }),
+            });
+
+            const result = await response.json();
+            console.log("Résultat login:", result);
+
+            // Vérification du compte suspendu
+            const isSuspended =
+              result.message === "suspended" ||
+              (result.message && result.message.toLowerCase() === "suspendu") ||
+              result.status === "suspendu" ||
+              (result.data && result.data.status === "suspendu");
+
+            if (isSuspended) {
+              console.log("Compte suspendu détecté");
+              showSuspendedPopup("gaiaalumen@gmail.com");
+              btn.textContent = "Se connecter";
+              btn.disabled = false;
+              document.getElementById("password-input").value = "";
+              // Réinitialiser le reCAPTCHA
+              if (typeof grecaptcha !== "undefined") {
+                grecaptcha.reset();
+              }
+              return;
+            }
+
+            if (result.success) {
+              const userData = result.data;
+              const userId = userData.id_utilisateur || userData.id;
+
+              if (userId) {
+                sessionStorage.setItem("user_id", userId);
+                localStorage.setItem("user_id", userId);
+              }
+
+              sessionStorage.setItem("user_email", userData.email);
+              sessionStorage.setItem("user_nom", userData.nom || "");
+              sessionStorage.setItem("user_prenom", userData.prenom || "");
+              sessionStorage.setItem("user_role", userData.role || "");
+
+              localStorage.setItem("gaialumen-user", JSON.stringify(userData));
+              localStorage.setItem("gaialumen-token", "session-" + Date.now());
+
+              if (document.getElementById("remember").checked) {
+                localStorage.setItem("gaialumen-remember-email", email);
+              } else {
+                localStorage.removeItem("gaialumen-remember-email");
+              }
+
+              btn.textContent = "✓ Connecté !";
+
+              setTimeout(() => {
+                if (userData.role === "admin") {
+                  window.location.href = "../backend/admin.html";
+                } else {
+                  window.location.href = "dashboard.html";
+                }
+              }, 800);
+              return;
+            }
+
+            if (result.message === "account_inactive") {
+              window.location.href =
+                "reactivate.html?email=" + encodeURIComponent(email);
+              return;
+            }
+
+            btn.textContent = "Se connecter";
+            btn.disabled = false;
+            errorDiv.textContent = result.message || "Identifiants incorrects.";
+            errorDiv.style.display = "block";
+
+            // Réinitialiser le reCAPTCHA en cas d'erreur
+            if (typeof grecaptcha !== "undefined") {
+              grecaptcha.reset();
+            }
+          } catch (err) {
+            console.error("Erreur login:", err);
+            btn.textContent = "Se connecter";
+            btn.disabled = false;
+            errorDiv.textContent = "Impossible de contacter le serveur.";
+            errorDiv.style.display = "block";
+
+            // Réinitialiser le reCAPTCHA
+            if (typeof grecaptcha !== "undefined") {
+              grecaptcha.reset();
+            }
+          }
+        });
+
+      /* THEME TOGGLE */
+      const themeToggle = document.getElementById("theme-toggle");
+      const html = document.documentElement;
+      let isDark = localStorage.getItem("gaialumen-theme") !== "light";
+      html.setAttribute("data-theme", isDark ? "dark" : "light");
+
+      // Mettre à jour le thème du reCAPTCHA
+      function updateRecaptchaTheme() {
+        const recaptchaContainer = document.querySelector(".g-recaptcha");
+        if (recaptchaContainer && typeof grecaptcha !== "undefined") {
+          const currentTheme = html.getAttribute("data-theme");
+          recaptchaContainer.setAttribute("data-theme", currentTheme);
         }
-      }, 800);
-      return;
-    }
-    
-    if(result.message === 'account_inactive') {
-      window.location.href = 'reactivate.html?email=' + encodeURIComponent(email);
-      return;
-    }
-    
-    btn.textContent = 'Se connecter';
-    btn.disabled = false;
-    errorDiv.textContent = result.message || 'Identifiants incorrects.';
-    errorDiv.style.display = 'block';
-    
-    // Réinitialiser le reCAPTCHA en cas d'erreur
-    if (typeof grecaptcha !== 'undefined') {
-      grecaptcha.reset();
-    }
+      }
 
-  } catch(err) {
-    console.error('Erreur login:', err);
-    btn.textContent = 'Se connecter';
-    btn.disabled = false;
-    errorDiv.textContent = 'Impossible de contacter le serveur.';
-    errorDiv.style.display = 'block';
-    
-    // Réinitialiser le reCAPTCHA
-    if (typeof grecaptcha !== 'undefined') {
-      grecaptcha.reset();
-    }
-  }
-});
+      themeToggle.addEventListener("click", () => {
+        isDark = !isDark;
+        html.setAttribute("data-theme", isDark ? "dark" : "light");
+        localStorage.setItem("gaialumen-theme", isDark ? "dark" : "light");
+        updateRecaptchaTheme();
+        // Recharger reCAPTCHA si nécessaire
+        if (typeof grecaptcha !== "undefined") {
+          grecaptcha.reset();
+        }
+      });
 
-/* THEME TOGGLE */
-const themeToggle = document.getElementById('theme-toggle');
-const html = document.documentElement;
-let isDark = localStorage.getItem('gaialumen-theme') !== 'light';
-html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      /* AI ASSISTANT */
+      const aiToggle = document.getElementById("ai-toggle");
+      const aiPanel = document.getElementById("ai-panel");
+      const aiClose = document.getElementById("ai-close");
+      const aiInput = document.getElementById("ai-input");
+      const aiSend = document.getElementById("ai-send");
+      const aiMessages = document.getElementById("ai-messages");
 
-// Mettre à jour le thème du reCAPTCHA
-function updateRecaptchaTheme() {
-  const recaptchaContainer = document.querySelector('.g-recaptcha');
-  if (recaptchaContainer && typeof grecaptcha !== 'undefined') {
-    const currentTheme = html.getAttribute('data-theme');
-    recaptchaContainer.setAttribute('data-theme', currentTheme);
-  }
-}
+      aiToggle.addEventListener("click", () => {
+        aiPanel.classList.toggle("active");
+      });
 
-themeToggle.addEventListener('click', () => {
-  isDark = !isDark;
-  html.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  localStorage.setItem('gaialumen-theme', isDark ? 'dark' : 'light');
-  updateRecaptchaTheme();
-  // Recharger reCAPTCHA si nécessaire
-  if (typeof grecaptcha !== 'undefined') {
-    grecaptcha.reset();
-  }
-});
+      aiClose.addEventListener("click", () => {
+        aiPanel.classList.remove("active");
+      });
 
-/* AI ASSISTANT */
-const aiToggle = document.getElementById('ai-toggle');
-const aiPanel = document.getElementById('ai-panel');
-const aiClose = document.getElementById('ai-close');
-const aiInput = document.getElementById('ai-input');
-const aiSend = document.getElementById('ai-send');
-const aiMessages = document.getElementById('ai-messages');
+      function addMessage(text, isUser = false) {
+        const msg = document.createElement("div");
+        msg.className = `ai-message ${isUser ? "user" : "bot"}`;
+        msg.textContent = text;
+        aiMessages.appendChild(msg);
+        aiMessages.scrollTop = aiMessages.scrollHeight;
+      }
 
-aiToggle.addEventListener('click', () => {
-  aiPanel.classList.toggle('active');
-});
+      function aiRespond(question) {
+        const q = question.toLowerCase();
+        if (q.includes("mot de passe") || q.includes("password"))
+          return "Pour réinitialiser votre mot de passe, cliquez sur 'Mot de passe oublié ?' sous le formulaire. 🔑";
+        if (q.includes("compte") || q.includes("inscription"))
+          return "Pour créer un compte, cliquez sur 'Créer un compte' sous le formulaire. 📝";
+        if (
+          q.includes("visage") ||
+          q.includes("face") ||
+          q.includes("reconnaissance")
+        )
+          return "Vous pouvez utiliser la reconnaissance faciale en cliquant sur le bouton 'Connexion par reconnaissance faciale' ! 📸";
+        if (
+          q.includes("captcha") ||
+          q.includes("recaptcha") ||
+          q.includes("vérification")
+        )
+          return "Le reCAPTCHA est une vérification de sécurité. Cochez la case 'Je ne suis pas un robot' pour prouver que vous êtes un humain. 🤖✅";
+        return "Je suis là pour vous aider ! Posez-moi des questions sur la connexion, votre compte, ou GaiaLumen. 😊";
+      }
 
-aiClose.addEventListener('click', () => {
-  aiPanel.classList.remove('active');
-});
+      aiSend.addEventListener("click", () => {
+        const text = aiInput.value.trim();
+        if (text) {
+          addMessage(text, true);
+          aiInput.value = "";
+          setTimeout(() => addMessage(aiRespond(text)), 500);
+        }
+      });
 
-function addMessage(text, isUser = false) {
-  const msg = document.createElement('div');
-  msg.className = `ai-message ${isUser ? 'user' : 'bot'}`;
-  msg.textContent = text;
-  aiMessages.appendChild(msg);
-  aiMessages.scrollTop = aiMessages.scrollHeight;
-}
+      aiInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") aiSend.click();
+      });
 
-function aiRespond(question) {
-  const q = question.toLowerCase();
-  if(q.includes('mot de passe') || q.includes('password'))
-    return "Pour réinitialiser votre mot de passe, cliquez sur 'Mot de passe oublié ?' sous le formulaire. 🔑";
-  if(q.includes('compte') || q.includes('inscription'))
-    return "Pour créer un compte, cliquez sur 'Créer un compte' sous le formulaire. 📝";
-  if(q.includes('visage') || q.includes('face') || q.includes('reconnaissance'))
-    return "Vous pouvez utiliser la reconnaissance faciale en cliquant sur le bouton 'Connexion par reconnaissance faciale' ! 📸";
-  if(q.includes('captcha') || q.includes('recaptcha') || q.includes('vérification'))
-    return "Le reCAPTCHA est une vérification de sécurité. Cochez la case 'Je ne suis pas un robot' pour prouver que vous êtes un humain. 🤖✅";
-  return "Je suis là pour vous aider ! Posez-moi des questions sur la connexion, votre compte, ou GaiaLumen. 😊";
-}
+      /* FACEID - RECONNAISSANCE FACIALE */
+      (function () {
+        const faceBtn = document.getElementById("faceLoginBtn");
+        const modal = document.getElementById("faceCameraModal");
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const captureBtn = document.getElementById("captureFace");
+        const closeBtn = document.getElementById("closeCamera");
+        const faceStatus = document.getElementById("faceStatus");
 
-aiSend.addEventListener('click', () => {
-  const text = aiInput.value.trim();
-  if(text) {
-    addMessage(text, true);
-    aiInput.value = '';
-    setTimeout(() => addMessage(aiRespond(text)), 500);
-  }
-});
+        let stream = null;
 
-aiInput.addEventListener('keypress', (e) => {
-  if(e.key === 'Enter') aiSend.click();
-});
-
-/* FACEID - RECONNAISSANCE FACIALE */
-(function() {
-    const faceBtn = document.getElementById('faceLoginBtn');
-    const modal = document.getElementById('faceCameraModal');
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const captureBtn = document.getElementById('captureFace');
-    const closeBtn = document.getElementById('closeCamera');
-    const faceStatus = document.getElementById('faceStatus');
-    
-    let stream = null;
-    
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        if(faceBtn) {
-            faceBtn.style.opacity = '0.5';
-            faceBtn.style.cursor = 'not-allowed';
-            faceBtn.title = 'Votre navigateur ne supporte pas la caméra';
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          if (faceBtn) {
+            faceBtn.style.opacity = "0.5";
+            faceBtn.style.cursor = "not-allowed";
+            faceBtn.title = "Votre navigateur ne supporte pas la caméra";
             faceBtn.disabled = true;
+          }
+          return;
         }
-        return;
-    }
-    
-    async function openCamera() {
-        try {
-            faceStatus.className = 'face-status loading';
-            faceStatus.textContent = '📷 Accès à la caméra...';
-            
-            stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: 'user',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                } 
+
+        async function openCamera() {
+          try {
+            faceStatus.className = "face-status loading";
+            faceStatus.textContent = "📷 Accès à la caméra...";
+
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                facingMode: "user",
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+              },
             });
             video.srcObject = stream;
-            modal.classList.add('active');
-            faceStatus.className = 'face-status';
-            faceStatus.textContent = '✅ Placez votre visage devant la caméra';
-        } catch (err) {
-            console.error('Erreur caméra:', err);
-            faceStatus.className = 'face-status error';
-            if(err.name === 'NotAllowedError') {
-                faceStatus.textContent = '❌ Accès à la caméra refusé. Veuillez autoriser l\'accès.';
-            } else if(err.name === 'NotFoundError') {
-                faceStatus.textContent = '❌ Aucune caméra trouvée sur votre appareil.';
+            modal.classList.add("active");
+            faceStatus.className = "face-status";
+            faceStatus.textContent = "✅ Placez votre visage devant la caméra";
+          } catch (err) {
+            console.error("Erreur caméra:", err);
+            faceStatus.className = "face-status error";
+            if (err.name === "NotAllowedError") {
+              faceStatus.textContent =
+                "❌ Accès à la caméra refusé. Veuillez autoriser l'accès.";
+            } else if (err.name === "NotFoundError") {
+              faceStatus.textContent =
+                "❌ Aucune caméra trouvée sur votre appareil.";
             } else {
-                faceStatus.textContent = '❌ Impossible d\'accéder à la caméra';
+              faceStatus.textContent = "❌ Impossible d'accéder à la caméra";
             }
             setTimeout(() => {
-                modal.classList.remove('active');
+              modal.classList.remove("active");
             }, 3000);
+          }
         }
-    }
-    
-    function closeCamera() {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+
+        function closeCamera() {
+          if (stream) {
+            stream.getTracks().forEach((track) => track.stop());
             stream = null;
+          }
+          video.srcObject = null;
+          modal.classList.remove("active");
+          faceStatus.className = "face-status";
+          faceStatus.textContent = "";
         }
-        video.srcObject = null;
-        modal.classList.remove('active');
-        faceStatus.className = 'face-status';
-        faceStatus.textContent = '';
-    }
-    
-    async function captureAndRecognize() {
-        if (!video.videoWidth || !video.videoHeight) {
-            faceStatus.className = 'face-status error';
-            faceStatus.textContent = '❌ Attendez que la caméra soit prête';
+
+        async function captureAndRecognize() {
+          if (!video.videoWidth || !video.videoHeight) {
+            faceStatus.className = "face-status error";
+            faceStatus.textContent = "❌ Attendez que la caméra soit prête";
             return;
-        }
-        
-        faceStatus.className = 'face-status loading';
-        faceStatus.textContent = '🔍 Analyse du visage en cours...';
-        
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.save();
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-        ctx.restore();
-        
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
-        
-        const formData = new FormData();
-        formData.append('action', 'login');
-        formData.append('image_base64', imageData);
-        
-        try {
-            const response = await fetch('../backend/face_login.php?action=login', {
-                method: 'POST',
+          }
+
+          faceStatus.className = "face-status loading";
+          faceStatus.textContent = "🔍 Analyse du visage en cours...";
+
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext("2d");
+          ctx.save();
+          ctx.scale(-1, 1);
+          ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+          ctx.restore();
+
+          const imageData = canvas.toDataURL("image/jpeg", 0.8);
+
+          const formData = new FormData();
+          formData.append("action", "login");
+          formData.append("image_base64", imageData);
+
+          try {
+            const response = await fetch(
+              "../backend/face_login.php?action=login",
+              {
+                method: "POST",
                 body: formData,
-                credentials: 'include'
-            });
-            
+                credentials: "include",
+              },
+            );
+
             const text = await response.text();
-            console.log('Réponse brute:', text);
-            
+            console.log("Réponse brute:", text);
+
             let result;
             try {
-                result = JSON.parse(text);
-            } catch(e) {
-                console.error('Erreur JSON:', e);
-                faceStatus.className = 'face-status error';
-                faceStatus.textContent = '❌ Erreur de réponse du serveur';
-                return;
+              result = JSON.parse(text);
+            } catch (e) {
+              console.error("Erreur JSON:", e);
+              faceStatus.className = "face-status error";
+              faceStatus.textContent = "❌ Erreur de réponse du serveur";
+              return;
             }
-            
-            const isSuspended = 
-                (result.message === 'suspended') ||
-                (result.status === 'suspendu') ||
-                (result.data && result.data.status === 'suspendu');
-            
+
+            const isSuspended =
+              result.message === "suspended" ||
+              result.status === "suspendu" ||
+              (result.data && result.data.status === "suspendu");
+
             if (isSuspended) {
-                faceStatus.className = 'face-status error';
-                faceStatus.textContent = '❌ Votre compte a été suspendu';
-                closeCamera();
-                setTimeout(() => {
-                    showSuspendedPopup('gaiaalumen@gmail.com');
-                }, 500);
-                return;
+              faceStatus.className = "face-status error";
+              faceStatus.textContent = "❌ Votre compte a été suspendu";
+              closeCamera();
+              setTimeout(() => {
+                showSuspendedPopup("gaiaalumen@gmail.com");
+              }, 500);
+              return;
             }
-            
+
             if (result.success) {
-                faceStatus.className = 'face-status success';
-                const confidencePercent = Math.round((result.confidence || 0.85) * 100);
-                faceStatus.textContent = `✅ Bienvenue ${result.data.prenom} ${result.data.nom} ! (${confidencePercent}% correspondance)`;
-                
-                if(result.data.id_utilisateur) {
-                    sessionStorage.setItem('user_id', result.data.id_utilisateur);
-                    localStorage.setItem('user_id', result.data.id_utilisateur);
-                }
-                sessionStorage.setItem('user_email', result.data.email);
-                sessionStorage.setItem('user_nom', result.data.nom || '');
-                sessionStorage.setItem('user_prenom', result.data.prenom || '');
-                sessionStorage.setItem('user_role', result.data.role || '');
-                localStorage.setItem('gaialumen-user', JSON.stringify(result.data));
-                localStorage.setItem('gaialumen-token', 'face-' + Date.now());
-                
-                setTimeout(() => {
-                    closeCamera();
-                    if(result.data.role === 'admin') {
-                        window.location.href = '../backend/admin.html';
-                    } else {
-                        window.location.href = 'dashboard.html';
-                    }
-                }, 1500);
-            } else {
-                faceStatus.className = 'face-status error';
-                faceStatus.textContent = `❌ ${result.message || 'Reconnaissance échouée'}`;
-                setTimeout(() => {
-                    faceStatus.className = 'face-status';
-                    faceStatus.textContent = '✅ Placez votre visage devant la caméra';
-                }, 2000);
-            }
-        } catch (err) {
-            console.error('Erreur fetch:', err);
-            faceStatus.className = 'face-status error';
-            faceStatus.textContent = '❌ Erreur de connexion au serveur';
-            setTimeout(() => {
-                faceStatus.className = 'face-status';
-                faceStatus.textContent = '✅ Placez votre visage devant la caméra';
-            }, 3000);
-        }
-    }
-    
-    if(faceBtn) {
-        faceBtn.addEventListener('click', openCamera);
-    }
-    if(closeBtn) {
-        closeBtn.addEventListener('click', closeCamera);
-    }
-    if(captureBtn) {
-        captureBtn.addEventListener('click', captureAndRecognize);
-    }
-    
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
-            closeCamera();
-        }
-    });
-    
-    if(modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
+              faceStatus.className = "face-status success";
+              const confidencePercent = Math.round(
+                (result.confidence || 0.85) * 100,
+              );
+              faceStatus.textContent = `✅ Bienvenue ${result.data.prenom} ${result.data.nom} ! (${confidencePercent}% correspondance)`;
+
+              if (result.data.id_utilisateur) {
+                sessionStorage.setItem("user_id", result.data.id_utilisateur);
+                localStorage.setItem("user_id", result.data.id_utilisateur);
+              }
+              sessionStorage.setItem("user_email", result.data.email);
+              sessionStorage.setItem("user_nom", result.data.nom || "");
+              sessionStorage.setItem("user_prenom", result.data.prenom || "");
+              sessionStorage.setItem("user_role", result.data.role || "");
+              localStorage.setItem(
+                "gaialumen-user",
+                JSON.stringify(result.data),
+              );
+              localStorage.setItem("gaialumen-token", "face-" + Date.now());
+
+              setTimeout(() => {
                 closeCamera();
+                if (result.data.role === "admin") {
+                  window.location.href = "../backend/admin.html";
+                } else {
+                  window.location.href = "dashboard.html";
+                }
+              }, 1500);
+            } else {
+              faceStatus.className = "face-status error";
+              faceStatus.textContent = `❌ ${result.message || "Reconnaissance échouée"}`;
+              setTimeout(() => {
+                faceStatus.className = "face-status";
+                faceStatus.textContent =
+                  "✅ Placez votre visage devant la caméra";
+              }, 2000);
             }
+          } catch (err) {
+            console.error("Erreur fetch:", err);
+            faceStatus.className = "face-status error";
+            faceStatus.textContent = "❌ Erreur de connexion au serveur";
+            setTimeout(() => {
+              faceStatus.className = "face-status";
+              faceStatus.textContent =
+                "✅ Placez votre visage devant la caméra";
+            }, 3000);
+          }
+        }
+
+        if (faceBtn) {
+          faceBtn.addEventListener("click", openCamera);
+        }
+        if (closeBtn) {
+          closeBtn.addEventListener("click", closeCamera);
+        }
+        if (captureBtn) {
+          captureBtn.addEventListener("click", captureAndRecognize);
+        }
+
+        document.addEventListener("keydown", (e) => {
+          if (
+            e.key === "Escape" &&
+            modal &&
+            modal.classList.contains("active")
+          ) {
+            closeCamera();
+          }
         });
-    }
-})();
 
-/* VÉRIFICATION DE SESSION AU CHARGEMENT */
-async function checkSession() {
-  try {
-    const response = await fetch('../backend/users/verify_session.php', {
-      method: 'GET',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-    const result = await response.json();
-    
-    if (!result.success && result.status === 'suspendu') {
-      showSuspendedPopup(result.contact_email || 'gaiaalumen@gmail.com');
-      localStorage.removeItem('gaialumen-user');
-      localStorage.removeItem('gaialumen-token');
-      sessionStorage.clear();
-    }
-    else if (result.success && result.data && result.data.status === 'actif') {
-      if (result.data.role === 'admin') {
-        window.location.href = '../backend/admin.html';
-      } else {
-        window.location.href = 'dashboard.html';
+        if (modal) {
+          modal.addEventListener("click", (e) => {
+            if (e.target === modal) {
+              closeCamera();
+            }
+          });
+        }
+      })();
+
+      /* VÉRIFICATION DE SESSION AU CHARGEMENT */
+      async function checkSession() {
+        try {
+          const response = await fetch("../backend/users/verify_session.php", {
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          });
+
+          const result = await response.json();
+
+          if (!result.success && result.status === "suspendu") {
+            showSuspendedPopup(result.contact_email || "gaiaalumen@gmail.com");
+            localStorage.removeItem("gaialumen-user");
+            localStorage.removeItem("gaialumen-token");
+            sessionStorage.clear();
+          } else if (
+            result.success &&
+            result.data &&
+            result.data.status === "actif"
+          ) {
+            if (result.data.role === "admin") {
+              window.location.href = "../backend/admin.html";
+            } else {
+              window.location.href = "dashboard.html";
+            }
+          }
+        } catch (err) {
+          console.error("Erreur vérification session:", err);
+        }
       }
-    }
-  } catch (err) {
-    console.error('Erreur vérification session:', err);
-  }
-}
 
-// Désactivée pour éviter les redirections intempestives
-// checkSession();
-</script>
-</body>
+      // Désactivée pour éviter les redirections intempestives
+      // checkSession();
+    </script>
+  </body>
 </html>

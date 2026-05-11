@@ -11,12 +11,22 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 require_once __DIR__ . '/../../../Controller/user.controller.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
+function loginJson(array $payload, int $status = 200): void
+{
+    http_response_code($status);
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit();
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    loginJson(['success' => false, 'message' => 'Méthode non autorisée'], 405);
+}
+
 $body = json_decode(file_get_contents('php://input'), true);
+if (!is_array($body)) {
+    loginJson(['success' => false, 'message' => 'JSON invalide'], 400);
+}
+
 $email = trim($body['email'] ?? '');
 $mdp = $body['mdp'] ?? '';
 $rememberMe = !empty($body['remember_me']);
@@ -24,8 +34,7 @@ $recaptchaToken = $body['recaptcha_token'] ?? '';
 
 // ========== VÉRIFICATION RECAPTCHA ==========
 if (empty($recaptchaToken)) {
-    echo json_encode(['success' => false, 'message' => 'CAPTCHA requis']);
-    exit();
+    loginJson(['success' => false, 'message' => 'CAPTCHA requis'], 400);
 }
 
 // VOTRE NOUVELLE CLÉ SECRÈTE
@@ -43,25 +52,34 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Désactiver pour localhost uniquement
 $verifyResponse = curl_exec($ch);
+$curlError = curl_error($ch);
 curl_close($ch);
 
 $verifyData = json_decode($verifyResponse, true);
 
-if (!$verifyData['success']) {
+if ($verifyResponse === false || !is_array($verifyData)) {
+    error_log('reCAPTCHA erreur cURL: ' . $curlError);
+    loginJson(['success' => false, 'message' => 'Vérification CAPTCHA impossible. Vérifiez la connexion serveur.'], 502);
+}
+
+if (empty($verifyData['success'])) {
     // Log l'erreur pour debug
     error_log('reCAPTCHA échec: ' . print_r($verifyData, true));
-    echo json_encode(['success' => false, 'message' => 'CAPTCHA invalide, veuillez réessayer']);
-    exit();
+    loginJson(['success' => false, 'message' => 'CAPTCHA invalide, veuillez réessayer'], 400);
 }
 // ========== FIN VÉRIFICATION RECAPTCHA ==========
 
 if ($email === '' || $mdp === '') {
-    echo json_encode(['success' => false, 'message' => 'Email et mot de passe requis']);
-    exit();
+    loginJson(['success' => false, 'message' => 'Email et mot de passe requis'], 400);
 }
 
-$userC = new UserController();
-$result = $userC->login($email, $mdp);
+try {
+    $userC = new UserController();
+    $result = $userC->login($email, $mdp);
+} catch (Throwable $e) {
+    error_log('login.php fatal: ' . $e->getMessage());
+    loginJson(['success' => false, 'message' => 'Erreur serveur: ' . $e->getMessage()], 500);
+}
 
 // Ajout de la vérification du statut "suspendu"
 if ($result['status'] === 'ok' && isset($result['data']['status'])) {
@@ -78,6 +96,7 @@ if ($result['status'] === 'ok' && isset($result['data']['status'])) {
 
 switch ($result['status']) {
     case 'ok':
+        $_SESSION['user_id'] = (int) $result['data']['id_utilisateur'];
         $_SESSION['user'] = [
             'id_utilisateur' => $result['data']['id_utilisateur'],
             'nom' => $result['data']['nom'],
@@ -105,22 +124,22 @@ switch ($result['status']) {
             );
         }
 
-        echo json_encode(['success' => true, 'data' => $result['data']]);
+        loginJson(['success' => true, 'data' => $result['data']]);
         break;
 
     case 'wrong_password':
-        echo json_encode(['success' => false, 'message' => 'Mot de passe incorrect']);
+        loginJson(['success' => false, 'message' => 'Mot de passe incorrect'], 401);
         break;
 
     case 'account_not_found':
-        echo json_encode(['success' => false, 'message' => 'Aucun compte trouvé']);
+        loginJson(['success' => false, 'message' => 'Aucun compte trouvé'], 404);
         break;
         
     case 'account_inactive':
-        echo json_encode(['success' => false, 'message' => 'account_inactive']);
+        loginJson(['success' => false, 'message' => 'account_inactive'], 403);
         break;
 
     default:
-        echo json_encode(['success' => false, 'message' => 'Erreur serveur']);
+        loginJson(['success' => false, 'message' => 'Erreur serveur: ' . ($result['message'] ?? 'cause inconnue')], 500);
 }
 ?>

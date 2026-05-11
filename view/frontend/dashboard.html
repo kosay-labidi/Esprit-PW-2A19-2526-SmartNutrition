@@ -583,8 +583,14 @@
 /* ── Profile Modal ── */
 function openProfileModal() {
   const user = JSON.parse(localStorage.getItem('gaialumen-user') || '{}');
-  if (user.name) document.getElementById('pm-name').textContent = user.name;
+  const fullName = [user.prenom, user.nom].filter(Boolean).join(' ').trim();
+  if (fullName) document.getElementById('pm-name').textContent = fullName;
   if (user.email) document.getElementById('pm-handle').textContent = '@' + user.email.split('@')[0];
+  if (user.photo_url || user.photo) {
+    const avatar = document.getElementById('pm-avatar-emoji');
+    const src = user.photo_url || ('../../' + String(user.photo).replace(/^\/+/, ''));
+    avatar.innerHTML = '<img src="' + src + '" alt="Photo profil" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+  }
   document.getElementById('profileModal').classList.add('open');
 }
 function closeProfileModal() {

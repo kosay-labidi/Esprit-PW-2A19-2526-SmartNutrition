@@ -1,29 +1,1556 @@
-<section class="content-section" id="health">
-  <div class="section-header">
-    <h2 class="module-title">❤️ Gestion de la Santé</h2>
-    <p>Suivez vos indicateurs de santé et votre progression vers vos objectifs.</p>
-  </div>
-  <div class="cards-grid">
-    <div class="info-card">
-      <h3>Indicateurs Corporels</h3>
-      <p>Suivez votre poids, IMC, tour de taille et autres mesures corporelles importantes.</p>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma Santé & Nutrition</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        :root {
+            --vert: #013220;
+            --sable: #CBBD93;
+            --violet: #BA5BED;
+            --bleu: #77B5FE;
+        }
+
+        .health-user-wrap {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .module-title {
+            color: var(--vert);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .health-tabs-nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 25px 0;
+            border-bottom: 3px solid rgba(1, 50, 32, 0.15);
+            padding-bottom: 15px;
+        }
+
+        .health-tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: #f8f8f8;
+            color: var(--vert);
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .health-tab-btn.active {
+            background: linear-gradient(135deg, var(--vert), #0a3d2a);
+            color: white;
+            box-shadow: 0 4px 12px rgba(1, 50, 32, 0.2);
+        }
+
+        .health-tab-content {
+            display: none;
+        }
+
+        .health-tab-content.active {
+            display: block;
+        }
+
+        .health-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .health-h3 {
+            color: var(--vert);
+            margin-bottom: 8px;
+        }
+
+        .health-muted {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .health-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px 24px;
+        }
+
+        .health-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--vert);
+        }
+
+        .health-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        .health-input:focus {
+            border-color: var(--bleu);
+            outline: none;
+        }
+
+        .health-btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .health-btn-violet {
+            background: linear-gradient(135deg, #BA5BED, #9d4dd4);
+            color: white;
+        }
+
+        .health-btn-bleu {
+            background: linear-gradient(135deg, #77B5FE, #4a9ee8);
+            color: #0a1a10;
+        }
+
+        .health-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 10000;
+            display: none;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9998;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(1, 50, 32, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--vert);
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--vert);
+        }
+
+        .modal-form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--vert);
+            font-size: 0.95rem;
+        }
+
+        .modal-input,
+        .modal-select,
+        .modal-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border 0.3s;
+            box-sizing: border-box;
+        }
+
+        .modal-input:focus,
+        .modal-select:focus,
+        .modal-textarea:focus {
+            border-color: var(--bleu);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(119, 181, 254, 0.1);
+        }
+
+        .modal-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .modal-btn-cancel {
+            background: #f0f0f0;
+            color: var(--vert);
+        }
+
+        .modal-btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .modal-btn-submit {
+            background: linear-gradient(135deg, var(--bleu), #4a9ee8);
+            color: white;
+        }
+
+        .modal-btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(119, 181, 254, 0.4);
+        }
+
+        .modal-btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid rgba(186, 91, 237, 0.1);
+        }
+
+        .stat-card h4 {
+            color: var(--vert);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--violet);
+            margin-bottom: 8px;
+        }
+
+        .assistant-container {
+            margin-top: 20px;
+        }
+
+        .assistant-section {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .assistant-tool {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .assistant-tool:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .assistant-tool h4 {
+            color: var(--vert);
+            margin-bottom: 15px;
+        }
+
+        .assistant-tool input, .assistant-tool select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .assistant-tool input:focus, .assistant-tool select:focus {
+            border-color: var(--bleu);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--violet), var(--bleu));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-container {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .warnings, .alternatives {
+            margin-top: 15px;
+        }
+
+        .warnings h5, .alternatives h5 {
+            color: var(--vert);
+            margin-bottom: 8px;
+        }
+
+        .warnings ul, .alternatives ul {
+            margin-left: 20px;
+        }
+
+        .warnings li, .alternatives li {
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .suggestions-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .suggestion-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .suggestion-card h4 {
+            color: var(--vert);
+            margin-bottom: 8px;
+        }
+
+        .regime-meta {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .regime-meta span {
+            background: var(--violet);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .calories {
+            color: var(--bleu);
+            font-weight: bold;
+        }
+
+        /* Chat typing animation */
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* Chat message fade-in */
+        @keyframes msgFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .chat-msg-anim { animation: msgFadeIn .25s ease; }
+
+        /* Sentiment badge */
+        .sentiment-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 20px; font-size: .78rem; font-weight: 600;
+        }
+        .sentiment-positive { background: #d4edda; color: #155724; }
+        .sentiment-negative { background: #f8d7da; color: #721c24; }
+        .sentiment-neutral  { background: #e2e3e5; color: #383d41; }
+
+        /* TCM herb pill */
+        .tcm-pill {
+            display: inline-block; background: rgba(1,50,32,.08);
+            color: var(--vert); border-radius: 20px; padding: 3px 10px;
+            font-size: .78rem; margin: 2px; font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-[#CBBD93]">
+
+<section class="content-section health-user-wrap" id="health">
+    <div class="section-header">
+        <h2 class="module-title health-user-title">🏥 Ma santé & nutrition</h2>
+        <p>Centralisez votre dossier médical, vos régimes autorisés et obtenez des indications personnalisées. Validez les aliments et consultez vos scores nutritionnels & écologiques.</p>
     </div>
-    <div class="info-card">
-      <h3>Glycémie & Hydratation</h3>
-      <p>Monitorez votre glycémie et votre consommation d'eau quotidienne.</p>
+
+    <!-- TABS NAVIGATION -->
+    <div class="health-tabs-nav">
+        <button class="health-tab-btn active" data-tab="dossier" onclick="healthTabSwitch(this, 'dossier')">📋 Dossier Médical</button>
+        <button class="health-tab-btn" data-tab="regimes" onclick="healthTabSwitch(this, 'regimes')">🥗 Mes Régimes</button>
+        <button class="health-tab-btn" data-tab="assistant" onclick="healthTabSwitch(this, 'assistant')">🤖 Assistant Santé</button>
+        <button class="health-tab-btn" data-tab="statistics" onclick="healthTabSwitch(this, 'statistics')">📊 Statistiques</button>
     </div>
-    <div class="info-card">
-      <h3>Objectifs Santé</h3>
-      <p>Définissez et suivez vos objectifs de santé personnalisés avec des graphiques de progression.</p>
+
+    <!-- ==================== TAB DOSSIER ==================== -->
+    <div id="health-tab-dossier" class="health-tab-content active">
+        <div class="health-panel">
+            <h3 class="health-h3">📋 Mon Dossier Médical</h3>
+            <p class="health-muted">Mise à jour des informations personnelles. L'IMC est calculé automatiquement.</p>
+
+            <div class="health-section-split" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 25px;">
+                
+                <!-- Biométrie -->
+                <div>
+                    <h4 style="color: var(--vert); font-weight: 600; margin-bottom: 15px;">Biométrie</h4>
+                    <div class="health-form-grid">
+                        <div>
+                            <label class="health-label">Groupe sanguin</label>
+                            <select class="health-input" id="healthDossierGroupe">
+                                <option value="">— Sélectionner —</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="health-label">Poids (kg)</label>
+                            <input type="number" step="0.1" class="health-input" id="healthDossierPoids" placeholder="ex. 70" />
+                        </div>
+                        <div>
+                            <label class="health-label">Taille (cm)</label>
+                            <input type="number" step="0.1" class="health-input" id="healthDossierTaille" placeholder="ex. 175" />
+                        </div>
+                        <div>
+                            <label class="health-label">IMC (calculé)</label>
+                            <input type="text" class="health-input" id="healthDossierIMC" readonly placeholder="—" 
+                                   style="background: rgba(1,50,32,0.08); font-weight: bold;"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Régime Associé -->
+                <div>
+                    <h4 style="color: var(--vert); font-weight: 600; margin-bottom: 15px;">🍽️ Régime Associé</h4>
+                    <div class="health-form-grid">
+                        <div class="col-span-2">
+                            <label class="health-label">Sélectionner un régime existant</label>
+                            <select class="health-input" id="healthDossierRegimeSelect" onchange="healthAttachRegime()">
+                                <option value="">— Choisir un régime —</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2" id="healthRegimeDisplay" style="background: rgba(1,50,32,0.05); padding: 12px; border-radius: 8px; display: none;">
+                            <strong style="color: var(--vert);">Régime actuel:</strong>
+                            <p id="healthRegimeInfo" style="margin: 8px 0 0 0; font-size: 0.9rem;"></p>
+                        </div>
+                        <div class="col-span-2">
+                            <a href="health/addRegime.php" class="health-btn health-btn-bleu" style="width:100%;display:flex;align-items:center;justify-content:center;text-decoration:none;">
+                                ➕ Créer un nouveau régime
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Allergies & Maladies — inside the panel -->
+            <div style="margin-top:25px;">
+                    <h4 style="color: var(--vert); font-weight: 600; margin-bottom: 15px;">Allergies & Maladies</h4>
+                    <div class="health-form-grid">
+                        <div class="col-span-2">
+                            <label class="health-label">Allergies (description)</label>
+                            <textarea class="health-input" id="healthDossierAllergie" rows="3" 
+                                      placeholder="ex. Arachides, lactose, pollen..."></textarea>
+                        </div>
+                        <div>
+                            <label class="health-label">Gravité de l'allergie</label>
+                            <select class="health-input" id="healthDossierGravite">
+                                <option value="">— Sélectionner —</option>
+                                <option value="légère">Légère</option>
+                                <option value="modérée">Modérée</option>
+                                <option value="sévère">Sévère</option>
+                                <option value="anaphylactique">Anaphylactique</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="health-label">Maladies chroniques</label>
+                            <textarea class="health-input" id="healthDossierMaladies" rows="3" 
+                                      placeholder="ex. Diabète type 2, hypertension, asthme..."></textarea>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="health-label">Traitement actuel</label>
+                            <textarea class="health-input" id="healthDossierTraitement" rows="2"
+                                      placeholder="Médicaments et dosages actuels..."></textarea>
+                        </div>
+                        <div>
+                            <label class="health-label">Médecin référent</label>
+                            <input type="text" class="health-input" id="healthDossierMedecin" placeholder="Dr. Nom Prénom" />
+                        </div>
+                        <div>
+                            <label class="health-label">Contact urgence</label>
+                            <input type="tel" class="health-input" id="healthDossierContact" placeholder="+216 XX XXX XXX" />
+                        </div>
+                        <div class="col-span-2">
+                            <label class="health-label">Notes du médecin</label>
+                            <textarea class="health-input" id="healthDossierNotes" rows="2"
+                                      placeholder="Observations et recommandations..."></textarea>
+                        </div>
+                    </div>
+            </div>
+
+            <div style="margin-top: 35px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button type="button" class="health-btn health-btn-violet" onclick="healthSaveDossier()">
+                    💾 Enregistrer le dossier
+                </button>
+                <button type="button" class="health-btn health-btn-bleu" onclick="healthCalculateIMC()">
+                    📐 Calculer IMC
+                </button>
+                <a id="modifierDossierLink" href="health/updateDossier.php" class="health-btn" style="background:#77B5FE;color:white;">
+                    ✏️ Modifier dossier
+                </a>
+            </div>
+        </div>
     </div>
-  </div>
+
+    <!-- ==================== TAB RÉGIMES ==================== -->
+    <div id="health-tab-regimes" class="health-tab-content">
+        <div class="health-panel">
+            <h3 class="health-h3">🥗 Mes Régimes Autorisés</h3>
+            <p class="health-muted">Liste des régimes liés à votre dossier médical.</p>
+
+            <div id="healthRegimeListContainer" style="margin: 25px 0; min-height: 200px;">
+                <!-- JavaScript will dynamically load the regimes list here -->
+                <p class="health-muted" style="text-align:center; padding:40px;">Chargement des régimes...</p>
+            </div>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="health/addRegime.php" class="health-btn health-btn-bleu">
+                     ➕ Ajouter un régime
+                 </a>
+                 <p class="health-muted" style="padding: 15px 0; font-size: 0.9rem;">Cliquez sur "Modifier" dans un régime pour l'éditer.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TAB ASSISTANT ==================== -->
+    <div id="health-tab-assistant" class="health-tab-content">
+        <div class="health-panel" style="padding:0;overflow:hidden;border-radius:20px;">
+
+            <!-- Chat header -->
+            <div style="background:linear-gradient(135deg,var(--vert),#0a3d2a);padding:24px 28px;display:flex;align-items:center;gap:14px;">
+                <div style="width:46px;height:46px;background:rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🤖</div>
+                <div>
+                    <h3 style="color:white;margin:0;font-size:1.2rem;font-weight:700;">Assistant Santé & Nutrition</h3>
+                    <p style="color:rgba(255,255,255,.7);margin:2px 0 0;font-size:.85rem;">Propulsé par IA · Médecine traditionnelle chinoise · Analyse personnalisée</p>
+                </div>
+                <div id="chatStatusDot" style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.8rem;color:rgba(255,255,255,.7);">
+                    <span style="width:8px;height:8px;background:#2ecc71;border-radius:50%;display:inline-block;"></span> En ligne
+                </div>
+            </div>
+
+            <!-- Messages area -->
+            <div id="chatMessages" style="height:420px;overflow-y:auto;padding:24px;background:#f8faf9;display:flex;flex-direction:column;gap:16px;">
+                <!-- Welcome bubble -->
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                    <div style="width:34px;height:34px;background:linear-gradient(135deg,var(--vert),#0a3d2a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;">🤖</div>
+                    <div style="max-width:75%;">
+                        <div style="background:white;border-radius:0 16px 16px 16px;padding:14px 18px;box-shadow:0 2px 8px rgba(0,0,0,.07);font-size:.95rem;color:#1a1a1a;line-height:1.6;">
+                            Bonjour ! Je suis votre assistant santé personnalisé. Je peux analyser votre dossier médical, vous proposer des conseils nutritionnels et des remèdes de médecine traditionnelle chinoise adaptés à votre profil. Comment puis-je vous aider aujourd'hui ?
+                        </div>
+                        <span style="font-size:.75rem;color:#999;margin-top:4px;display:block;padding-left:4px;">Maintenant</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing indicator (hidden by default) -->
+            <div id="chatTyping" style="display:none;padding:0 24px 8px;background:#f8faf9;">
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <div style="width:34px;height:34px;background:linear-gradient(135deg,var(--vert),#0a3d2a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;">🤖</div>
+                    <div style="background:white;border-radius:0 16px 16px 16px;padding:12px 18px;box-shadow:0 2px 8px rgba(0,0,0,.07);">
+                        <span style="display:inline-flex;gap:4px;align-items:center;">
+                            <span class="typing-dot" style="width:7px;height:7px;background:#aaa;border-radius:50%;animation:typingBounce .8s infinite;"></span>
+                            <span class="typing-dot" style="width:7px;height:7px;background:#aaa;border-radius:50%;animation:typingBounce .8s .15s infinite;"></span>
+                            <span class="typing-dot" style="width:7px;height:7px;background:#aaa;border-radius:50%;animation:typingBounce .8s .3s infinite;"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick suggestions -->
+            <div id="chatSuggestions" style="padding:8px 24px;background:#f8faf9;display:flex;gap:8px;flex-wrap:wrap;">
+                <button onclick="chatSendQuick('Quels aliments dois-je éviter avec mes allergies ?')" style="background:white;border:1.5px solid #e0e0e0;border-radius:20px;padding:6px 14px;font-size:.82rem;cursor:pointer;color:var(--vert);transition:all .2s;" onmouseover="this.style.borderColor='var(--vert)'" onmouseout="this.style.borderColor='#e0e0e0'">🚫 Aliments à éviter</button>
+                <button onclick="chatSendQuick('Quel régime me recommandes-tu selon mon IMC ?')" style="background:white;border:1.5px solid #e0e0e0;border-radius:20px;padding:6px 14px;font-size:.82rem;cursor:pointer;color:var(--vert);transition:all .2s;" onmouseover="this.style.borderColor='var(--vert)'" onmouseout="this.style.borderColor='#e0e0e0'">🥗 Régime recommandé</button>
+                <button onclick="chatSendQuick('Quelles plantes médicinales chinoises peuvent m\'aider ?')" style="background:white;border:1.5px solid #e0e0e0;border-radius:20px;padding:6px 14px;font-size:.82rem;cursor:pointer;color:var(--vert);transition:all .2s;" onmouseover="this.style.borderColor='var(--vert)'" onmouseout="this.style.borderColor='#e0e0e0'">🌿 Plantes TCM</button>
+                <button onclick="chatSendQuick('Comment améliorer mon score de santé ?')" style="background:white;border:1.5px solid #e0e0e0;border-radius:20px;padding:6px 14px;font-size:.82rem;cursor:pointer;color:var(--vert);transition:all .2s;" onmouseover="this.style.borderColor='var(--vert)'" onmouseout="this.style.borderColor='#e0e0e0'">💪 Améliorer ma santé</button>
+            </div>
+
+            <!-- Input area -->
+            <div style="padding:16px 24px 20px;background:white;border-top:1px solid #eee;display:flex;gap:10px;align-items:flex-end;">
+                <textarea id="chatInput" placeholder="Posez votre question à l'assistant..." rows="1"
+                    style="flex:1;padding:12px 16px;border:2px solid #e0e0e0;border-radius:14px;font-size:.95rem;font-family:inherit;resize:none;outline:none;transition:border .2s;line-height:1.5;max-height:120px;overflow-y:auto;"
+                    onfocus="this.style.borderColor='var(--vert)'"
+                    onblur="this.style.borderColor='#e0e0e0'"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend();}"
+                    oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+                <button id="chatSendBtn" onclick="chatSend()"
+                    style="width:46px;height:46px;background:linear-gradient(135deg,var(--vert),#0a3d2a);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s,box-shadow .2s;"
+                    onmouseover="this.style.transform='scale(1.08)';this.style.boxShadow='0 4px 14px rgba(1,50,32,.35)'"
+                    onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TAB STATISTICS ==================== -->
+    <div id="health-tab-statistics" class="health-tab-content">
+        <div class="health-panel">
+            <h3 class="health-h3">📊 Statistiques & Analyses</h3>
+            <p class="health-muted">Vos métriques de santé personnelles en un coup d'œil.</p>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:24px;">
+                <!-- IMC -->
+                <div style="background:linear-gradient(135deg,#013220,#0a3d2a);border-radius:16px;padding:22px;color:white;text-align:center;">
+                    <div style="font-size:2rem;margin-bottom:4px;">⚖️</div>
+                    <div id="stat-imc-val" style="font-size:2.2rem;font-weight:700;line-height:1;">—</div>
+                    <div style="font-size:.8rem;opacity:.8;margin-top:4px;">IMC actuel</div>
+                    <div id="stat-imc-cat" style="font-size:.75rem;background:rgba(255,255,255,.15);border-radius:20px;padding:2px 10px;margin-top:8px;display:inline-block;">—</div>
+                </div>
+                <!-- Poids -->
+                <div style="background:linear-gradient(135deg,#BA5BED,#9d4dd4);border-radius:16px;padding:22px;color:white;text-align:center;">
+                    <div style="font-size:2rem;margin-bottom:4px;">🏋️</div>
+                    <div id="stat-poids-val" style="font-size:2.2rem;font-weight:700;line-height:1;">—</div>
+                    <div style="font-size:.8rem;opacity:.8;margin-top:4px;">Poids (kg)</div>
+                </div>
+                <!-- Taille -->
+                <div style="background:linear-gradient(135deg,#77B5FE,#4a9ee8);border-radius:16px;padding:22px;color:white;text-align:center;">
+                    <div style="font-size:2rem;margin-bottom:4px;">📏</div>
+                    <div id="stat-taille-val" style="font-size:2.2rem;font-weight:700;line-height:1;">—</div>
+                    <div style="font-size:.8rem;opacity:.8;margin-top:4px;">Taille (cm)</div>
+                </div>
+                <!-- Régimes -->
+                <div style="background:linear-gradient(135deg,#f39c12,#e67e22);border-radius:16px;padding:22px;color:white;text-align:center;">
+                    <div style="font-size:2rem;margin-bottom:4px;">🥗</div>
+                    <div id="stat-regimes-val" style="font-size:2.2rem;font-weight:700;line-height:1;">—</div>
+                    <div style="font-size:.8rem;opacity:.8;margin-top:4px;">Régimes disponibles</div>
+                </div>
+            </div>
+
+            <!-- IMC progress bar -->
+            <div style="margin-top:28px;background:#f8f9fa;border-radius:14px;padding:20px;">
+                <h4 style="color:var(--vert);margin-bottom:14px;font-size:1rem;">📈 Votre IMC sur l'échelle de santé</h4>
+                <div style="position:relative;height:12px;background:#e0e0e0;border-radius:6px;overflow:hidden;">
+                    <div style="position:absolute;left:0;top:0;height:100%;width:25%;background:#3498db;"></div>
+                    <div style="position:absolute;left:25%;top:0;height:100%;width:30%;background:#2ecc71;"></div>
+                    <div style="position:absolute;left:55%;top:0;height:100%;width:20%;background:#f39c12;"></div>
+                    <div style="position:absolute;left:75%;top:0;height:100%;width:25%;background:#e74c3c;"></div>
+                    <div id="stat-imc-marker" style="position:absolute;top:-3px;width:18px;height:18px;background:white;border:3px solid #333;border-radius:50%;transform:translateX(-50%);transition:left .6s ease;left:0;display:none;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#888;margin-top:6px;">
+                    <span>Sous-poids<br>&lt;18.5</span>
+                    <span style="text-align:center;">Normal<br>18.5–25</span>
+                    <span style="text-align:center;">Surpoids<br>25–30</span>
+                    <span style="text-align:right;">Obésité<br>&gt;30</span>
+                </div>
+            </div>
+
+            <!-- Groupe sanguin + allergies -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+                <div style="background:#f8f9fa;border-radius:14px;padding:18px;">
+                    <h4 style="color:var(--vert);margin-bottom:10px;font-size:.95rem;">🩸 Groupe Sanguin</h4>
+                    <div id="stat-groupe-val" style="font-size:2rem;font-weight:700;color:var(--violet);">—</div>
+                </div>
+                <div style="background:#f8f9fa;border-radius:14px;padding:18px;">
+                    <h4 style="color:var(--vert);margin-bottom:10px;font-size:.95rem;">⚠️ Allergies</h4>
+                    <div id="stat-allergie-val" style="font-size:.9rem;color:#555;line-height:1.5;">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Create Regime Modal (inside section so module loader can find it) -->
+<div class="modal-overlay" id="createRegimeModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">🍽️ Créer un régime</h2>
+            <button type="button" class="modal-close" onclick="healthCloseCreateRegimeModal()">✕</button>
+        </div>
+        <form id="createRegimeForm" onsubmit="healthSubmitCreateRegime(event)">
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeName">Nom du régime *</label>
+                <input type="text" id="createRegimeName" class="modal-input" placeholder="ex. Régime Méditerranéen">
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeDescription">Description</label>
+                <textarea id="createRegimeDescription" class="modal-textarea" placeholder="Décrivez les principes et bénéfices du régime..."></textarea>
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeType">Type de régime *</label>
+                <select id="createRegimeType" class="modal-select">
+                    <option value="">— Sélectionner un type —</option>
+                    <option value="alimentaire">Alimentaire</option>
+                    <option value="perte_de_poids">Perte de poids</option>
+                    <option value="prise_de_masse">Prise de masse</option>
+                    <option value="sportif">Sportif</option>
+                    <option value="medical">Médical</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeDifficulty">Niveau de difficulté *</label>
+                <select id="createRegimeDifficulty" class="modal-select">
+                    <option value="">— Sélectionner un niveau —</option>
+                    <option value="facile">Facile</option>
+                    <option value="modere">Modéré</option>
+                    <option value="avance">Avancé</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label" for="createRegimeCalories">Apport calorique moyen (kcal)</label>
+                <input type="number" id="createRegimeCalories" class="modal-input" placeholder="ex. 2000" min="0">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="healthCloseCreateRegimeModal()">Annuler</button>
+                <button type="submit" class="modal-btn modal-btn-submit">✓ Créer le régime</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 </section>
 
-<style>
-.module-title {
-  background: linear-gradient(135deg, var(--text), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+<script>
+    /* ============================================================
+       CHAT ASSISTANT
+       ============================================================ */
+    const CHATBOT_URL = '../../controller/ChatbotController.php?action=ask';
+
+    function healthCurrentUserId() {
+        const direct = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+        if (direct && /^\d+$/.test(String(direct))) return String(direct);
+        try {
+            const user = JSON.parse(localStorage.getItem('gaialumen-user') || '{}');
+            const id = user.id_utilisateur || user.id;
+            return id && /^\d+$/.test(String(id)) ? String(id) : '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function chatTimestamp() {
+        return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function chatAppendUser(text) {
+        const box = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = 'chat-msg-anim';
+        div.style.cssText = 'display:flex;justify-content:flex-end;gap:10px;align-items:flex-start;';
+        div.innerHTML = `
+            <div style="max-width:75%;text-align:right;">
+                <div style="background:linear-gradient(135deg,var(--vert),#0a3d2a);color:white;border-radius:16px 0 16px 16px;padding:12px 16px;font-size:.95rem;line-height:1.6;display:inline-block;text-align:left;">${escHtml(text)}</div>
+                <span style="font-size:.75rem;color:#999;margin-top:4px;display:block;">${chatTimestamp()}</span>
+            </div>
+            <div style="width:34px;height:34px;background:linear-gradient(135deg,var(--bleu),#4a9ee8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;">👤</div>`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function chatAppendBot(data) {
+        const box = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = 'chat-msg-anim';
+        div.style.cssText = 'display:flex;gap:10px;align-items:flex-start;';
+
+        // Sentiment badge
+        const sent = data.sentiment || {};
+        const label = typeof sent === 'string' ? sent : (sent.label || 'NEUTRAL');
+        const score = typeof sent === 'object' && sent.score ? Math.round(sent.score * 100) : '';
+        const badgeClass = label === 'POSITIVE' ? 'sentiment-positive' : label === 'NEGATIVE' ? 'sentiment-negative' : 'sentiment-neutral';
+        const badgeIcon = label === 'POSITIVE' ? '😊' : label === 'NEGATIVE' ? '😟' : '😐';
+        const sentBadge = `<span class="sentiment-badge ${badgeClass}">${badgeIcon} ${label} ${score ? score+'%' : ''}</span>`;
+
+        // TCM herbs
+        let tcmHtml = '';
+        const herbs = Array.isArray(data.tcm_herbs)
+            ? data.tcm_herbs
+            : (Array.isArray(data.tcm_herbs_suggested) ? data.tcm_herbs_suggested : []);
+        if (herbs.length > 0) {
+            tcmHtml = `<div style="margin-top:10px;"><span style="font-size:.8rem;color:#666;font-weight:600;">🌿 Plantes TCM suggérées :</span><br>`;
+            herbs.forEach(h => {
+                tcmHtml += `<span class="tcm-pill" title="${escHtml(h.safety||'')}">${escHtml(h.name||h)}</span>`;
+            });
+            tcmHtml += '</div>';
+        }
+
+        // Outcome prediction
+        let outcomeHtml = '';
+        if (data.predicted_outcome) {
+            const o = data.predicted_outcome;
+            outcomeHtml = `<div style="margin-top:10px;background:rgba(119,181,254,.1);border-radius:10px;padding:10px 14px;font-size:.85rem;">
+                <strong style="color:var(--vert);">📊 Prédiction :</strong>
+                ${typeof o === 'string' ? escHtml(o) : ''}
+                ${typeof o === 'object' && o.weight_change ? `<span style="margin-left:8px;">⚖️ ${o.weight_change}</span>` : ''}
+                ${typeof o === 'object' && o.adherence ? `<span style="margin-left:8px;">📈 Adhérence : ${o.adherence}</span>` : ''}
+            </div>`;
+        }
+
+        // Main response text — convert markdown to HTML, then newlines to <br>
+        const responseText = formatBotText(data.response || data.message || 'Désolé, je n\'ai pas pu générer de réponse.');
+
+        const rawText = data.response || data.message || '';
+        div.innerHTML = `
+            <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--vert),#0a3d2a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;box-shadow:0 2px 8px rgba(1,50,32,.25);">🤖</div>
+            <div style="max-width:82%;">
+                <div style="background:white;border-radius:4px 18px 18px 18px;padding:16px 20px;box-shadow:0 3px 12px rgba(0,0,0,.09);font-size:.95rem;color:#1a1a1a;line-height:1.75;border-left:3px solid var(--vert);">
+                    <div class="bot-response-text">${responseText}</div>
+                    ${tcmHtml}
+                    ${outcomeHtml}
+                    <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <div>${sentBadge}</div>
+                        <button onclick="navigator.clipboard.writeText(this.dataset.text).then(()=>{this.textContent='✅ Copié';setTimeout(()=>this.textContent='📋 Copier',1500)})" data-text="${escHtml(rawText)}" style="background:none;border:1px solid #e0e0e0;border-radius:20px;padding:3px 10px;font-size:.75rem;cursor:pointer;color:#666;transition:all .2s;" onmouseover="this.style.borderColor='var(--vert)';this.style.color='var(--vert)'" onmouseout="this.style.borderColor='#e0e0e0';this.style.color='#666'">📋 Copier</button>
+                    </div>
+                </div>
+                <span style="font-size:.75rem;color:#aaa;margin-top:5px;display:block;padding-left:4px;">🤖 Assistant · ${chatTimestamp()}</span>
+            </div>`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function chatAppendError(msg) {
+        const box = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = 'chat-msg-anim';
+        div.style.cssText = 'display:flex;gap:10px;align-items:flex-start;';
+        div.innerHTML = `
+            <div style="width:34px;height:34px;background:#e74c3c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;">⚠️</div>
+            <div style="background:#fdf0f0;border:1px solid #f5c6cb;border-radius:0 16px 16px 16px;padding:12px 16px;font-size:.9rem;color:#721c24;max-width:75%;">${escHtml(msg)}</div>`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Convert LLM markdown to clean HTML
+    function formatBotText(raw) {
+        let t = raw;
+        // Bold: **text** or __text__
+        t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        t = t.replace(/__(.+?)__/g, '<strong>$1</strong>');
+        // Italic: *text* or _text_ (single)
+        t = t.replace(/\*([^*\n]+?)\*/g, '<em>$1</em>');
+        t = t.replace(/_([^_\n]+?)_/g, '<em>$1</em>');
+        // Bullet lists: lines starting with - or *
+        t = t.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+        t = t.replace(/(<li>.*<\/li>)/s, '<ul style="margin:8px 0 8px 18px;padding:0;">$1</ul>');
+        // Numbered lists
+        t = t.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+        // Headers: ### or ## or #
+        t = t.replace(/^###\s+(.+)$/gm, '<strong style="display:block;margin-top:10px;color:var(--vert);">$1</strong>');
+        t = t.replace(/^##\s+(.+)$/gm, '<strong style="display:block;margin-top:10px;color:var(--vert);font-size:1.05rem;">$1</strong>');
+        t = t.replace(/^#\s+(.+)$/gm, '<strong style="display:block;margin-top:10px;color:var(--vert);font-size:1.1rem;">$1</strong>');
+        // Horizontal rule
+        t = t.replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid #eee;margin:10px 0;">');
+        // Newlines to <br> (but not inside list items)
+        t = t.replace(/\n/g, '<br>');
+        // Clean up double <br> after list items
+        t = t.replace(/<\/li><br>/g, '</li>');
+        return t;
+    }
+
+    async function chatSend() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Disable input while waiting
+        input.value = '';
+        input.style.height = 'auto';
+        input.disabled = true;
+        document.getElementById('chatSendBtn').disabled = true;
+        document.getElementById('chatSuggestions').style.display = 'none';
+
+        chatAppendUser(text);
+
+        // Show typing indicator
+        document.getElementById('chatTyping').style.display = 'block';
+        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+
+        try {
+            const res = await fetch(CHATBOT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, user_id: healthCurrentUserId() })
+            });
+
+            document.getElementById('chatTyping').style.display = 'none';
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                chatAppendError(err.error || 'Service IA temporairement indisponible. Réessayez dans un instant.');
+            } else {
+                const data = await res.json();
+                chatAppendBot(data);
+            }
+        } catch (e) {
+            document.getElementById('chatTyping').style.display = 'none';
+            chatAppendError('Impossible de joindre le service IA. Vérifiez que le serveur Python est démarré.');
+        }
+
+        input.disabled = false;
+        document.getElementById('chatSendBtn').disabled = false;
+        input.focus();
+    }
+
+    function chatSendQuick(text) {
+        document.getElementById('chatInput').value = text;
+        chatSend();
+    }
+
+    /* ============================================================
+       TAB SWITCHING — load chat when assistant tab is opened
+       ============================================================ */
+    // Tab switching
+    function healthTabSwitch(btn, tab) {
+        document.querySelectorAll('.health-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.health-tab-content').forEach(c => c.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById('health-tab-' + tab).classList.add('active');
+        
+        if (tab === 'dossier') {
+            healthLoadAvailableRegimes();
+        }
+        if (tab === 'statistics') {
+            loadFrontendStats();
+        }
+    }
+
+    async function loadFrontendStats() {
+        try {
+            // Load dossier data
+            const res = await fetch(`../../controller/dossierMedical.controller.php?action=read&user_id=${encodeURIComponent(healthCurrentUserId())}`);
+            const d = await res.json();
+            if (d.success && d.data && d.data.length > 0) {
+                const dossier = d.data[0]; // most recent
+                const imc = dossier.imc ? parseFloat(dossier.imc) : null;
+
+                document.getElementById('stat-poids-val').textContent = dossier.poids ? dossier.poids + ' kg' : '—';
+                document.getElementById('stat-taille-val').textContent = dossier.taille ? dossier.taille + ' cm' : '—';
+                document.getElementById('stat-groupe-val').textContent = dossier.groupe_sanguin || '—';
+                document.getElementById('stat-allergie-val').textContent = dossier.allergie || 'Aucune allergie renseignée';
+
+                if (imc) {
+                    document.getElementById('stat-imc-val').textContent = imc.toFixed(1);
+                    let cat = '', catColor = '';
+                    if (imc < 18.5)      { cat = 'Sous-poids';  catColor = '#3498db'; }
+                    else if (imc < 25)   { cat = 'Normal ✓';    catColor = '#2ecc71'; }
+                    else if (imc < 30)   { cat = 'Surpoids';    catColor = '#f39c12'; }
+                    else                 { cat = 'Obésité';      catColor = '#e74c3c'; }
+                    const catEl = document.getElementById('stat-imc-cat');
+                    catEl.textContent = cat;
+                    catEl.style.background = catColor;
+
+                    // Position marker on scale (IMC 10–40 mapped to 0–100%)
+                    const pct = Math.min(100, Math.max(0, ((imc - 10) / 30) * 100));
+                    const marker = document.getElementById('stat-imc-marker');
+                    marker.style.display = 'block';
+                    marker.style.left = pct + '%';
+                    marker.style.borderColor = catColor;
+                }
+            }
+
+            // Load regime count
+            const rRes = await fetch('../../controller/regime.controller.php?action=list');
+            const rData = await rRes.json();
+            document.getElementById('stat-regimes-val').textContent = rData.success ? rData.data.length : '—';
+        } catch(e) {
+            console.error('Stats error:', e);
+        }
+    }
+
+    // IMC Calculation
+    function healthCalculateIMC() {
+        const poids = parseFloat(document.getElementById('healthDossierPoids').value);
+        const tailleCm = parseFloat(document.getElementById('healthDossierTaille').value);
+        
+        if (!poids || !tailleCm || tailleCm <= 0) {
+            showToast('Erreur', 'Veuillez entrer un poids et une taille valides', 'error');
+            return;
+        }
+        
+        const tailleM = tailleCm / 100;
+        const imc = (poids / (tailleM * tailleM)).toFixed(1);
+        
+        document.getElementById('healthDossierIMC').value = imc;
+        
+        let message = `Votre IMC est ${imc}. `;
+        if (imc < 18.5) message += "Vous êtes en sous-poids.";
+        else if (imc < 25) message += "Vous avez un poids normal.";
+        else if (imc < 30) message += "Vous êtes en surpoids.";
+        else message += "Vous êtes en obésité.";
+        
+        showToast('IMC Calculé', message, 'success');
+    }
+
+    // Save Dossier
+    async function healthSaveDossier() {
+        const dossierData = {
+            id_utilisateur: healthCurrentUserId(),
+            groupe_sanguin: document.getElementById('healthDossierGroupe').value,
+            poids: parseFloat(document.getElementById('healthDossierPoids').value) || 0,
+            taille: parseFloat(document.getElementById('healthDossierTaille').value) || 0,
+            regime_special: '',
+            notes_medecin: document.getElementById('healthDossierNotes')?.value || '',
+            allergie: document.getElementById('healthDossierAllergie').value,
+            gravite_allergie: document.getElementById('healthDossierGravite').value,
+            maladies: document.getElementById('healthDossierMaladies').value,
+            traitement: document.getElementById('healthDossierTraitement')?.value || '',
+            medecin: document.getElementById('healthDossierMedecin')?.value || '',
+            contact_en_cas_durgence: document.getElementById('healthDossierContact')?.value || ''
+        };
+
+        try {
+            const formData = new FormData();
+            formData.append('action', window.currentDossierId ? 'update' : 'add');
+            if (window.currentDossierId) {
+                formData.append('id_dossier', window.currentDossierId);
+            }
+            Object.keys(dossierData).forEach(key => {
+                formData.append(key, dossierData[key]);
+            });
+
+            const response = await fetch('../../controller/dossierMedical.controller.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Succès', 'Dossier médical enregistré avec succès !', 'success');
+                // Reload the page or refresh data
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showToast('Erreur', data.message || 'Erreur lors de l\'enregistrement du dossier.', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving dossier:', error);
+            showToast('Erreur', 'Erreur de connexion: ' + error.message, 'error');
+        }
+    }
+
+    // Simple Toast Notification
+    function showToast(title, message, type = 'success') {
+        let toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.style.background = type === 'success' ? '#013220' : '#e74c3c';
+        toast.innerHTML = `<strong>${title}</strong><br>${message}`;
+        document.body.appendChild(toast);
+        toast.style.display = 'block';
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }, 4000);
+    }
+
+    // Load available regimes for selection
+    async function healthLoadAvailableRegimes() {
+        try {
+            const response = await fetch('../../controller/regime.controller.php?action=list');
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+                const select = document.getElementById('healthDossierRegimeSelect');
+                select.innerHTML = '<option value="">— Choisir un régime —</option>';
+                
+                data.data.forEach(regime => {
+                    const option = document.createElement('option');
+                    option.value = regime.id_regime;
+                    option.textContent = `${regime.nom_regime} (${regime.type_regime})`;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading regimes:', error);
+        }
+    }
+
+    // Attach selected regime to dossier
+    async function healthAttachRegime() {
+        const id_regime = document.getElementById('healthDossierRegimeSelect').value;
+        const id_dossier = window.currentDossierId || 1;
+        
+        if (!id_regime) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('action', 'attachRegime');
+            formData.append('id_dossier', id_dossier);
+            formData.append('id_regime', id_regime);
+            formData.append('user_id', healthCurrentUserId());
+
+            const response = await fetch('../../controller/dossierMedical.controller.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Succès', 'Régime attaché avec succès !', 'success');
+                loadExistingDossier(); // Refresh dossier info
+            } else {
+                showToast('Erreur', data.message || 'Erreur lors de l\'attachement du régime', 'error');
+            }
+        } catch (error) {
+            console.error('Error attaching regime:', error);
+            showToast('Erreur', 'Erreur de connexion: ' + error.message, 'error');
+        }
+    }
+
+    // Display current regime information
+    function healthDisplayCurrentRegime(dossier) {
+        const display = document.getElementById('healthRegimeDisplay');
+        const info = document.getElementById('healthRegimeInfo');
+        
+        if (dossier.nom_regime) {
+            display.style.display = 'block';
+            info.innerHTML = `
+                <strong>${dossier.nom_regime}</strong><br>
+                <span style="font-size: 0.85rem; color: #666;">
+                    ${dossier.type_regime} • ${dossier.niveau_difficulte} • ${dossier.apport_calorique_moyen || 'N/A'} kcal/jour
+                </span>
+            `;
+        } else {
+            display.style.display = 'none';
+        }
+    }
+
+    // Open regime creation modal
+    function healthOpenCreateRegime() {
+        const modal = document.getElementById('createRegimeModal');
+        if (modal) {
+            modal.classList.add('active');
+            document.getElementById('createRegimeForm').reset();
+        }
+    }
+
+    // Close regime creation modal
+    function healthCloseCreateRegimeModal() {
+        const modal = document.getElementById('createRegimeModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    // Submit regime creation form
+    async function healthSubmitCreateRegime(e) {
+        e.preventDefault();
+        
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        
+        const formData = new FormData();
+        formData.append('action', 'add');
+        formData.append('nom_regime', document.getElementById('createRegimeName').value);
+        formData.append('description', document.getElementById('createRegimeDescription').value);
+        formData.append('type_regime', document.getElementById('createRegimeType').value);
+        formData.append('niveau_difficulte', document.getElementById('createRegimeDifficulty').value);
+        formData.append('apport_calorique_moyen', document.getElementById('createRegimeCalories').value);
+        
+        try {
+            const response = await fetch('../../controller/regime.controller.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Succès', '✅ Régime créé avec succès!', 'success');
+                healthCloseCreateRegimeModal();
+                // Reload available regimes and dossier
+                setTimeout(() => {
+                    healthLoadAvailableRegimes();
+                    loadExistingDossier();
+                }, 300);
+            } else {
+                showToast('Erreur', '❌ ' + (data.message || 'Erreur'), 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Erreur', '❌ Erreur de connexion', 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('createRegimeModal');
+        if (modal && e.target === modal) {
+            healthCloseCreateRegimeModal();
+        }
+    });
+
+
+    // Load regimes when tab is opened
+    async function loadRegimes() {
+        const container = document.getElementById('healthRegimeListContainer');
+        container.innerHTML = '<div style="text-align:center; padding:40px;"><div class="section-loader-spinner"></div><p class="health-muted">Chargement des régimes...</p></div>';
+
+        try {
+            const response = await fetch('../../controller/regime.controller.php?action=list');
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const data = await response.json();
+            if (data.success && data.data && data.data.length > 0) {
+                const regimesHTML = data.data.map(regime => `
+                    <div class="regime-card" style="background:#f9f9f9; border-radius:12px; padding:20px; margin-bottom:15px; border:1px solid #eee;">
+                        <h4 style="color:#013220; margin-bottom:10px;">${regime.nom_regime}</h4>
+                        <p class="health-muted" style="margin-bottom:8px;">${regime.description || 'Aucune description'}</p>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <span style="background:#77B5FE; color:white; padding:4px 8px; border-radius:20px; font-size:0.8rem;">${regime.type_regime}</span>
+                            <span style="background:#BA5BED; color:white; padding:4px 8px; border-radius:20px; font-size:0.8rem;">${regime.niveau_difficulte}</span>
+                        </div>
+                        <div style="font-size:0.9rem;">
+                            <strong>Calories:</strong> ${regime.apport_calorique_moyen || 'N/A'} kcal/jour
+                        </div>
+                        <div style="margin-top:10px;">
+                            <a href="#" onclick="openUpdateRegime(${regime.id_regime}); return false;" style="color:#77B5FE; text-decoration:none; font-weight:500;">✏️ Modifier</a>
+                            <button onclick="deleteRegime(${regime.id_regime})" style="color:#e74c3c; background:none; border:none; cursor:pointer; font-weight:500; text-decoration:none; margin-left:10px;">🗑️ Supprimer</button>
+                        </div>
+                    </div>
+                `).join('');
+                container.innerHTML = regimesHTML;
+            } else {
+                container.innerHTML = `
+                    <div style="padding:20px; background:#f9f9f9; border-radius:12px; border:1px solid #eee;">
+                        <p><strong>Aucun régime enregistré pour le moment.</strong></p>
+                        <p class="health-muted">Ajoutez votre premier régime via le bouton ci-dessous.</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading regimes:', error);
+            container.innerHTML = `
+                <div style="padding:20px; background:#ffebee; border-radius:12px; border:1px solid #f44336;">
+                    <p><strong>Erreur de chargement</strong></p>
+                    <p class="health-muted">Impossible de charger les régimes.</p>
+                </div>
+            `;
+        }
+    }
+
+    document.querySelector('[data-tab="regimes"]').addEventListener('click', function() {
+        setTimeout(() => loadRegimes(), 300);
+    });
+
+    // Open update page for a regime and include a return URL so we can come back
+    function openUpdateRegime(id) {
+        // send a relative path (pathname + search) so server can validate easily
+        const returnPath = encodeURIComponent(window.location.pathname + window.location.search);
+        const url = `health/updateRegime.php?id=${id}&return=${returnPath}`;
+        window.location.href = url;
+    }
+
+    // Load data when dossier tab is clicked
+    document.querySelector('[data-tab="dossier"]').addEventListener('click', function() {
+        setTimeout(() => {
+            loadExistingDossier();
+            healthLoadAvailableRegimes();
+        }, 300);
+    });
+
+    // Auto-calculate IMC when weight or height changes
+    document.getElementById('healthDossierPoids').addEventListener('input', healthCalculateIMC);
+    document.getElementById('healthDossierTaille').addEventListener('input', healthCalculateIMC);
+
+    // Load on initial page render
+    loadExistingDossier();
+    healthLoadAvailableRegimes();
+
+    // Load existing dossier data on page load
+    async function loadExistingDossier() {
+        try {
+            const response = await fetch(`../../controller/dossierMedical.controller.php?action=read&user_id=${encodeURIComponent(healthCurrentUserId())}`);
+            if (!response.ok) return;
+
+            const data = await response.json();
+            if (data.success && data.data && data.data.length > 0) {
+                const dossier = data.data[0];
+                
+                // Store dossier ID for later use
+                window.currentDossierId = dossier.id_dossier;
+
+                // Fill form fields
+                if (dossier.groupe_sanguin) document.getElementById('healthDossierGroupe').value = dossier.groupe_sanguin;
+                if (dossier.poids) document.getElementById('healthDossierPoids').value = dossier.poids;
+                if (dossier.taille) document.getElementById('healthDossierTaille').value = dossier.taille;
+                if (dossier.allergie) document.getElementById('healthDossierAllergie').value = dossier.allergie;
+                if (dossier.gravite_allergie) document.getElementById('healthDossierGravite').value = dossier.gravite_allergie;
+                if (dossier.maladies) document.getElementById('healthDossierMaladies').value = dossier.maladies;
+                const traitement = document.getElementById('healthDossierTraitement');
+                if (traitement && dossier.traitement) traitement.value = dossier.traitement;
+                const medecin = document.getElementById('healthDossierMedecin');
+                if (medecin && dossier.medecin) medecin.value = dossier.medecin;
+                const contact = document.getElementById('healthDossierContact');
+                if (contact && dossier.contact_en_cas_durgence) contact.value = dossier.contact_en_cas_durgence;
+                const notes = document.getElementById('healthDossierNotes');
+                if (notes && dossier.notes_medecin) notes.value = dossier.notes_medecin;
+
+                // Calculate IMC if both weight and height are present
+                if (dossier.poids && dossier.taille) {
+                    healthCalculateIMC();
+                }
+
+                // Display current regime if attached
+                healthDisplayCurrentRegime(dossier);
+
+                // Set regime select value if dossier has one
+                if (dossier.id_regime) {
+                    document.getElementById('healthDossierRegimeSelect').value = dossier.id_regime;
+                }
+
+                // Set the modifier link to include dossier id and return URL
+                const modifierLink = document.getElementById('modifierDossierLink');
+                if (modifierLink) {
+                    const ret = encodeURIComponent(window.location.pathname + window.location.search);
+                    modifierLink.href = `health/updateDossier.php?id=${dossier.id_dossier}&return=${ret}`;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading dossier:', error);
+        }
+    }
+
+    // Delete regime
+    async function deleteRegime(id) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce régime ?')) return;
+        
+        try {
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('id', id);
+            const response = await fetch(`../../controller/regime.controller.php?action=delete&id=${id}`, { method: 'POST' });
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Succès', '✅ Régime supprimé!', 'success');
+                healthLoadAvailableRegimes();
+                loadRegimes();
+            } else {
+                showToast('Erreur', '❌ Erreur suppression', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting:', error);
+            showToast('Erreur', '❌ Erreur de connexion', 'error');
+        }
+    }
+
+    // Function to load the chat assistant UI
+function loadHealthAssistant() {
+    const container = document.getElementById('healthAssistant');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="assistant-section">
+            <div class="assistant-tool">
+                <h4>💬 Assistant Santé & Nutrition</h4>
+                <form id="chatForm" onsubmit="sendChatMessage(event)">
+                    <textarea id="chatMessage" rows="3" placeholder="Décrivez vos symptômes ou posez votre question..." 
+                              style="width:100%; padding:12px; border-radius:12px; border:2px solid #e0e0e0; resize:vertical;"></textarea>
+                    <div style="margin-top:15px; text-align:right;">
+                        <button type="submit" class="health-btn health-btn-violet">💬 Envoyer</button>
+                    </div>
+                </form>
+                <div id="chatResponse" style="margin-top:20px; display:none;">
+                    <div style="background:#f8f9fa; border-radius:12px; padding:20px;">
+                        <div id="responseContent"></div>
+                        <div id="sentimentInfo" style="margin-top:10px; font-size:0.9rem; color:#666;"></div>
+                        <div id="tcmInfo" style="margin-top:10px; font-size:0.9rem; color:#77B5FE;"></div>
+                        <div id="outcomeInfo" style="margin-top:10px; font-size:0.9rem; font-weight:bold; color:#BA5BED;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 }
-</style>
+
+// Function to send chat message to your ChatbotController
+window.sendChatMessage = async function(event) {
+    event.preventDefault();
+    const message = document.getElementById('chatMessage').value;
+    if (!message.trim()) return;
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Envoi...';
+
+    try {
+        const response = await fetch('../../controller/ChatbotController.php?action=ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message, user_id: healthCurrentUserId() })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.details || errorData.error || 'Erreur réseau');
+        }
+        
+        const data = await response.json();
+        
+        const chatDiv = document.getElementById('chatResponse');
+        chatDiv.style.display = 'block';
+        document.getElementById('responseContent').innerHTML = `<strong>Réponse :</strong><br>${data.response.replace(/\n/g, '<br>')}`;
+        document.getElementById('sentimentInfo').innerHTML = `<strong>Sentiment détecté :</strong> ${data.sentiment}`;
+        document.getElementById('tcmInfo').innerHTML = `<strong>Plantes suggérées (MTC) :</strong> ${data.tcm_herbs_suggested?.join(', ') || 'Aucune'}`;
+        document.getElementById('outcomeInfo').innerHTML = `<strong>Prédiction réaliste :</strong> ${data.predicted_outcome}`;
+        
+    } catch (error) {
+        const chatDiv = document.getElementById('chatResponse');
+        chatDiv.style.display = 'block';
+        document.getElementById('responseContent').innerHTML = `<strong>Erreur :</strong> ${error.message}`;
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '💬 Envoyer';
+    }
+};
+
+// Load assistant when the page loads and when the tab is clicked
+document.addEventListener('DOMContentLoaded', function() {
+    // If Assistant tab is active by default
+    const assistantTab = document.getElementById('health-tab-assistant');
+    if (assistantTab && assistantTab.classList.contains('active')) {
+        loadHealthAssistant();
+    }
+    // Also attach to tab click
+    const assistantTabBtn = document.querySelector('[data-tab="assistant"]');
+    if (assistantTabBtn) {
+        assistantTabBtn.addEventListener('click', function() {
+            setTimeout(loadHealthAssistant, 100);
+        });
+    }
+});
+</script>
+<script src="js/health.controller.js"></script>
+
+
+
+
+</body>
+</html>

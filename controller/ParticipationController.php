@@ -1,10 +1,27 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../Model/Participation.php';
+require_once __DIR__ . '/../helpers/auth_user.php';
 
 class ParticipationController {
+    private bool $userSchemaReady = false;
+
+    private function ensureUserSchema(): void {
+        if ($this->userSchemaReady) return;
+        try {
+            $db = config::getConnexion();
+            $cols = $db->query("SHOW COLUMNS FROM participation")->fetchAll(PDO::FETCH_COLUMN);
+            if (!in_array('id_utilisateur', $cols, true)) {
+                $db->exec("ALTER TABLE participation ADD COLUMN id_utilisateur INT UNSIGNED DEFAULT NULL AFTER id_event");
+            }
+        } catch (Exception $e) {
+            error_log('Erreur ensureUserSchema participation: ' . $e->getMessage());
+        }
+        $this->userSchemaReady = true;
+    }
 
     public function listParticipations() {
+        $this->ensureUserSchema();
         $sql = "SELECT p.*, e.titre as evenement_titre 
                 FROM participation p 
                 JOIN evenement e ON p.id_event = e.id_event";
@@ -17,6 +34,7 @@ class ParticipationController {
     }
 
     public function listParticipationsByEvent($id_event) {
+        $this->ensureUserSchema();
         $sql = "SELECT p.*, e.titre as evenement_titre 
                 FROM participation p 
                 JOIN evenement e ON p.id_event = e.id_event
@@ -45,6 +63,7 @@ class ParticipationController {
     }
 
     public function deleteParticipation($id) {
+        $this->ensureUserSchema();
         $sql = "DELETE FROM participation WHERE id_participation = :id";
         $db = config::getConnexion();
         $req = $db->prepare($sql);
@@ -52,14 +71,17 @@ class ParticipationController {
         $req->execute();
     }
 
-    public function addParticipation(Participation $participation) {
-        $sql = "INSERT INTO participation (id_event, nom_complet, email, telephone, centre_interet, statut) 
-                VALUES (:id_event, :nom_complet, :email, :telephone, :centre_interet, 'en_attente')";
+    public function addParticipation(Participation $participation, int $userId = 0) {
+        $this->ensureUserSchema();
+        $sql = "INSERT INTO participation (id_event, id_utilisateur, nom_complet, email, telephone, centre_interet, statut) 
+                VALUES (:id_event, :id_utilisateur, :nom_complet, :email, :telephone, :centre_interet, 'en_attente')";
         $db = config::getConnexion();
         try {
+            $userId = $userId > 0 ? $userId : gl_current_user_id();
             $query = $db->prepare($sql);
             return $query->execute([
                 'id_event'       => $participation->getIdEvent(),
+                'id_utilisateur' => $userId > 0 ? $userId : null,
                 'nom_complet'    => $participation->getNomComplet(),
                 'email'          => $participation->getEmail(),
                 'telephone'      => $participation->getTelephone(),
@@ -72,6 +94,7 @@ class ParticipationController {
     }
 
     public function showParticipation($id) {
+        $this->ensureUserSchema();
         $sql = "SELECT p.*, e.titre as evenement_titre 
                 FROM participation p 
                 JOIN evenement e ON p.id_event = e.id_event 
@@ -83,6 +106,7 @@ class ParticipationController {
     }
 
     public function updateParticipationStatut($id, $statut) {
+        $this->ensureUserSchema();
         $sql = "UPDATE participation SET statut = :statut WHERE id_participation = :id";
         $db = config::getConnexion();
         try {
@@ -132,6 +156,20 @@ class ParticipationController {
                 ? "Statut mis à jour et email envoyé à {$data['email']}."
                 : "Statut mis à jour. Aucun email (adresse manquante).",
         ];
+    }
+
+    public function listParticipationsByUser(int $userId): array {
+        $this->ensureUserSchema();
+        if ($userId <= 0) return [];
+        $sql = "SELECT p.*, e.titre as evenement_titre, e.date, e.heure, e.type
+                FROM participation p
+                JOIN evenement e ON p.id_event = e.id_event
+                WHERE p.id_utilisateur = :user_id
+                ORDER BY e.date DESC, e.heure DESC";
+        $db = config::getConnexion();
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>

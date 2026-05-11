@@ -1,10 +1,27 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../Model/Evenement.php';
+require_once __DIR__ . '/../helpers/auth_user.php';
 
 class EvenementController {
+    private bool $userSchemaReady = false;
+
+    private function ensureUserSchema(): void {
+        if ($this->userSchemaReady) return;
+        try {
+            $db = config::getConnexion();
+            $cols = $db->query("SHOW COLUMNS FROM evenement")->fetchAll(PDO::FETCH_COLUMN);
+            if (!in_array('id_utilisateur', $cols, true)) {
+                $db->exec("ALTER TABLE evenement ADD COLUMN id_utilisateur INT UNSIGNED DEFAULT NULL AFTER id_event");
+            }
+        } catch (Exception $e) {
+            error_log('Erreur ensureUserSchema evenement: ' . $e->getMessage());
+        }
+        $this->userSchemaReady = true;
+    }
 
     public function listEvenements($orderBy = 'date ASC') {
+        $this->ensureUserSchema();
         $allowed = ['date ASC', 'date DESC', 'titre ASC', 'titre DESC', 'id_event ASC', 'id_event DESC'];
         if (!in_array($orderBy, $allowed)) $orderBy = 'date ASC';
         $sql = "SELECT * FROM evenement ORDER BY $orderBy";
@@ -42,6 +59,7 @@ class EvenementController {
     }
 
     public function deleteEvenement($id) {
+        $this->ensureUserSchema();
         $sql = "DELETE FROM evenement WHERE id_event = :id";
         $db  = config::getConnexion();
         $req = $db->prepare($sql);
@@ -50,11 +68,13 @@ class EvenementController {
     }
 
     public function addEvenement(Evenement $evenement) {
-        $sql   = "INSERT INTO evenement (titre, description, date, heure, type)
-                  VALUES (:titre, :description, :date, :heure, :type)";
+        $this->ensureUserSchema();
+        $sql   = "INSERT INTO evenement (id_utilisateur, titre, description, date, heure, type)
+                  VALUES (:id_utilisateur, :titre, :description, :date, :heure, :type)";
         $db    = config::getConnexion();
         $query = $db->prepare($sql);
         $query->execute([
+            ':id_utilisateur' => gl_current_user_id() ?: null,
             ':titre'       => $evenement->getTitre(),
             ':description' => $evenement->getDescription(),
             ':date'        => $evenement->getDate()->format('Y-m-d'),
@@ -64,6 +84,7 @@ class EvenementController {
     }
 
     public function updateEvenement(Evenement $evenement, $id) {
+        $this->ensureUserSchema();
         $sql   = "UPDATE evenement SET titre=:titre, description=:description,
                   date=:date, heure=:heure, type=:type WHERE id_event=:id";
         $db    = config::getConnexion();
@@ -79,6 +100,7 @@ class EvenementController {
     }
 
     public function showEvenement($id) {
+        $this->ensureUserSchema();
         $sql = "SELECT * FROM evenement WHERE id_event = :id";
         $db  = config::getConnexion();
         $req = $db->prepare($sql);

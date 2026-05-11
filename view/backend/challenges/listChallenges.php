@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once(__DIR__ . '/../../../controller/challenge.controller.php');
 require_once(__DIR__ . '/../../../controller/participant.controller.php');
 require_once(__DIR__ . '/../../../Model/Challenge.php');
+require_once(__DIR__ . '/../../../helpers/auth_user.php');
 
 $challengeC = new ChallengeController();
 $participantC = new ParticipantController();
@@ -26,7 +27,7 @@ if ($action !== '') {
         // ── Lister les défis (simple, pour le tableau admin) ──
         case 'list':
             header('Content-Type: application/json');
-            $idUser = (int)($_SESSION['user_id'] ?? 1);
+            $idUser = gl_current_user_id($_GET);
             echo json_encode($challengeC->listChallenges($idUser));
             break;
 
@@ -57,7 +58,12 @@ if ($action !== '') {
             header('Content-Type: application/json');
             $body    = json_decode(file_get_contents('php://input'), true) ?? [];
             $idC     = (int)($body['id_challenge'] ?? 0);
-            $idUser  = (int)($_SESSION['user_id']  ?? 1);
+            $idUser  = gl_current_user_id($body);
+            if ($idUser <= 0) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'error' => 'Utilisateur non connecté']);
+                break;
+            }
             echo json_encode($challengeC->toggleLike($idC, $idUser));
             break;
 
@@ -146,7 +152,7 @@ if ($isAjax) {
     }
 
     // Retour liste simple
-    $idUser = (int)($_SESSION['user_id'] ?? 1);
+    $idUser = gl_current_user_id($_GET);
     echo json_encode($challengeC->listChallenges($idUser));
     exit;
 }
@@ -184,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_challenge'])) {
     exit;
 }
 
-$idUser = (int)($_SESSION['user_id'] ?? 1);
+$idUser = gl_current_user_id($_GET);
 $list = $challengeC->listChallenges($idUser);
 ?>
 <!DOCTYPE html>

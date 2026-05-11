@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/EvenementController.php';
+require_once __DIR__ . '/../helpers/auth_user.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -32,7 +33,15 @@ try {
         }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
-        $stmt = $db->prepare("SELECT * FROM evenement $where ORDER BY $sort");
+        $stmt = $db->prepare("
+            SELECT e.*,
+                   COUNT(p.id_participation) AS participants_count
+            FROM evenement e
+            LEFT JOIN participation p ON p.id_event = e.id_event
+            $where
+            GROUP BY e.id_event
+            ORDER BY $sort
+        ");
         $stmt->execute($params);
         $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -41,6 +50,7 @@ try {
             return [
                 'id' => (int) $event['id_event'],
                 'id_event' => (int) $event['id_event'],
+                'id_utilisateur' => isset($event['id_utilisateur']) ? (int)$event['id_utilisateur'] : null,
                 'titre' => $event['titre'] ?? '',
                 'description' => $event['description'] ?? '',
                 'date' => $event['date'] ?? '',
@@ -51,7 +61,7 @@ try {
                 'lieu' => $event['lieu'] ?? 'GaiaLumen',
                 'organisateur' => $event['organisateur'] ?? 'GaiaLumen',
                 'capacite_max' => $event['capacite_max'] ?? null,
-                'participants_count' => $event['participants_count'] ?? 0,
+                'participants_count' => (int)($event['participants_count'] ?? 0),
                 'image' => $event['image'] ?? null,
             ];
         }, $events);
@@ -71,6 +81,16 @@ try {
         } else {
             echo json_encode($stats);
         }
+        exit;
+    }
+
+    if ($action === 'my_participations') {
+        require_once __DIR__ . '/ParticipationController.php';
+        $userId = gl_current_user_id($_GET);
+        echo json_encode([
+            'success' => $userId > 0,
+            'data' => $userId > 0 ? (new ParticipationController())->listParticipationsByUser($userId) : []
+        ]);
         exit;
     }
 

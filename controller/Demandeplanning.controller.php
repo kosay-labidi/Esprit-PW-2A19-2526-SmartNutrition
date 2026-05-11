@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../Model/Demandeplanning.php';
+require_once __DIR__ . '/../helpers/auth_user.php';
 
 class DemandeplanningController {
 
@@ -118,6 +119,11 @@ class DemandeplanningController {
 
     public function updateDemande(Demandeplanning $demande, int $id): bool {
         try {
+            $existing = $this->getDemandeById($id);
+            if (!$existing) return false;
+            if (!gl_is_admin() && gl_current_user_id() > 0 && (int)$existing['id_utilisateur'] !== gl_current_user_id()) {
+                return false;
+            }
             $db   = config::getConnexion();
             $stmt = $db->prepare("
                 UPDATE demandeplanning SET
@@ -139,6 +145,11 @@ class DemandeplanningController {
 
     public function deleteDemande(int $id): bool {
         try {
+            $existing = $this->getDemandeById($id);
+            if (!$existing) return false;
+            if (!gl_is_admin() && gl_current_user_id() > 0 && (int)$existing['id_utilisateur'] !== gl_current_user_id()) {
+                return false;
+            }
             $db = config::getConnexion();
             $db->beginTransaction();
             $db->prepare("DELETE FROM planning     WHERE id_demande=:id")->execute([':id'=>$id]);

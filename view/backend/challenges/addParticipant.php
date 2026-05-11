@@ -3,6 +3,7 @@ require_once(__DIR__ . '/../../../controller/participant.controller.php');
 require_once(__DIR__ . '/../../../controller/challenge.controller.php');
 require_once(__DIR__ . '/../../../controller/paiementDefi.controller.php');
 require_once(__DIR__ . '/../../../Model/Participant.php');
+require_once(__DIR__ . '/../../../helpers/auth_user.php');
 
 $participantC = new ParticipantController();
 $challengeC   = new ChallengeController();
@@ -24,6 +25,7 @@ if ($isAjax && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── Traitement POST ───────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $currentUserId = gl_current_user_id($_POST);
     $required = ['id_challenge', 'nom', 'email', 'objectif'];
     $missing  = array_filter($required, fn($k) => empty($_POST[$k]));
 
@@ -68,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             (int)  ($_POST['engagement']    ?? 0),
             (int)  ($_POST['notifications'] ?? 0)
         );
-            $participantId = $participantC->addParticipant($participant);
+            $participantId = $participantC->addParticipant($participant, $currentUserId);
             $ok = $participantId !== false;
             $paiement = null;
 

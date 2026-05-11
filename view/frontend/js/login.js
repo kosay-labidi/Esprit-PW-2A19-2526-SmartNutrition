@@ -64,6 +64,15 @@ async function handleLogin(event) {
       // ── Stocker les infos utilisateur ──
       localStorage.setItem('gaialumen-user', JSON.stringify(result.data));
       localStorage.setItem('gaialumen-token', 'session-' + Date.now());
+      const userId = result.data.id_utilisateur || result.data.id;
+      if (userId) {
+        sessionStorage.setItem('user_id', userId);
+        localStorage.setItem('user_id', userId);
+      }
+      sessionStorage.setItem('user_email', result.data.email || '');
+      sessionStorage.setItem('user_nom', result.data.nom || '');
+      sessionStorage.setItem('user_prenom', result.data.prenom || '');
+      sessionStorage.setItem('user_role', result.data.role || '');
 
       btn.textContent = '✓ Connexion réussie!';
 

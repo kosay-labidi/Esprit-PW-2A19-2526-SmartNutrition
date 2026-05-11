@@ -2,6 +2,7 @@
 require_once(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/../../../controller/Demandeplanning.controller.php');
 require_once(__DIR__ . '/../../../Model/Demandeplanning.php');
+require_once(__DIR__ . '/../../../helpers/auth_user.php');
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -17,6 +18,11 @@ try {
         if (!$demande) {
             http_response_code(404);
             echo json_encode(['success' => false, 'error' => 'Demande non trouvee.']);
+            exit;
+        }
+        if (!gl_is_admin() && gl_current_user_id() > 0 && (int)$demande['id_utilisateur'] !== gl_current_user_id()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Acces refuse.']);
             exit;
         }
 
@@ -65,6 +71,12 @@ try {
     if (!$existing) {
         http_response_code(404);
         $response['error'] = 'Demande non trouvee.';
+        echo json_encode($response);
+        exit;
+    }
+    if (!gl_is_admin() && gl_current_user_id() > 0 && (int)$existing['id_utilisateur'] !== gl_current_user_id()) {
+        http_response_code(403);
+        $response['error'] = 'Acces refuse.';
         echo json_encode($response);
         exit;
     }

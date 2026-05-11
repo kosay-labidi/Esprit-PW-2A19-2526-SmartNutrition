@@ -7,6 +7,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     require_once __DIR__ . '/../../../controller/Demandeplanning.controller.php';
+    require_once __DIR__ . '/../../../helpers/auth_user.php';
 
     if (isset($_GET['action']) && $_GET['action']==='delete' && isset($_GET['id'])) {
         $ok = (new DemandeplanningController())->deleteDemande((int)$_GET['id']);
@@ -15,12 +16,7 @@ try {
         exit;
     }
 
-    $userId = 0;
-    if (!empty($_SESSION['user']['id_utilisateur'])) {
-        $userId = (int) $_SESSION['user']['id_utilisateur'];
-    } elseif (!empty($_SESSION['user_id'])) {
-        $userId = (int) $_SESSION['user_id'];
-    }
+    $userId = gl_current_user_id($_GET);
 
     if ($userId <= 0) {
         ob_end_clean();

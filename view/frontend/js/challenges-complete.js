@@ -46,7 +46,19 @@ const PAYMENT_ENDPOINT = (function () {
 // État global du module (éviter collisions en auto-reload)
 var allChallenges = window.allChallenges || [];
 var allParticipants = window.allParticipants || [];
-var currentUser = window.__USER__ || { id: 1, nom: 'Utilisateur', pseudo: 'user1' };
+function getStoredChallengeUser() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('gaialumen-user') || '{}');
+    const id = parseInt(sessionStorage.getItem('user_id') || localStorage.getItem('user_id') || stored.id_utilisateur || stored.id || 0, 10);
+    const nom = [stored.prenom, stored.nom].filter(Boolean).join(' ').trim() || stored.nom || sessionStorage.getItem('user_nom') || 'Utilisateur';
+    const email = stored.email || sessionStorage.getItem('user_email') || '';
+    return { id: id || 0, nom, pseudo: nom, email };
+  } catch (_) {
+    const id = parseInt(sessionStorage.getItem('user_id') || localStorage.getItem('user_id') || 0, 10);
+    return { id: id || 0, nom: sessionStorage.getItem('user_nom') || 'Utilisateur', pseudo: 'user', email: sessionStorage.getItem('user_email') || '' };
+  }
+}
+var currentUser = window.__USER__ || getStoredChallengeUser();
 window.allChallenges = allChallenges;
 window.allParticipants = allParticipants;
 
@@ -197,7 +209,7 @@ async function loadChallenges() {
   empty.style.display = 'none';
   
   try {
-    const response = await fetch(`${CHALLENGES_ENDPOINT}&t=${Date.now()}`, {
+    const response = await fetch(`${CHALLENGES_ENDPOINT}&user_id=${encodeURIComponent(currentUser.id || '')}&t=${Date.now()}`, {
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json'
@@ -1776,13 +1788,13 @@ function getParticipationFormHTML(challenge) {
       <form id="inline-participation-form-${challenge.id}" onsubmit="window.handleParticipationSubmit(event, ${challenge.id})" novalidate>
         <div class="form-group">
           <label class="form-label">Nom complet <span class="required">*</span></label>
-          <input type="text" name="nom" class="form-input" placeholder="Ex: Jean Dupont" required>
+          <input type="text" name="nom" class="form-input" placeholder="Ex: Jean Dupont" value="${escapeHtml(currentUser.nom || '')}" required>
           <span class="error-msg" id="error-nom-${challenge.id}"></span>
         </div>
 
         <div class="form-group">
           <label class="form-label">Email <span class="required">*</span></label>
-          <input type="email" name="email" class="form-input" placeholder="votre@email.com" required>
+          <input type="email" name="email" class="form-input" placeholder="votre@email.com" value="${escapeHtml(currentUser.email || '')}" required>
           <span class="error-msg" id="error-email-${challenge.id}"></span>
         </div>
 
@@ -2127,7 +2139,7 @@ function submitParticipationData(normalizedId, challenge, data, btnSubmit, submi
       'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest'
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify({ ...data, user_id: currentUser.id || 0 })
   })
     .then(r => r.json())
     .then(result => {
@@ -2487,7 +2499,7 @@ window.toggleLike = function(challengeId, btn) {
   fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-    body: JSON.stringify({ id_challenge: challengeId })
+    body: JSON.stringify({ id_challenge: challengeId, user_id: currentUser.id || 0 })
   })
   .then(r => r.json())
   .then(data => {

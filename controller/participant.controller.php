@@ -1,9 +1,11 @@
 <?php
 require_once(__DIR__ . '/../config.php');
 require_once(__DIR__ . '/../Model/Participant.php');
+require_once(__DIR__ . '/../helpers/auth_user.php');
 
 class ParticipantController {
     private bool $paymentSchemaReady = false;
+    private bool $userSchemaReady = false;
 
     private function ensurePaymentSchema(): void {
         if ($this->paymentSchemaReady) return;
@@ -33,18 +35,35 @@ class ParticipantController {
         $this->paymentSchemaReady = true;
     }
 
+    private function ensureUserSchema(): void {
+        if ($this->userSchemaReady) return;
+        try {
+            $db = Config::getConnexion();
+            $cols = $db->query("SHOW COLUMNS FROM participant")->fetchAll(PDO::FETCH_COLUMN);
+            if (!in_array('id_utilisateur', $cols, true)) {
+                $db->exec("ALTER TABLE participant ADD COLUMN id_utilisateur INT UNSIGNED DEFAULT NULL AFTER id_challenge");
+            }
+        } catch (Exception $e) {
+            error_log('Erreur ensureUserSchema participant: ' . $e->getMessage());
+        }
+        $this->userSchemaReady = true;
+    }
+
     // ═══════════════════════════════════════════════════════════
     // CRUD DE BASE (préservés identiques)
     // ═══════════════════════════════════════════════════════════
 
-    public function addParticipant(Participant $participant) {
-        $sql = "INSERT INTO participant (id_challenge, nom, email, objectif, motivation, action, engagement, notifications, points, days_active, smart_score)
-                VALUES (:id_challenge, :nom, :email, :objectif, :motivation, :action, :engagement, :notifications, :points, :days_active, :smart_score)";
+    public function addParticipant(Participant $participant, int $userId = 0) {
+        $this->ensureUserSchema();
+        $sql = "INSERT INTO participant (id_challenge, id_utilisateur, nom, email, objectif, motivation, action, engagement, notifications, points, days_active, smart_score)
+                VALUES (:id_challenge, :id_utilisateur, :nom, :email, :objectif, :motivation, :action, :engagement, :notifications, :points, :days_active, :smart_score)";
         $db = Config::getConnexion();
         try {
+            $userId = $userId > 0 ? $userId : gl_current_user_id();
             $query = $db->prepare($sql);
             $query->execute([
                 'id_challenge' => (int)$participant->getIdChallenge(),
+                'id_utilisateur' => $userId > 0 ? $userId : null,
                 'nom'          => Config::sanitizeInput($participant->getNom()),
                 'email'        => Config::sanitizeInput($participant->getEmail()),
                 'objectif'     => (int)$participant->getObjectif(),
@@ -65,7 +84,9 @@ class ParticipantController {
 
     public function listParticipants($id_challenge = null) {
         $this->ensurePaymentSchema();
+        $this->ensureUserSchema();
         $sql = "SELECT p.*,
+                    p.id_utilisateur AS id_user,
                     c.titre        AS challenge_titre,
                     c.streak_icon  AS challenge_icon,
                     c.valeur_cible AS challenge_target,
@@ -98,7 +119,8 @@ class ParticipantController {
     }
 
     public function listParticipantsByChallenge($id_challenge) {
-        $sql = "SELECT * FROM participant WHERE id_challenge = :id_challenge";
+        $this->ensureUserSchema();
+        $sql = "SELECT p.*, p.id_utilisateur AS id_user FROM participant p WHERE p.id_challenge = :id_challenge";
         $db = Config::getConnexion();
         try {
             $query = $db->prepare($sql);
@@ -124,6 +146,7 @@ class ParticipantController {
     }
 
     public function showParticipant($id) {
+        $this->ensureUserSchema();
         $sql = "SELECT p.*, c.titre AS challenge_titre, c.streak_icon AS challenge_icon, c.valeur_cible AS challenge_target
                 FROM participant p
                 LEFT JOIN challenge c ON c.id = p.id_challenge
@@ -140,6 +163,7 @@ class ParticipantController {
     }
 
     public function updateParticipant(Participant $participant, $id) {
+        $this->ensureUserSchema();
         $sql = "UPDATE participant SET
                     id_challenge  = :id_challenge,
                     nom           = :nom,
@@ -402,8 +426,19 @@ class ParticipantController {
     // ═══════════════════════════════════════════════════════════
 
     public function emailDejaInscrit(string $email, int $id_challenge): bool {
+        $this->ensureUserSchema();
         $db = Config::getConnexion();
         try {
+            $userId = gl_current_user_id();
+            if ($userId > 0) {
+                $q = $db->prepare(
+                    "SELECT COUNT(*) FROM participant WHERE id_utilisateur = :user_id AND id_challenge = :id_challenge"
+                );
+                $q->execute(['user_id' => $userId, 'id_challenge' => $id_challenge]);
+                if ((int)$q->fetchColumn() > 0) {
+                    return true;
+                }
+            }
             $q = $db->prepare(
                 "SELECT COUNT(*) FROM participant WHERE email = :email AND id_challenge = :id_challenge"
             );

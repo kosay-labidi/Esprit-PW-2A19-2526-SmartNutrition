@@ -2,6 +2,7 @@
 // Depuis frontoffice/participation/ → 3 niveaux → u/
 require_once __DIR__ . '/../../../config.php';
 require_once __DIR__ . '/../../../controller/EvenementController.php';
+require_once __DIR__ . '/../../../helpers/auth_user.php';
 
 $error   = "";
 $success = false;
@@ -18,12 +19,17 @@ if ($event_id) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['nom_complet']) && !empty($_POST['email']) && !empty($_POST['id_event'])) {
         $db  = config::getConnexion();
-        $sql = "INSERT INTO participation (id_event, nom_complet, email, telephone, centre_interet, statut)
-                VALUES (:id_event, :nom_complet, :email, :telephone, :centre_interet, 'en_attente')";
+        $cols = $db->query("SHOW COLUMNS FROM participation")->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array('id_utilisateur', $cols, true)) {
+            $db->exec("ALTER TABLE participation ADD COLUMN id_utilisateur INT UNSIGNED DEFAULT NULL AFTER id_event");
+        }
+        $sql = "INSERT INTO participation (id_event, id_utilisateur, nom_complet, email, telephone, centre_interet, statut)
+                VALUES (:id_event, :id_utilisateur, :nom_complet, :email, :telephone, :centre_interet, 'en_attente')";
         try {
             $stmt   = $db->prepare($sql);
             $result = $stmt->execute([
                 ':id_event'       => (int)$_POST['id_event'],
+                ':id_utilisateur' => gl_current_user_id($_POST) ?: null,
                 ':nom_complet'    => trim($_POST['nom_complet']),
                 ':email'          => trim($_POST['email']),
                 ':telephone'      => trim($_POST['telephone'] ?? ''),

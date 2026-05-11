@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../helpers/auth_user.php';
 $pdo = Config::getConnexion();
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -8,11 +9,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 function repas_currentUserId(): int {
-    return (int) ($_SESSION['user']['id_utilisateur'] ?? $_SESSION['user_id'] ?? 1);
+    return gl_current_user_id();
 }
 
 function repas_isAdmin(): bool {
-    return (($_SESSION['user']['role'] ?? '') === 'admin');
+    return gl_is_admin();
 }
 
 function repas_targetUserId(array $data): int {
@@ -73,7 +74,7 @@ function repas_create($pdo, array $data): int {
     $stmt->execute([
         $data['nom_repas'],
         $data['date_repas'],
-        $data['id_utilisateur'] ?? 1
+        $data['id_utilisateur'] ?? repas_currentUserId()
     ]);
     return (int) $pdo->lastInsertId();
 }
@@ -201,6 +202,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'create') {
 
         $idUser = repas_targetUserId($_POST);
+        if ($idUser <= 0) {
+            repas_redirect('../view/frontend/fo_repaslist.php', 'error', 'Utilisateur non connecté.');
+        }
         $nom = trim($_POST['nom_repas'] ?? '');
         $date = trim($_POST['date_repas'] ?? '');
         $aliments = $_POST['aliments'] ?? [];
@@ -232,6 +236,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $date = trim($_POST['date_repas'] ?? '');
 
         $idUser = repas_targetUserId($_POST);
+        if ($idUser <= 0) {
+            repas_redirect("../view/frontend/fo_updaterepas.php?id=$id", 'error', 'Utilisateur non connecté.');
+        }
         if ($id <= 0 || (!repas_isAdmin() && !repas_getByIdForUser($pdo, $id, $idUser)) || (repas_isAdmin() && !repas_getById($pdo, $id))) {
             repas_redirect("../view/frontend/fo_updaterepas.php?id=$id", 'error', 'not_found');
         }

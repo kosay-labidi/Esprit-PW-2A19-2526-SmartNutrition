@@ -8,6 +8,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     require_once __DIR__ . '/../../../config.php';
+    require_once __DIR__ . '/../../../helpers/auth_user.php';
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
@@ -15,14 +16,7 @@ try {
         exit;
     }
 
-    $id_utilisateur = 0;
-    if (!empty($_SESSION['user']['id_utilisateur'])) {
-        $id_utilisateur = (int) $_SESSION['user']['id_utilisateur'];
-    } elseif (!empty($_SESSION['user_id'])) {
-        $id_utilisateur = (int) $_SESSION['user_id'];
-    } elseif (isset($_POST['id_utilisateur'])) {
-        $id_utilisateur = (int) $_POST['id_utilisateur'];
-    }
+    $id_utilisateur = gl_current_user_id($_POST);
 
     $calories       = isset($_POST['calories']) ? (int)$_POST['calories'] : 0;
     $budget         = isset($_POST['budget']) ? (float)str_replace(',', '.', $_POST['budget']) : 0;

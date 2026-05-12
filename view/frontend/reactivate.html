@@ -238,7 +238,7 @@ input {
 </div>
 
 <script>
-const BASE_URL = '';
+const USERS_API_BASE = '../backend/users/';
 let userEmail = '';
 let isOAuthAccount = false;
 
@@ -260,7 +260,7 @@ async function checkAccountType() {
   if (!userEmail || userEmail === 'Email non spécifié') return;
   
   try {
-    const response = await fetch(BASE_URL + '/view/backend/users/check_account_type.php', {
+    const response = await fetch(USERS_API_BASE + 'check_account_type.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: userEmail })
@@ -293,7 +293,7 @@ async function reactivateAccount(e) {
   submitBtn.textContent = '⏳ Réactivation...';
   
   try {
-    const response = await fetch(BASE_URL + '/view/backend/users/reactivate_account.php', {
+    const response = await fetch(USERS_API_BASE + 'reactivate_account.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: userEmail, password: password })

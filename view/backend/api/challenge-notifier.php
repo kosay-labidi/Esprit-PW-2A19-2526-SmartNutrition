@@ -17,6 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../../../vendor/autoload.php');
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception as MailException;
 
 function challenge_notifier_json(array $data, int $code = 200): void {
     http_response_code($code);
@@ -55,6 +59,54 @@ function challenge_notifier_email_body(string $challengeTitle, string $participa
     </body></html>";
 }
 
+function challenge_notifier_send_mail(string $email, string $name, string $subject, string $body): bool {
+    $gmailUser = defined('GMAIL_USER') ? GMAIL_USER : '';
+    $gmailPass = defined('GMAIL_PASS') ? GMAIL_PASS : '';
+
+    if ($gmailUser === '' || $gmailPass === '') {
+        $servicesConfig = __DIR__ . '/../../../config_services.php';
+        if (file_exists($servicesConfig)) {
+            require_once $servicesConfig;
+            $gmailUser = defined('GMAIL_USER') ? GMAIL_USER : $gmailUser;
+            $gmailPass = defined('GMAIL_PASS') ? GMAIL_PASS : $gmailPass;
+        }
+    }
+
+    if (class_exists(PHPMailer::class) && $gmailUser !== '' && $gmailPass !== '') {
+        try {
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = $gmailUser;
+            $mail->Password = $gmailPass;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
+            $mail->CharSet = 'UTF-8';
+            $mail->setFrom($gmailUser, 'GaiaLumen');
+            $mail->addAddress($email, $name);
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $body;
+            $mail->AltBody = trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $body)));
+            $mail->send();
+            return true;
+        } catch (MailException $e) {
+            error_log('[challenge-notifier SMTP] ' . $email . ' : ' . $e->getMessage());
+        }
+    }
+
+    $fromEmail = getenv('MAIL_FROM') ?: ($_SERVER['MAIL_FROM'] ?? 'noreply@gaialumen.com');
+    $fromName = getenv('MAIL_FROM_NAME') ?: ($_SERVER['MAIL_FROM_NAME'] ?? 'GaiaLumen');
+    $headers = implode("\r\n", [
+        'From: ' . $fromName . ' <' . $fromEmail . '>',
+        'Reply-To: ' . $fromEmail,
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8',
+    ]);
+    return @mail($email, $subject, $body, $headers);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     challenge_notifier_json(['success' => false, 'error' => 'Method not allowed'], 405);
 }
@@ -90,15 +142,6 @@ try {
     $failed = 0;
     $invalid = 0;
 
-    $fromEmail = getenv('MAIL_FROM') ?: ($_SERVER['MAIL_FROM'] ?? 'noreply@gaialumen.com');
-    $fromName = getenv('MAIL_FROM_NAME') ?: ($_SERVER['MAIL_FROM_NAME'] ?? 'GaiaLumen');
-    $headers = implode("\r\n", [
-        'From: ' . $fromName . ' <' . $fromEmail . '>',
-        'Reply-To: ' . $fromEmail,
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=UTF-8',
-    ]);
-
     foreach ($participants as $participant) {
         $email = trim((string)($participant['email'] ?? ''));
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -112,7 +155,7 @@ try {
             $message
         );
 
-        if (@mail($email, $subject, $body, $headers)) {
+        if (challenge_notifier_send_mail($email, (string)($participant['nom'] ?? ''), $subject, $body)) {
             $sent++;
         } else {
             $failed++;
@@ -125,6 +168,9 @@ try {
         'failed' => $failed,
         'invalid' => $invalid,
         'total' => count($participants),
+        'message' => count($participants) === 0
+            ? 'Aucun participant avec notifications activées.'
+            : "{$sent} email(s) envoyé(s), {$failed} échec(s).",
     ]);
 } catch (Throwable $e) {
     error_log('Erreur challenge-notifier: ' . $e->getMessage());

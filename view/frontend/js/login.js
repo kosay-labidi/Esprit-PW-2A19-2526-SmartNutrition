@@ -87,6 +87,18 @@ async function handleLogin(event) {
     } else {
       btn.textContent = 'Se connecter';
       btn.disabled = false;
+
+      if (result.message === 'account_inactive' || result.status === 'inactif') {
+        window.location.href = `reactivate.html?email=${encodeURIComponent(email)}`;
+        return;
+      }
+
+      if (result.message === 'suspended' || result.status === 'suspendu') {
+        errorDiv.textContent = 'Votre compte est suspendu. Veuillez contacter gaiaalumen@gmail.com.';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
       errorDiv.textContent = result.message || 'Identifiants incorrects.';
       errorDiv.style.display = 'block';
     }

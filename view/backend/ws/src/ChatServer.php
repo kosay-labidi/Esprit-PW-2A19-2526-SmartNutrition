@@ -22,7 +22,7 @@ final class ChatServer implements MessageComponentInterface {
 
     public function onOpen(ConnectionInterface $conn): void {
         $this->clients->attach($conn, [
-            'rooms' => [], // challenge_id => true
+            'rooms' => [], // challenge:<id> or channel:<id> => true
             'name' => 'Invité',
             'conn_id' => spl_object_id($conn),
         ]);
@@ -32,22 +32,21 @@ final class ChatServer implements MessageComponentInterface {
         $meta = $this->clients[$conn] ?? ['rooms' => []];
         $this->clients->detach($conn);
         // Optionally broadcast typing stop for rooms
-        foreach (array_keys($meta['rooms'] ?? []) as $cid) {
-            $this->broadcastToRoom((int)$cid, [
+        foreach (array_keys($meta['rooms'] ?? []) as $roomId) {
+            $payloadBase = $this->roomPayload($roomId);
+            $this->broadcastToRoom($roomId, array_merge($payloadBase, [
                 'type' => 'typing',
-                'challenge_id' => (int)$cid,
                 'author' => ['name' => $meta['name'] ?? 'Invité'],
                 'is_typing' => false,
-            ]);
-            $this->broadcastToRoom((int)$cid, [
+            ]));
+            $this->broadcastToRoom($roomId, array_merge($payloadBase, [
                 'type' => 'webrtc:state',
-                'challenge_id' => (int)$cid,
                 'author' => [
                     'name' => $meta['name'] ?? 'Invité',
                     'conn_id' => (int)($meta['conn_id'] ?? 0),
                 ],
                 'state' => 'offline',
-            ]);
+            ]));
         }
     }
 
@@ -68,41 +67,60 @@ final class ChatServer implements MessageComponentInterface {
         }
 
         if ($type === 'join') {
-            $cid = (int)($data['challenge_id'] ?? 0);
-            if ($cid <= 0) return;
+            $roomId = $this->roomIdFromData($data);
+            if ($roomId === '') return;
             $meta = $this->clients[$from];
-            $meta['rooms'][(string)$cid] = true;
+            $meta['rooms'][$roomId] = true;
             $this->clients[$from] = $meta;
-            $from->send(json_encode([
+            $roomPayload = $this->roomPayload($roomId);
+            $from->send(json_encode(array_merge($roomPayload, [
                 'type' => 'joined',
-                'challenge_id' => $cid,
                 'conn_id' => (int)($meta['conn_id'] ?? 0),
-            ]));
-            $this->broadcastToRoom($cid, [
+            ])));
+            $this->broadcastToRoom($roomId, array_merge($roomPayload, [
                 'type' => 'webrtc:state',
-                'challenge_id' => $cid,
                 'author' => [
                     'name' => $meta['name'] ?? 'Invité',
                     'conn_id' => (int)($meta['conn_id'] ?? 0),
                 ],
                 'state' => 'ready',
-            ], $from);
+            ]), $from);
             return;
         }
 
         if ($type === 'typing') {
-            $cid = (int)($data['challenge_id'] ?? 0);
-            if ($cid <= 0) return;
+            $roomId = $this->roomIdFromData($data);
+            if ($roomId === '') return;
             $isTyping = (bool)($data['is_typing'] ?? false);
             $meta = $this->clients[$from];
-            if (empty($meta['rooms'][(string)$cid])) return; // must join first
+            if (empty($meta['rooms'][$roomId])) return; // must join first
 
-            $this->broadcastToRoom($cid, [
+            $this->broadcastToRoom($roomId, array_merge($this->roomPayload($roomId), [
                 'type' => 'typing',
-                'challenge_id' => $cid,
                 'author' => ['name' => $meta['name'] ?? 'Invité'],
                 'is_typing' => $isTyping,
-            ], $from);
+            ]), $from);
+            return;
+        }
+
+        if (in_array($type, ['message:new', 'message:update', 'message:delete'], true)) {
+            $roomId = $this->roomIdFromData($data);
+            if ($roomId === '') return;
+            $meta = $this->clients[$from];
+            if (empty($meta['rooms'][$roomId])) return;
+
+            $payload = array_merge($this->roomPayload($roomId), [
+                'type' => $type,
+                'author' => [
+                    'name' => $meta['name'] ?? 'Invité',
+                    'conn_id' => (int)($meta['conn_id'] ?? 0),
+                ],
+            ]);
+            if (array_key_exists('message', $data)) $payload['message'] = $data['message'];
+            if (array_key_exists('id', $data)) $payload['id'] = $data['id'];
+            if (array_key_exists('body', $data)) $payload['body'] = $data['body'];
+
+            $this->broadcastToRoom($roomId, $payload, $from);
             return;
         }
 
@@ -123,36 +141,55 @@ final class ChatServer implements MessageComponentInterface {
         }
 
         if (str_starts_with($type, 'webrtc:')) {
-            $cid = (int)($data['challenge_id'] ?? 0);
-            if ($cid <= 0) return;
+            $roomId = $this->roomIdFromData($data);
+            if ($roomId === '') return;
             $meta = $this->clients[$from];
-            if (empty($meta['rooms'][(string)$cid])) return;
+            if (empty($meta['rooms'][$roomId])) return;
             $targetConnId = (int)($data['target_conn_id'] ?? 0);
-            $payload = [
+            $payload = array_merge($this->roomPayload($roomId), [
                 'type' => $type,
-                'challenge_id' => $cid,
                 'author' => [
                     'name' => $meta['name'] ?? 'Invité',
                     'conn_id' => (int)($meta['conn_id'] ?? 0),
                 ],
-            ];
+            ]);
             if (array_key_exists('sdp', $data)) $payload['sdp'] = $data['sdp'];
             if (array_key_exists('candidate', $data)) $payload['candidate'] = $data['candidate'];
             if (array_key_exists('state', $data)) $payload['state'] = $data['state'];
             if ($targetConnId > 0) $payload['target_conn_id'] = $targetConnId;
 
-            $this->broadcastToRoom($cid, $payload, $from, $targetConnId > 0 ? $targetConnId : null);
+            $this->broadcastToRoom($roomId, $payload, $from, $targetConnId > 0 ? $targetConnId : null);
             return;
         }
     }
 
-    private function broadcastToRoom(int $challengeId, array $payload, ?ConnectionInterface $exclude = null, ?int $targetConnId = null): void {
+    private function roomIdFromData(array $data): string {
+        $cid = (int)($data['challenge_id'] ?? 0);
+        if ($cid > 0) return 'challenge:' . $cid;
+        $channelId = trim((string)($data['channel_id'] ?? ''));
+        if ($channelId !== '' && preg_match('/^[a-zA-Z0-9_-]{1,60}$/', $channelId)) {
+            return 'channel:' . $channelId;
+        }
+        return '';
+    }
+
+    private function roomPayload(string $roomId): array {
+        if (str_starts_with($roomId, 'challenge:')) {
+            return ['challenge_id' => (int)substr($roomId, strlen('challenge:'))];
+        }
+        if (str_starts_with($roomId, 'channel:')) {
+            return ['channel_id' => substr($roomId, strlen('channel:'))];
+        }
+        return [];
+    }
+
+    private function broadcastToRoom(string $roomId, array $payload, ?ConnectionInterface $exclude = null, ?int $targetConnId = null): void {
         $encoded = json_encode($payload);
         foreach ($this->clients as $client) {
             if ($exclude && $client === $exclude) continue;
             $meta = $this->clients[$client];
             if ($targetConnId !== null && (int)($meta['conn_id'] ?? 0) !== $targetConnId) continue;
-            if (!empty($meta['rooms'][(string)$challengeId])) {
+            if (!empty($meta['rooms'][$roomId])) {
                 $client->send($encoded);
             }
         }

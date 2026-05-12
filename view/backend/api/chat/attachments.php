@@ -76,10 +76,11 @@ if ($type === '' || $ext === '') {
 $db = chat_db();
 $me = chat_get_me_from_session();
 if ($type === 'video') {
-    if ($challengeId <= 0) chat_json(['ok' => false, 'error' => 'challenge_id requis pour une vidéo'], 400);
-    if (!chat_challenge_exists($db, $challengeId)) chat_json(['ok' => false, 'error' => 'Défi introuvable'], 404);
-    if (!chat_user_can_upload_challenge_media($challengeId, $me, $db)) {
-        chat_json(['ok' => false, 'error' => 'Permission vidéo refusée'], 403);
+    if ($challengeId > 0) {
+        if (!chat_challenge_exists($db, $challengeId)) chat_json(['ok' => false, 'error' => 'Défi introuvable'], 404);
+        if (!chat_user_can_upload_challenge_media($challengeId, $me, $db)) {
+            chat_json(['ok' => false, 'error' => 'Permission vidéo refusée'], 403);
+        }
     }
 }
 

@@ -14,13 +14,13 @@
     <div class="gl-hero__content">
       <div class="gl-hero__eyebrow">
         <span class="gl-eyebrow-dot"></span>
-        GaiaLumen · Admin
+        GaiaLumen · Admin v5.0
       </div>
       <h2 class="gl-hero__title">
-        Tableau de Bord Admin<br />Vue d'ensemble des statistiques
+        Tableau de Bord Admin<br />Pilotage des modules GaiaLumen
       </h2>
       <p class="gl-hero__subtitle">
-        Surveillance en temps réel des activités et performances de la plateforme
+        Accès rapide aux utilisateurs, défis, plannings et derniers événements système.
       </p>
       <div class="gl-hero__stats" id="admin-global-stats">
         <div class="gl-stat-card">
@@ -117,6 +117,42 @@
       <div class="chart-bar" style="height:140px;"><span class="chart-value">140</span><span class="chart-label">Ven</span></div>
       <div class="chart-bar" style="height:100px;"><span class="chart-value">100</span><span class="chart-label">Sam</span></div>
       <div class="chart-bar" style="height:80px;"><span class="chart-value">80</span><span class="chart-label">Dim</span></div>
+    </div>
+  </div>
+
+  <div class="dashboard-admin-grid">
+    <div class="gf-frame dashboard-admin-card">
+      <div class="gf-frame__edge gf-frame__edge--top"></div>
+      <div class="gf-frame__corner gf-frame__corner--tl"></div>
+      <div class="gf-frame__corner gf-frame__corner--tr"></div>
+      <div class="gf-frame__header">
+        <div class="gf-frame__header-left">
+          <span class="gf-frame__icon">⚡</span>
+          <h3 class="gf-frame__title">Actions rapides</h3>
+        </div>
+      </div>
+      <div class="dashboard-actions">
+        <button type="button" onclick="showAdminModule('users')">👥 Gérer utilisateurs</button>
+        <button type="button" onclick="showAdminModule('challenges')">🏆 Gérer défis</button>
+        <button type="button" onclick="showAdminModule('activity')">📜 Voir logs</button>
+      </div>
+    </div>
+
+    <div class="gf-frame dashboard-admin-card">
+      <div class="gf-frame__edge gf-frame__edge--top"></div>
+      <div class="gf-frame__corner gf-frame__corner--tl"></div>
+      <div class="gf-frame__corner gf-frame__corner--tr"></div>
+      <div class="gf-frame__header">
+        <div class="gf-frame__header-left">
+          <span class="gf-frame__icon">📜</span>
+          <h3 class="gf-frame__title">Dernières activités</h3>
+        </div>
+      </div>
+      <div class="dashboard-log-list">
+        <div><strong>IA Défis</strong><span>Brouillon local activé si Groq indisponible</span></div>
+        <div><strong>Utilisateurs</strong><span>Recherche et filtres rôle synchronisés</span></div>
+        <div><strong>Thème</strong><span>Mode sombre / clair sauvegardé</span></div>
+      </div>
     </div>
   </div>
 </section>
@@ -224,7 +260,7 @@
 }
 
 .gf-frame--chart-container {
-  margin-bottom: 0;
+  margin-bottom: 22px;
 }
 
 .gf-frame--chart-container .gf-frame__header {
@@ -238,5 +274,74 @@
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
     0 2px 6px rgba(31, 61, 43, 0.05),
     0 8px 22px rgba(31, 61, 43, 0.1);
+}
+
+.dashboard-admin-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, .9fr) minmax(320px, 1.1fr);
+  gap: 18px;
+}
+
+.dashboard-admin-card {
+  padding: 18px 20px 20px;
+}
+
+.dashboard-actions {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.dashboard-actions button {
+  border: 1px solid rgba(91,62,150,.28);
+  background: rgba(91,62,150,.12);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dashboard-actions button:hover {
+  border-color: var(--blue);
+  background: rgba(58,134,196,.16);
+}
+
+.dashboard-log-list {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.dashboard-log-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.dashboard-log-list strong {
+  color: var(--text);
+}
+
+.dashboard-log-list span {
+  color: var(--muted);
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .dashboard-admin-grid {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-log-list div {
+    flex-direction: column;
+  }
+  .dashboard-log-list span {
+    text-align: left;
+  }
 }
 </style>

@@ -33,31 +33,46 @@ function logout() {
 // Gestion du thème
 function initTheme() {
   const btn = document.getElementById('theme-toggle');
+  const mobileBtn = document.getElementById('theme-toggle-mobile');
   const html = document.documentElement;
-  const saved = localStorage.getItem('gaialumen-theme') || 'dark';
+  const normalizeTheme = (value) => value === 'light' ? 'light' : 'dark';
   
   const updateBtn = (theme) => {
-    if (!btn) return;
-    // Plus intuitif : l'icône représente le thème actuel
     const icon = theme === 'dark' ? '🌙' : '☀️';
     const text = theme === 'dark' ? 'Sombre' : 'Clair';
-    btn.innerHTML = `
-      <span class="menu-item-icon">${icon}</span>
-      <span class="menu-item-text">${text}</span>
-    `;
+    if (btn) {
+      btn.innerHTML = `<span class="menu-item-icon">${icon}</span><span class="menu-item-text">${text}</span>`;
+    }
+    if (mobileBtn) {
+      mobileBtn.innerHTML = `<span class="menu-item-icon">${icon}</span><span class="menu-item-text">Mode ${text}</span>`;
+    }
   };
 
-  html.setAttribute('data-theme', saved);
-  updateBtn(saved);
+  const applyTheme = (theme) => {
+    const next = normalizeTheme(theme);
+    html.setAttribute('data-theme', next);
+    document.body?.setAttribute('data-theme', next);
+    localStorage.setItem('gaialumen-theme', next);
+    localStorage.setItem('theme', next);
+    updateBtn(next);
+  };
+
+  const saved = normalizeTheme(localStorage.getItem('gaialumen-theme') || localStorage.getItem('theme') || 'dark');
+  applyTheme(saved);
   
-  if (btn) {
-    btn.addEventListener('click', () => {
+  [btn, mobileBtn].forEach((themeBtn) => {
+    if (!themeBtn) return;
+    themeBtn.addEventListener('click', () => {
       const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', n);
-      localStorage.setItem('gaialumen-theme', n);
-      updateBtn(n);
+      applyTheme(n);
     });
-  }
+  });
+
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'gaialumen-theme' || event.key === 'theme') {
+      applyTheme(event.newValue);
+    }
+  });
 }
 
 // Gestion de la navbar au scroll
@@ -137,56 +152,175 @@ function initAIAssistant() {
   const send = document.querySelector('.ai-send');
   const input = document.querySelector('.ai-input');
   const body = document.querySelector('.ai-body');
+  const user = getCurrentUser() || {};
+  const storageKey = `gaialumen-ai-conversations-${user.id_utilisateur || user.id || 'guest'}`;
+  let conversations = [];
+  let activeConversationId = null;
   
   if (btn) btn.addEventListener('click', () => panel?.classList.toggle('active'));
   if (close) close.addEventListener('click', () => panel?.classList.remove('active'));
+
+  function createConversation(title = 'Nouveau chat') {
+    return {
+      id: `chat-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      title,
+      messages: [
+        {
+          role: 'assistant',
+          content: 'Bonjour! Je suis GaiaLumen Hub. Je peux aider pour la nutrition, le planning, la santé, les défis et router la question vers le meilleur moteur disponible.',
+          meta: 'hub'
+        }
+      ]
+    };
+  }
+
+  function saveConversations() {
+    localStorage.setItem(storageKey, JSON.stringify({ activeConversationId, conversations }));
+  }
+
+  function loadConversations() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+      conversations = Array.isArray(saved?.conversations) ? saved.conversations : [];
+      activeConversationId = saved?.activeConversationId || conversations[0]?.id || null;
+    } catch (error) {
+      conversations = [];
+      activeConversationId = null;
+    }
+    if (conversations.length === 0) {
+      const initial = createConversation();
+      conversations = [initial];
+      activeConversationId = initial.id;
+      saveConversations();
+    }
+  }
+
+  function activeConversation() {
+    return conversations.find(c => c.id === activeConversationId) || conversations[0];
+  }
+
+  function renderShell() {
+    if (!body) return;
+    let tabs = document.querySelector('.ai-chat-tabs');
+    if (!tabs) {
+      tabs = document.createElement('div');
+      tabs.className = 'ai-chat-tabs';
+      body.before(tabs);
+    }
+    tabs.innerHTML = conversations.map(c => `
+      <button class="ai-chat-tab ${c.id === activeConversationId ? 'active' : ''}" data-chat-id="${c.id}" title="${escapeHtml(c.title)}">${escapeHtml(c.title)}</button>
+    `).join('') + '<button class="ai-chat-new" title="Nouveau chat">+</button>';
+
+    tabs.querySelectorAll('.ai-chat-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        activeConversationId = tab.dataset.chatId;
+        saveConversations();
+        renderMessages();
+        renderShell();
+      });
+    });
+    tabs.querySelector('.ai-chat-new')?.addEventListener('click', () => {
+      const chat = createConversation();
+      conversations.unshift(chat);
+      activeConversationId = chat.id;
+      saveConversations();
+      renderShell();
+      renderMessages();
+    });
+  }
   
-  function addMessage(text, isUser) {
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[char]));
+  }
+
+  function addMessage(text, isUser, meta = '') {
     if (!body) return;
     const msg = document.createElement('div');
     msg.className = `ai-message ${isUser ? 'user' : 'bot'}`;
-    msg.textContent = text;
+    msg.innerHTML = `<div>${escapeHtml(text)}</div>${meta ? `<small class="ai-provider">${escapeHtml(meta)}</small>` : ''}`;
     body.appendChild(msg);
     body.scrollTop = body.scrollHeight;
   }
+
+  function renderMessages() {
+    if (!body) return;
+    const chat = activeConversation();
+    body.innerHTML = '';
+    (chat?.messages || []).forEach(message => {
+      addMessage(message.content, message.role === 'user', message.meta || '');
+    });
+  }
+
+  function pushMessage(role, content, meta = '') {
+    const chat = activeConversation();
+    if (!chat) return;
+    chat.messages.push({ role, content, meta });
+    if (role === 'user' && (chat.title === 'Nouveau chat' || chat.title.length < 4)) {
+      chat.title = content.slice(0, 22) + (content.length > 22 ? '…' : '');
+    }
+    saveConversations();
+    renderShell();
+    addMessage(content, role === 'user', meta);
+  }
   
-  function handleSend() {
+  async function handleSend() {
     const text = input?.value.trim();
     if (!text) return;
-    addMessage(text, true);
+    pushMessage('user', text);
     if (input) input.value = '';
+    if (send) send.disabled = true;
+    const typingId = `typing-${Date.now()}`;
+    if (body) {
+      const typing = document.createElement('div');
+      typing.className = 'ai-message bot ai-typing';
+      typing.id = typingId;
+      typing.textContent = 'GaiaLumen réfléchit...';
+      body.appendChild(typing);
+      body.scrollTop = body.scrollHeight;
+    }
     
-    setTimeout(() => {
-      let response = '';
-      const lowerText = text.toLowerCase();
-      
-      if (lowerText.includes('planning') || lowerText.includes('repas')) {
-        response = '📅 Le module Planning vous permet d\'organiser vos repas de la semaine. Cliquez sur "GS Planning" dans le menu pour commencer!';
-      } else if (lowerText.includes('santé') || lowerText.includes('health')) {
-        response = '❤️ Le module Santé vous aide à suivre vos indicateurs corporels, glycémie et hydratation. Consultez "GS Santé" pour plus de détails.';
-      } else if (lowerText.includes('défi') || lowerText.includes('challenge')) {
-        response = '🏆 Relevez des défis écologiques dans le module "GS Défis" et gagnez des badges en réduisant votre empreinte carbone!';
-      } else if (lowerText.includes('aide') || lowerText.includes('help')) {
-        response = 'Je peux vous aider avec tous les modules GaiaLumen: Utilisateurs, Planning, Events, Repas, Santé et Défis. Que souhaitez-vous savoir?';
-      } else if (lowerText.includes('merci') || lowerText.includes('thanks')) {
-        response = 'Avec plaisir! 😊 N\'hésitez pas si vous avez d\'autres questions.';
-      } else {
-        const responses = [
-          'Je peux vous aider avec vos modules! Que recherchez-vous?',
-          'Consultez la section Planning pour organiser vos repas de la semaine.',
-          'Le module Santé vous permet de suivre vos indicateurs corporels.',
-          'Besoin d\'aide? Je suis là pour vous guider! 🌿'
-        ];
-        response = responses[Math.floor(Math.random() * responses.length)];
+    try {
+      const chat = activeConversation();
+      const response = await fetch('../backend/api/gaialumen-hub.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          conversation_id: chat?.id,
+          history: (chat?.messages || []).slice(-10),
+          user_id: user.id_utilisateur || user.id || null
+        })
+      });
+      const result = await response.json();
+      document.getElementById(typingId)?.remove();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Assistant indisponible');
       }
-      addMessage(response, false);
-    }, 800);
+      pushMessage('assistant', result.reply, `${result.route || 'hub'} · ${result.provider || 'local'}${result.model ? ' · ' + result.model : ''}`);
+    } catch (error) {
+      document.getElementById(typingId)?.remove();
+      pushMessage('assistant', error.message || 'Je ne peux pas répondre pour le moment.', 'fallback');
+    } finally {
+      if (send) send.disabled = false;
+      input?.focus();
+    }
   }
   
   if (send) send.addEventListener('click', handleSend);
   if (input) input.addEventListener('keypress', e => {
     if (e.key === 'Enter') handleSend();
   });
+
+  loadConversations();
+  renderShell();
+  renderMessages();
 }
 
 // Gestion des événements

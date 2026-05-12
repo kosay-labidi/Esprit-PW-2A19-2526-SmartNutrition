@@ -24,11 +24,11 @@
 
 [data-theme="light"] {
   --bg: #f5f0e8;
-  --surface: #ede5d0;
+  --surface: #fffaf2;
   --text: #1F3D2B;
   --muted: #5a6e5a;
-  --card-bg: rgba(242, 232, 207, 0.75);
-  --glass: rgba(242, 232, 207, 0.6);
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --glass: rgba(255, 255, 255, 0.7);
   --shadow: 0 8px 32px rgba(31, 61, 43, 0.15);
   --border: rgba(31, 61, 43, 0.15);
   --border-hover: rgba(31, 61, 43, 0.3);
@@ -660,6 +660,11 @@ h1, h2, h3, h4 {
   cursor: none;
 }
 
+.form-select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
 /* Tables */
 .table-container {
   overflow-x: auto;
@@ -780,6 +785,11 @@ tbody tr:hover {
 .badge-inactive {
   background: rgba(231, 76, 60, .2);
   color: #e74c3c;
+}
+
+.badge-suspended {
+  background: rgba(245, 158, 11, .2);
+  color: #f59e0b;
 }
 
 .badge-admin {
@@ -1237,20 +1247,20 @@ tbody tr:hover {
 
 .toast-title {
   font-weight: 700;
-  color: #E8DCC4;
+  color: var(--text);
   font-size: 1rem;
   margin-bottom: 2px;
 }
 
 .toast-message {
-  color: #A8B8A0;
+  color: var(--muted);
   font-size: 0.85rem;
 }
 
 .toast-close {
   background: none;
   border: none;
-  color: #A8B8A0;
+  color: var(--muted);
   font-size: 1.5rem;
   cursor: pointer;
   opacity: 0.5;

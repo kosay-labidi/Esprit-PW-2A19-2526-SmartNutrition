@@ -3,6 +3,7 @@
  * suspendUser.php
  * Placer dans : view/backend/users/suspendUser.php
  */
+require_once __DIR__ . '/../../../auth.php';
 require_once __DIR__ . '/../../../config.php';
 
 // ── 1. Headers ───────────────────────────────────────────────────────────────
@@ -23,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
     exit;
 }
+
+requireAdmin();
 
 // ── 3. Lecture du body JSON ───────────────────────────────────────────────────
 $raw  = file_get_contents('php://input');
@@ -59,7 +62,7 @@ try {
 
 // ── 6. Vérifier que l'utilisateur existe ──────────────────────────────────────
 try {
-    $stmtCheck = $pdo->prepare("SELECT role, status FROM utilisateurs WHERE id_utilisateur = ? LIMIT 1");
+    $stmtCheck = $pdo->prepare("SELECT id_utilisateur, role, status FROM utilisateurs WHERE id_utilisateur = ? LIMIT 1");
     $stmtCheck->execute([$id]);
     $user = $stmtCheck->fetch();
 
@@ -68,9 +71,18 @@ try {
         exit;
     }
 
-    // Vérifier si on essaie de suspendre un admin
-    if ($user['role'] === 'admin' && $status === 'suspendu') {
-        echo json_encode(['success' => false, 'message' => 'Impossible de suspendre un administrateur']);
+    $sessionUser = getSessionUser();
+    $sessionUserId = (int)($sessionUser['id_utilisateur'] ?? 0);
+
+    // Éviter qu'un administrateur bloque son propre accès.
+    if ((int)$user['id_utilisateur'] === $sessionUserId) {
+        echo json_encode(['success' => false, 'message' => 'Vous ne pouvez pas modifier le statut de votre propre compte administrateur']);
+        exit;
+    }
+
+    // Vérifier si on essaie de suspendre ou désactiver un admin
+    if ($user['role'] === 'admin' && $status !== 'actif') {
+        echo json_encode(['success' => false, 'message' => 'Impossible de désactiver ou suspendre un administrateur']);
         exit;
     }
 

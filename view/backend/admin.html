@@ -604,7 +604,7 @@ verifyAdminSession();
 
     <!-- Footer version -->
     <div class="sidebar-bottom">
-      <div class="sidebar-version">GaiaLumen Admin · v4.0</div>
+      <div class="sidebar-version">GaiaLumen Admin · v5.0</div>
     </div>
 
   </aside>
@@ -695,14 +695,22 @@ verifyAdminSession();
 (function(){
   const btn=document.getElementById('theme-toggle');
   const html=document.documentElement;
-  const saved=localStorage.getItem('gaialumen-theme')||'dark';
-  html.setAttribute('data-theme',saved);
-  if(btn)btn.textContent=saved==='dark'?'🌙 Sombre':'☀️ Clair';
+  const normalizeTheme=(value)=>value==='light'?'light':'dark';
+  const applyTheme=(theme)=>{
+    const next=normalizeTheme(theme);
+    html.setAttribute('data-theme',next);
+    document.body.setAttribute('data-theme',next);
+    localStorage.setItem('gaialumen-theme',next);
+    localStorage.setItem('theme',next);
+    if(btn)btn.textContent=next==='dark'?'🌙 Sombre':'☀️ Clair';
+  };
+  const saved=normalizeTheme(localStorage.getItem('gaialumen-theme')||localStorage.getItem('theme')||'dark');
+  applyTheme(saved);
   if(btn)btn.addEventListener('click',()=>{
-    const n=html.getAttribute('data-theme')==='dark'?'light':'dark';
-    html.setAttribute('data-theme',n);
-    localStorage.setItem('gaialumen-theme',n);
-    btn.textContent=n==='dark'?'🌙 Sombre':'☀️ Clair';
+    applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark');
+  });
+  window.addEventListener('storage',(event)=>{
+    if(event.key==='gaialumen-theme'||event.key==='theme')applyTheme(event.newValue);
   });
 })();
 
@@ -722,8 +730,8 @@ window.logout = logout;
 
 <!-- ── SCRIPTS ──────────────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="js/challenges-admin.js?v=20260506-payments"></script>
-<script src="js/users-admin.js?v=20260511-2"></script>
+<script src="js/challenges-admin.js?v=20260512-ai-fixes"></script>
+<script src="js/users-admin.js?v=20260512-filters"></script>
 <script src="js/admin-module-loader.js?v=20260511-3"></script>
 </body>
 </html>

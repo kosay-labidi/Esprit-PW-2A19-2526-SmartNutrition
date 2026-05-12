@@ -87,7 +87,7 @@ elseif (isset($_COOKIE['remember_token'])) {
         $stmt = $db->prepare("
             SELECT u.id_utilisateur, u.nom, u.prenom, u.email, u.role, u.photo, u.status, rt.expires_at 
             FROM utilisateurs u 
-            INNER JOIN remember_tokens rt ON u.id_utilisateur = rt.user_id 
+            INNER JOIN remember_tokens rt ON u.id_utilisateur = rt.id_utilisateur 
             WHERE rt.token = :token AND rt.expires_at > NOW()
         ");
         $stmt->execute([':token' => $token]);

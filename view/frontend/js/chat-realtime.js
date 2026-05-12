@@ -15,7 +15,7 @@
     ws: null,
     url: DEFAULT_URL,
     connected: false,
-    rooms: new Set(), // challenge_id numbers
+    rooms: new Set(), // room ids: challenge:<id> or channel:<id>
     listeners: new Set(),
     reconnectTimer: null,
     typingDebounce: null,
@@ -52,9 +52,9 @@
       } catch (_) {}
 
       // re-join rooms
-      state.rooms.forEach((cid) => {
+      state.rooms.forEach((roomId) => {
         try {
-          state.ws.send(JSON.stringify({ type: 'join', challenge_id: cid }));
+          state.ws.send(buildRoomPayload('join', roomId));
         } catch (_) {}
       });
     });
@@ -86,22 +86,42 @@
     }, 1500);
   }
 
-  function join(challengeId) {
-    const cid = parseInt(challengeId || 0, 10);
-    if (!cid) return;
-    state.rooms.add(cid);
+  function normalizeRoom(room) {
+    if (typeof room === 'number' || /^\d+$/.test((room || '').toString())) {
+      const cid = parseInt(room || 0, 10);
+      return cid > 0 ? `challenge:${cid}` : '';
+    }
+    const channel = (room || '').toString().trim();
+    if (!/^[a-zA-Z0-9_-]{1,60}$/.test(channel)) return '';
+    return `channel:${channel}`;
+  }
+
+  function buildRoomPayload(type, roomId, extra) {
+    const payload = { ...(extra || {}), type };
+    if (roomId.indexOf('challenge:') === 0) {
+      payload.challenge_id = parseInt(roomId.replace('challenge:', ''), 10);
+    } else if (roomId.indexOf('channel:') === 0) {
+      payload.channel_id = roomId.replace('channel:', '');
+    }
+    return payload;
+  }
+
+  function join(room) {
+    const roomId = normalizeRoom(room);
+    if (!roomId) return;
+    state.rooms.add(roomId);
     if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
       connect(state.url);
       return;
     }
     try {
-      state.ws.send(JSON.stringify({ type: 'join', challenge_id: cid }));
+      state.ws.send(JSON.stringify(buildRoomPayload('join', roomId)));
     } catch (_) {}
   }
 
-  function sendTyping(challengeId, isTyping) {
-    const cid = parseInt(challengeId || 0, 10);
-    if (!cid) return;
+  function sendTyping(room, isTyping) {
+    const roomId = normalizeRoom(room);
+    if (!roomId) return;
     if (!state.ws || state.ws.readyState !== WebSocket.OPEN) return;
 
     const now = Date.now();
@@ -109,26 +129,38 @@
     state.lastTypingSentAt = now;
 
     try {
-      state.ws.send(JSON.stringify({ type: 'typing', challenge_id: cid, is_typing: !!isTyping }));
+      state.ws.send(JSON.stringify(buildRoomPayload('typing', roomId, { is_typing: !!isTyping })));
     } catch (_) {}
   }
 
-  function sendSignal(challengeId, payload) {
-    const cid = parseInt(challengeId || 0, 10);
-    if (!cid || !payload || typeof payload !== 'object') return false;
+  function sendSignal(room, payload) {
+    const roomId = normalizeRoom(room);
+    if (!roomId || !payload || typeof payload !== 'object') return false;
     if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
       connect(state.url);
       return false;
     }
     const type = (payload.type || '').toString();
     if (!type || type.indexOf('webrtc:') !== 0) return false;
-    const out = {
-      ...payload,
-      type,
-      challenge_id: cid,
-    };
+    const out = buildRoomPayload(type, roomId, payload);
     try {
       state.ws.send(JSON.stringify(out));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function sendChatEvent(room, type, payload) {
+    const roomId = normalizeRoom(room);
+    const eventType = (type || '').toString();
+    if (!roomId || !eventType || eventType.indexOf('message:') !== 0) return false;
+    if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
+      connect(state.url);
+      return false;
+    }
+    try {
+      state.ws.send(JSON.stringify(buildRoomPayload(eventType, roomId, payload || {})));
       return true;
     } catch (_) {
       return false;
@@ -146,6 +178,7 @@
     join,
     sendTyping,
     sendSignal,
+    sendChatEvent,
     on,
   };
 

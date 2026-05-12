@@ -17,6 +17,26 @@ function chat_json(array $data, int $code = 200): void {
     exit;
 }
 
+function coach_chat_fallback(array $participant, string $message, string $reason = ''): string {
+    $progress = (int)($participant['objectif'] ?? 0);
+    $target = (int)($participant['valeur_cible'] ?? 100);
+    $name = (string)($participant['nom'] ?? 'ce participant');
+    $challenge = (string)($participant['challenge_titre'] ?? 'ce défi');
+    $lower = mb_strtolower($message, 'UTF-8');
+
+    if (str_contains($lower, 'retard') || str_contains($lower, 'risque') || str_contains($lower, 'abandon')) {
+        return "{$name} est à {$progress}% sur {$target}% pour « {$challenge} ». Proposez une action très simple aujourd'hui, puis un rappel court demain. L'objectif est de réduire la friction plutôt que d'augmenter la pression.";
+    }
+    if (str_contains($lower, 'message') || str_contains($lower, 'motivation') || str_contains($lower, 'encourag')) {
+        return "Message conseillé: Bravo {$name}, chaque petite action compte pour « {$challenge} ». Choisis une action facile aujourd'hui, note ta progression, et garde le rythme.";
+    }
+    if (str_contains($lower, 'plan')) {
+        return "Plan rapide: J1 action simple, J2 rappel, J3 mini-bilan, J4 encouragement dans le chat, J5 répétition, J6 petit palier, J7 bilan final. Progression actuelle: {$progress}%.";
+    }
+
+    return "Analyse locale: {$name} progresse à {$progress}% sur {$target}% dans « {$challenge} ». Je conseille un suivi court, concret et encourageant. " . ($reason ? "Note technique: {$reason}" : "");
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     chat_json(['ok' => false, 'error' => 'Method not allowed'], 405);
 }
@@ -59,7 +79,7 @@ try {
     $q->execute(['pid' => $participantId]);
     $history = array_reverse($q->fetchAll(PDO::FETCH_ASSOC));
 
-    $apiKey = GROQ_API_KEY;
+    $apiKey = trim((string)GROQ_API_KEY);
     $model = GROQ_MODEL;
 
     $system = "Tu es le Coach IA de GaiaLumen. Tu discutes avec un administrateur à propos de la progression de {$participant['nom']} dans le défi '{$participant['challenge_titre']}'.
@@ -72,6 +92,15 @@ Sois concis, analytique et encourageant. Réponds en français.";
         $messages[] = ['role' => 'user', 'content' => $h['body']];
     }
     $messages[] = ['role' => 'user', 'content' => $message];
+
+    if ($apiKey === '' || !function_exists('curl_init')) {
+        chat_json([
+            'ok' => true,
+            'reply' => coach_chat_fallback($participant, $message, $apiKey === '' ? 'clé IA manquante' : 'cURL non activé'),
+            'provider' => 'local',
+            'model' => 'rules',
+        ]);
+    }
 
     $ch = curl_init('https://api.groq.com/openai/v1/chat/completions');
     curl_setopt_array($ch, [
@@ -91,14 +120,28 @@ Sois concis, analytique et encourageant. Réponds en français.";
     ]);
 
     $resp = curl_exec($ch);
+    $curlError = curl_error($ch);
+    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     $decoded = json_decode($resp, true);
-    $reply = $decoded['choices'][0]['message']['content'] ?? 'Désolé, je ne peux pas répondre pour le moment.';
+    $reply = trim((string)($decoded['choices'][0]['message']['content'] ?? ''));
+    if ($resp === false || $httpCode < 200 || $httpCode >= 300 || $reply === '') {
+        $detail = $curlError ?: ($decoded['error']['message'] ?? 'service IA indisponible');
+        chat_json([
+            'ok' => true,
+            'reply' => coach_chat_fallback($participant, $message, $detail),
+            'provider' => 'local',
+            'model' => 'rules',
+            'upstream_error' => $detail,
+        ]);
+    }
 
     chat_json([
         'ok' => true,
-        'reply' => $reply
+        'reply' => $reply,
+        'provider' => 'groq',
+        'model' => $decoded['model'] ?? $model,
     ]);
 
 } catch (Throwable $e) {

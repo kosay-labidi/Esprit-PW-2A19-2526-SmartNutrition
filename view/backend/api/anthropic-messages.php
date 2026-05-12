@@ -27,6 +27,8 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 
+require_once __DIR__ . '/../../../config.php';
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
@@ -38,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$apiKey = GROQ_API_KEY;
+$apiKey = defined('GROQ_API_KEY') ? trim((string)GROQ_API_KEY) : '';
 if (!$apiKey) {
     http_response_code(500);
     echo json_encode(['error' => 'Server misconfigured: GROQ_API_KEY missing']);

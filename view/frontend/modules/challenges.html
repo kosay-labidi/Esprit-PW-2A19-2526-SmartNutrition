@@ -5880,12 +5880,14 @@
       return 0;
     }
 
+    function modalRealtimeRoomId() {
+      return modalActiveChallengeId() || _modalActiveChannel || "global";
+    }
+
     function syncModalLiveButton() {
       var btn = document.getElementById("modal-live-btn");
       if (!btn) return;
-      var cid = modalActiveChallengeId();
-      btn.style.display = cid ? "inline-flex" : "none";
-      // On ne force plus l'affichage du panel ici, l'utilisateur doit cliquer sur "Live"
+      btn.style.display = "inline-flex";
     }
 
     function toggleWebRtcPanel() {
@@ -6070,8 +6072,8 @@
     }
 
     async function startWebRtcCall() {
-      var cid = modalActiveChallengeId();
-      if (!cid) return toastChatError("Choisissez un canal défi pour lancer le live.");
+      var cid = modalRealtimeRoomId();
+      if (!cid) return toastChatError("Choisissez un canal pour lancer le live.");
       if (!window.ChatRealtime) return toastChatError("WebSocket live indisponible.");
       var s = window.__modalWebRtc;
       if (s.callInitInProgress) return;
@@ -6126,7 +6128,7 @@
     }
 
     async function acceptWebRtcInvite(fromConnId) {
-      var cid = modalActiveChallengeId();
+      var cid = modalRealtimeRoomId();
       if (!cid) return;
       await ensureLocalMedia();
       window.__modalWebRtc.peerConnId = fromConnId || 0;
@@ -6362,29 +6364,11 @@
         if (!r.ok) return;
         var j = await r.json();
         if (!j || !j.ok || !Array.isArray(j.messages)) return;
-        var me = pickModalAuthorFromChannel(ch);
         var msgs = j.messages
           .slice()
           .reverse()
           .map(function (m) {
-            var own =
-              (me.userId && m.user_id && parseInt(m.user_id, 10) === me.userId) ||
-              (me.participantId &&
-                m.participant_id &&
-                parseInt(m.participant_id, 10) === me.participantId) ||
-              false;
-            return {
-              id: m.id,
-              author: m.author_name,
-              avatar: "👤",
-              text: m.body || "",
-              time: new Date(m.created_at).getTime(),
-              own: own,
-              isAi: false,
-              parent_id: m.parent_id || null,
-              attachments: Array.isArray(m.attachments) ? m.attachments : [],
-              reactions: [],
-            };
+            return modalMessageFromServer(m, ch);
           });
         ch.messages = msgs;
         renderModalMessages(_modalActiveChannel);
@@ -6392,6 +6376,56 @@
     }
 
     window.__loadModalHistoryIfDefi = loadModalHistoryIfDefi;
+
+    function modalMessageFromServer(m, ch) {
+      var me = pickModalAuthorFromChannel(ch);
+      var ts = new Date(m.created_at || Date.now()).getTime();
+      return {
+        id: m.id,
+        author: m.author_name || "Participant",
+        avatar: "👤",
+        text: m.body || "",
+        time: Number.isFinite(ts) ? ts : Date.now(),
+        own:
+          (me.userId && m.user_id && parseInt(m.user_id, 10) === me.userId) ||
+          (me.participantId &&
+            m.participant_id &&
+            parseInt(m.participant_id, 10) === me.participantId) ||
+          false,
+        isAi: false,
+        parent_id: m.parent_id || null,
+        attachments: Array.isArray(m.attachments) ? m.attachments : [],
+        reactions: [],
+      };
+    }
+
+    function channelIdFromRealtimeEvent(evt) {
+      if (evt && evt.challenge_id) return "defi_" + parseInt(evt.challenge_id || 0, 10);
+      return (evt && evt.channel_id ? String(evt.channel_id) : "");
+    }
+
+    function roomIdFromRealtimeEvent(evt) {
+      if (evt && evt.challenge_id) return parseInt(evt.challenge_id || 0, 10);
+      return (evt && evt.channel_id ? String(evt.channel_id) : "");
+    }
+
+    function receiveModalServerMessage(evt, rawMessage) {
+      var channelId = channelIdFromRealtimeEvent(evt);
+      if (!window.ChatState || !window.ChatState.channels[channelId] || !rawMessage) return;
+      var ch = window.ChatState.channels[channelId];
+      if ((ch.messages || []).some(function (m) { return m.id === rawMessage.id; })) return;
+      ch.messages.push(modalMessageFromServer(rawMessage, ch));
+      if (ch.messages.length > 120) ch.messages.shift();
+      if (_modalActiveChannel === channelId) {
+        renderModalMessages(channelId);
+        if (typeof window.ChatNotify === "object" && window.ChatNotify) {
+          if (evt.challenge_id) window.ChatNotify.markSeen(evt.challenge_id, Date.now());
+        }
+      } else {
+        ch.unread = (parseInt(ch.unread || 0, 10) || 0) + 1;
+        renderModalChannelTabs();
+      }
+    }
 
     window.deleteModalChatMessage = function (msgId) {
       if (!window.ChatState) return;
@@ -6413,6 +6447,9 @@
               return m.id !== msgId;
             });
             renderModalMessages(_modalActiveChannel);
+            if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
+              window.ChatRealtime.sendChatEvent(cid, "message:delete", { id: msgId });
+            }
           })
           .catch(function () {
             ch.messages = ch.messages.filter(function (m) {
@@ -6425,6 +6462,9 @@
           return m.id !== msgId;
         });
         renderModalMessages(_modalActiveChannel);
+        if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
+          window.ChatRealtime.sendChatEvent(_modalActiveChannel, "message:delete", { id: msgId });
+        }
       }
     };
 
@@ -6456,8 +6496,9 @@
     // Realtime typing indicator (WebSocket)
     if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
       window.ChatRealtime.on(function (evt) {
-        var cid = modalActiveChallengeId();
-        if (!evt || !cid || parseInt(evt.challenge_id, 10) !== cid) return;
+        var eventChannelId = channelIdFromRealtimeEvent(evt);
+        var eventRoomId = roomIdFromRealtimeEvent(evt);
+        if (!evt || !eventChannelId || eventChannelId !== _modalActiveChannel) return;
         if (evt.type === "typing") {
           var el = document.getElementById("modal-typing-indicator");
           var txt = document.getElementById("modal-typing-text");
@@ -6472,6 +6513,30 @@
           }
           return;
         }
+        if (evt.type === "message:new") {
+          receiveModalServerMessage(evt, evt.message);
+          return;
+        }
+        if (evt.type === "message:update") {
+          var upChannel = window.ChatState && window.ChatState.channels[eventChannelId];
+          if (upChannel && evt.id) {
+            (upChannel.messages || []).forEach(function (m) {
+              if (m.id === evt.id) m.text = evt.body || "";
+            });
+            if (_modalActiveChannel === eventChannelId) renderModalMessages(_modalActiveChannel);
+          }
+          return;
+        }
+        if (evt.type === "message:delete") {
+          var delChannel = window.ChatState && window.ChatState.channels[eventChannelId];
+          if (delChannel && evt.id) {
+            delChannel.messages = (delChannel.messages || []).filter(function (m) {
+              return m.id !== evt.id;
+            });
+            if (_modalActiveChannel === eventChannelId) renderModalMessages(_modalActiveChannel);
+          }
+          return;
+        }
         if (evt.type === "joined" && evt.conn_id) {
           window.__modalWebRtc.myConnId = parseInt(evt.conn_id, 10) || 0;
           return;
@@ -6483,13 +6548,13 @@
             if (state === "ready") {
               window.__modalWebRtc.peerConnId = peerId;
               if (window.__modalWebRtc.isCaller && peerId) {
-                void createAndSendOffer(cid, peerId);
+                void createAndSendOffer(eventRoomId, peerId);
               }
               setWebRtcButtonState();
             } else if (state === "accepted") {
               window.__modalWebRtc.peerConnId = peerId;
               if (window.__modalWebRtc.isCaller && peerId) {
-                void createAndSendOffer(cid, peerId);
+                void createAndSendOffer(eventRoomId, peerId);
               }
               setWebRtcStatus("Connexion pair...");
               setWebRtcButtonState();
@@ -6528,11 +6593,11 @@
           (async function () {
             try {
               var fromId = evt.author && parseInt(evt.author.conn_id || 0, 10);
-              var pc = await createPeerConnection(cid, fromId || 0);
+              var pc = await createPeerConnection(eventRoomId, fromId || 0);
               await pc.setRemoteDescription(new RTCSessionDescription(evt.sdp));
               var answer = await pc.createAnswer();
               await pc.setLocalDescription(answer);
-              window.ChatRealtime.sendSignal(cid, {
+              window.ChatRealtime.sendSignal(eventRoomId, {
                 type: "webrtc:answer",
                 target_conn_id: fromId || 0,
                 sdp: answer,
@@ -6949,8 +7014,7 @@
 
       // WebSocket join room for défi channels
       if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
-        var joinCid = modalActiveChallengeId();
-        if (joinCid) window.ChatRealtime.join(joinCid);
+        window.ChatRealtime.join(modalRealtimeRoomId());
       }
 
       overlay.classList.add("active");
@@ -7258,11 +7322,11 @@
 
       tabsEl.querySelectorAll(".gl-chat-modal-tab").forEach(function (btn) {
         btn.addEventListener("click", function () {
-          var prevCid = modalActiveChallengeId();
+          var prevRoom = modalRealtimeRoomId();
           _modalActiveChannel = btn.dataset.ch;
           window.__glModalActiveChannel = _modalActiveChannel;
-          var nextCid = modalActiveChallengeId();
-          if (prevCid && nextCid && prevCid !== nextCid) {
+          var nextRoom = modalRealtimeRoomId();
+          if (prevRoom && nextRoom && prevRoom !== nextRoom) {
             closePeerConnection(true);
           }
           if (window.ChatState.channels[_modalActiveChannel]) {
@@ -7280,8 +7344,7 @@
           void loadModalHistoryIfDefi();
 
           if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
-            var joinCid = modalActiveChallengeId();
-            if (joinCid) window.ChatRealtime.join(joinCid);
+            window.ChatRealtime.join(modalRealtimeRoomId());
           }
         });
       });
@@ -7552,7 +7615,22 @@
       var editId = (window.__modalChatEditId || "").toString().trim();
 
       // Edition (texte uniquement)
-      if (cid && editId) {
+      if (editId && !cid) {
+        ch.messages = (ch.messages || []).map(function (m) {
+          if (m.id === editId) {
+            m.text = text;
+            m.updated_at = Date.now();
+          }
+          return m;
+        });
+        if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
+          window.ChatRealtime.sendChatEvent(_modalActiveChannel, "message:update", {
+            id: editId,
+            body: text,
+          });
+        }
+        window.__modalChatEditId = "";
+      } else if (cid && editId) {
         fetch(getBackendApiPath("chat/message.php?id=") + encodeURIComponent(editId), {
           method: "PATCH",
           headers: {
@@ -7571,6 +7649,12 @@
               return m;
             });
             renderModalMessages(_modalActiveChannel);
+            if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
+              window.ChatRealtime.sendChatEvent(cid, "message:update", {
+                id: editId,
+                body: text,
+              });
+            }
           })
           .catch(function () {});
         window.__modalChatEditId = "";
@@ -7613,7 +7697,7 @@
               renderModalMessages(_modalActiveChannel);
               return;
             }
-            ch.messages.push({
+            var savedMessage = {
               id: j.message.id,
               author: j.message.author_name || who.nom,
               avatar: who.avatar,
@@ -7626,8 +7710,14 @@
               isAi: false,
               reactions: [],
               parent_id: replyTo || null,
-            });
+            };
+            ch.messages.push(savedMessage);
             renderModalMessages(_modalActiveChannel);
+            if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
+              window.ChatRealtime.sendChatEvent(cid, "message:new", {
+                message: j.message,
+              });
+            }
           })
           .catch(function () {
             // fallback local
@@ -7650,19 +7740,35 @@
         window.__modalChatReplyTo = "";
       } else {
         // Canaux non défi: local
-        ch.messages.push({
-          id: Math.random().toString(36).slice(2, 10),
+        var localId = Math.random().toString(36).slice(2, 10);
+        var localTime = Date.now();
+        var localMessage = {
+          id: localId,
           author: who.nom,
           avatar: who.avatar,
           text: text,
           attachments: pendingAtt,
           participantId: who.participantId,
           userId: who.userId,
-          time: Date.now(),
+          time: localTime,
           own: true,
           isAi: false,
           reactions: [],
-        });
+        };
+        ch.messages.push(localMessage);
+        if (typeof window.ChatRealtime === "object" && window.ChatRealtime) {
+          window.ChatRealtime.sendChatEvent(_modalActiveChannel, "message:new", {
+            message: {
+              id: localId,
+              author_name: who.nom,
+              body: text,
+              created_at: new Date(localTime).toISOString(),
+              user_id: who.userId,
+              participant_id: who.participantId,
+              attachments: pendingAtt,
+            },
+          });
+        }
       }
 
       if (ch.messages.length > 120) ch.messages.shift();
@@ -7675,7 +7781,7 @@
       renderModalMessages(_modalActiveChannel);
 
       // Simulate peer response 25% chance (prénoms réels si inscrits chargés)
-      if (Math.random() < 0.25) {
+      if (false && !cid && Math.random() < 0.25) {
         var peerList = [
           ["Marie D.", "👩", "Super initiative ! Je vais essayer ça aussi 🌿"],
           ["Jean M.", "👨", "Bonne idée ! On peut faire équipe 💪"],
@@ -7874,10 +7980,10 @@
       var typingTimer = null;
       function sendTyping(isTyping) {
         if (typeof window.ChatRealtime !== "object" || !window.ChatRealtime) return;
-        var cid = modalActiveChallengeId();
-        if (!cid) return;
-        window.ChatRealtime.join(cid);
-        window.ChatRealtime.sendTyping(cid, !!isTyping);
+        var roomId = modalRealtimeRoomId();
+        if (!roomId) return;
+        window.ChatRealtime.join(roomId);
+        window.ChatRealtime.sendTyping(roomId, !!isTyping);
       }
 
       // Important: module-loader can re-render; bind once per DOM instance

@@ -7,6 +7,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/../../../config.php';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -30,6 +32,17 @@ function ai_challenge_limit(string $value, int $limit): string {
     return substr($value, 0, $limit);
 }
 
+function ai_challenge_lower(string $value): string {
+    if (function_exists('mb_strtolower')) {
+        return mb_strtolower($value, 'UTF-8');
+    }
+    return strtolower($value);
+}
+
+function ai_challenge_contains(string $haystack, string $needle): bool {
+    return $needle !== '' && strpos($haystack, $needle) !== false;
+}
+
 function ai_challenge_error_detail($decoded, string $raw = ''): string {
     if (is_array($decoded)) {
         if (isset($decoded['error']['message'])) return (string)$decoded['error']['message'];
@@ -43,13 +56,48 @@ function ai_challenge_error_detail($decoded, string $raw = ''): string {
     return $raw !== '' ? substr($raw, 0, 500) : 'Erreur inconnue';
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    ai_challenge_json(['ok' => false, 'error' => 'Method not allowed'], 405);
+function ai_challenge_local_draft(string $prompt, string $today): array {
+    $lower = ai_challenge_lower($prompt);
+    $objective = 'dechets';
+    if (ai_challenge_contains($lower, 'sport') || ai_challenge_contains($lower, 'vélo') || ai_challenge_contains($lower, 'velo') || ai_challenge_contains($lower, 'marche') || ai_challenge_contains($lower, 'transport')) {
+        $objective = 'transport';
+    } elseif (ai_challenge_contains($lower, 'eau')) {
+        $objective = 'eau';
+    } elseif (ai_challenge_contains($lower, 'repas') || ai_challenge_contains($lower, 'nutrition') || ai_challenge_contains($lower, 'aliment')) {
+        $objective = 'repas';
+    } elseif (ai_challenge_contains($lower, 'energie') || ai_challenge_contains($lower, 'énergie')) {
+        $objective = 'energie';
+    } elseif (ai_challenge_contains($lower, 'co2') || ai_challenge_contains($lower, 'carbone')) {
+        $objective = 'co2';
+    }
+
+    $type = (ai_challenge_contains($lower, 'individuel') || ai_challenge_contains($lower, 'solo')) ? 'individuel' : 'collectif';
+    preg_match('/(\d{1,3})\s*%?/', $prompt, $targetMatch);
+    $target = isset($targetMatch[1]) ? max(1, min(100, (int)$targetMatch[1])) : 30;
+    $title = 'Défi GaiaLumen';
+    if ($objective === 'transport') $title = 'Défi Sport & Mobilité Verte';
+    if ($objective === 'dechets') $title = 'Défi Zéro Déchet';
+    if ($objective === 'repas') $title = 'Défi Nutrition Durable';
+    if ($objective === 'eau') $title = 'Défi Économie d’Eau';
+    if ($objective === 'energie') $title = 'Défi Énergie Responsable';
+    if ($objective === 'co2') $title = 'Défi Bas Carbone';
+
+    return [
+        'titre' => ai_challenge_limit($title, 80),
+        'description' => ai_challenge_limit($prompt !== '' ? $prompt : 'Un défi concret pour progresser ensemble sur GaiaLumen.', 500),
+        'type' => $type,
+        'objectif' => $objective,
+        'valeur_cible' => $target,
+        'date_debut' => $today,
+        'date_fin' => date('Y-m-d', strtotime($today . ' +14 days')),
+        'statut' => 'actif',
+        'streak_icon' => $objective === 'transport' ? '🚴' : ($objective === 'repas' ? '🥗' : '🌿'),
+        'image' => '',
+    ];
 }
 
-$apiKey = GROQ_API_KEY;
-if (!$apiKey) {
-    ai_challenge_json(['ok' => false, 'error' => 'GROQ_API_KEY manquant côté serveur'], 500);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ai_challenge_json(['ok' => false, 'error' => 'Method not allowed'], 405);
 }
 
 $payload = json_decode(file_get_contents('php://input'), true);
@@ -58,8 +106,19 @@ if (!is_array($payload)) {
 }
 
 $prompt = trim((string)($payload['prompt'] ?? ''));
-if (strlen($prompt) < 8) {
+if (function_exists('mb_strlen') ? mb_strlen($prompt, 'UTF-8') < 4 : strlen($prompt) < 4) {
     ai_challenge_json(['ok' => false, 'error' => 'Prompt trop court'], 400);
+}
+
+$apiKey = defined('GROQ_API_KEY') ? trim((string)GROQ_API_KEY) : '';
+if (!$apiKey) {
+    ai_challenge_json([
+        'ok' => true,
+        'challenge' => ai_challenge_local_draft($prompt, date('Y-m-d')),
+        'provider' => 'local',
+        'model' => 'rules',
+        'warning' => 'GROQ_API_KEY manquant côté serveur: brouillon local utilisé.',
+    ]);
 }
 
 $today = date('Y-m-d');
@@ -85,6 +144,16 @@ SYS;
 
 $user = "Crée un défi GaiaLumen à partir de cette demande admin:\n" . $prompt;
 $model = (string)(getenv('GROQ_MODEL') ?: ($_SERVER['GROQ_MODEL'] ?? 'llama-3.3-70b-versatile'));
+
+if (!function_exists('curl_init')) {
+    ai_challenge_json([
+        'ok' => true,
+        'challenge' => ai_challenge_local_draft($prompt, $today),
+        'provider' => 'local',
+        'model' => 'rules',
+        'warning' => 'Extension PHP cURL désactivée: brouillon local utilisé.',
+    ]);
+}
 
 $body = [
     'model' => $model,
@@ -114,17 +183,27 @@ $err = curl_error($ch);
 curl_close($ch);
 
 if ($respBody === false) {
-    ai_challenge_json(['ok' => false, 'error' => 'Requête IA échouée', 'detail' => $err], 502);
+    ai_challenge_json([
+        'ok' => true,
+        'challenge' => ai_challenge_local_draft($prompt, $today),
+        'provider' => 'local',
+        'model' => 'rules',
+        'warning' => 'Requête IA échouée: brouillon local utilisé.',
+        'detail' => $err,
+    ]);
 }
 
 $decoded = json_decode($respBody, true);
 if ($respCode < 200 || $respCode >= 300 || !is_array($decoded)) {
     ai_challenge_json([
-        'ok' => false,
-        'error' => 'Erreur IA',
+        'ok' => true,
+        'challenge' => ai_challenge_local_draft($prompt, $today),
+        'provider' => 'local',
+        'model' => 'rules',
+        'warning' => 'Erreur IA: brouillon local utilisé.',
         'detail' => ai_challenge_error_detail($decoded, $respBody),
         'status' => $respCode,
-    ], $respCode ?: 502);
+    ]);
 }
 
 $content = trim((string)($decoded['choices'][0]['message']['content'] ?? ''));
@@ -133,10 +212,13 @@ $content = preg_replace('/\s*```$/', '', $content);
 $challenge = json_decode($content, true);
 if (!is_array($challenge)) {
     ai_challenge_json([
-        'ok' => false,
-        'error' => 'Réponse IA non exploitable',
+        'ok' => true,
+        'challenge' => ai_challenge_local_draft($prompt, $today),
+        'provider' => 'local',
+        'model' => 'rules',
+        'warning' => 'Réponse IA non exploitable: brouillon local utilisé.',
         'detail' => substr($content, 0, 500),
-    ], 502);
+    ]);
 }
 
 $allowedTypes = ['collectif', 'individuel'];

@@ -56,6 +56,7 @@
   --sidebar-bg: rgba(255, 255, 255, 0.6);
   --nav-btn-bg: rgba(91, 62, 150, 0.1);
   --nav-sep: rgba(31, 61, 43, 0.15);
+  --glass-border: rgba(31, 61, 43, 0.12);
 }
 
 [data-theme="dark"] {
@@ -1074,6 +1075,46 @@ h1, h2, h3, h4 {
   justify-content: space-between;
 }
 
+.ai-chat-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(91, 62, 150, .18);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ai-chat-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.ai-chat-tab,
+.ai-chat-new {
+  border: 1px solid rgba(91, 62, 150, .25);
+  background: rgba(91, 62, 150, .08);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: .72rem;
+  cursor: none;
+  white-space: nowrap;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-chat-tab.active {
+  background: linear-gradient(135deg, rgba(91, 62, 150, .34), rgba(58, 134, 196, .24));
+  color: var(--text);
+  border-color: var(--violet);
+}
+
+.ai-chat-new {
+  min-width: 30px;
+  color: var(--text);
+  font-weight: 700;
+}
+
 .ai-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.1rem;
@@ -1139,6 +1180,19 @@ h1, h2, h3, h4 {
   align-self: flex-end;
 }
 
+.ai-provider {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: .68rem;
+  opacity: .8;
+}
+
+.ai-typing {
+  color: var(--muted);
+  font-style: italic;
+}
+
 .ai-input-wrap {
   padding: 16px;
   border-top: 1px solid rgba(91, 62, 150, .2);
@@ -1157,6 +1211,26 @@ h1, h2, h3, h4 {
   font-size: .88rem;
   outline: none;
   transition: border-color .2s;
+}
+
+[data-theme="light"] #ai-panel,
+[data-theme="light"] .notif-panel,
+[data-theme="light"] .profile-modal-card {
+  background: rgba(255, 255, 255, .96);
+  border-color: rgba(31, 61, 43, .14);
+}
+
+[data-theme="light"] .ai-message.bot {
+  background: rgba(91, 62, 150, .11);
+}
+
+[data-theme="light"] .ai-message.user {
+  color: #fff;
+}
+
+[data-theme="light"] .ai-input {
+  background: rgba(31, 61, 43, .05);
+  border-color: rgba(31, 61, 43, .18);
 }
 
 .ai-input:focus {

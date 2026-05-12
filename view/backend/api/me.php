@@ -11,10 +11,21 @@ if (ob_get_length()) {
     ob_clean();
 }
 
-$uid = (int)($_SESSION['user_id'] ?? 0);
-$nom = trim((string)($_SESSION['nom'] ?? $_SESSION['name'] ?? ''));
-$pseudo = trim((string)($_SESSION['pseudo'] ?? ''));
-$email = trim((string)($_SESSION['email'] ?? ''));
+$sessionUser = is_array($_SESSION['user'] ?? null) ? $_SESSION['user'] : [];
+
+$uid = (int)(
+    $_SESSION['user_id']
+    ?? $sessionUser['id_utilisateur']
+    ?? $sessionUser['id']
+    ?? 0
+);
+$nom = trim((string)(
+    $_SESSION['nom']
+    ?? $_SESSION['name']
+    ?? trim(($sessionUser['prenom'] ?? '') . ' ' . ($sessionUser['nom'] ?? ''))
+));
+$pseudo = trim((string)($_SESSION['pseudo'] ?? $sessionUser['pseudo'] ?? ''));
+$email = trim((string)($_SESSION['email'] ?? $sessionUser['email'] ?? ''));
 
 if ($nom === '' && $pseudo !== '') {
     $nom = $pseudo;

@@ -101,19 +101,30 @@ function initCursor() {
 function initTheme() {
   const btn = document.getElementById('theme-toggle');
   const html = document.documentElement;
-  const saved = localStorage.getItem('gaialumen-theme') || 'dark';
+  const normalizeTheme = (value) => value === 'light' ? 'light' : 'dark';
+  const applyTheme = (theme) => {
+    const next = normalizeTheme(theme);
+    html.setAttribute('data-theme', next);
+    document.body?.setAttribute('data-theme', next);
+    localStorage.setItem('gaialumen-theme', next);
+    localStorage.setItem('theme', next);
+    if (btn) btn.textContent = next === 'dark' ? '🌙 Sombre' : '☀️ Clair';
+  };
+  const saved = normalizeTheme(localStorage.getItem('gaialumen-theme') || localStorage.getItem('theme') || 'dark');
   
-  html.setAttribute('data-theme', saved);
-  if (btn) btn.textContent = saved === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+  applyTheme(saved);
   
   if (btn) {
     btn.addEventListener('click', () => {
-      const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', n);
-      localStorage.setItem('gaialumen-theme', n);
-      btn.textContent = n === 'dark' ? '☀️ Clair' : '🌙 Sombre';
+      applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     });
   }
+
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'gaialumen-theme' || event.key === 'theme') {
+      applyTheme(event.newValue);
+    }
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════

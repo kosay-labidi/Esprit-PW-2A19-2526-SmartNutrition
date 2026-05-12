@@ -1,10 +1,48 @@
 <section class="content-section" id="activity">
-  <div class="section-header">
-    <h2 class="module-title">📜 Logs d'Activité</h2>
-    <p>Historique complet des actions effectuées sur la plateforme</p>
+  <div class="section-header activity-hero">
+    <div>
+      <h2 class="module-title">📜 Logs d'Activité</h2>
+      <p>Historique complet des actions effectuées sur la plateforme admin</p>
+    </div>
+    <button type="button" class="activity-refresh" onclick="renderActivityLogs()">↻ Actualiser</button>
   </div>
 
-  <div class="section">
+  <div class="activity-stats" aria-label="Résumé des logs">
+    <div class="activity-stat">
+      <span class="activity-stat-value" id="activityTotal">0</span>
+      <span class="activity-stat-label">Actions</span>
+    </div>
+    <div class="activity-stat">
+      <span class="activity-stat-value" id="activityAdmin">0</span>
+      <span class="activity-stat-label">Admin</span>
+    </div>
+    <div class="activity-stat">
+      <span class="activity-stat-value" id="activityCritical">0</span>
+      <span class="activity-stat-label">Critiques</span>
+    </div>
+  </div>
+
+  <div class="section activity-panel">
+    <div class="activity-toolbar">
+      <input id="activitySearch" class="activity-input" type="search" placeholder="Rechercher action, module, utilisateur..." oninput="renderActivityLogs()">
+      <select id="activityModuleFilter" class="activity-select" onchange="renderActivityLogs()">
+        <option value="">Tous les modules</option>
+        <option value="Défis">Défis</option>
+        <option value="Utilisateurs">Utilisateurs</option>
+        <option value="Planning">Planning</option>
+        <option value="Auth">Auth</option>
+        <option value="Système">Système</option>
+      </select>
+      <select id="activityTypeFilter" class="activity-select" onchange="renderActivityLogs()">
+        <option value="">Toutes les actions</option>
+        <option value="Create">Create</option>
+        <option value="Update">Update</option>
+        <option value="Delete">Delete</option>
+        <option value="Login">Login</option>
+        <option value="IA">IA</option>
+      </select>
+    </div>
+
     <div class="table-container">
       <table>
         <thead>
@@ -16,33 +54,84 @@
             <th>Détails</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>09/04/2026 14:32</td>
-            <td>Admin</td>
-            <td><span class="badge badge-active">Update</span></td>
-            <td>Défis</td>
-            <td>Modification du défi "30 Jours Végétarien"</td>
-          </tr>
-          <tr>
-            <td>09/04/2026 13:15</td>
-            <td>Sophie Martin</td>
-            <td><span class="badge badge-user">Login</span></td>
-            <td>Auth</td>
-            <td>Connexion réussie</td>
-          </tr>
-          <tr>
-            <td>09/04/2026 12:45</td>
-            <td>Admin</td>
-            <td><span class="badge badge-inactive">Delete</span></td>
-            <td>Events</td>
-            <td>Suppression de l'événement obsolète #452</td>
-          </tr>
-        </tbody>
+        <tbody id="activityRows"></tbody>
       </table>
     </div>
   </div>
 </section>
+
+<script>
+(function() {
+  const fallbackLogs = [
+    { date: '12/05/2026 14:32', user: 'Admin', action: 'IA', module: 'Défis', details: 'Génération assistée d’un défi depuis un prompt' },
+    { date: '12/05/2026 13:18', user: 'Admin', action: 'Update', module: 'Utilisateurs', details: 'Filtre rôle et recherche utilisateurs vérifiés' },
+    { date: '12/05/2026 12:45', user: 'Système', action: 'Update', module: 'Système', details: 'Mode sombre / clair synchronisé avec localStorage' },
+    { date: '12/05/2026 11:10', user: 'Admin', action: 'Create', module: 'Défis', details: 'Nouveau défi ajouté depuis le panneau admin' },
+    { date: '12/05/2026 09:54', user: 'Utilisateur', action: 'Login', module: 'Auth', details: 'Connexion réussie au tableau de bord' },
+    { date: '11/05/2026 18:02', user: 'Admin', action: 'Delete', module: 'Planning', details: 'Suppression d’une demande obsolète' }
+  ];
+
+  function badgeClass(action) {
+    if (action === 'Delete') return 'badge badge-inactive';
+    if (action === 'Login') return 'badge badge-user';
+    if (action === 'IA') return 'badge badge-active';
+    return 'badge badge-active';
+  }
+
+  function escapeLog(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  window.renderActivityLogs = function() {
+    const rows = document.getElementById('activityRows');
+    if (!rows) return;
+
+    let stored = [];
+    try {
+      stored = JSON.parse(localStorage.getItem('gaialumen-admin-logs') || '[]');
+    } catch (error) {
+      stored = [];
+    }
+    const logs = Array.isArray(stored) && stored.length ? stored.concat(fallbackLogs) : fallbackLogs;
+    const search = (document.getElementById('activitySearch')?.value || '').toLowerCase().trim();
+    const moduleFilter = document.getElementById('activityModuleFilter')?.value || '';
+    const typeFilter = document.getElementById('activityTypeFilter')?.value || '';
+
+    const filtered = logs.filter(log => {
+      const haystack = [log.date, log.user, log.action, log.module, log.details].join(' ').toLowerCase();
+      return (!search || haystack.includes(search))
+        && (!moduleFilter || log.module === moduleFilter)
+        && (!typeFilter || log.action === typeFilter);
+    });
+
+    document.getElementById('activityTotal').textContent = logs.length;
+    document.getElementById('activityAdmin').textContent = logs.filter(log => log.user === 'Admin').length;
+    document.getElementById('activityCritical').textContent = logs.filter(log => log.action === 'Delete').length;
+
+    if (!filtered.length) {
+      rows.innerHTML = '<tr><td colspan="5"><div class="activity-empty">Aucun log trouvé pour ces filtres.</div></td></tr>';
+      return;
+    }
+
+    rows.innerHTML = filtered.map(log => `
+      <tr>
+        <td>${escapeLog(log.date)}</td>
+        <td>${escapeLog(log.user)}</td>
+        <td><span class="${badgeClass(log.action)}">${escapeLog(log.action)}</span></td>
+        <td>${escapeLog(log.module)}</td>
+        <td>${escapeLog(log.details)}</td>
+      </tr>
+    `).join('');
+  };
+
+  window.renderActivityLogs();
+})();
+</script>
 
 <style>
 .module-title {
@@ -50,5 +139,79 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+.activity-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.activity-refresh,
+.activity-input,
+.activity-select {
+  border: 1px solid rgba(91,62,150,.28);
+  background: var(--glass);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font: inherit;
+}
+.activity-refresh {
+  cursor: pointer;
+  font-weight: 700;
+}
+.activity-refresh:hover {
+  border-color: var(--blue);
+  background: rgba(58,134,196,.14);
+}
+.activity-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin: 0 0 18px;
+}
+.activity-stat {
+  background: var(--card-bg);
+  border: 1px solid rgba(91,62,150,.22);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+.activity-stat-value {
+  display: block;
+  color: var(--text);
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+.activity-stat-label {
+  color: var(--muted);
+  font-size: .76rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.activity-panel {
+  overflow: hidden;
+}
+.activity-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 190px 180px;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.activity-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 34px 12px;
+}
+[data-theme="light"] .activity-input,
+[data-theme="light"] .activity-select,
+[data-theme="light"] .activity-refresh {
+  background: rgba(255,255,255,.9);
+}
+@media (max-width: 760px) {
+  .activity-hero,
+  .activity-toolbar {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
 }
 </style>

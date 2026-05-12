@@ -495,7 +495,13 @@ async function generateChallengeWithAI() {
       },
       body: JSON.stringify({ prompt }),
     });
-    const data = await resp.json().catch(() => ({}));
+    const raw = await resp.text();
+    let data = {};
+    try {
+      data = JSON.parse(raw);
+    } catch (parseError) {
+      throw new Error(raw.trim().slice(0, 220) || `Réponse IA invalide (HTTP ${resp.status || 'inconnu'})`);
+    }
     console.log('Réponse IA défi:', { status: resp.status, ok: resp.ok, data });
     if (!resp.ok || !data.ok || !data.challenge) {
       const detail = typeof data.detail === 'string'
@@ -506,8 +512,9 @@ async function generateChallengeWithAI() {
     }
 
     fillChallengeFormFromAI(data.challenge);
-    setChallengeAIStatus('Brouillon généré. Vérifiez puis publiez le défi.', 'ok');
-    showToast('Défi généré', 'Le formulaire a été rempli par l’IA.', 'success');
+    const statusMessage = data.warning || 'Brouillon généré. Vérifiez puis publiez le défi.';
+    setChallengeAIStatus(statusMessage, 'ok');
+    showToast('Défi généré', data.warning || 'Le formulaire a été rempli par l’IA.', data.warning ? 'warning' : 'success');
   } catch (err) {
     console.error('Erreur génération défi IA:', err);
     setChallengeAIStatus(err.message || 'Erreur IA', 'error');
@@ -2377,11 +2384,23 @@ function openNotifModal(id, titre) {
   document.getElementById('gl-notif-id').value    = id;
   document.getElementById('gl-notif-titre').textContent = titre;
   
-  // Chercher le défi pour le nombre de participants
-  const c = adminChallenges.find(x => String(x.id) === String(id));
-  const count = c ? (parseInt(c.participants_count) || 0) : 0;
   const countEl = document.getElementById('gl-notif-count');
-  if (countEl) countEl.textContent = `${count} recevront cet email`;
+  if (countEl) countEl.textContent = 'Calcul...';
+
+  fetch(`challenges/listParticipants.php?id_challenge=${encodeURIComponent(id)}&ajax=1`, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' }
+  })
+    .then(r => r.json())
+    .then(rows => {
+      const list = Array.isArray(rows) ? rows : [];
+      const enabled = list.filter(p => parseInt(p.notifications || 0, 10) === 1 && String(p.email || '').trim() !== '');
+      if (countEl) countEl.textContent = `${enabled.length} recevront cet email`;
+    })
+    .catch(() => {
+      const c = adminChallenges.find(x => String(x.id) === String(id));
+      const count = c ? (parseInt(c.participants_count) || 0) : 0;
+      if (countEl) countEl.textContent = `${count} participant(s) détecté(s)`;
+    });
 
   modal.style.display = 'flex';
 }
@@ -2411,7 +2430,11 @@ function sendNotification() {
     headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
     body: JSON.stringify({ id_challenge: parseInt(id), sujet, message })
   })
-    .then(r => r.json())
+    .then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+      return data;
+    })
     .then(data => {
       btn.disabled = false;
       btn.innerHTML = originalHTML;
@@ -2431,7 +2454,8 @@ function sendNotification() {
         if (resFailed) resFailed.textContent = data.failed || 0;
         if (resTotal) resTotal.textContent = data.total || 0;
         
-        showToast('Notifications envoyées', `${data.sent} email(s) envoyé(s).`, 'success');
+        const toastType = parseInt(data.sent || 0, 10) > 0 ? 'success' : 'warning';
+        showToast('Notifications traitées', data.message || `${data.sent} email(s) envoyé(s).`, toastType);
       } else {
         showToast('Erreur', data.error || 'Erreur lors de l\'envoi', 'error');
       }

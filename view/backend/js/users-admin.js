@@ -6,6 +6,30 @@ let userPieChart = null;
 let userBarChart = null;
 let userStatusPieChart = null;
 let userStatusBarChart = null;
+const userFilters = {
+  search: '',
+  role: '',
+  status: '',
+  order: 'desc'
+};
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[char]));
+}
+
+function normalizeUserText(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
 
 function showToast(message, subtitle, type = 'info') {
   console.log('Toast:', message, subtitle, type);
@@ -37,9 +61,15 @@ function showToast(message, subtitle, type = 'info') {
 
 document.addEventListener('adminModuleLoaded', (e) => {
   if (e.detail.moduleName === 'users') {
+    bindUsersModuleEvents();
+  }
+});
+
+function bindUsersModuleEvents() {
     // Attach edit form listener
     const editForm = document.getElementById('editUserForm');
-    if (editForm) {
+    if (editForm && editForm.dataset.bound !== '1') {
+      editForm.dataset.bound = '1';
       editForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveUser();
@@ -48,7 +78,8 @@ document.addEventListener('adminModuleLoaded', (e) => {
 
     // Attach add form listener
     const addForm = document.getElementById('addUserForm');
-    if (addForm) {
+    if (addForm && addForm.dataset.bound !== '1') {
+      addForm.dataset.bound = '1';
       addForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveNewUser();
@@ -57,37 +88,49 @@ document.addEventListener('adminModuleLoaded', (e) => {
 
     // Attach search listener
     const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
+    if (searchInput && searchInput.dataset.bound !== '1') {
+      searchInput.dataset.bound = '1';
       searchInput.addEventListener('input', () => {
+        searchUsers();
+      });
+      searchInput.addEventListener('keyup', () => {
         searchUsers();
       });
     }
 
     // Attach role filter listener
     const roleFilter = document.getElementById('roleFilter');
-    if (roleFilter) {
+    if (roleFilter && roleFilter.dataset.bound !== '1') {
+      roleFilter.dataset.bound = '1';
       roleFilter.addEventListener('change', () => {
+        const allChip = document.querySelector('.filter-chips .chip');
+        if (roleFilter.value === '' && allChip) {
+          document.querySelectorAll('.filter-chips .chip').forEach(chip => chip.classList.remove('active'));
+          allChip.classList.add('active');
+          userFilters.status = '';
+        }
         filterUsers();
       });
     }
 
     // Attach sort listener
     const sortSelect = document.getElementById('triDate');
-    if (sortSelect) {
+    if (sortSelect && sortSelect.dataset.bound !== '1') {
+      sortSelect.dataset.bound = '1';
       sortSelect.addEventListener('change', () => {
         tri();
       });
     }
 
     // Attach rows per page listener
-    const rowsPerPageSelect = document.getElementById('rowsPerPage');
-    if (rowsPerPageSelect) {
+    const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
+    if (rowsPerPageSelect && rowsPerPageSelect.dataset.bound !== '1') {
+      rowsPerPageSelect.dataset.bound = '1';
       rowsPerPageSelect.addEventListener('change', (e) => {
         setRowsPerPage(parseInt(e.target.value));
       });
     }
-  }
-});
+}
 
 function addUser() {
   const modal = document.getElementById('addUserModal');
@@ -266,14 +309,29 @@ async function loadUsers() {
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;"><div class="section-loader-spinner"></div>Chargement…</td></tr>';
 
   try {
-    const response = await fetch('users/tri.php', {
+    syncFiltersFromInputs();
+    const params = new URLSearchParams();
+    if (userFilters.search) params.set('search', userFilters.search);
+    if (userFilters.role) params.set('role', userFilters.role);
+    if (userFilters.status) params.set('status', userFilters.status);
+    params.set('order', userFilters.order || 'desc');
+
+    const response = await fetch(`users/tri.php?${params.toString()}&t=${Date.now()}`, {
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      cache: 'no-store'
     });
-    const result = await response.json();
+    const text = await response.text();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (parseError) {
+      throw new Error(text.trim() || 'Réponse utilisateurs invalide');
+    }
     if (result.success) {
       usersData = result.data;
       filteredUsers = [...usersData];
+      applyClientFilters(false);
       renderUsersTable();
       renderUserCharts();
     } else {
@@ -293,23 +351,31 @@ function renderUsersTable() {
   const end = start + rowsPerPage;
   const pageUsers = filteredUsers.slice(start, end);
 
+  if (pageUsers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:34px; color:var(--muted);">Aucun utilisateur ne correspond aux filtres.</td></tr>';
+    renderPagination();
+    return;
+  }
+
   tbody.innerHTML = pageUsers.map(user => {
-    const statusClass = user.status === 'actif' ? 'badge-active' : (user.status === 'suspendu' ? 'badge-inactive' : 'badge-inactive');
+    const statusClass = user.status === 'actif' ? 'badge-active' : (user.status === 'suspendu' ? 'badge-suspended' : 'badge-inactive');
     const statusText = user.status === 'actif' ? '✅ Actif' : (user.status === 'suspendu' ? '🚫 Suspendu' : '⭕ Inactif');
+    const toggleTitle = user.status === 'actif' ? 'Désactiver' : 'Réactiver';
+    const fullName = `${user.prenom || ''} ${user.nom || ''}`.trim();
     
     return `
       <tr class="animate-in">
-        <td><strong>#${user.id}</strong></td>
+        <td><strong>#${escapeHtml(user.id)}</strong></td>
         <td>
-          <strong>${user.prenom} ${user.nom}</strong>
+          <strong>${escapeHtml(fullName)}</strong>
         </td>
-        <td>${user.email}</td>
+        <td>${escapeHtml(user.email)}</td>
         <td>
           <span class="badge ${user.role === 'admin' ? 'badge-admin' : 'badge-user'}">
-            ${getRoleLabel(user.role)}
+            ${escapeHtml(getRoleLabel(user.role))}
           </span>
         </td>
-        <td>${user.date_creation}</td>
+        <td>${escapeHtml(user.date_creation)}</td>
         <td>
           <span class="badge ${statusClass}">
             ${statusText}
@@ -318,7 +384,7 @@ function renderUsersTable() {
         <td style="text-align:center;">
           <div class="action-btns" style="justify-content:center;">
             <button onclick="editUser(${user.id})" class="action-btn action-btn-edit" title="Modifier">✏️</button>
-            <button onclick="toggleAccountStatus(${user.id})" class="action-btn action-btn-view" title="${user.status === 'actif' ? 'Désactiver' : 'Activer'}">
+            <button onclick="toggleAccountStatus(${user.id})" class="action-btn action-btn-view" title="${toggleTitle}">
               ${user.status === 'actif' ? '⏸️' : '▶️'}
             </button>
             <button onclick="deleteUser(${user.id})" class="action-btn action-btn-delete" title="Supprimer">🗑️</button>
@@ -332,7 +398,7 @@ function renderUsersTable() {
 }
 
 function renderPagination() {
-  const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / rowsPerPage));
   const paginationDiv = document.querySelector('.pagination');
   if (!paginationDiv) return;
 
@@ -355,7 +421,8 @@ function renderPagination() {
 }
 
 function changePage(page) {
-  currentPage = page;
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / rowsPerPage));
+  currentPage = Math.max(1, Math.min(page, totalPages));
   renderUsersTable();
 }
 
@@ -375,30 +442,57 @@ function getRoleLabel(role) {
   return labels[role] || role;
 }
 
-function searchUsers() {
+function parseUserDate(user) {
+  if (user.date_creation_raw) {
+    const rawDate = new Date(user.date_creation_raw.replace(' ', 'T'));
+    if (!Number.isNaN(rawDate.getTime())) return rawDate;
+  }
+  const parts = String(user.date_creation || '').match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+  if (!parts) return new Date(0);
+  return new Date(Number(parts[3]), Number(parts[2]) - 1, Number(parts[1]), Number(parts[4] || 0), Number(parts[5] || 0));
+}
+
+function syncFiltersFromInputs() {
   const searchInput = document.getElementById('searchInput');
-  if (!searchInput) return;
-  const query = searchInput.value.toLowerCase().trim();
+  const roleFilter = document.getElementById('roleFilter');
+  const triDate = document.getElementById('triDate');
 
-  filteredUsers = usersData.filter(user =>
-    `${user.prenom} ${user.nom}`.toLowerCase().includes(query) ||
-    user.email.toLowerCase().includes(query)
-  );
+  userFilters.search = searchInput ? normalizeUserText(searchInput.value) : userFilters.search;
+  userFilters.role = roleFilter ? roleFilter.value : userFilters.role;
+  userFilters.order = triDate && triDate.value ? triDate.value : (userFilters.order || 'desc');
+}
 
-  currentPage = 1;
+function applyClientFilters(resetPage = true) {
+  syncFiltersFromInputs();
+  filteredUsers = usersData.filter(user => {
+    const query = normalizeUserText(userFilters.search);
+    const fullName = normalizeUserText(`${user.prenom || ''} ${user.nom || ''}`);
+    const reverseName = normalizeUserText(`${user.nom || ''} ${user.prenom || ''}`);
+    const email = normalizeUserText(user.email);
+    const role = normalizeUserText(user.role);
+    const id = String(user.id || '');
+    const matchesSearch = !query || fullName.includes(query) || reverseName.includes(query) || email.includes(query) || role.includes(query) || id.includes(query);
+    const matchesRole = !userFilters.role || String(user.role || '').toLowerCase() === String(userFilters.role || '').toLowerCase();
+    const matchesStatus = !userFilters.status || user.status === userFilters.status;
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  filteredUsers.sort((a, b) => {
+    const dateA = parseUserDate(a);
+    const dateB = parseUserDate(b);
+    return userFilters.order === 'asc' ? dateA - dateB : dateB - dateA;
+  });
+
+  if (resetPage) currentPage = 1;
+}
+
+function searchUsers() {
+  applyClientFilters();
   renderUsersTable();
 }
 
 function filterUsers() {
-  const roleFilter = document.getElementById('roleFilter');
-  if (!roleFilter) return;
-  const role = roleFilter.value;
-
-  filteredUsers = role
-    ? usersData.filter(user => user.role === role)
-    : [...usersData];
-
-  currentPage = 1;
+  applyClientFilters();
   renderUsersTable();
 }
 
@@ -406,40 +500,31 @@ function filterByChip(element, type) {
   document.querySelectorAll('.filter-chips .chip').forEach(chip => chip.classList.remove('active'));
   element.classList.add('active');
 
-  switch (type) {
-    case 'all':
-      filteredUsers = [...usersData];
-      break;
-    case 'active':
-      filteredUsers = usersData.filter(u => u.status === 'actif');
-      break;
-    case 'inactive':
-      filteredUsers = usersData.filter(u => u.status === 'inactif');
-      break;
-    case 'suspended':
-      filteredUsers = usersData.filter(u => u.status === 'suspendu');
-      break;
-    case 'admin':
-      filteredUsers = usersData.filter(u => u.role === 'admin');
-      break;
+  userFilters.status = '';
+  if (type === 'active') userFilters.status = 'actif';
+  if (type === 'inactive') userFilters.status = 'inactif';
+  if (type === 'suspended') userFilters.status = 'suspendu';
+
+  const roleFilter = document.getElementById('roleFilter');
+  if (type === 'admin') {
+    userFilters.role = 'admin';
+    if (roleFilter) roleFilter.value = 'admin';
+  } else if (roleFilter && roleFilter.value === 'admin' && type !== 'all') {
+    userFilters.role = roleFilter.value;
   }
 
-  currentPage = 1;
+  if (type === 'all') {
+    userFilters.role = '';
+    userFilters.status = '';
+    if (roleFilter) roleFilter.value = '';
+  }
+
+  applyClientFilters();
   renderUsersTable();
 }
 
 function tri() {
-  const triDate = document.getElementById('triDate');
-  if (!triDate) return;
-  const order = triDate.value;
-
-  filteredUsers.sort((a, b) => {
-    const dateA = new Date(a.date_creation.split('/').reverse().join('-'));
-    const dateB = new Date(b.date_creation.split('/').reverse().join('-'));
-    return order === 'asc' ? dateA - dateB : dateB - dateA;
-  });
-
-  currentPage = 1;
+  applyClientFilters();
   renderUsersTable();
 }
 
@@ -449,15 +534,28 @@ function refreshUsers() {
 }
 
 async function toggleAccountStatus(userId) {
+  if (!confirm('Confirmer le changement de statut de cet utilisateur ?')) {
+    return;
+  }
+
   try {
-    const response = await fetch(`users/toggle_account_status.php?id=${userId}`, {
+    const response = await fetch('users/toggle_account_status.php', {
+      method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId })
     });
-    const result = await response.json();
+    const text = await response.text();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (parseError) {
+      throw new Error(text.trim() || 'Réponse serveur invalide');
+    }
+
     if (result.success) {
-      loadUsers();
       showToast(result.message, 'succès', 'success');
+      await loadUsers();
     } else {
       showToast(result.message || 'Erreur', 'erreur', 'error');
     }

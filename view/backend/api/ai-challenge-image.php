@@ -61,6 +61,43 @@ function challenge_image_absolute_url(string $path): string {
     return $scheme . '://' . $host . $base . '/' . ltrim($path, '/');
 }
 
+function challenge_image_svg_fallback(string $prompt, int $seed): string {
+    $colors = [
+        ['#1F3D2B', '#3A86C4', '#5B3E96'],
+        ['#0f766e', '#22c55e', '#2563eb'],
+        ['#14532d', '#84cc16', '#0ea5e9'],
+        ['#312e81', '#06b6d4', '#16a34a'],
+    ];
+    $palette = $colors[$seed % count($colors)];
+    $safePrompt = htmlspecialchars(challenge_image_limit($prompt, 180), ENT_QUOTES, 'UTF-8');
+    return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="{$palette[0]}"/>
+      <stop offset=".55" stop-color="{$palette[1]}"/>
+      <stop offset="1" stop-color="{$palette[2]}"/>
+    </linearGradient>
+    <radialGradient id="sun" cx=".72" cy=".24" r=".35">
+      <stop offset="0" stop-color="#F2E8CF" stop-opacity=".78"/>
+      <stop offset="1" stop-color="#F2E8CF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <rect width="1200" height="800" fill="url(#sun)"/>
+  <path d="M0 610 C180 540 310 650 500 585 C700 515 850 620 1200 500 L1200 800 L0 800Z" fill="#0A1A10" opacity=".28"/>
+  <path d="M120 590 C230 520 360 520 470 595 C575 670 720 640 805 560 C895 475 1035 485 1120 560" fill="none" stroke="#F2E8CF" stroke-width="18" stroke-linecap="round" opacity=".45"/>
+  <circle cx="316" cy="545" r="56" fill="none" stroke="#F2E8CF" stroke-width="18" opacity=".82"/>
+  <circle cx="466" cy="545" r="56" fill="none" stroke="#F2E8CF" stroke-width="18" opacity=".82"/>
+  <path d="M335 545 L390 470 L450 545 M390 470 L430 470 M390 470 L372 428" fill="none" stroke="#F2E8CF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity=".82"/>
+  <path d="M710 520 C760 450 840 450 890 520 C820 545 770 545 710 520Z" fill="#F2E8CF" opacity=".78"/>
+  <path d="M800 520 C800 470 815 435 855 405" fill="none" stroke="#F2E8CF" stroke-width="12" stroke-linecap="round" opacity=".78"/>
+  <circle cx="900" cy="245" r="78" fill="#F2E8CF" opacity=".28"/>
+  <title>{$safePrompt}</title>
+</svg>
+SVG;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $prompt = challenge_image_limit((string)($_GET['prompt'] ?? ''), 850);
     $seed = max(1, (int)($_GET['seed'] ?? 1));
@@ -73,7 +110,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $remote = 'https://image.pollinations.ai/prompt/' . rawurlencode($prompt)
         . '?width=1200&height=800&seed=' . $seed
         . '&model=flux&enhance=true&nologo=true';
-    header('Location: ' . $remote, true, 302);
+    if (function_exists('curl_init')) {
+        $ch = curl_init($remote);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 18,
+            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_USERAGENT => 'GaiaLumen/1.0',
+        ]);
+        $body = curl_exec($ch);
+        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $type = (string)curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+
+        if (is_string($body) && strlen($body) > 1000 && $code >= 200 && $code < 300 && stripos($type, 'image/') !== false) {
+            header('Content-Type: ' . $type);
+            header('Cache-Control: public, max-age=86400');
+            echo $body;
+            exit;
+        }
+    }
+
+    header('Content-Type: image/svg+xml; charset=utf-8');
+    header('Cache-Control: public, max-age=300');
+    echo challenge_image_svg_fallback($prompt, $seed);
     exit;
 }
 

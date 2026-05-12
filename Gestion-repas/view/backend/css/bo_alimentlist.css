@@ -1,0 +1,230 @@
+/* bo_alimentlist.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@400;500;700&display=swap');
+
+
+        
+        html, body {
+    margin: 0; padding: 0; display:block;
+    background: var(--sable);
+            color: var(--vert);
+            min-height: 100vh;
+        }
+        body.dark {
+            background: var(--bg-page, #0f1623);
+            color: var(--text-main, #e2e8f0);
+        }
+
+        :root {
+            --vert   : #1a372f;
+            --sable  : #f4ede4;
+            --violet : #a78bfa;
+            --bleu   : #60a5fa;
+        }
+
+        
+        * { font-family:'Lato',sans-serif; box-sizing:border-box; margin:0; padding:0; }
+        .hf { font-family:'Cormorant Garamond',serif; } /* classe pour les titres */
+        body { background:var(--sable); color:var(--vert); display:block; min-height:100vh; }
+
+        /* Curseur personnalisé GaiaLumen    */
+        #cur  { position:fixed;top:0;left:0;z-index:9999;pointer-events:none;width:14px;height:14px;border-radius:50%;background:var(--violet);box-shadow:0 0 12px var(--violet),0 0 24px var(--bleu);transform:translate(-50%,-50%);transition:width .2s,height .2s;mix-blend-mode:screen; }
+        #cur.h{ width:28px;height:28px;background:var(--bleu); }
+        #curt { position:fixed;top:0;left:0;z-index:9998;pointer-events:none;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(167,139,250,.4);transform:translate(-50%,-50%); }
+
+        /* Badge "Back Office"  */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 20px;
+            color: rgba(255,255,255,.65);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all .18s;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: rgba(255,255,255,.07); color: white; }
+        
+        .nav-item.active {
+            background: rgba(167,139,250,.18);
+            color: var(--violet);
+            border-left-color: var(--violet);
+        }
+        .nav-item i { width: 16px; text-align: center; font-size: 13px; }
+        
+        /*  Zone de contenu principal  */
+        /* Topbar  */
+        .topbar {
+            background: linear-gradient(135deg, var(--vert) 0%, #11241f 100%);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /*  Hero   */
+        .hero { display:block; width:100%;
+            background-image:
+                linear-gradient(rgba(26,55,47,.72), rgba(26,55,47,.72)),
+                url('/GSRepasVF2_final/Gestion-repas/view/backend/repas/assets/images/1000051721.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 48px 28px 36px;
+        }
+
+        /*  Filtres  */
+        .fb {
+            padding:6px 16px;border-radius:99px;
+            border:1.5px solid rgba(255,255,255,.3);
+            background:transparent;font-size:12px;
+            color:rgba(255,255,255,.75);cursor:pointer;
+            transition:all .18s;font-family:'Lato',sans-serif;font-weight:500;
+        }
+        .fb.on,.fb:hover { background:var(--violet);color:white;border-color:var(--violet); }
+
+        /* Tableau des aliments  */
+        .tbl-wrap { background:var(--bg-card);border-radius:20px;overflow:hidden;border:1px solid rgba(26,55,47,.1); }
+        .thead {
+            display:grid;
+            grid-template-columns:48px 1.5fr .7fr .7fr .6fr .6fr .6fr .6fr .6fr .6fr .9fr 1.1fr 90px;
+            align-items:center;padding:11px 16px;
+            background:var(--vert);color:white;
+            font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+        }
+        .trow {
+            display:grid;
+            grid-template-columns:48px 1.5fr .7fr .7fr .6fr .6fr .6fr .6fr .6fr .6fr .9fr 1.1fr 90px;
+            align-items:center;padding:12px 16px;
+            border-bottom:1px solid #f4ede4;transition:background .12s;
+            text-decoration:none;color:inherit;
+        }
+        .trow:hover { background:#faf7f3; }
+        .trow:last-child { border-bottom:none; }
+
+        /*  Badges de type et catégorie  */
+        .badge  { display:inline-block;font-size:9.5px;padding:2px 8px;border-radius:99px;font-weight:600;white-space:nowrap; }
+        .cbadge { font-size:9.5px;padding:1px 6px;border-radius:4px;background:#f4ede4;color:#5a5850; }
+
+        /*  Barre CO₂  */
+        .cobar { height:5px;border-radius:3px;background:#ede9e3;overflow:hidden;margin-top:3px; }
+        .cofil { height:100%;border-radius:3px; }
+
+        /* Edit / Delete)  */
+        .bedit { display:inline-flex;align-items:center;padding:5px 10px;border-radius:8px;font-size:11px;border:1px solid var(--bleu);color:#1a5fa8;background:transparent;cursor:pointer;transition:all .14s;text-decoration:none; }
+        .bedit:hover { background:#e8f2fc; }
+        .bdel  { display:inline-flex;align-items:center;padding:5px 10px;border-radius:8px;font-size:11px;border:1px solid #c09090;color:#8a2020;background:transparent;cursor:pointer;transition:all .14s;text-decoration:none; }
+        .bdel:hover  { background:#faeaea; }
+
+        /* ─ Recherche  */
+        .si { padding:8px 14px 8px 36px;border-radius:99px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);font-size:12px;color:white;outline:none;font-family:'Lato',sans-serif;width:210px; }
+        .si::placeholder { color:rgba(255,255,255,.5); }
+        .si:focus { border-color:var(--violet); }
+        .sw { position:relative;display:inline-block; }
+        .sw i { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.5);font-size:11px; }
+
+        /* Champs du formulaire modal  */
+        .mi { width:100%;padding:9px 14px;border-radius:12px;border:1.5px solid #e8e0d8;font-family:'Lato',sans-serif;font-size:13px;outline:none;background:white;color:var(--vert); }
+        .mi:focus { border-color:var(--violet); }
+        .mi.error { border-color:#c09090;background:#fdf5f5; } /* erreur de validation */
+        label.lbl { display:block;font-size:11px;font-weight:600;color:var(--vert);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em; }
+
+        /*  Message d'erreur de validation */
+        .err-msg { font-size:11px;color:#8a2020;margin-top:4px;display:none; }
+        .err-msg.show { display:block; }
+
+        
+        .sp { background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:5px 14px;font-size:12px;color:white;display:inline-flex;align-items:center;gap:4px; }
+        .sp b { font-weight:700; }
+
+        
+        .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center; }
+        .modal-overlay.open { display:flex; }
+        .modal-box { background:white;border-radius:24px;width:100%;max-width:680px;margin:0 16px;max-height:90vh;overflow-y:auto; }
+    
+:root {
+            --vert:#1a372f; --sable:#f4ede4; --violet:#a78bfa; --bleu:#60a5fa;
+            /* Variables light mode */
+            --bg-page: #f4ede4;
+            --bg-card: white;
+            --bg-card2: white;
+            --bg-input: white;
+            --text-main: #1a372f;
+            --text-muted: #6b7280;
+            --text-label: #1a372f;
+            --border-card: #ede8e0;
+            --border-input: #d0c8be;
+            --navbar-bg: linear-gradient(90deg,#1a372f 0%,#11241f 100%);
+            --hero-overlay: rgba(26,55,47,.72);
+            --modal-overlay: rgba(0,0,0,.5);
+            --badge-bg: #e8f0e9;
+            --badge-text: #1a372f;
+            --sable-card: #f9f6f2;
+        }
+        body.dark {
+            --bg-page: #0f1623;
+            --bg-card: #1a2433;
+            --bg-card2: #1e2a3a;
+            --bg-input: #1e2a3a;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --text-label: #94a3b8;
+            --border-card: #243040;
+            --border-input: #2d3f54;
+            --navbar-bg: linear-gradient(90deg,#0d1520 0%,#0a1018 100%);
+            --hero-overlay: rgba(8,15,24,.55);
+            --modal-overlay: rgba(0,0,0,.75);
+            --badge-bg: #1e2a3a;
+            --badge-text: #94a3b8;
+            --sable-card: #1a2433;
+        }
+
+        body.dark .topbar { background:linear-gradient(135deg,#0d1520 0%,#0a1018 100%) !important; }
+        body.dark .hero { display:block; width:100%; background:linear-gradient(rgba(8,15,24,.60),rgba(8,15,24,.60)) center/cover no-repeat, url('/GSRepasVF2_final/Gestion-repas/view/backend/repas/assets/images/1000051721.jpg') center/cover no-repeat !important; }
+        body.dark body.dark .nav-section { color:var(--text-muted) !important; }
+        body.dark .nav-item { color:var(--text-main) !important; }
+        body.dark .nav-item:hover, body.dark .nav-item.active { background:rgba(96,165,250,.12) !important; color:#60a5fa !important; }
+        body.dark .tbl-wrap, body.dark .thead, body.dark .trow { background:var(--bg-card) !important; border-color:var(--border-card) !important; }
+        body.dark .thead { background:var(--bg-card2) !important; }
+        body.dark [style*="background:white"] { background:var(--bg-card) !important; }
+        body.dark [style*="color:#1a372f"] { color:var(--text-main) !important; }
+        body.dark [style*="color:#6b7280"] { color:var(--text-muted) !important; }
+        body.dark [style*="border:1px solid #ede8e0"] { border-color:var(--border-card) !important; }
+        body.dark .modal-box { background:var(--bg-card) !important; }
+        body.dark .mi { background:var(--bg-input) !important; color:var(--text-main) !important; border-color:var(--border-input) !important; }
+        body.dark select.mi { background:var(--bg-input) !important; color:var(--text-main) !important; }
+
+        body.dark #breadcrumb-liste { color:var(--text-main) !important; }
+        body.dark .trow { color:var(--text-main) !important; border-color:var(--border-card) !important; }
+        body.dark .trow:hover { background:var(--bg-card2) !important; }
+        body.dark .trow * { color:var(--text-main) !important; }
+        body.dark .trow .badge { color:#94a3b8 !important; background:var(--bg-card2) !important; }
+        body.dark .tbl-wrap { background:var(--bg-card) !important; border-color:var(--border-card) !important; }
+        body.dark .tbl-wrap > * { background:var(--bg-card) !important; }
+        body.dark #btnCreerAliment { background:transparent !important; border:2px solid rgba(255,255,255,.6) !important; color:white !important; }
+        
+        /* ── Zone sous hero fond sombre ─────────── */
+        body.dark [style*="padding:0 28px"] { background:var(--bg-page) !important; }
+        body.dark [style*="padding:16px 28px"] { background:var(--bg-page) !important; }
+
+        /* ── Messages succès → bleu ──────────────── */
+        body.dark #msgSucces { background:rgba(96,165,250,.08) !important; border-color:#60a5fa !important; color:#60a5fa !important; }
+        body.dark #msgSucces i { color:#60a5fa !important; }
+
+        /* ── Titres formulaires blancs ───────────── */
+        body.dark h3.hf { color:var(--text-main) !important; }
+        body.dark label.lbl { color:var(--text-label) !important; }
+
+        /* ── Boutons Enregistrer → mauve ─────────── */
+        body.dark #btnSaveAdd, body.dark #btnSaveUpdate { background:#a78bfa !important; }
+
+        /* ── Badges CO2 → texte noir lisible ─────── */
+        body.dark span[style*="font-size:9px"][style*="background:"] { color:#111111 !important; font-weight:700 !important; }
+        body.dark .trow span[style*="padding:1px"] { color:#111111 !important; font-weight:700 !important; }
+        
+        body.dark .cbadge { color:#111111 !important; }
+        body.dark #btnAnnulerAdd, body.dark #btnAnnulerUpdate { color:#a78bfa !important; border-color:#a78bfa !important; }

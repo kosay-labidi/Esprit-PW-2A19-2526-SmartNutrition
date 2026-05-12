@@ -1,0 +1,20 @@
+/* dashboard.css — Styles du dashboard frontend */
+:root { --vert:#1a372f; --violet:#a78bfa; --sable:#f4ede4; }
+* { font-family: 'Lato', sans-serif; box-sizing:border-box; margin:0; padding:0; }
+.hf { font-family:'Cormorant Garamond',serif; }
+.navbar { background:linear-gradient(90deg,#1a372f,#11241f); position:sticky; top:0; z-index:50; box-shadow:0 2px 20px rgba(0,0,0,.2); }
+.navbar-inner { max-width:1400px; margin:0 auto; padding:0 40px; height:72px; display:flex; align-items:center; justify-content:space-between; }
+.navbar-brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
+.brand-name { font-family:'Cormorant Garamond',serif; font-size:24px; color:white; letter-spacing:-.02em; }
+.nav-links { display:flex; gap:32px; list-style:none; }
+.nav-links a { color:rgba(255,255,255,.8); text-decoration:none; font-size:14px; font-weight:500; transition:color .2s; }
+.nav-links a:hover, .nav-links a.active { color:#a78bfa; }
+.dashboard-main { max-width:1400px; margin:0 auto; padding:48px 40px; }
+.dashboard-main h1 { font-size:48px; color:var(--vert); margin-bottom:10px; }
+.lead { font-size:16px; color:#6b7280; margin-bottom:40px; }
+.modules-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
+.module-card { background:white; border-radius:20px; padding:32px; border:1px solid #ede8e0; text-decoration:none; color:var(--vert); transition:all .2s; display:flex; flex-direction:column; gap:12px; }
+.module-card:hover { transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,.1); border-color:var(--vert); }
+.module-card i { font-size:2rem; color:var(--violet); }
+.module-card h3 { font-family:'Cormorant Garamond',serif; font-size:24px; }
+.module-card p { font-size:13px; color:#6b7280; }

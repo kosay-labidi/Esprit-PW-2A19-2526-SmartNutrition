@@ -1,0 +1,169 @@
+
+        /* ── Équivalents Tailwind (supprimé CDN) ─────────────── */
+        .max-w-screen-xl { max-width:1280px; }
+        .mx-auto         { margin-left:auto; margin-right:auto; }
+        .px-8            { padding-left:2rem; padding-right:2rem; }
+        .py-4            { padding-top:1rem; padding-bottom:1rem; }
+        .py-8            { padding-top:2rem; padding-bottom:2rem; }
+        .py-10           { padding-top:2.5rem; padding-bottom:2.5rem; }
+        .pt-5            { padding-top:1.25rem; }
+        .pb-6            { padding-bottom:1.5rem; }
+        .space-y-6 > * + * { margin-top:1.5rem; }
+        .space-y-4 > * + * { margin-top:1rem; }
+        .text-lg         { font-size:1.125rem; }
+        .text-xl         { font-size:1.25rem; }
+        .text-2xl        { font-size:1.5rem; }
+        .font-bold       { font-weight:700; }
+        .grid            { display:grid; }
+        .grid-cols-2     { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .grid-cols-3     { grid-template-columns:repeat(3,minmax(0,1fr)); }
+        .gap-4           { gap:1rem; }
+        .gap-6           { gap:1.5rem; }
+        .gap-2           { gap:0.5rem; }
+        .mt-2            { margin-top:0.5rem; }
+        .mt-4            { margin-top:1rem; }
+        .mt-6            { margin-top:1.5rem; }
+        .mb-2            { margin-bottom:0.5rem; }
+        .mb-4            { margin-bottom:1rem; }
+        .rounded-xl      { border-radius:0.75rem; }
+        .rounded-2xl     { border-radius:1rem; }
+        .p-4             { padding:1rem; }
+        .p-6             { padding:1.5rem; }
+        .truncate        { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .text-center     { text-align:center; }
+        .relative        { position:relative; }
+        .absolute        { position:absolute; }
+        .inset-0         { top:0;right:0;bottom:0;left:0; }
+        .shrink-0        { flex-shrink:0; }
+        .flex            { display:flex; }
+        .items-center    { align-items:center; }
+        .items-start     { align-items:flex-start; }
+        .justify-between { justify-content:space-between; }
+        .justify-center  { justify-content:center; }
+        .gap-3           { gap:0.75rem; }
+        .gap-7           { gap:1.75rem; }
+        .gap-8           { gap:2rem; }
+        .flex-wrap       { flex-wrap:wrap; }
+        .flex-col        { flex-direction:column; }
+        .flex-1          { flex:1; }
+        .text-sm         { font-size:0.875rem; }
+        .text-3xl        { font-size:1.875rem; }
+        .font-medium     { font-weight:500; }
+        .font-semibold   { font-weight:600; }
+        .text-white      { color:white; }
+        .shadow-xl       { box-shadow:0 20px 25px -5px rgba(0,0,0,.1); }
+        .min-w-0         { min-width:0; }
+        .w-full          { width:100%; }
+        .h-full          { height:100%; }
+        .overflow-hidden { overflow:hidden; }
+        .tracking-tighter{ letter-spacing:-.05em; }
+        .transition-colors{ transition:color .15s; }
+        .hover\:text-\[\#a78bfa\]:hover { color:#a78bfa; }
+
+/* fo_alimentdetail.css */
+
+/* ── Polices GaiaLumen ──────────────────────────────── */
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@400;500;700&display=swap');
+
+        /* ── Palette officielle ─────────────────────────────── */
+        :root {
+            --vert:#1a372f; --sable:#f4ede4; --violet:#a78bfa; --bleu:#60a5fa;
+            --bg-page:#f4ede4; --bg-card:white; --bg-card2:#f9f6f2;
+            --bg-input:white; --text-main:#1a372f; --text-muted:#6b7280;
+            --text-label:#1a372f; --border-card:#ede8e0; --border-input:#d0c8be;
+            --navbar-bg:linear-gradient(90deg,#1a372f 0%,#11241f 100%);
+        }
+        body.dark {
+            --bg-page:#0f1623; --bg-card:#1a2433; --bg-card2:#1e2a3a;
+            --bg-input:#1e2a3a; --text-main:#e2e8f0; --text-muted:#64748b;
+            --text-label:#94a3b8; --border-card:#243040; --border-input:#2d3f54;
+            --navbar-bg:linear-gradient(90deg,#0d1520 0%,#0a1018 100%);
+        }
+        body { width:100%; background:var(--bg-page)!important; color:var(--text-main)!important; transition:background .3s,color .3s; }
+        body.dark * { color:inherit; }
+
+        * { font-family:'Lato',sans-serif; box-sizing:border-box; margin:0; padding:0; }
+        .hf { font-family:'Cormorant Garamond',serif; } /* titres */
+        
+
+        /* ── Cartes de section ──────────────────────────────── */
+        .card { background:var(--bg-card); border-radius:20px; border:1px solid var(--border-card); padding:24px; }
+
+        /* ── Badges ─────────────────────────────────────────── */
+        .badge { display:inline-block; font-size:11px; padding:3px 10px; border-radius:99px; font-weight:600; white-space:nowrap; }
+        .cbadge { font-size:11px; padding:2px 8px; border-radius:5px; background:var(--bg-page); color:#5a5850; }
+
+        /* ── Barres de macronutriments ──────────────────────── */
+        .mrow   { display:flex; align-items:center; gap:10px; margin-bottom:11px; }
+        .mtrack { flex:1; height:8px; border-radius:4px; background:#ede8e0; overflow:hidden; }
+        .mfill  { height:100%; border-radius:4px; transition:width .9s ease; }
+
+        /* ── Boîtes statistiques (hero) ─────────────────────── */
+        .stat-box { background:var(--bg-page); border-radius:14px; padding:14px 18px; text-align:center; }
+        .stat-val { font-size:24px; font-weight:700; font-family:'Cormorant Garamond',serif; }
+        .stat-lbl { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+        /* ── Graphique donut (macros) ───────────────────────── */
+        .donut-wrap   { position:relative; width:150px; height:150px; flex-shrink:0; }
+        .donut-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+
+        /* ── Nutri-Score lettre ─────────────────────────────── */
+        .ns-box { width:60px; height:60px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:700; font-family:'Cormorant Garamond',serif; }
+    
+
+        /* ── Dark mode pour pages aliments ─── */
+        body.dark [style*="background:var(--bg-card)"]{background:var(--bg-card)!important;}
+        body.dark [style*="background:var(--bg-card2)"]{background:#1a2433!important;}
+        body.dark [style*="background:var(--bg-card2)"]{background:#1e2a3a!important;}
+        body.dark [style*="background:var(--bg-page)"]{background:#1a2433!important;}
+        body.dark [style*="color:var(--text-muted)"]{color:var(--text-muted)!important;}
+        body.dark [style*="border:1px solid var(--border-card)"]{border-color:var(--border-card)!important;}
+        body.dark [style*="border:1.5px solid var(--border-card)"]{border-color:var(--border-card)!important;}
+        body.dark input,body.dark select,body.dark textarea{background:var(--bg-input)!important;color:var(--text-main)!important;border-color:var(--border-input)!important;}
+        body.dark .lbody{background:var(--bg-card)!important;border-color:var(--border-card)!important;}
+        body.dark .lrow{border-color:var(--border-card)!important;}
+        body.dark .lrow:hover{background:var(--bg-card2)!important;}
+        body.dark .lhead{background:var(--bg-card2)!important;border-color:var(--border-card)!important;}
+        /* Modal langue */
+        #langModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--modal-overlay,rgba(0,0,0,.5));z-index:9999;align-items:center;justify-content:center;}
+        #langModal.open{display:flex;}
+        #langBox{background:var(--bg-card,white);border-radius:24px;width:90%;max-width:560px;max-height:80vh;overflow:hidden;border:1px solid var(--border-card,#ede8e0);box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;}
+        #langHead{padding:20px 24px 14px;border-bottom:1px solid var(--border-card,#ede8e0);display:flex;align-items:center;justify-content:space-between;}
+        #langHead h2{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--text-main,#1a372f);margin:0;}
+        #langSearch{width:100%;padding:10px 14px;border:1.5px solid var(--border-input,#d0c8be);border-radius:10px;font-size:13px;background:var(--bg-input,white);color:var(--text-main,#1a372f);outline:none;margin-bottom:12px;}
+        #langList{overflow-y:auto;padding:16px 20px 20px;flex:1;}
+        .region-title{font-size:11px;font-weight:700;color:var(--text-muted,#6b7280);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;}
+        .lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+        .lang-btn{padding:8px 10px;border-radius:10px;border:1px solid var(--border-card,#ede8e0);background:var(--bg-card2,white);cursor:pointer;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-main,#1a372f);font-family:'Lato',sans-serif;transition:all .15s;}
+        .lang-btn:hover{border-color:#a78bfa;}
+        .lang-btn.active{border-color:#60a5fa;color:#60a5fa;font-weight:700;background:rgba(96,165,250,.12);}
+        .lang-btn .flag{font-size:16px;}
+
+        
+        body.dark .lrow:hover { background:var(--bg-card2)!important; }
+        body.dark .lbody, body.dark .lhead { background:var(--bg-card)!important; border-color:var(--border-card)!important; }
+        body.dark .lrow { border-color:var(--border-card)!important; }
+        body.dark input, body.dark select, body.dark textarea { background:var(--bg-input)!important; color:var(--text-main)!important; border-color:var(--border-input)!important; }
+        
+        body.dark body.dark .active { border-color:#60a5fa !important; background:rgba(96,165,250,.12) !important; color:#60a5fa !important; }
+        body.dark a.btn-add-repas { background:#60a5fa !important; border-color:#60a5fa !important; }
+        
+        body.dark .alim-header, body.dark [style*="background:white;border-radius:20px"] { background:var(--bg-card2) !important; }
+        body.dark [style*="background:white"][style*="border-radius"] { background:var(--bg-card2) !important; }
+        body.dark h2[style*="color:var(--vert)"] { color:var(--text-main) !important; }
+        body.dark h3[style*="color:var(--vert)"] { color:var(--text-main) !important; }
+        body.dark [style*="color:var(--vert)"] { color:var(--text-main) !important; }
+        body.dark .prix-val, body.dark [style*="font-size:2.5rem"] { color:var(--text-main) !important; }
+        body.dark [style*="font-size:2rem"][style*="font-weight:700"] { color:var(--text-main) !important; }
+        body.dark a[href="fo_alimentlist.php"] { color:var(--text-main) !important; border-color:var(--border-card) !important; }
+        body.dark a[href="fo_alimentlist.php"]:hover { border-color:#60a5fa !important; color:#60a5fa !important; }
+        
+        body.dark a[href^="fo_repaslist.php?add_aliment"] { background:#60a5fa !important; }
+        
+        body.dark p[style*="font-weight:700"][style*="color:var(--vert)"] { color:#93c5fd !important; }
+        body.dark h2[style*="color:var(--vert)"] { color:#93c5fd !important; }
+        body.dark i[style*="color:var(--vert)"] { color:#93c5fd !important; }
+        
+        body.dark h1.hf { color:#cbd5e1 !important; }
+
+        

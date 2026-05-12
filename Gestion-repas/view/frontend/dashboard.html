@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GaiaLumen · Mon Espace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        html { height:100%; }
+        body {
+            height:100%;
+            display:flex;
+            flex-direction:column;
+            background:#f4ede4;
+            transition:background .3s;
+            overflow:hidden;
+            margin:0;
+        }
+        body.dark{background:#0f1623;color:#e2e8f0;}
+
+        /* ── NAVBAR ── */
+        .navbar{
+            background:linear-gradient(90deg,#1a372f,#11241f);
+            height:72px;
+            flex-shrink:0;
+            z-index:100;
+            box-shadow:0 2px 20px rgba(0,0,0,.2);
+        }
+        body.dark .navbar{background:linear-gradient(90deg,#0d1520,#080e18);}
+        .navbar-inner{
+            max-width:1400px;margin:0 auto;padding:0 40px;height:72px;
+            display:flex;align-items:center;justify-content:space-between;
+        }
+
+        /* ── ZONE DE CONTENU ── */
+        .content-area{
+            flex:1;
+            height:calc(100vh - 72px);
+            overflow:hidden;
+            position:relative;
+        }
+
+        /* Pages statiques */
+        .static-page{
+            position:absolute;
+            top:0;left:0;right:0;bottom:0;
+            overflow-y:auto;
+            padding:40px;
+            display:none;
+            background:#f4ede4;
+        }
+        body.dark .static-page{background:#0f1623;}
+        .static-page.visible{display:block;}
+
+        /* Pages iframe */
+        .iframe-page{
+            position:absolute;
+            top:0;left:0;right:0;bottom:0;
+            display:none;
+        }
+        .iframe-page.visible{display:block;}
+        .iframe-page iframe{
+            width:100%;
+            height:100%;
+            border:none;
+            display:block;
+        }
+
+        /* Soon */
+        .soon-page{
+            display:flex;flex-direction:column;
+            align-items:center;justify-content:center;
+            gap:14px;color:#9ca3af;
+            height:100%;min-height:300px;
+        }
+        .navbar-brand{display:flex;align-items:center;gap:12px;text-decoration:none;}
+        .brand-name{font-family:'Cormorant Garamond',serif;font-size:24px;color:white;letter-spacing:-.02em;}
+
+        .nav-links{display:flex;gap:6px;list-style:none;}
+        .nav-links button{
+            display:flex;align-items:center;gap:7px;
+            padding:7px 14px;border-radius:99px;
+            border:none;background:transparent;
+            color:rgba(255,255,255,.75);font-size:13px;font-weight:500;
+            cursor:pointer;font-family:'Lato',sans-serif;
+            transition:all .2s;
+        }
+        .nav-links button:hover{background:rgba(255,255,255,.1);color:white;}
+        .nav-links button.active{background:rgba(167,139,250,.2);color:#a78bfa;}
+        .nav-links button i{font-size:12px;}
+
+        .nav-right{display:flex;align-items:center;gap:8px;}
+        .nb-btn{
+            width:38px;height:38px;border-radius:50%;
+            border:1px solid rgba(255,255,255,.2);
+            background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);
+            font-size:15px;cursor:pointer;
+            display:inline-flex;align-items:center;justify-content:center;
+            transition:all .2s;text-decoration:none;
+        }
+        .nb-btn:hover{background:rgba(255,255,255,.18);}
+        .lang-pill{
+            height:38px;border-radius:99px;
+            border:1px solid rgba(255,255,255,.2);
+            background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);
+            font-size:13px;font-weight:500;cursor:pointer;
+            display:inline-flex;align-items:center;gap:6px;
+            padding:0 16px;transition:all .2s;font-family:'Lato',sans-serif;
+        }
+
+        /* ── ZONE DE CONTENU ── */
+        .content-area{flex:1;overflow:hidden;position:relative;}
+
+        /* Pages statiques */
+        .static-page{
+            position:absolute;inset:0;
+            overflow-y:auto;padding:40px;
+            display:none;background:#f4ede4;
+        }
+        body.dark .static-page{background:#0f1623;}
+        .static-page.visible{display:block;}
+
+        /* Pages iframe */
+        .iframe-page{position:absolute;inset:0;display:none;}
+        .iframe-page.visible{display:block;}
+        .iframe-page iframe{width:100%;height:100%;border:none;display:block;}
+
+        /* Accueil */
+        .hero-accueil{
+            background:linear-gradient(rgba(26,55,47,.88),rgba(26,55,47,.88)),
+            url('repas/assets/images/1000051721.jpg') center/cover no-repeat;
+            border-radius:20px;padding:48px 40px;margin-bottom:28px;color:white;
+        }
+        body.dark .hero-accueil{background:linear-gradient(rgba(8,15,24,.9),rgba(8,15,24,.9)),url('repas/assets/images/1000051721.jpg') center/cover no-repeat;}
+        .hero-accueil h1{font-family:'Cormorant Garamond',serif;font-size:48px;line-height:1;margin-bottom:10px;}
+        .hero-accueil p{font-size:14px;color:rgba(255,255,255,.7);}
+
+        .modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;}
+        .mod-card{
+            background:white;border-radius:18px;padding:24px;
+            border:1px solid #ede8e0;cursor:pointer;
+            display:flex;flex-direction:column;gap:12px;
+            transition:all .2s;
+        }
+        body.dark .mod-card{background:#1a2433;border-color:#243040;color:#e2e8f0;}
+        .mod-card:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(0,0,0,.1);border-color:var(--violet);}
+        .mod-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;}
+        .mod-card h3{font-family:'Cormorant Garamond',serif;font-size:21px;}
+        .mod-card p{font-size:12px;color:#9ca3af;line-height:1.5;}
+        .tag-soon{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(156,163,175,.12);color:#9ca3af;width:fit-content;}
+
+        /* Soon */
+        .soon-page{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#9ca3af;height:100%;}
+        .soon-page i{font-size:3rem;opacity:.2;}
+        .soon-page h2{font-family:'Cormorant Garamond',serif;font-size:32px;opacity:.4;}
+        .soon-page p{font-size:13px;opacity:.4;}
+
+        /* Modale langue */
+        #langModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;}
+        #langModal.open{display:flex;}
+        #langBox{background:#f4ede4;border-radius:20px;width:90%;max-width:480px;max-height:78vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.3);}
+        body.dark #langBox{background:#1a2433;border:1px solid #243040;}
+        #langHead{padding:16px 20px 10px;border-bottom:1px solid #ede8e0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+        body.dark #langHead{border-color:#243040;}
+        #langHead h2{font-family:'Cormorant Garamond',serif;font-size:22px;color:#1a372f;}
+        body.dark #langHead h2{color:#e2e8f0;}
+        #langSearch{width:100%;padding:9px 13px;border:1.5px solid #d0c8be;border-radius:10px;font-size:13px;background:white;color:#1a372f;outline:none;}
+        body.dark #langSearch{background:#0f1623;color:#e2e8f0;border-color:#2d3f54;}
+        #langList{overflow-y:auto;padding:10px 16px 16px;flex:1;}
+        .rg-title{font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin:8px 0 5px;}
+        .lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+        .lbtn{padding:7px 8px;border-radius:9px;border:1px solid #ede8e0;background:white;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;color:#1a372f;font-family:'Lato',sans-serif;transition:all .15s;}
+        body.dark .lbtn{background:#1a2433;border-color:#243040;color:#e2e8f0;}
+        .lbtn:hover,.lbtn.active{border-color:var(--vert);}
+    </style>
+    <link rel="stylesheet" href="css/cursor.css">
+</head>
+<body>
+<div id="cursor"></div><div id="cursor-trail"></div>
+
+<!-- NAVBAR FIXE -->
+<nav class="navbar">
+    <div class="navbar-inner">
+        <a href="dashboard.html" class="navbar-brand">
+            <svg viewBox="0 0 60 60" fill="none" width="38" height="38">
+      <circle cx="30" cy="30" r="28" stroke="url(#ag)" stroke-width="1.5" opacity=".6"/>
+      <circle cx="30" cy="30" r="22" stroke="url(#ag)" stroke-width=".8" opacity=".3"/>
+      <defs>
+        <radialGradient id="ag" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A86C4"/>
+          <stop offset="100%" stop-color="#5B3E96"/>
+        </radialGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1F3D2B"/>
+          <stop offset="100%" stop-color="#3A86C4"/>
+        </linearGradient>
+      </defs>
+      <path d="M30 10 C42 18,46 30,30 50 C14 30,18 18,30 10Z" fill="url(#lg)"/>
+      <path d="M30 14 L30 46" stroke="rgba(242,232,207,.5)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+            <span class="brand-name">GaiaLumen</span>
+        </a>
+
+        <ul class="nav-links">
+            <li><button class="active" onclick="nav(this,'accueil')"><i class="fas fa-home"></i>Accueil</button></li>
+            <li><button onclick="nav(this,'donnees')"><i class="fas fa-user"></i>Mes données</button></li>
+            <li><button id="btn-repas" onclick="nav(this,'repas')"><i class="fas fa-utensils"></i>Mes Repas</button></li>
+            <li><button onclick="nav(this,'plannings')"><i class="fas fa-calendar-alt"></i>Plannings</button></li>
+            <li><button onclick="nav(this,'defis')"><i class="fas fa-trophy"></i>Défis</button></li>
+            <li><button onclick="nav(this,'sante')"><i class="fas fa-heartbeat"></i>Santé</button></li>
+            <li><button onclick="nav(this,'evenements')"><i class="fas fa-calendar-check"></i>Événements</button></li>
+        </ul>
+
+        <div class="nav-right">
+            <button class="nb-btn" onclick="toggleDark()" title="Mode sombre/clair">
+                <i id="darkIcon" class="fas fa-moon"></i>
+            </button>
+            <button class="lang-pill" onclick="openLang()">
+                <span id="currentLangLabel">🇫🇷 Français</span>
+            </button>
+            <a href="#" class="nb-btn" title="Mon compte"><i class="fas fa-user-circle"></i></a>
+        </div>
+    </div>
+</nav>
+
+<!-- ZONE DE CONTENU -->
+<div class="content-area">
+
+    <!-- ACCUEIL -->
+    <div id="pg-accueil" class="static-page visible">
+        <div class="hero-accueil">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);padding:4px 14px;border-radius:99px;font-size:11px;color:rgba(255,255,255,.85);margin-bottom:14px;">
+                <i class="fas fa-leaf" style="color:var(--violet);"></i> MON ESPACE NUTRITIONNEL
+            </div>
+            <h1 class="hf">Bienvenue sur GaiaLumen</h1>
+            <p>Votre assistant nutritionnel intelligent pour une alimentation saine et durable.</p>
+        </div>
+        <div class="modules-grid">
+            <div class="mod-card" onclick="nav(document.getElementById('btn-repas'),'repas')">
+                <div class="mod-icon" style="background:linear-gradient(135deg,#1a372f,#11241f);"><i class="fas fa-utensils"></i></div>
+                <h3>Mes Repas</h3>
+                <p>Composez vos repas et suivez vos apports nutritionnels.</p>
+            </div>
+            <div class="mod-card">
+                <div class="mod-icon" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);"><i class="fas fa-user"></i></div>
+                <h3>Mes Données</h3><p>Gérez votre profil et préférences alimentaires.</p>
+                <span class="tag-soon">Bientôt disponible</span>
+            </div>
+            <div class="mod-card">
+                <div class="mod-icon" style="background:linear-gradient(135deg,#a78bfa,#7c5cbf);"><i class="fas fa-calendar-alt"></i></div>
+                <h3>Plannings</h3><p>Planifiez vos menus nutritionnels.</p>
+                <span class="tag-soon">Bientôt disponible</span>
+            </div>
+            <div class="mod-card">
+                <div class="mod-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);"><i class="fas fa-trophy"></i></div>
+                <h3>Défis</h3><p>Participez aux défis nutritionnels.</p>
+                <span class="tag-soon">Bientôt disponible</span>
+            </div>
+            <div class="mod-card">
+                <div class="mod-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626);"><i class="fas fa-heartbeat"></i></div>
+                <h3>Santé</h3><p>Suivez vos indicateurs de santé.</p>
+                <span class="tag-soon">Bientôt disponible</span>
+            </div>
+            <div class="mod-card">
+                <div class="mod-icon" style="background:linear-gradient(135deg,#10b981,#059669);"><i class="fas fa-calendar-check"></i></div>
+                <h3>Événements</h3><p>Découvrez les ateliers nutritionnels.</p>
+                <span class="tag-soon">Bientôt disponible</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MES REPAS (iframe) -->
+    <div id="pg-repas" class="iframe-page">
+        <iframe id="ifRepas" src=""></iframe>
+    </div>
+
+    <!-- MES ALIMENTS (iframe) -->
+    <div id="pg-aliments" class="iframe-page">
+        <iframe id="ifAliments" src=""></iframe>
+    </div>
+
+    <!-- SECTIONS BIENTÔT -->
+    <div id="pg-donnees" class="static-page">
+        <div class="soon-page"><i class="fas fa-user"></i><h2>Mes Données</h2><p>Bientôt disponible.</p></div>
+    </div>
+    <div id="pg-plannings" class="static-page">
+        <div class="soon-page"><i class="fas fa-calendar-alt"></i><h2>Plannings</h2><p>Bientôt disponible.</p></div>
+    </div>
+    <div id="pg-defis" class="static-page">
+        <div class="soon-page"><i class="fas fa-trophy"></i><h2>Défis</h2><p>Bientôt disponible.</p></div>
+    </div>
+    <div id="pg-sante" class="static-page">
+        <div class="soon-page"><i class="fas fa-heartbeat"></i><h2>Santé</h2><p>Bientôt disponible.</p></div>
+    </div>
+    <div id="pg-evenements" class="static-page">
+        <div class="soon-page"><i class="fas fa-calendar-check"></i><h2>Événements</h2><p>Bientôt disponible.</p></div>
+    </div>
+
+</div><!-- /content-area -->
+
+<!-- MODALE LANGUE -->
+<div id="langModal" onclick="if(event.target===this)closeLang()">
+    <div id="langBox">
+        <div id="langHead">
+            <h2>🌐 Choisir la langue</h2>
+            <button onclick="closeLang()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+        </div>
+        <div style="padding:10px 16px 0;">
+            <input id="langSearch" placeholder="Rechercher..." oninput="buildLangs(this.value)">
+        </div>
+        <div id="langList"></div>
+    </div>
+</div>
+
+<script>
+/* ══ NAVIGATION ══════════════════════════════════════════════ */
+var loaded = {};
+var IFRAMES = {
+    repas:    {id:'ifRepas',    src:'repas/fo_repaslist.php'},
+    aliments: {id:'ifAliments', src:'repas/fo_alimentlist.php'}
+};
+
+function nav(btn, name) {
+    document.querySelectorAll('.nav-links button').forEach(function(b){ b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+
+    document.querySelectorAll('.static-page, .iframe-page').forEach(function(el){
+        el.classList.remove('visible');
+    });
+
+    var pg = document.getElementById('pg-' + name);
+    if (pg) pg.classList.add('visible');
+
+    if (IFRAMES[name]) {
+        document.getElementById(IFRAMES[name].id).src = IFRAMES[name].src;
+    }
+}
+
+/* ══ DARK MODE ════════════════════════════════════════════════ */
+function toggleDark() {
+    var d = document.body.classList.toggle('dark');
+    localStorage.setItem('gl-dark', d ? '1' : '0');
+    document.getElementById('darkIcon').className = d ? 'fas fa-sun' : 'fas fa-moon';
+    syncIframesDark(d);
+}
+function syncIframesDark(d) {
+    document.querySelectorAll('.iframe-page iframe').forEach(function(ifr) {
+        try {
+            var ifDoc = ifr.contentDocument || ifr.contentWindow.document;
+            if (ifDoc && ifDoc.body) {
+                ifDoc.body.classList.toggle('dark', d);
+            }
+        } catch(e) {}
+    });
+}
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('gl-dark') === '1') {
+        document.body.classList.add('dark');
+        document.getElementById('darkIcon').className = 'fas fa-sun';
+        syncIframesDark(true);
+    }
+});
+
+/* ══ LANGUE ══════════════════════════════════════════════════ */
+var LANGS = [
+    {r:'Fréquentes', l:[
+        {c:'fr',n:'Français',f:'🇫🇷'},{c:'ar',n:'العربية',f:'🇸🇦'},
+        {c:'en',n:'English',f:'🇬🇧'},{c:'de',n:'Deutsch',f:'🇩🇪'},
+        {c:'es',n:'Español',f:'🇪🇸'},{c:'it',n:'Italiano',f:'🇮🇹'}
+    ]},
+    {r:'Europe', l:[
+        {c:'pt',n:'Português',f:'🇵🇹'},{c:'nl',n:'Nederlands',f:'🇳🇱'},
+        {c:'ru',n:'Русский',f:'🇷🇺'},{c:'pl',n:'Polski',f:'🇵🇱'},
+        {c:'tr',n:'Türkçe',f:'🇹🇷'},{c:'sv',n:'Svenska',f:'🇸🇪'}
+    ]},
+    {r:'Asie & Moyen-Orient', l:[
+        {c:'zh-CN',n:'中文',f:'🇨🇳'},{c:'ja',n:'日本語',f:'🇯🇵'},
+        {c:'ko',n:'한국어',f:'🇰🇷'},{c:'hi',n:'हिन्दी',f:'🇮🇳'}
+    ]}
+];
+var curLang = localStorage.getItem('gl-lang') || 'fr';
+
+function openLang()  { document.getElementById('langModal').classList.add('open'); buildLangs(''); }
+function closeLang() { document.getElementById('langModal').classList.remove('open'); }
+function buildLangs(q) {
+    q = (q||'').toLowerCase();
+    var html = '';
+    LANGS.forEach(function(g) {
+        var ls = g.l.filter(function(l){ return !q || l.n.toLowerCase().includes(q) || l.c.includes(q); });
+        if (!ls.length) return;
+        html += '<div class="rg-title">'+g.r+'</div><div class="lang-grid">';
+        ls.forEach(function(l){
+            html += '<button class="lbtn'+(l.c===curLang?' active':'')+'" onclick="selectLang(\''+l.c+'\',\''+l.n+'\',\''+l.f+'\')">'
+                  + '<span>'+l.f+'</span>'+l.n+'</button>';
+        });
+        html += '</div>';
+    });
+    document.getElementById('langList').innerHTML = html;
+}
+function selectLang(c,n,f) {
+    curLang = c; localStorage.setItem('gl-lang', c);
+    document.getElementById('currentLangLabel').textContent = f+' '+n;
+    closeLang();
+}
+</script>
+    <script src="js/cursor.js"></script>
+</body>
+</html>
